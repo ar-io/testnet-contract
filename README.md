@@ -2,7 +2,7 @@
 
 ## Project setup
 ```
-yarn install
+yarn add arweave@1.10.23 arlocal@1.1.30 redstone-smartweave@0.5.6
 ```
 
 ### Compiles and minifies for production
