@@ -1,4 +1,4 @@
-# gnsr-beta-contract
+# Gateway Name Service Registry Proof of Concept
 
 ## Project setup
 ```
