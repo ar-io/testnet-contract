@@ -8,16 +8,16 @@ import { keyfile } from "../constants";
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // A short token symbol, typically with GNT- in front
-  const ticker = "ANT-LASERILLA";
+  const ticker = "GNT-WAVELENGTH";
 
   // A friendly name for the name of this GNT
-  const name = "Laserilla";
+  const name = "Wavelength";
 
   // This is the name that will be purchased in the Gateway Name System Registry
-  const nameToBuy = "laserilla";
+  const nameToBuy = "wavelength";
 
   // The arweave data transaction added to the GNT that is to be proxied using the registered name
-  const dataPointer = "Hg89hNyRy56OnspA8hKwcpfzoE75Kh0-m_ka5SbPhu0";
+  const dataPointer = "Bgw5-GwpymUoe5VMeb-No9WWXpjWsq_8g4oeiGP5RnA";
 
   // This is the GNT Smartweave Contract Source TX ID that will be used to create the new GNT
   const gntRecordContractTxId = "cNr6JPVu3rEOwIbdnu3lVipz9pwY5Pps9mxHSW7Jdtk";
@@ -68,7 +68,7 @@ import { keyfile } from "../constants";
     },
     balances: {
       [walletAddress]: 1,
-    },
+    }
   };
 
   // Deploy GNT Contract in order to link to the new record
