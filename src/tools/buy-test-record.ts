@@ -7,7 +7,7 @@ import { testKeyfile } from "../constants";
 
 (async () => {
     //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  // This is the name that will be purchased in the Gateway Name System Registry testnet
+  // This is the name that will be purchased in the Arweave Name System Registry testnet
   const nameToBuy = "another-one";
 
   // This is the ANT Smartweave Contract TX ID that will be added to the testnet registry

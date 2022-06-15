@@ -7,7 +7,7 @@ import { testKeyfile } from "../constants";
 
 (async () => {
     //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  // This is the name that will be removed from the Gateway Name System Registry testnet
+  // This is the name that will be removed from the Arweave Name System Registry testnet
   const nameToRemove = "another-one";
 
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

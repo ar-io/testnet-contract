@@ -13,7 +13,7 @@ import { keyfile } from "../constants";
   // A friendly name for the name of this ANT
   const name = "Almostgreatco.etsy.com";
 
-  // This is the name that will be purchased in the Gateway Name System Registry
+  // This is the name that will be purchased in the Arweave Name System Registry
   const nameToBuy = "almostgreat";
 
   // The arweave data transaction added to the ANT that is to be proxied using the registered name
