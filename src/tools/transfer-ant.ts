@@ -9,7 +9,7 @@ import { keyfile } from "../constants";
   // The recipient target of the token transfer
   const target = "6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M";
 
-  // This is the Gateway Network Token Contract TX ID that will be transferred
+  // This is the Arweave Network Token Contract TX ID that will be transferred
   const antRecordContractTxId = "uFA2OlsLGJe-4BjbT8OtvH0KT6EZJQMccOVx332lMSI";
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

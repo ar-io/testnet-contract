@@ -1,4 +1,4 @@
-# Gateway Name Service Registry Proof of Concept
+# Arweave Name Service Registry Pilot
 
 ## Project setup
 ```
@@ -16,7 +16,7 @@ yarn test
 ```
 
 ### Tools
-In order to deploy contracts and use the Gateway Name Service Registry (along with creating Gateway Name Tokens) the following tools are available to be used. 
+In order to deploy contracts and use the Arweave Name Service Registry (along with creating Arweave Name Tokens) the following tools are available to be used. 
 
 Make sure to update the variables at the top of each tool's `.ts` file, as well as the local wallet file in `constants.ts`  
 
