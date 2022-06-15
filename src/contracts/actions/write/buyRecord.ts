@@ -1,11 +1,11 @@
-import { PstAction, GNSRState, ContractResult } from "../../types/types";
+import { PstAction, ArNSState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 const MAX_NAME_LENGTH = 20;
 const TX_ID_LENGTH = 43;
 
 export const buyRecord = async (
-  state: GNSRState,
+  state: ArNSState,
   { caller, input: { name, contractTransactionId } }: PstAction
 ): Promise<ContractResult> => {
   const balances = state.balances;
@@ -26,7 +26,7 @@ export const buyRecord = async (
     name === "www" || // reserved
     name === "" // reserved
   ) {
-    throw new ContractError("Invalid GNS Record Name");
+    throw new ContractError("Invalid ArNS Record Name");
   }
 
   // Determine price of name
@@ -110,7 +110,7 @@ export const buyRecord = async (
     contractTransactionId.length !== TX_ID_LENGTH ||
     !txIdres
   ) {
-    throw new ContractError("Invalid GNT Smartweave Contract Address");
+    throw new ContractError("Invalid ANT Smartweave Contract Address");
   }
 
   // Check if the requested name already exists, if not reduce balance and add it

@@ -8,14 +8,14 @@ import { keyfile } from "../constants";
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // The recipient target of the token transfer
-  const target = "31LPFYoow2G7j-eSSsrIh8OlNaARZ84-80J-8ba68d8";
+  const target = "6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M";
 
   // The amount of tokens to be transferred
   const qty = 1000000000000;
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   
-  // This is the production GNS Registry Smartweave Contract
-  const gnsRegistryContractTxId = deployedContracts.contractTxId;
+  // This is the production ArNS Registry Smartweave Contract
+  const arnsRegistryContractTxId = deployedContracts.contractTxId;
 
   // Initialize Arweave
   const arweave = Arweave.init({
@@ -36,14 +36,14 @@ import { keyfile } from "../constants";
   );
   const walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
-  // Read the GNT Registry Contract
+  // Read the ANT Registry Contract
   console.log(
     "Transfering %s tokens from %s to %s",
     qty,
     walletAddress,
     target
   );
-  const pst = smartweave.pst(gnsRegistryContractTxId);
+  const pst = smartweave.pst(arnsRegistryContractTxId);
   pst.connect(wallet);
   await pst.transfer({
     target,

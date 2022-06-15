@@ -1,9 +1,9 @@
-import { PstAction, GNSRState, ContractResult } from "../../types/types";
+import { PstAction, ArNSState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 
 export const nameId = async (
-  state: GNSRState,
+  state: ArNSState,
   { input: { name } }: PstAction
 ): Promise<ContractResult> => {
     const records = state.records;

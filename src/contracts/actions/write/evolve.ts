@@ -1,10 +1,10 @@
-import { PstAction, GNSRState, ContractResult } from "../../types/types";
+import { PstAction, ArNSState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 
 // Sets an existing record and if one does not exist, it cre
 export const evolve = async (
-  state: GNSRState,
+  state: ArNSState,
   { caller, input: { value } }: PstAction
 ): Promise<ContractResult> => {
   const owner = state.owner;

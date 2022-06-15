@@ -1,6 +1,6 @@
 {
-  "name": "gnsr-poc",
-  "version": "0.1.3",
+  "name": "arns-pilot",
+  "version": "0.1.4",
   "private": true,
   "scripts": {
     "build": "yarn run clean && yarn run build-ts && npm run cp",

@@ -12,15 +12,15 @@ import {
   SmartWeaveNodeFactory,
 } from "redstone-smartweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
-import { GNSRState } from "../src/contracts/types/types";
+import { ArNSState } from "../src/contracts/types/types";
 
 const TOKENS_TO_CREATE = 0; // ten million tokens
 
-describe("Testing the GNS Registry Contract", () => {
+describe("Testing the ArNS Registry Contract", () => {
   let contractSrc: string;
   let wallet: JWKInterface;
   let walletAddress: string;
-  let initialState: GNSRState;
+  let initialState: ArNSState;
   let smartweave: SmartWeave;
   let arweave: Arweave;
   let pst: PstContract;
@@ -51,7 +51,7 @@ describe("Testing the GNS Registry Contract", () => {
       path.join(__dirname, "../dist/contract.js"),
       "utf8"
     );
-    const stateFromFile: GNSRState = JSON.parse(
+    const stateFromFile: ArNSState = JSON.parse(
       fs.readFileSync(
         path.join(__dirname, "../dist/contracts/initial-state.json"),
         "utf8"

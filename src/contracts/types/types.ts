@@ -1,5 +1,5 @@
 // ~~ Write types for your contract ~~
-export interface GNSRState {
+export interface ArNSState {
   ticker: string;
   name: string;
   owner: string;
@@ -32,7 +32,7 @@ export interface PstResult {
   balance: number;
 }
 
-export interface GNSRNameResult {
+export interface ArNSNameResult {
   name: string;
   contractTransactionId: string;
 }
@@ -40,4 +40,4 @@ export interface GNSRNameResult {
 
 export type PstFunction = "transfer" | "mint" | "evolve" | "buyRecord" | "removeRecord" | "balance";
 
-export type ContractResult = { state: GNSRState } | { result: PstResult } | {result: GNSRNameResult};
+export type ContractResult = { state: ArNSState } | { result: PstResult } | {result: ArNSNameResult};

@@ -10,12 +10,12 @@ import { testKeyfile } from "../constants";
   // This is the name that will be purchased in the Gateway Name System Registry testnet
   const nameToBuy = "another-one";
 
-  // This is the GNT Smartweave Contract TX ID that will be added to the testnet registry
+  // This is the ANT Smartweave Contract TX ID that will be added to the testnet registry
   const contractTxId = "6-H14K04w-_5t4u_TFJyVCzkt2szBmyoWSMRbniOQzw";
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  // This is the testnet GNS Registry Smartweave Contract TX ID
-  const gnsRegistryContractTxId = deployedTestContracts.contractTxId;
+  // This is the testnet ArNS Registry Smartweave Contract TX ID
+  const arnsRegistryContractTxId = deployedTestContracts.contractTxId;
 
   // Initialize Arweave
   const arweave = Arweave.init({
@@ -35,8 +35,8 @@ import { testKeyfile } from "../constants";
     await fs.readFileSync(testKeyfile).toString()
   );
 
-  // Read the GNT Registry Contract
-  const pst = smartweave.pst(gnsRegistryContractTxId);
+  // Read the ANT Registry Contract
+  const pst = smartweave.pst(arnsRegistryContractTxId);
   pst.connect(wallet);
 
   // check if this name exists in the registry, if not exit the script.
@@ -48,9 +48,9 @@ import { testKeyfile } from "../constants";
     return;
   }
 
-  // Buy the available record in GNS Registry
+  // Buy the available record in ArNS Registry
   console.log(
-    "Buying the test record, %s using the GNT %s",
+    "Buying the test record, %s using the ANT %s",
     nameToBuy,
     contractTxId
   );

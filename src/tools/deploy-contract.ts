@@ -1,6 +1,6 @@
 import Arweave from "arweave";
 import { LoggerFactory, SmartWeaveNodeFactory } from "redstone-smartweave";
-import { GNSRState } from "../contracts/types/types";
+import { ArNSState } from "../contracts/types/types";
 import * as fs from "fs";
 import path from "path";
 import { keyfile } from "../constants";
@@ -30,13 +30,13 @@ const TOKENS_TO_CREATE = 10000000000000; // ten trillion tokens
     path.join(__dirname, "../../dist/contract.js"),
     "utf8"
   );
-  const stateFromFile: GNSRState = JSON.parse(
+  const stateFromFile: ArNSState = JSON.parse(
     fs.readFileSync(
       path.join(__dirname, "../../dist/contracts/initial-state.json"),
       "utf8"
     )
   );
-  const initialState: GNSRState = {
+  const initialState: ArNSState = {
     ...stateFromFile,
     ...{
       owner: walletAddress,

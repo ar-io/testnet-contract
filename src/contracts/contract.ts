@@ -7,12 +7,12 @@ import { removeRecord } from "./actions/write/removeRecord";
 import { evolve } from "./actions/write/evolve";
 import { mintTokens } from "./actions/write/mintTokens";
 import { transferTokens } from "./actions/write/transferTokens";
-import { ContractResult, PstAction, GNSRState } from "./types/types";
+import { ContractResult, PstAction, ArNSState } from "./types/types";
 
 declare const ContractError;
 
 export async function handle(
-  state: GNSRState,
+  state: ArNSState,
   action: PstAction
 ): Promise<ContractResult> {
   const input = action.input;

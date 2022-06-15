@@ -2,10 +2,10 @@ export const url = {
   redstoneGateway: "",
 };
 
-// The mainnet wallet that will be used in the creation of contracts, gnts and record purchases.
+// The mainnet wallet that will be used in the creation of contracts, ants and record purchases.
 export const keyfile =
-  "C:\\Stuff\\GNSR3_arweave-keyfile-QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ.json";
+  "F:\\Keys\\GNSR3_arweave-keyfile-QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ.json";
 
-  // The Redstone Testnet wallet that will be used in the creation of contracts, gnts and record purchases.
+  // The Redstone Testnet wallet that will be used in the creation of contracts, ants and record purchases.
 export const testKeyfile =
-  "C:\\Stuff\\GNSR2_arweave-keyfile-K6AmqvbFSiNKJkfauWt68Qg8ISwwM-3wT_8wcryuS6U.json";
+  "C:\\Stuff\\GNSR3_arweave-keyfile-K6AmqvbFSiNKJkfauWt68Qg8ISwwM-3wT_8wcryuS6U.json";

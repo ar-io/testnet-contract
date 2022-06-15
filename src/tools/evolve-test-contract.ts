@@ -7,8 +7,8 @@ import { deployedTestContracts } from "../deployed-contracts";
 import { testKeyfile } from "../constants";
 
 (async () => {
-  // This is the testnet GNS Registry Smartweave Contract TX ID
-  const gnsRegistryContractTxId = deployedTestContracts.contractTxId;
+  // This is the testnet ArNS Registry Smartweave Contract TX ID
+  const arnsRegistryContractTxId = deployedTestContracts.contractTxId;
 
   // Initialize Arweave
   const arweave = Arweave.init({
@@ -28,8 +28,8 @@ import { testKeyfile } from "../constants";
     await fs.readFileSync(testKeyfile).toString()
   );
 
-  // Read the GNT Registry Contract
-  const pst = smartweave.pst(gnsRegistryContractTxId);
+  // Read the ANT Registry Contract
+  const pst = smartweave.pst(arnsRegistryContractTxId);
   console.log ("yep")
   pst.connect(wallet);
 
@@ -40,5 +40,5 @@ import { testKeyfile } from "../constants";
   
   console.log ((await pst.currentState()).balances[walletAddress]);
 
-  //console.log("Finished evolving the Test GNSR Smartweave Contract %s.", newSrcTxId);
+  //console.log("Finished evolving the Test ArNS Smartweave Contract %s.", newSrcTxId);
 })();

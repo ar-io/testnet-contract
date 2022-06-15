@@ -7,10 +7,10 @@ import { keyfile } from "../constants";
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // The recipient target of the token transfer
-  const target = "31LPFYoow2G7j-eSSsrIh8OlNaARZ84-80J-8ba68d8";
+  const target = "6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M";
 
   // This is the Gateway Network Token Contract TX ID that will be transferred
-  const gntRecordContractTxId = "lXQnhpzNXN0vthWm3sZwE2z7E_d3EWALe5lZPruCOD4";
+  const antRecordContractTxId = "uFA2OlsLGJe-4BjbT8OtvH0KT6EZJQMccOVx332lMSI";
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   // Initialize Arweave
@@ -32,14 +32,14 @@ import { keyfile } from "../constants";
   );
   const walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
-  // Read the GNT Registry Contract
+  // Read the ANT Registry Contract
   console.log(
-    "Transfering %s GNT from %s to %s",
-    gntRecordContractTxId,
+    "Transfering %s ANT from %s to %s",
+    antRecordContractTxId,
     walletAddress,
     target
   );
-  const pst = smartweave.pst(gntRecordContractTxId);
+  const pst = smartweave.pst(antRecordContractTxId);
   pst.connect(wallet);
   await pst.transfer({
     target,

@@ -12,8 +12,8 @@ import { testKeyfile } from "../constants";
 
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  // This is the testnet GNS Registry Smartweave Contract TX ID
-  const gnsRegistryContractTxId = deployedTestContracts.contractTxId;
+  // This is the testnet ArNS Registry Smartweave Contract TX ID
+  const arnsRegistryContractTxId = deployedTestContracts.contractTxId;
 
   // Initialize Arweave
   const arweave = Arweave.init({
@@ -33,11 +33,11 @@ import { testKeyfile } from "../constants";
     await fs.readFileSync(testKeyfile).toString()
   );
 
-  // Read the GNT Registry Contract
-  const pst = smartweave.pst(gnsRegistryContractTxId);
+  // Read the ANT Registry Contract
+  const pst = smartweave.pst(arnsRegistryContractTxId);
   pst.connect(wallet);
 
-  // Buy the available record in GNS Registry
+  // Buy the available record in ArNS Registry
   console.log(
     "Removing the test record, %s",
     nameToRemove,

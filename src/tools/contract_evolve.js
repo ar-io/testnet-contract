@@ -32,7 +32,7 @@
     const namePattern = new RegExp("^[a-zA-Z0-9_-]");
     const nameRes = namePattern.test(name);
     if (typeof name !== "string" || name.length > MAX_NAME_LENGTH || !nameRes || name === "www" || name === "") {
-      throw new ContractError("Invalid GNS Record Name");
+      throw new ContractError("Invalid ArNS Record Name");
     }
     let qty;
     switch (name.length) {
@@ -105,7 +105,7 @@
     const txIdPattern = new RegExp("^[a-zA-Z0-9_-]{43}$");
     const txIdres = txIdPattern.test(contractTransactionId);
     if (typeof contractTransactionId !== "string" || contractTransactionId.length !== TX_ID_LENGTH || !txIdres) {
-      throw new ContractError("Invalid GNT Smartweave Contract Address");
+      throw new ContractError("Invalid ANT Smartweave Contract Address");
     }
     if (records.some((existingRecord) => existingRecord.name === record.name)) {
       throw new ContractError("This name already exists");
