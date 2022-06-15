@@ -29,3 +29,5 @@ Make sure to update the variables at the top of each tool's `.ts` file, as well 
 - `deploy-contract` deploys a new GNSR Contract to mainnet  
 - `deploy-test-contract` deploys a new GNSR Contract to Redstone Testnet  
 
+Run an above script using yarn  
+`yarn ts-node .\src\tools\buy-record.ts`

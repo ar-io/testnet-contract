@@ -8,16 +8,16 @@ import { keyfile } from "../constants";
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // A short token symbol, typically with GNT- in front
-  const ticker = "GNT-TESTER";
+  const ticker = "ANT-LASERILLA";
 
   // A friendly name for the name of this GNT
-  const name = "Testing 1 2 3";
+  const name = "Laserilla";
 
   // This is the name that will be purchased in the Gateway Name System Registry
-  const nameToBuy = "test";
+  const nameToBuy = "laserilla";
 
   // The arweave data transaction added to the GNT that is to be proxied using the registered name
-  const dataPointer = "zHpMN6UyTSSIo6WqER2527LvEvMKLlAcr3UR6ljd32Q";
+  const dataPointer = "Hg89hNyRy56OnspA8hKwcpfzoE75Kh0-m_ka5SbPhu0";
 
   // This is the GNT Smartweave Contract Source TX ID that will be used to create the new GNT
   const gntRecordContractTxId = "cNr6JPVu3rEOwIbdnu3lVipz9pwY5Pps9mxHSW7Jdtk";
@@ -63,7 +63,7 @@ import { keyfile } from "../constants";
     name,
     owner: walletAddress,
     evolve: null,
-    record: {
+    records: {
       ["@"]: dataPointer
     },
     balances: {
