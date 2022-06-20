@@ -15,7 +15,7 @@ import { keyfile } from "../constants";
   const dataPointer = "zHpMN6UyTSSIo6WqER2527LvEvMKLlAcr3UR6ljd32Q";
 
   // This is the ANT Smartweave Contract Source TX ID that will be used to create the new ANT
-  const antRecordContractTxId = "cNr6JPVu3rEOwIbdnu3lVipz9pwY5Pps9mxHSW7Jdtk";
+  const antRecordContractTxId = "7hL0La2KMapdJI6yIGnb4f4IjvhlGQyXnqpWc0i0d_w";
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   // ~~ Initialize Arweave ~~

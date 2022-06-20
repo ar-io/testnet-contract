@@ -2,6 +2,7 @@
 // from the contract source. ~~
 
 import { balance } from "./actions/read/balance";
+import { record } from "./actions/read/record";
 import { buyRecord } from "./actions/write/buyRecord";
 import { removeRecord } from "./actions/write/removeRecord";
 import { evolve } from "./actions/write/evolve";
@@ -30,6 +31,8 @@ export async function handle(
       return await evolve(state, action);
     case "balance":
       return await balance(state, action);
+    case "record":
+      return await record(state, action); 
     default:
       throw new ContractError(
         `No function supplied or function not recognised: "${input.function}"`

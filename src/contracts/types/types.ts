@@ -38,6 +38,6 @@ export interface ArNSNameResult {
 }
 
 
-export type PstFunction = "transfer" | "mint" | "evolve" | "buyRecord" | "removeRecord" | "balance";
+export type PstFunction = "transfer" | "mint" | "evolve" | "buyRecord" | "removeRecord" | "balance" | "record";
 
 export type ContractResult = { state: ArNSState } | { result: PstResult } | {result: ArNSNameResult};
