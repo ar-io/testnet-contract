@@ -1,8 +1,9 @@
 # Arweave Name Service Registry Pilot
 
 ## Project setup
+Clone this repository and install the dependencies.  
 ```
-yarn add arweave@1.10.23 arlocal@1.1.30 redstone-smartweave@0.5.6
+yarn install
 ```
 
 ### Compiles and minifies for production
