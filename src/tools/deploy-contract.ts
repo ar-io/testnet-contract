@@ -1,5 +1,5 @@
 import Arweave from "arweave";
-import { LoggerFactory, SmartWeaveNodeFactory } from "redstone-smartweave";
+import { LoggerFactory, WarpNodeFactory } from "warp-contracts";
 import { ArNSState } from "../contracts/types/types";
 import * as fs from "fs";
 import path from "path";
@@ -19,7 +19,7 @@ const TOKENS_TO_CREATE = 10000000000000; // ten trillion tokens
   LoggerFactory.INST.logLevel("error");
 
   // ~~ Initialize SmartWeave ~~
-  const smartweave = SmartWeaveNodeFactory.memCached(arweave);
+  const smartweave = WarpNodeFactory.memCached(arweave);
 
   // Get the key file used for the distribution
   const wallet = JSON.parse(await fs.readFileSync(keyfile).toString());

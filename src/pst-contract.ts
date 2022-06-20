@@ -1,5 +1,5 @@
 import Arweave from "arweave";
-import { SmartWeave, SmartWeaveWebFactory } from "redstone-smartweave";
+import { Warp, WarpWebFactory } from "warp-contracts";
 
 export const arweave: Arweave = Arweave.init({
   //host: "testnet.redstone.tools",
@@ -8,7 +8,7 @@ export const arweave: Arweave = Arweave.init({
   protocol: "https",
 });
 
-export const smartweave: SmartWeave = SmartWeaveWebFactory.memCachedBased(
+export const smartweave: Warp = WarpWebFactory.memCachedBased(
   arweave
 )
   .useArweaveGateway()

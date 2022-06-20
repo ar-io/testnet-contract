@@ -1,5 +1,5 @@
 import Arweave from "arweave";
-import { LoggerFactory, SmartWeaveNodeFactory } from "redstone-smartweave";
+import { LoggerFactory, WarpNodeFactory } from "warp-contracts";
 import * as fs from "fs";
 import path from "path";
 import { JWKInterface } from "arweave/node/lib/wallet";
@@ -21,7 +21,7 @@ import { testKeyfile } from "../constants";
   LoggerFactory.INST.logLevel("error");
 
   // Initialize SmartWeave
-  const smartweave = SmartWeaveNodeFactory.memCached(arweave);
+  const smartweave = WarpNodeFactory.memCached(arweave);
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(

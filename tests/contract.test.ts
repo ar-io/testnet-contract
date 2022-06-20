@@ -8,9 +8,9 @@ import {
   LoggerFactory,
   PstContract,
   PstState,
-  SmartWeave,
-  SmartWeaveNodeFactory,
-} from "redstone-smartweave";
+  Warp,
+  WarpNodeFactory,
+} from "warp-contracts";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import { ArNSState } from "../src/contracts/types/types";
 
@@ -21,7 +21,7 @@ describe("Testing the ArNS Registry Contract", () => {
   let wallet: JWKInterface;
   let walletAddress: string;
   let initialState: ArNSState;
-  let smartweave: SmartWeave;
+  let Warp: Warp;
   let arweave: Arweave;
   let pst: PstContract;
   const arlocal = new ArLocal(1820, false);
@@ -38,8 +38,8 @@ describe("Testing the ArNS Registry Contract", () => {
     // ~~ Initialize 'LoggerFactory' ~~
     LoggerFactory.INST.logLevel("fatal");
 
-    // ~~ Set up SmartWeave ~~
-    smartweave = SmartWeaveNodeFactory.forTesting(arweave);
+    // ~~ Set up Warp ~~
+    Warp = WarpNodeFactory.forTesting(arweave);
 
     // ~~ Generate wallet and add funds ~~
     wallet = await arweave.wallets.generate();
@@ -70,14 +70,14 @@ describe("Testing the ArNS Registry Contract", () => {
     };
 
     // ~~ Deploy contract ~~
-    const contractTxId = await smartweave.createContract.deploy({
+    const contractTxId = await Warp.createContract.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc,
     });
 
     // ~~ Connect to the pst contract ~~
-    pst = smartweave.pst(contractTxId);
+    pst = Warp.pst(contractTxId);
     pst.connect(wallet);
 
     // ~~ Mine block ~~
@@ -193,7 +193,10 @@ describe("Testing the ArNS Registry Contract", () => {
 
     const newSource = fs.readFileSync(path.join(__dirname, '../src/tools/contract_evolve.js'), 'utf8');
 
-    const newSrcTxId = await pst.saveNewSource(newSource);
+    const newSrcTxId = await pst.save({src: newSource});
+    if (newSrcTxId === null) {
+      return 0;
+    }
     await mineBlock(arweave);
 
     await pst.evolve(newSrcTxId);
@@ -202,7 +205,10 @@ describe("Testing the ArNS Registry Contract", () => {
     // note: the evolved balance always returns -1
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(-1);
 
-    const updatedContractTxId = await pst.saveNewSource(contractSrc);
+    const updatedContractTxId = await pst.save({src: contractSrc});
+    if (updatedContractTxId === null) {
+      return 0;
+    }
     await mineBlock(arweave);
     await pst.evolve(updatedContractTxId);
     await mineBlock(arweave);
@@ -265,7 +271,10 @@ describe("Testing the ArNS Registry Contract", () => {
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(10000000 - 1500000 - 500000);
 
     const newSource = fs.readFileSync(path.join(__dirname, '../src/tools/contract_evolve.js'), 'utf8');
-    const newSrcTxId = await pst.saveNewSource(newSource);
+    const newSrcTxId = await pst.save({src: newSource});
+    if (newSrcTxId === null) {
+      return 0;
+    }
     await mineBlock(arweave);
 
     await pst.evolve(newSrcTxId);
