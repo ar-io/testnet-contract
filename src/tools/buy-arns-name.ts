@@ -10,7 +10,7 @@ import { keyfile } from "../constants";
   // This is the name that will be purchased in the Arweave Name System Registry
   const nameToBuy = "genesis";
 
-  // This is the ANT Smartweave Contract TX ID that will be added to the registry
+  // This is the ANT Smartweave Contract TX ID that will be added to the registry. It must follow the ArNS ANT Specification
   const contractTxId = "xEL3QuBjrJtlJm4DSHn7BKB5S-riLc1qCkmn3r-xkiE";
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

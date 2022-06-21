@@ -99,11 +99,11 @@ describe("Testing the ArNS Registry Contract", () => {
   it("should properly mint tokens", async () => {
     await pst.writeInteraction({
       function: "mint",
-      qty: 20000000,
+      qty: 1000000000,
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      0 + 20000000
+      0 + 1000000000
     );
   });
 
@@ -112,7 +112,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const contractTransactionId = "lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU"
     await pst.writeInteraction({
       function: "buyRecord",
-      name: nameToBuy, // should cost 1500000 tokens
+      name: nameToBuy, // should cost 5000000 tokens
       contractTransactionId,
     });
     await mineBlock(arweave);
@@ -120,7 +120,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const anotherContractTransactionId = "BBBBfeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU"
     await pst.writeInteraction({
       function: "buyRecord",
-      name: anotherNameToBuy, // should cost 1500000 tokens
+      name: anotherNameToBuy, // should cost 156250000 tokens
       contractTransactionId: anotherContractTransactionId,
     });
     await mineBlock(arweave);
@@ -130,7 +130,7 @@ describe("Testing the ArNS Registry Contract", () => {
     expect(currentStateJSON.records[nameToBuy]).toEqual(contractTransactionId);
     expect(currentStateJSON.records[anotherNameToBuy]).toEqual(anotherContractTransactionId);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      0 + 20000000 - 1500000 - 10000000
+      0 + 1000000000 - 156250000 - 5000000
     );
   });
 
@@ -139,57 +139,57 @@ describe("Testing the ArNS Registry Contract", () => {
     const contractTransactionId = "lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU"
     await pst.writeInteraction({
       function: "buyRecord",
-      name: emptyNameToBuy, // should cost 1500000 tokens
+      name: emptyNameToBuy, // should cost 156250000 tokens
       contractTransactionId,
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      0 + 20000000 - 1500000 - 10000000
+      0 + 1000000000 - 156250000 - 5000000
     );
     const malformedNameToBuy = "*&*##$%#";
     await pst.writeInteraction({
       function: "buyRecord",
-      name: malformedNameToBuy, // should cost 1500000 tokens
+      name: malformedNameToBuy, // should cost 156250000 tokens
       contractTransactionId,
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      0 + 20000000 - 1500000 - 10000000
+      0 + 1000000000 - 156250000 - 5000000
     );
     const veryLongNameToBuy = "this_is_a_looong_name";
     await pst.writeInteraction({
       function: "buyRecord",
-      name: veryLongNameToBuy, // should cost 1500000 tokens
+      name: veryLongNameToBuy, // should cost 156250000 tokens
       contractTransactionId,
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      0 + 20000000 - 1500000 - 10000000
+      0 + 1000000000 - 156250000 - 5000000
     );
     const existingNameToBuy = "permaweb";
     await pst.writeInteraction({
       function: "buyRecord",
-      name: existingNameToBuy, // should cost 1500000 tokens
+      name: existingNameToBuy, // should cost 156250000 tokens
       contractTransactionId,
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      0 + 20000000 - 1500000 - 10000000
+      0 + 1000000000 - 156250000 - 5000000
     );
     const expensiveNameToBuy = "v";
     await pst.writeInteraction({
       function: "buyRecord",
-      name: expensiveNameToBuy, // should cost 10000000 tokens
+      name: expensiveNameToBuy, // should cost 5000000 tokens
       contractTransactionId,
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      0 + 20000000 - 1500000 - 10000000
+      0 + 1000000000 - 156250000 - 5000000
     );
   });
 
   it("should properly evolve contract's source code", async () => {
-    expect((await pst.currentBalance(walletAddress)).balance).toEqual(0 + 20000000 - 1500000 - 10000000);
+    expect((await pst.currentBalance(walletAddress)).balance).toEqual(0 + 1000000000 - 156250000 - 5000000);
 
     const newSource = fs.readFileSync(path.join(__dirname, '../src/tools/contract_evolve.js'), 'utf8');
 
@@ -214,7 +214,7 @@ describe("Testing the ArNS Registry Contract", () => {
     await mineBlock(arweave);
 
     // note: the balance should return correctly now
-    expect((await pst.currentBalance(walletAddress)).balance).toEqual(0 + 20000000 - 1500000 - 10000000);
+    expect((await pst.currentBalance(walletAddress)).balance).toEqual(0 + 1000000000 - 156250000 - 5000000);
   });
 
   it("should properly transfer and perform dry write with overwritten caller", async () => {
@@ -227,7 +227,7 @@ describe("Testing the ArNS Registry Contract", () => {
 
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      10000000 - 1500000 - 500000
+      1000000000 - 156250000 - 5000000 - 500000
     );
     expect((await pst.currentState()).balances[overwrittenCaller]).toEqual(
       0 + 500000
@@ -259,7 +259,7 @@ describe("Testing the ArNS Registry Contract", () => {
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      10000000 - 1500000 - 500000
+      1000000000 - 156250000 - 5000000 - 500000
     );
     expect((await pst.currentState()).balances[overwrittenCaller]).toEqual(undefined);
   });
@@ -268,7 +268,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const newWallet = await arweave.wallets.generate();
     await addFunds(arweave, newWallet);
     pst.connect(newWallet);
-    expect((await pst.currentBalance(walletAddress)).balance).toEqual(10000000 - 1500000 - 500000);
+    expect((await pst.currentBalance(walletAddress)).balance).toEqual(1000000000 - 156250000 - 5000000 - 500000);
 
     const newSource = fs.readFileSync(path.join(__dirname, '../src/tools/contract_evolve.js'), 'utf8');
     const newSrcTxId = await pst.save({src: newSource});
@@ -281,7 +281,7 @@ describe("Testing the ArNS Registry Contract", () => {
     await mineBlock(arweave);
 
     // note: the evolved balance always returns 1 because the contract did not change
-    expect((await pst.currentBalance(walletAddress)).balance).toEqual(10000000 - 1500000 - 500000);
+    expect((await pst.currentBalance(walletAddress)).balance).toEqual(1000000000 - 156250000 - 5000000 - 500000);
   });
 
   it("should not remove names with incorrect ownership", async () => {

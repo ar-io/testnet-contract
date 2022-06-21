@@ -10,6 +10,9 @@ export interface ArNSState {
   balances: {
     [address: string]: number;
   };
+  fees: {
+    [nameLength: string]: number;
+  };
 }
 
 export interface PstAction {

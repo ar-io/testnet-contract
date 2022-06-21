@@ -10,6 +10,7 @@ export const buyRecord = async (
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
+  const fees = state.fees;
 
   // Check if the user has enough tokens to purchase the name
   if (!balances[caller]) {
@@ -30,71 +31,7 @@ export const buyRecord = async (
   }
 
   // Determine price of name
-  let qty: number;
-  switch (name.length) {
-    case 1:
-      qty = 100000000;
-      break;
-    case 2:
-      qty = 50000000;
-      break;
-    case 3:
-      qty = 25000000;
-      break;
-    case 4:
-      qty = 10000000;
-      break;
-    case 5:
-      qty = 5000000;
-      break;
-    case 6:
-      qty = 2500000;
-      break;
-    case 7:
-      qty = 2000000;
-      break;
-    case 8:
-      qty = 1500000;
-      break;
-    case 9:
-      qty = 1250000;
-      break;
-    case 10:
-      qty = 1000000;
-      break;
-    case 11:
-      qty = 900000;
-      break;
-    case 12:
-      qty = 800000;
-      break;
-    case 13:
-      qty = 700000;
-      break;
-    case 14:
-      qty = 600000;
-      break;
-    case 15:
-      qty = 500000;
-      break;
-    case 16:
-      qty = 400000;
-      break;
-    case 17:
-      qty = 300000;
-      break;
-    case 18:
-      qty = 200000;
-      break;
-    case 19:
-      qty = 100000;
-      break;
-    case 20:
-      qty = 50000;
-      break;
-    default:
-      throw new ContractError("Invalid string length");
-  }
+  let qty = fees[name.length.toString()];
 
   if (balances[caller] < qty) {
     throw new ContractError(
