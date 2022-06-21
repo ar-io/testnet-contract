@@ -7,6 +7,7 @@ import { buyRecord } from "./actions/write/buyRecord";
 import { removeRecord } from "./actions/write/removeRecord";
 import { evolve } from "./actions/write/evolve";
 import { mintTokens } from "./actions/write/mintTokens";
+import { setFees } from "./actions/write/setFees";
 import { transferTokens } from "./actions/write/transferTokens";
 import { ContractResult, PstAction, ArNSState } from "./types/types";
 
@@ -23,6 +24,8 @@ export async function handle(
       return await transferTokens(state, action);
     case "mint":
       return await mintTokens(state, action);
+    case "setFees":
+      return await setFees(state, action);
     case "buyRecord":
       return await buyRecord(state, action);
     case "removeRecord":

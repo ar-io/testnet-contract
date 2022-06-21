@@ -1,8 +1,7 @@
+import { MAX_NAME_LENGTH, TX_ID_LENGTH } from "@/constants";
 import { PstAction, ArNSState, ContractResult } from "../../types/types";
 
 declare const ContractError;
-const MAX_NAME_LENGTH = 20;
-const TX_ID_LENGTH = 43;
 
 export const buyRecord = async (
   state: ArNSState,

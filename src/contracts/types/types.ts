@@ -27,6 +27,9 @@ export interface PstInput {
   name: string;
   contractTransactionId: string;
   qty: number;
+  fees: {
+    [nameLength: string]: number;
+  }
 }
 
 export interface PstResult {
@@ -40,7 +43,6 @@ export interface ArNSNameResult {
   contractTransactionId: string;
 }
 
-
-export type PstFunction = "transfer" | "mint" | "evolve" | "buyRecord" | "removeRecord" | "balance" | "record";
+export type PstFunction = "transfer" | "mint" | "setFees" | "evolve" | "buyRecord" | "removeRecord" | "balance" | "record";
 
 export type ContractResult = { state: ArNSState } | { result: PstResult } | {result: ArNSNameResult};
