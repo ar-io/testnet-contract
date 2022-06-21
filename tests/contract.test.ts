@@ -310,6 +310,306 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.records[nameToRemove]).toEqual(undefined);
   });
+
+  it("should change fees with correct ownership", async () => {
+    pst.connect(wallet) // connect the original owning wallet
+    const feesToChange = {
+        "1": 5000000000,
+        "2": 1406250000,
+        "3": 468750000,
+        "4": 156250000,
+        "5": 62500000,
+        "6": 25000000,
+        "7": 10000000,
+        "8": 5000000,
+        "9": 1000000,
+        "10": 500000,
+        "11": 450000,
+        "12": 400000,
+        "13": 350000,
+        "14": 300000,
+        "15": 250000,
+        "16": 200000,
+        "17": 175000,
+        "18": 150000,
+        "19": 125000,
+        "20": 5
+    };
+    await pst.writeInteraction({
+      function: "setFees",
+      fees: feesToChange
+    });
+    await mineBlock(arweave);
+    const currentState = await pst.currentState();
+    const currentStateString = JSON.stringify(currentState);
+    const currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.fees).toEqual(feesToChange);
+  });
+
+  it("should not change malformed fees with correct ownership", async () => {
+    pst.connect(wallet) // connect the original owning wallet
+    const originalFees = {
+        "1": 5000000000,
+        "2": 1406250000,
+        "3": 468750000,
+        "4": 156250000,
+        "5": 62500000,
+        "6": 25000000,
+        "7": 10000000,
+        "8": 5000000,
+        "9": 1000000,
+        "10": 500000,
+        "11": 450000,
+        "12": 400000,
+        "13": 350000,
+        "14": 300000,
+        "15": 250000,
+        "16": 200000,
+        "17": 175000,
+        "18": 150000,
+        "19": 125000,
+        "20": 5
+    };
+
+    let feesToChange = { // should not write if any fee is equal to 0
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 1000000,
+      "10": 500000,
+      "11": 450000,
+      "12": 400000,
+      "13": 350000,
+      "14": 300000,
+      "15": 250000,
+      "16": 200000,
+      "17": 175000,
+      "18": 150000,
+      "19": 125000,
+      "20": 5
+  };
+    await pst.writeInteraction({
+      function: "setFees",
+      fees: feesToChange
+    });
+    await mineBlock(arweave);
+    let currentState = await pst.currentState();
+    let currentStateString = JSON.stringify(currentState);
+    let currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.fees).toEqual(originalFees);
+
+    let feesToChange2 = { // should not write if strings are the fees
+      "1": "5000000000",
+      "2": 1406250000,
+      "3": 468750000,
+      "4": 156250000,
+      "5": 62500000,
+      "6": 25000000,
+      "7": 10000000,
+      "8": 5000000,
+      "9": 1000000,
+      "10": 500000,
+      "11": 450000,
+      "12": 400000,
+      "13": 350000,
+      "14": 300000,
+      "15": 250000,
+      "16": 200000,
+      "17": 175000,
+      "18": 150000,
+      "19": 125000,
+      "20": 5
+  };
+    await pst.writeInteraction({
+      function: "setFees",
+      fees: feesToChange2
+    });
+    await mineBlock(arweave);
+    currentState = await pst.currentState();
+    currentStateString = JSON.stringify(currentState);
+    currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.fees).toEqual(originalFees);
+
+    let feesToChange3 = { // should not write with a string as the index
+      "whatever": 5000000000, 
+      "2": 1406250000,
+      "3": 468750000,
+      "4": 156250000,
+      "5": 62500000,
+      "6": 25000000,
+      "7": 10000000,
+      "8": 5000000,
+      "9": 1000000,
+      "10": 500000,
+      "11": 450000,
+      "12": 400000,
+      "13": 350000,
+      "14": 300000,
+      "15": 250000,
+      "16": 200000,
+      "17": 175000,
+      "18": 150000,
+      "19": 125000,
+      "20": 5
+  };
+    await pst.writeInteraction({
+      function: "setFees",
+      fees: feesToChange3
+    });
+    await mineBlock(arweave);
+    currentState = await pst.currentState();
+    currentStateString = JSON.stringify(currentState);
+    currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.fees).toEqual(originalFees);
+
+    let feesToChange4 = { // should not write if incomplete fees are added
+      "1": 1, 
+      "2": 2,
+      "3": 3,
+      "4": 4,
+      "5": 5,
+  };
+    await pst.writeInteraction({
+      function: "setFees",
+      fees: feesToChange4
+    });
+    await mineBlock(arweave);
+    currentState = await pst.currentState();
+    currentStateString = JSON.stringify(currentState);
+    currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.fees).toEqual(originalFees);
+
+    let feesToChange5 = { // should not write if additional fees are added
+      "1": 5000000000, 
+      "2": 1406250000,
+      "3": 468750000,
+      "4": 156250000,
+      "5": 62500000,
+      "6": 25000000,
+      "7": 10000000,
+      "8": 5000000,
+      "9": 1000000,
+      "10": 500000,
+      "11": 450000,
+      "12": 400000,
+      "13": 350000,
+      "14": 300000,
+      "15": 250000,
+      "16": 200000,
+      "17": 175000,
+      "18": 150000,
+      "19": 125000,
+      "20": 5,
+      "21": 1000000000
+  };
+    await pst.writeInteraction({
+      function: "setFees",
+      fees: feesToChange5
+    });
+    await mineBlock(arweave);
+    currentState = await pst.currentState();
+    currentStateString = JSON.stringify(currentState);
+    currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.fees).toEqual(originalFees);
+
+    let feesToChange6 = { // should not write if decimals are used
+      "1": 5000000000.666, 
+      "2": 1406250000,
+      "3": 468750000,
+      "4": 156250000,
+      "5": 62500000,
+      "6": 25000000,
+      "7": 10000000,
+      "8": 5000000,
+      "9": 1000000,
+      "10": 500000,
+      "11": 450000,
+      "12": 400000,
+      "13": 350000,
+      "14": 300000,
+      "15": 250000,
+      "16": 200000,
+      "17": 175000,
+      "18": 150000,
+      "19": 125000,
+      "20": 5.666,
+  };
+    await pst.writeInteraction({
+      function: "setFees",
+      fees: feesToChange6
+    });
+    await mineBlock(arweave);
+    currentState = await pst.currentState();
+    currentStateString = JSON.stringify(currentState);
+    currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.fees).toEqual(originalFees);
+
+
+  });
+
+  it("should not change fees with incorrect ownership", async () => {
+    const originalFees = {
+      "1": 5000000000,
+      "2": 1406250000,
+      "3": 468750000,
+      "4": 156250000,
+      "5": 62500000,
+      "6": 25000000,
+      "7": 10000000,
+      "8": 5000000,
+      "9": 1000000,
+      "10": 500000,
+      "11": 450000,
+      "12": 400000,
+      "13": 350000,
+      "14": 300000,
+      "15": 250000,
+      "16": 200000,
+      "17": 175000,
+      "18": 150000,
+      "19": 125000,
+      "20": 5
+  };
+    const newWallet = await arweave.wallets.generate();
+    await addFunds(arweave, newWallet);
+    pst.connect(newWallet);
+    const feesToChange = {
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1,
+        "5": 1,
+        "6": 1,
+        "7": 1,
+        "8": 1,
+        "9": 1,
+        "10": 1,
+        "11": 1,
+        "12": 1,
+        "13": 1,
+        "14": 1,
+        "15": 1,
+        "16": 1,
+        "17": 1,
+        "18": 1,
+        "19": 1,
+        "20": 1
+    };
+    await pst.writeInteraction({
+      function: "setFees",
+      fees: feesToChange
+    });
+    await mineBlock(arweave);
+    const currentState = await pst.currentState();
+    const currentStateString = JSON.stringify(currentState);
+    const currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.fees).toEqual(originalFees);
+  });
 });
 
 
