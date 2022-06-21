@@ -108,7 +108,7 @@ describe("Testing the ArNS Registry Contract", () => {
   });
 
   it("should properly buy records", async () => {
-    const nameToBuy = "permaweb";
+    const nameToBuy = "permaWEB"; // this should be set to lower case
     const contractTransactionId = "lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU"
     await pst.writeInteraction({
       function: "buyRecord",
@@ -127,7 +127,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentState = await pst.currentState();
     const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
     const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.records[nameToBuy]).toEqual(contractTransactionId);
+    expect(currentStateJSON.records[nameToBuy.toLowerCase()]).toEqual(contractTransactionId);
     expect(currentStateJSON.records[anotherNameToBuy]).toEqual(anotherContractTransactionId);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
       0 + 1000000000 - 156250000 - 5000000

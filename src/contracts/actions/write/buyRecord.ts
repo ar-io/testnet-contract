@@ -29,6 +29,9 @@ export const buyRecord = async (
     throw new ContractError("Invalid ArNS Record Name");
   }
 
+  // enforce lower case names
+  name = name.toLowerCase();
+
   // Determine price of name
   let qty = fees[name.length.toString()];
 
