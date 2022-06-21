@@ -1,4 +1,5 @@
 import { MAX_NAME_LENGTH, TX_ID_LENGTH } from "@/constants";
+import { Warp } from "warp-contracts";
 import { PstAction, ArNSState, ContractResult } from "../../types/types";
 
 declare const ContractError;
@@ -7,6 +8,7 @@ export const buyRecord = async (
   state: ArNSState,
   { caller, input: { name, contractTransactionId } }: PstAction
 ): Promise<ContractResult> => {
+  let Warp: Warp;
   const balances = state.balances;
   const records = state.records;
   const fees = state.fees;
@@ -51,6 +53,10 @@ export const buyRecord = async (
   ) {
     throw new ContractError("Invalid ANT Smartweave Contract Address");
   }
+
+  // Check if this contract has an approved ANT Source Contract Transaction ID
+  // const contractDefiniton = await Warp.definitionLoader.load(contractTransactionId);
+  // console.log ("CONTRACT DEFINITON", contractDefiniton.srcTxId)
 
   // Check if the requested name already exists, if not reduce balance and add it
   if (name in records) {

@@ -13,6 +13,7 @@ export interface ArNSState {
   fees: {
     [nameLength: string]: number;
   };
+  approvedANTSourceCodeTxs: string[];
 }
 
 export interface PstAction {
