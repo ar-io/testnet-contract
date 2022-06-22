@@ -3,7 +3,7 @@ import { TX_ID_LENGTH } from "@/constants";
 declare const ContractError;
 
 // Modifies the fees for purchasing ArNS names
-export const addANTSourceCodeTx = async (
+export const removeANTSourceCodeTx = async (
   state: ArNSState,
   { caller, input: { contractTransactionId } }: PstAction
 ): Promise<ContractResult> => {
@@ -27,9 +27,9 @@ export const addANTSourceCodeTx = async (
   }
 
   if (approvedANTSourceCodeTxs.indexOf(contractTransactionId) > -1) {
-    throw new ContractError("This ANT Source Code Transaction ID not in the list.");
-  } else {
     state.approvedANTSourceCodeTxs.splice(approvedANTSourceCodeTxs.indexOf(contractTransactionId));
+  } else {
+    throw new ContractError("This ANT Source Code Transaction ID not in the list.");
   }
 
   return { state };

@@ -610,6 +610,89 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.fees).toEqual(originalFees);
   });
+
+  it("should add valid whitelisted ANT Smartweave Contract Source TX IDs with correct ownership", async () => {
+    pst.connect(wallet) // connect the original owning wallet
+    const sourceTxIdToAdd = "da51nhDwLZaLBA3lzpE7xl36Rms2NwUNZ7SKOTEWkbI"
+    await pst.writeInteraction({
+      function: "addANTSourceCodeTx",
+      contractTransactionId: sourceTxIdToAdd
+    });
+
+    const anotherSourceTxIdToAdd = "test" // this should not get added because it is not a valid arweave transaction
+    await pst.writeInteraction({
+      function: "addANTSourceCodeTx",
+      contractTransactionId: anotherSourceTxIdToAdd
+    });
+    await mineBlock(arweave);
+    const currentState = await pst.currentState();
+    const currentStateString = JSON.stringify(currentState);
+    const currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.approvedANTSourceCodeTxs).toContain(sourceTxIdToAdd);
+    if (currentStateJSON.approvedANTSourceCodeTxs.indexOf(anotherSourceTxIdToAdd) > -1) {
+      expect(false);
+    } else {
+      expect(true);
+    }
+  });
+
+  it("should not add whitelisted ANT Smartweave Contract Source TX IDs with incorrect ownership", async () => {
+    const newWallet = await arweave.wallets.generate();
+    await addFunds(arweave, newWallet);
+    pst.connect(newWallet);
+    const sourceTxIdToAdd = "BLAHhDwLZaLBA3lzpE7xl36Rms2NwUNZ7SKOTEWkbI"
+    await pst.writeInteraction({
+      function: "addANTSourceCodeTx",
+      contractTransactionId: sourceTxIdToAdd
+    });
+    await mineBlock(arweave);
+    const currentState = await pst.currentState();
+    const currentStateString = JSON.stringify(currentState);
+    const currentStateJSON = JSON.parse(currentStateString);
+    if (currentStateJSON.approvedANTSourceCodeTxs.indexOf(sourceTxIdToAdd) > -1) {
+      expect(false);
+    } else {
+      expect(true);
+    }
+  });
+
+  it("should not remove whitelisted ANT Smartweave Contract Source TX IDs with incorrect ownership", async () => {
+    const newWallet = await arweave.wallets.generate();
+    await addFunds(arweave, newWallet);
+    pst.connect(newWallet);
+    const currentState = await pst.currentState();
+    const currentStateString = JSON.stringify(currentState);
+    const currentStateJSON = JSON.parse(currentStateString);
+    const sourceTxIdToRemove = currentStateJSON.approvedANTSourceCodeTxs[0];
+    await pst.writeInteraction({
+      function: "removeANTSourceCodeTx",
+      contractTransactionId: sourceTxIdToRemove
+    });
+    await mineBlock(arweave);
+    const newState = await pst.currentState();
+    const newStateString = JSON.stringify(newState);
+    const newStateJSON = JSON.parse(newStateString);
+    expect(newStateJSON.approvedANTSourceCodeTxs).toEqual(currentStateJSON.approvedANTSourceCodeTxs);
+  });
+
+  it("should remove whitelisted ANT Smartweave Contract Source TX IDs with correct ownership", async () => {
+    pst.connect(wallet);
+    const sourceTxIdToRemove = "da51nhDwLZaLBA3lzpE7xl36Rms2NwUNZ7SKOTEWkbI";
+    await pst.writeInteraction({
+      function: "removeANTSourceCodeTx",
+      contractTransactionId: sourceTxIdToRemove
+    });
+    await mineBlock(arweave);
+    const newState = await pst.currentState();
+    const newStateString = JSON.stringify(newState);
+    const newStateJSON = JSON.parse(newStateString);
+    if (newStateJSON.approvedANTSourceCodeTxs.indexOf(sourceTxIdToRemove) > -1) {
+      expect(false);
+    } else {
+      expect(true);
+    }
+  });
+
 });
 
 

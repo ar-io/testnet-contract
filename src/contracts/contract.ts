@@ -5,6 +5,8 @@ import { balance } from "./actions/read/balance";
 import { record } from "./actions/read/record";
 import { buyRecord } from "./actions/write/buyRecord";
 import { removeRecord } from "./actions/write/removeRecord";
+import { addANTSourceCodeTx } from "./actions/write/addANTSourceCodeTx";
+import { removeANTSourceCodeTx } from "./actions/write/removeANTSourceCodeTx";
 import { evolve } from "./actions/write/evolve";
 import { mintTokens } from "./actions/write/mintTokens";
 import { setFees } from "./actions/write/setFees";
@@ -32,6 +34,10 @@ export async function handle(
       return await removeRecord(state, action);
     case "evolve":
       return await evolve(state, action);
+    case "addANTSourceCodeTx":
+      return await addANTSourceCodeTx(state, action); 
+    case "removeANTSourceCodeTx":
+      return await removeANTSourceCodeTx(state, action);   
     case "balance":
       return await balance(state, action);
     case "record":

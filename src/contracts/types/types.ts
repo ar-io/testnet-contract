@@ -44,6 +44,6 @@ export interface ArNSNameResult {
   contractTransactionId: string;
 }
 
-export type PstFunction = "transfer" | "mint" | "setFees" | "evolve" | "buyRecord" | "removeRecord" | "balance" | "record";
+export type PstFunction = "transfer" | "mint" | "setFees" | "evolve" | "buyRecord" | "removeRecord" | "addANTSourceCodeTx" | "removeANTSourceCodeTx" | "balance" | "record";
 
 export type ContractResult = { state: ArNSState } | { result: PstResult } | {result: ArNSNameResult};

@@ -14,6 +14,9 @@ export const removeRecord = async (
     throw new ContractError(`Caller is not the owner of the ArNS!`);
   }
 
+  // enforce lower case names
+  name = name.toLowerCase();
+
   // Check if the requested name already exists, if not reduce balance and add it
   if (name in records) {
     delete records[name];

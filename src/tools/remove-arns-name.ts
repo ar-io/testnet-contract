@@ -8,7 +8,7 @@ import { keyfile } from "../constants";
 (async () => {
     //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // This is the name that will be removed from the Arweave Name System Registry
-  const nameToRemove = "example";
+  const nameToRemove = "rakis";
 
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
