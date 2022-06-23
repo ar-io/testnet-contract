@@ -1,6 +1,6 @@
 // ~~ Write types for your contract ~~
 export interface ArNSState {
-  ticker: string; // A short token symbol, typically with ANT- in front
+  ticker: string; // A short token symbol
   name: string;   // This is the name that will be purchased in the Arweave Name System Registry
   owner: string;  // The owner of this contract who can execute specific methods
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to

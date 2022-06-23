@@ -5,6 +5,6 @@ export const deployedContracts = {
 };
 
 export const deployedTestContracts = {
-  contractTxId: "IWJZ0CCL_-Iw0N1-3Pdz822ZH9GLs2blkCYm4MoDq9k",
-  sourceTxId: "8QCNXGa6NMvmF06yBaUyFt_Adjt27r1d01cUiUGT_Oo",
+  contractTxId: "zybnl0o12f-fb5w-4xA8WCR2iCPLWdqrHRto1qACLAQ",
+  sourceTxId: "AK8FZ0722kJONu3JnXWxhHp8LhcHtQMGCmFVviB1uCY",
 };
