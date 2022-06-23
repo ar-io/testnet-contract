@@ -1,6 +1,6 @@
 {
   "name": "arns-pilot",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "scripts": {
     "build": "yarn run clean && yarn run build-ts && npm run cp",
