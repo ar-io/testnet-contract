@@ -1,7 +1,7 @@
 // ~~ Inidicate contract id ~~
 export const deployedContracts = {
-  contractTxId: "Wr27DYc_5cuquhvpMbnhy2idGf_vzOnn0gYHqSgTXNE",
-  sourceTxId: "z4AYt9Ms4Qqy9G8wv0M2DEvGIRfuMe_ZM2Untnferjo",
+  contractTxId: "bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U",
+  sourceTxId: "1pDLvnQfq2in7lCLt9vO-c8QiWvBnGEaDmQzv4gA5ok",
 };
 
 export const deployedTestContracts = {
