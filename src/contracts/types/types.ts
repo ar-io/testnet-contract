@@ -1,19 +1,19 @@
 // ~~ Write types for your contract ~~
 export interface ArNSState {
-  ticker: string;
-  name: string;
-  owner: string;
-  evolve: string;
-  records: {
+  ticker: string; // A short token symbol, typically with ANT- in front
+  name: string;   // This is the name that will be purchased in the Arweave Name System Registry
+  owner: string;  // The owner of this contract who can execute specific methods
+  evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
+  records: {      // A list of all friendly names and their corresponding ANT adresses
     [name: string]: string;
   }
-  balances: {
+  balances: {     // A list of all outstanding, positive, token balances
     [address: string]: number;
   };
-  fees: {
+  fees: {         // A list of all fees for purchasing ArNS names
     [nameLength: string]: number;
   };
-  approvedANTSourceCodeTxs: string[];
+  approvedANTSourceCodeTxs: string[]; // An array of Smartweave Source Code transactions for whitelisted ANTs
 }
 
 export interface PstAction {
