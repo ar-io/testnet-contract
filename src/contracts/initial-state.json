@@ -1,6 +1,6 @@
 {
-  "ticker": "ARNS",
-  "name": "Arweave Name System Registry v0.1.4",
+  "ticker": "ARNS-TEST",
+  "name": "Arweave Name System Registry Test v0.1.4",
   "owner": "",
   "evolve": null,
   "records": {},
