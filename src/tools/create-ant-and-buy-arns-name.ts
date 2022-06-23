@@ -8,19 +8,19 @@ import { keyfile } from "../constants";
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // A short token symbol, typically with ANT- in front
-  const ticker = "ANT-ARDRIVE";
+  const ticker = "ANT-REEFERMADNESS";
 
   // A friendly name for the name of this ANT
-  const name = "ArDrive.io";
+  const name = "Reefer Madness";
 
   // This is the name that will be purchased in the Arweave Name System Registry
-  const nameToBuy = "ardrive";
+  const nameToBuy = "reefer-madness";
 
   // The arweave data transaction added to the ANT that is to be proxied using the registered name
-  const dataPointer = "nOXJjj_vk0Dc1yCgdWD8kti_1iHruGzLQLNNBHVpN0Y";
+  const dataPointer = "_tJ1Lrf9y04qvEIjeyWhvfGdaS9O4zLfUarJixyJCJ0";
 
   // This is the ANT Smartweave Contract Source TX ID that will be used to create the new ANT
-  const antRecordContractTxId = "7hL0La2KMapdJI6yIGnb4f4IjvhlGQyXnqpWc0i0d_w";
+  const antRecordContractTxId = "JIIB01pRbNK2-UyNxwQK-6eknrjENMTpTvQmB8ZDzQg";
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   // This is the production ArNS Registry Smartweave Contract
