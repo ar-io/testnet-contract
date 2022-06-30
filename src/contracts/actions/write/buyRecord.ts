@@ -16,8 +16,8 @@ export const buyRecord = async (
     throw new ContractError(`Caller balance is not defined!`);
   }
 
-  // check if it is a valid arweave transaction id for the smartweave contract
-  const namePattern = new RegExp("^[a-zA-Z0-9_-]");
+  // check if it is a valid subdomain name for the smartweave contract
+  const namePattern = new RegExp("^[a-zA-Z0-9_-]+$");
   const nameRes = namePattern.test(name);
   if (
     typeof name !== "string" ||
