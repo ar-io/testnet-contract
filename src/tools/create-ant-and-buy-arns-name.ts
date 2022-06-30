@@ -13,6 +13,9 @@ import { keyfile } from "../constants";
   // A friendly name for the name of this ANT
   const name = "Reefer Madness";
 
+  // The Time To Live for this ANT to reside cached, the default and minimum is 900 seconds
+  const ttl = 900;
+
   // This is the name that will be purchased in the Arweave Name System Registry
   const nameToBuy = "reefer-madness";
 
@@ -64,7 +67,10 @@ import { keyfile } from "../constants";
     owner: walletAddress,
     evolve: null,
     records: {
-      ["@"]: dataPointer
+      "@": {
+        "transactionId": dataPointer,
+        "ttl": ttl
+      }
     },
     balances: {
       [walletAddress]: 1,
