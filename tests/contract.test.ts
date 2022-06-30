@@ -15,6 +15,7 @@ import { JWKInterface } from "arweave/node/lib/wallet";
 import { ArNSState } from "../src/contracts/types/types";
 
 const TOKENS_TO_CREATE = 0; // ten million tokens
+const EXPECTED_BALANCE_AFTER_INVALID_TX = 838750000; // 0 + 1000000000 - 156250000 - 5000000
 
 describe("Testing the ArNS Registry Contract", () => {
   let contractSrc: string;
@@ -129,9 +130,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.records[nameToBuy.toLowerCase()]).toEqual(contractTransactionId);
     expect(currentStateJSON.records[anotherNameToBuy]).toEqual(anotherContractTransactionId);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      0 + 1000000000 - 156250000 - 5000000
-    );
+    expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
   });
 
   it("should not buy malformed, too long, existing, or too expensive records", async () => {
@@ -143,9 +142,7 @@ describe("Testing the ArNS Registry Contract", () => {
       contractTransactionId,
     });
     await mineBlock(arweave);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      0 + 1000000000 - 156250000 - 5000000
-    );
+    expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
     const malformedNameToBuy = "*&*##$%#";
     await pst.writeInteraction({
       function: "buyRecord",
@@ -153,9 +150,7 @@ describe("Testing the ArNS Registry Contract", () => {
       contractTransactionId,
     });
     await mineBlock(arweave);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      0 + 1000000000 - 156250000 - 5000000
-    );
+    expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
     const veryLongNameToBuy = "this_is_a_looong_name";
     await pst.writeInteraction({
       function: "buyRecord",
@@ -163,9 +158,7 @@ describe("Testing the ArNS Registry Contract", () => {
       contractTransactionId,
     });
     await mineBlock(arweave);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      0 + 1000000000 - 156250000 - 5000000
-    );
+    expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
     const existingNameToBuy = "permaweb";
     await pst.writeInteraction({
       function: "buyRecord",
@@ -173,9 +166,7 @@ describe("Testing the ArNS Registry Contract", () => {
       contractTransactionId,
     });
     await mineBlock(arweave);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      0 + 1000000000 - 156250000 - 5000000
-    );
+    expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
     const expensiveNameToBuy = "v";
     await pst.writeInteraction({
       function: "buyRecord",
@@ -183,9 +174,16 @@ describe("Testing the ArNS Registry Contract", () => {
       contractTransactionId,
     });
     await mineBlock(arweave);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      0 + 1000000000 - 156250000 - 5000000
-    );
+    expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
+    const disallowedNameToBuy = "test.subdomain.name";
+    await pst.writeInteraction({
+      function: "buyRecord",
+      name: disallowedNameToBuy, // should cost 125000 tokens
+      contractTransactionId,
+    });
+    await mineBlock(arweave);
+    expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
+
   });
 
   it("should properly evolve contract's source code", async () => {
