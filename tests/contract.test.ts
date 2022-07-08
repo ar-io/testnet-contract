@@ -71,14 +71,14 @@ describe("Testing the ArNS Registry Contract", () => {
     };
 
     // ~~ Deploy contract ~~
-    const contractTxId = await Warp.createContract.deploy({
+    const deploy = await Warp.createContract.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc,
     });
 
     // ~~ Connect to the pst contract ~~
-    pst = Warp.pst(contractTxId);
+    pst = Warp.pst(deploy.contractTxId);
     pst.connect(wallet);
 
     // ~~ Mine block ~~
@@ -151,7 +151,7 @@ describe("Testing the ArNS Registry Contract", () => {
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
-    const veryLongNameToBuy = "this_is_a_looong_name";
+    const veryLongNameToBuy = "this-is-a-looong-name-a-verrrryyyyy-loooooong-name-that-is-too-long";
     await pst.writeInteraction({
       function: "buyRecord",
       name: veryLongNameToBuy, // should cost 156250000 tokens
@@ -331,7 +331,19 @@ describe("Testing the ArNS Registry Contract", () => {
         "17": 175000,
         "18": 150000,
         "19": 125000,
-        "20": 5
+        "20": 5,
+        "21": 5,
+        "22": 5,
+        "23": 5,
+        "24": 5,
+        "25": 5,
+        "26": 5,
+        "27": 5,
+        "28": 5,
+        "29": 5,
+        "30": 5,
+        "31": 5,
+        "32": 5
     };
     await pst.writeInteraction({
       function: "setFees",
@@ -347,26 +359,38 @@ describe("Testing the ArNS Registry Contract", () => {
   it("should not change malformed fees with correct ownership", async () => {
     pst.connect(wallet) // connect the original owning wallet
     const originalFees = {
-        "1": 5000000000,
-        "2": 1406250000,
-        "3": 468750000,
-        "4": 156250000,
-        "5": 62500000,
-        "6": 25000000,
-        "7": 10000000,
-        "8": 5000000,
-        "9": 1000000,
-        "10": 500000,
-        "11": 450000,
-        "12": 400000,
-        "13": 350000,
-        "14": 300000,
-        "15": 250000,
-        "16": 200000,
-        "17": 175000,
-        "18": 150000,
-        "19": 125000,
-        "20": 5
+      "1": 5000000000,
+      "2": 1406250000,
+      "3": 468750000,
+      "4": 156250000,
+      "5": 62500000,
+      "6": 25000000,
+      "7": 10000000,
+      "8": 5000000,
+      "9": 1000000,
+      "10": 500000,
+      "11": 450000,
+      "12": 400000,
+      "13": 350000,
+      "14": 300000,
+      "15": 250000,
+      "16": 200000,
+      "17": 175000,
+      "18": 150000,
+      "19": 125000,
+      "20": 5,
+      "21": 5,
+      "22": 5,
+      "23": 5,
+      "24": 5,
+      "25": 5,
+      "26": 5,
+      "27": 5,
+      "28": 5,
+      "29": 5,
+      "30": 5,
+      "31": 5,
+      "32": 5
     };
 
     let feesToChange = { // should not write if any fee is equal to 0
@@ -389,7 +413,19 @@ describe("Testing the ArNS Registry Contract", () => {
       "17": 175000,
       "18": 150000,
       "19": 125000,
-      "20": 5
+      "20": 5,
+      "21": 5,
+      "22": 5,
+      "23": 5,
+      "24": 5,
+      "25": 5,
+      "26": 5,
+      "27": 5,
+      "28": 5,
+      "29": 5,
+      "30": 5,
+      "31": 5,
+      "32": 5
   };
     await pst.writeInteraction({
       function: "setFees",
@@ -571,7 +607,19 @@ describe("Testing the ArNS Registry Contract", () => {
       "17": 175000,
       "18": 150000,
       "19": 125000,
-      "20": 5
+      "20": 5,
+      "21": 5,
+      "22": 5,
+      "23": 5,
+      "24": 5,
+      "25": 5,
+      "26": 5,
+      "27": 5,
+      "28": 5,
+      "29": 5,
+      "30": 5,
+      "31": 5,
+      "32": 5
   };
     const newWallet = await arweave.wallets.generate();
     await addFunds(arweave, newWallet);
@@ -596,7 +644,19 @@ describe("Testing the ArNS Registry Contract", () => {
         "17": 1,
         "18": 1,
         "19": 1,
-        "20": 1
+        "20": 5,
+        "21": 5,
+        "22": 5,
+        "23": 5,
+        "24": 5,
+        "25": 5,
+        "26": 5,
+        "27": 5,
+        "28": 5,
+        "29": 5,
+        "30": 5,
+        "31": 5,
+        "32": 5
     };
     await pst.writeInteraction({
       function: "setFees",
