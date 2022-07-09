@@ -65,6 +65,12 @@ describe("Testing the ArNS Registry Contract", () => {
       ...{
         owner: walletAddress,
       },
+      records: {
+        ["permaweb"]: { // We set an expired name here so we can test overwriting it
+          contractTxId: "io9_QNUf4yBG0ErNKCmjGzZ-X9BJhmWOiVVQVyainlY",
+          end: 100_000_000
+        }
+      },
       balances: {
         [walletAddress]: TOKENS_TO_CREATE,
       },
@@ -109,37 +115,40 @@ describe("Testing the ArNS Registry Contract", () => {
   });
 
   it("should properly buy records", async () => {
-    const nameToBuy = "permaWEB"; // this should be set to lower case
-    const contractTransactionId = "lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU"
+    const nameToBuy = "permaWEB"; // this should be set to lower case, this name already exists but is expired
+    const contractTxId = "lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU"
+    const years = 3;
     await pst.writeInteraction({
       function: "buyRecord",
       name: nameToBuy, // should cost 5000000 tokens
-      contractTransactionId,
+      contractTxId,
+      years
     });
     await mineBlock(arweave);
     const anotherNameToBuy = "vile";
-    const anotherContractTransactionId = "BBBBfeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU"
+    const anothercontractTxId = "BBBBfeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU"
     await pst.writeInteraction({
       function: "buyRecord",
       name: anotherNameToBuy, // should cost 156250000 tokens
-      contractTransactionId: anotherContractTransactionId,
+      contractTxId: anothercontractTxId,
+      years
     });
     await mineBlock(arweave);
     const currentState = await pst.currentState();
     const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
     const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.records[nameToBuy.toLowerCase()]).toEqual(contractTransactionId);
-    expect(currentStateJSON.records[anotherNameToBuy]).toEqual(anotherContractTransactionId);
+    expect(currentStateJSON.records[nameToBuy.toLowerCase()].contractTxId).toEqual("lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU");
+    expect(currentStateJSON.records[anotherNameToBuy].contractTxId).toEqual("BBBBfeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU");
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
   });
 
   it("should not buy malformed, too long, existing, or too expensive records", async () => {
     const emptyNameToBuy = "";
-    const contractTransactionId = "lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU"
+    const contractTxId = "lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU"
     await pst.writeInteraction({
       function: "buyRecord",
       name: emptyNameToBuy, // should cost 156250000 tokens
-      contractTransactionId,
+      contractTxId,
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
@@ -147,7 +156,7 @@ describe("Testing the ArNS Registry Contract", () => {
     await pst.writeInteraction({
       function: "buyRecord",
       name: malformedNameToBuy, // should cost 156250000 tokens
-      contractTransactionId,
+      contractTxId,
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
@@ -155,7 +164,7 @@ describe("Testing the ArNS Registry Contract", () => {
     await pst.writeInteraction({
       function: "buyRecord",
       name: veryLongNameToBuy, // should cost 156250000 tokens
-      contractTransactionId,
+      contractTxId,
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
@@ -163,7 +172,7 @@ describe("Testing the ArNS Registry Contract", () => {
     await pst.writeInteraction({
       function: "buyRecord",
       name: existingNameToBuy, // should cost 156250000 tokens
-      contractTransactionId,
+      contractTxId,
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
@@ -171,7 +180,7 @@ describe("Testing the ArNS Registry Contract", () => {
     await pst.writeInteraction({
       function: "buyRecord",
       name: expensiveNameToBuy, // should cost 5000000 tokens
-      contractTransactionId,
+      contractTxId,
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
@@ -179,7 +188,7 @@ describe("Testing the ArNS Registry Contract", () => {
     await pst.writeInteraction({
       function: "buyRecord",
       name: disallowedNameToBuy, // should cost 125000 tokens
-      contractTransactionId,
+      contractTxId,
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
@@ -187,7 +196,7 @@ describe("Testing the ArNS Registry Contract", () => {
     await pst.writeInteraction({
       function: "buyRecord",
       name: disallowedNameToBuy2,
-      contractTransactionId,
+      contractTxId,
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
@@ -300,7 +309,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentState = await pst.currentState();
     const currentStateString = JSON.stringify(currentState);
     const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.records[nameToRemove]).toEqual("BBBBfeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU");
+    expect(currentStateJSON.records[nameToRemove]).toBeTruthy();
   });
 
   it("should remove names with correct ownership", async () => {
@@ -682,13 +691,13 @@ describe("Testing the ArNS Registry Contract", () => {
     const sourceTxIdToAdd = "da51nhDwLZaLBA3lzpE7xl36Rms2NwUNZ7SKOTEWkbI"
     await pst.writeInteraction({
       function: "addANTSourceCodeTx",
-      contractTransactionId: sourceTxIdToAdd
+      contractTxId: sourceTxIdToAdd
     });
 
     const anotherSourceTxIdToAdd = "test" // this should not get added because it is not a valid arweave transaction
     await pst.writeInteraction({
       function: "addANTSourceCodeTx",
-      contractTransactionId: anotherSourceTxIdToAdd
+      contractTxId: anotherSourceTxIdToAdd
     });
     await mineBlock(arweave);
     const currentState = await pst.currentState();
@@ -709,7 +718,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const sourceTxIdToAdd = "BLAHhDwLZaLBA3lzpE7xl36Rms2NwUNZ7SKOTEWkbI"
     await pst.writeInteraction({
       function: "addANTSourceCodeTx",
-      contractTransactionId: sourceTxIdToAdd
+      contractTxId: sourceTxIdToAdd
     });
     await mineBlock(arweave);
     const currentState = await pst.currentState();
@@ -732,7 +741,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const sourceTxIdToRemove = currentStateJSON.approvedANTSourceCodeTxs[0];
     await pst.writeInteraction({
       function: "removeANTSourceCodeTx",
-      contractTransactionId: sourceTxIdToRemove
+      contractTxId: sourceTxIdToRemove
     });
     await mineBlock(arweave);
     const newState = await pst.currentState();
@@ -746,7 +755,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const sourceTxIdToRemove = "da51nhDwLZaLBA3lzpE7xl36Rms2NwUNZ7SKOTEWkbI";
     await pst.writeInteraction({
       function: "removeANTSourceCodeTx",
-      contractTransactionId: sourceTxIdToRemove
+      contractTxId: sourceTxIdToRemove
     });
     await mineBlock(arweave);
     const newState = await pst.currentState();

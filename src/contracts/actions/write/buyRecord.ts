@@ -2,19 +2,30 @@ import { MAX_NAME_LENGTH, TX_ID_LENGTH } from "@/constants";
 import { PstAction, ArNSState, ContractResult } from "../../types/types";
 
 declare const ContractError;
+declare const SmartWeave: any;
+const SECONDS_IN_A_YEAR = 31_536_000;
 
 export const buyRecord = async (
   state: ArNSState,
-  { caller, input: { name, contractTransactionId } }: PstAction
+  { caller, input: { name, contractTxId, years } }: PstAction
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
   const fees = state.fees;
+  const currentBlockTime = +SmartWeave.block.timestamp;
 
   // Check if the user has enough tokens to purchase the name
   if (!balances[caller]) {
     throw new ContractError(`Caller balance is not defined!`);
   }
+
+  // Check if it includes a valid start and end date
+  if (!Number.isInteger(years)) {
+    throw new ContractError('Invalid value for "years". Must be an integers');
+  }
+
+  // set the end lease period for this based on number of years
+  const end = currentBlockTime + (SECONDS_IN_A_YEAR * years);
 
   // check if it is a valid subdomain name for the smartweave contract
   const namePattern = new RegExp("^[a-zA-Z0-9-]+$");
@@ -43,10 +54,10 @@ export const buyRecord = async (
 
   // check if it is a valid arweave transaction id for the smartweave contract
   const txIdPattern = new RegExp("^[a-zA-Z0-9_-]{43}$");
-  const txIdres = txIdPattern.test(contractTransactionId);
+  const txIdres = txIdPattern.test(contractTxId);
   if (
-    typeof contractTransactionId !== "string" ||
-    contractTransactionId.length !== TX_ID_LENGTH ||
+    typeof contractTxId !== "string" ||
+    contractTxId.length !== TX_ID_LENGTH ||
     !txIdres
   ) {
     throw new ContractError("Invalid ANT Smartweave Contract Address");
@@ -54,11 +65,16 @@ export const buyRecord = async (
 
   // Check if the requested name already exists, if not reduce balance and add it
   if (name in records) {
-    throw new ContractError("This name already exists");
-  } else {
+    if (records[`${name}`].end < currentBlockTime) { // This name's lease has expired and can be repurchased
+      balances[caller] -= qty;
+      records[`${name}`] = {contractTxId, end};
+    } else {
+      throw new ContractError("This name already exists in an active lease");
+    }
+  } else { // The name does not exist in the registry at all, and can be purchased
     balances[caller] -= qty;
-    records[`${name}`] = contractTransactionId;
-  }
+    records[`${name}`] = {contractTxId, end};
+  };
 
   return { state };
 };

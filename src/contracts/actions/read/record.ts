@@ -15,12 +15,13 @@ export const record = async (
     // Check if the requested name already exists, if not reduce balance and add it
     if (!(name in records)) {
         throw new ContractError("This name does not exist");
-    } 
+    }
 
     return {
         result: {
             name,
-            contractTransactionId: records[name],
+            contractTxId: records[name].contractTxId,
+            end: records[name].end
         },
     };
 };

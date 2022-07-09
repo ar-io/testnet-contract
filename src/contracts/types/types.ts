@@ -4,9 +4,12 @@ export interface ArNSState {
   name: string;   // The friendly name of the token, shown in block explorers and marketplaces
   owner: string;  // The owner of this contract who can execute specific methods
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
-  records: {      // A list of all friendly names and their corresponding ANT adresses
-    [name: string]: string;
-  }
+  records: {     // A list of all subdomains and their corresponding ANT addresses and lease periods
+    [name: string]: {
+      contractTxId: string, // The ANT Contract used to manage this name
+      end: number, // At what unix time (seconds since epoch) the lease ends
+    }
+  };
   balances: {     // A list of all outstanding, positive, token balances
     [address: string]: number;
   };
@@ -26,7 +29,8 @@ export interface PstInput {
   target: string;
   value: string;
   name: string;
-  contractTransactionId: string;
+  contractTxId: string;
+  years: number;
   qty: number;
   fees: {
     [nameLength: string]: number;
@@ -41,7 +45,8 @@ export interface PstResult {
 
 export interface ArNSNameResult {
   name: string;
-  contractTransactionId: string;
+  contractTxId: string;
+  end: number;
 }
 
 export type PstFunction = "transfer" | "mint" | "setFees" | "evolve" | "buyRecord" | "removeRecord" | "addANTSourceCodeTx" | "removeANTSourceCodeTx" | "balance" | "record";
