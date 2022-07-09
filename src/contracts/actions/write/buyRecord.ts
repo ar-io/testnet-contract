@@ -17,7 +17,7 @@ export const buyRecord = async (
   }
 
   // check if it is a valid subdomain name for the smartweave contract
-  const namePattern = new RegExp("^[a-zA-Z0-9_-]+$");
+  const namePattern = new RegExp("^[a-zA-Z0-9-]+$");
   const nameRes = namePattern.test(name);
   if (
     typeof name !== "string" ||
