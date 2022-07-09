@@ -159,7 +159,7 @@ describe("Testing the ArNS Registry Contract", () => {
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
-    const existingNameToBuy = "permaweb";
+    const existingNameToBuy = "permaweb"; // this name should already exist
     await pst.writeInteraction({
       function: "buyRecord",
       name: existingNameToBuy, // should cost 156250000 tokens
@@ -179,6 +179,14 @@ describe("Testing the ArNS Registry Contract", () => {
     await pst.writeInteraction({
       function: "buyRecord",
       name: disallowedNameToBuy, // should cost 125000 tokens
+      contractTransactionId,
+    });
+    await mineBlock(arweave);
+    expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
+    const disallowedNameToBuy2 = "test_subdomain";
+    await pst.writeInteraction({
+      function: "buyRecord",
+      name: disallowedNameToBuy2,
       contractTransactionId,
     });
     await mineBlock(arweave);
