@@ -1,4 +1,4 @@
-import { MAX_YEARS, SECONDS_IN_A_YEAR, SECONDS_IN_GRACE_PERIOD } from "@/constants";
+import { MAX_YEARS, SECONDS_IN_A_YEAR} from "@/constants";
 import { PstAction, ArNSState, ContractResult } from "../../types/types";
 
 declare const ContractError;
