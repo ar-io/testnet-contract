@@ -68,7 +68,8 @@ describe("Testing the ArNS Registry Contract", () => {
       records: {
         ["permaweb"]: { // We set an expired name here so we can test overwriting it
           contractTxId: "io9_QNUf4yBG0ErNKCmjGzZ-X9BJhmWOiVVQVyainlY",
-          end: 100_000_000
+          maxSubdomains: 100,
+          endTimestamp: 100_000_000
         }
       },
       balances: {
@@ -118,11 +119,13 @@ describe("Testing the ArNS Registry Contract", () => {
     const nameToBuy = "permaWEB"; // this should be set to lower case, this name already exists but is expired
     const contractTxId = "lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU"
     const years = 3;
+    const tier = 1;
     await pst.writeInteraction({
       function: "buyRecord",
       name: nameToBuy, // should cost 5000000 tokens
       contractTxId,
-      years
+      years,
+      tier
     });
     await mineBlock(arweave);
     const anotherNameToBuy = "vile";
@@ -131,7 +134,8 @@ describe("Testing the ArNS Registry Contract", () => {
       function: "buyRecord",
       name: anotherNameToBuy, // should cost 156250000 tokens
       contractTxId: anothercontractTxId,
-      years
+      years,
+      tier
     });
     await mineBlock(arweave);
     const currentState = await pst.currentState();
@@ -145,10 +149,14 @@ describe("Testing the ArNS Registry Contract", () => {
   it("should not buy malformed, too long, existing, or too expensive records", async () => {
     const emptyNameToBuy = "";
     const contractTxId = "lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU"
+    let years = 1;
+    let tier = 1;
     await pst.writeInteraction({
       function: "buyRecord",
       name: emptyNameToBuy, // should cost 156250000 tokens
       contractTxId,
+      years,
+      tier
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
@@ -157,6 +165,8 @@ describe("Testing the ArNS Registry Contract", () => {
       function: "buyRecord",
       name: malformedNameToBuy, // should cost 156250000 tokens
       contractTxId,
+      years,
+      tier
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
@@ -165,6 +175,8 @@ describe("Testing the ArNS Registry Contract", () => {
       function: "buyRecord",
       name: veryLongNameToBuy, // should cost 156250000 tokens
       contractTxId,
+      years,
+      tier
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
@@ -173,6 +185,8 @@ describe("Testing the ArNS Registry Contract", () => {
       function: "buyRecord",
       name: existingNameToBuy, // should cost 156250000 tokens
       contractTxId,
+      years,
+      tier
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
@@ -181,6 +195,8 @@ describe("Testing the ArNS Registry Contract", () => {
       function: "buyRecord",
       name: expensiveNameToBuy, // should cost 5000000 tokens
       contractTxId,
+      years,
+      tier
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
@@ -189,6 +205,8 @@ describe("Testing the ArNS Registry Contract", () => {
       function: "buyRecord",
       name: disallowedNameToBuy, // should cost 125000 tokens
       contractTxId,
+      years,
+      tier
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
@@ -197,6 +215,8 @@ describe("Testing the ArNS Registry Contract", () => {
       function: "buyRecord",
       name: disallowedNameToBuy2,
       contractTxId,
+      years,
+      tier
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);

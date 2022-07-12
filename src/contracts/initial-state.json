@@ -9,6 +9,17 @@
     "7hL0La2KMapdJI6yIGnb4f4IjvhlGQyXnqpWc0i0d_w",
     "cNr6JPVu3rEOwIbdnu3lVipz9pwY5Pps9mxHSW7Jdtk"
   ],
+  "tiers": {
+    "1": {
+      "maxSubdomains": 100
+    },
+    "2": {
+      "maxSubdomains": 1000
+    },
+    "3": {
+      "maxSubdomains": 10000
+    }
+  },
   "fees": {
     "1": 4218750000,
     "2": 1406250000,

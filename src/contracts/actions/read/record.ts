@@ -21,7 +21,7 @@ export const record = async (
         result: {
             name,
             contractTxId: records[name].contractTxId,
-            end: records[name].end
+            endTimestamp: records[name].endTimestamp
         },
     };
 };

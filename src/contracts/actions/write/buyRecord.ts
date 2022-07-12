@@ -1,17 +1,18 @@
-import { MAX_NAME_LENGTH, TX_ID_LENGTH } from "@/constants";
+import { MAX_NAME_LENGTH, MAX_YEARS, SECONDS_IN_A_YEAR, SECONDS_IN_GRACE_PERIOD, TX_ID_LENGTH } from "@/constants";
 import { PstAction, ArNSState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 declare const SmartWeave: any;
-const SECONDS_IN_A_YEAR = 31_536_000;
+
 
 export const buyRecord = async (
   state: ArNSState,
-  { caller, input: { name, contractTxId, years } }: PstAction
+  { caller, input: { name, contractTxId, years, tier } }: PstAction
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
   const fees = state.fees;
+  const tiers = state.tiers;
   const currentBlockTime = +SmartWeave.block.timestamp;
 
   // Check if the user has enough tokens to purchase the name
@@ -19,13 +20,26 @@ export const buyRecord = async (
     throw new ContractError(`Caller balance is not defined!`);
   }
 
-  // Check if it includes a valid start and end date
-  if (!Number.isInteger(years)) {
-    throw new ContractError('Invalid value for "years". Must be an integers');
+  // Check if it includes a valid number of years
+  if (!Number.isInteger(years) || years > MAX_YEARS) {
+    throw new ContractError('Invalid value for "years". Must be an integers and less than the max years');
   }
 
+  // Check if it includes a valid number of years
+  if (!Number.isInteger(tier)) {
+    throw new ContractError('Invalid value for "tier". Must be an integers');
+  }
+
+  // Check if this is a valid tier
+  if (!tiers[tier]) {
+    throw new ContractError(`Tier is not defined!`);
+  }
+
+  // Set the maximum amount of subdomains for this name based on the selected tier
+  const maxSubdomains = tiers[tier].maxSubdomains;
+
   // set the end lease period for this based on number of years
-  const end = currentBlockTime + (SECONDS_IN_A_YEAR * years);
+  const endTimestamp = currentBlockTime + (SECONDS_IN_A_YEAR * years);
 
   // check if it is a valid subdomain name for the smartweave contract
   const namePattern = new RegExp("^[a-zA-Z0-9-]+$");
@@ -65,15 +79,15 @@ export const buyRecord = async (
 
   // Check if the requested name already exists, if not reduce balance and add it
   if (name in records) {
-    if (records[`${name}`].end < currentBlockTime) { // This name's lease has expired and can be repurchased
+    if (records[`${name}`].endTimestamp < (currentBlockTime + SECONDS_IN_GRACE_PERIOD)) { // This name's lease has expired and can be repurchased
       balances[caller] -= qty;
-      records[`${name}`] = {contractTxId, end};
+      records[`${name}`] = {contractTxId, endTimestamp, maxSubdomains};
     } else {
       throw new ContractError("This name already exists in an active lease");
     }
   } else { // The name does not exist in the registry at all, and can be purchased
     balances[caller] -= qty;
-    records[`${name}`] = {contractTxId, end};
+    records[`${name}`] = {contractTxId, endTimestamp, maxSubdomains};
   };
 
   return { state };

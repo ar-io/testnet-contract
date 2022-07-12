@@ -8,6 +8,7 @@ export interface ArNSState {
     [name: string]: {
       contractTxId: string, // The ANT Contract used to manage this name
       endTimestamp: number, // At what unix time (seconds since epoch) the lease ends
+      maxSubdomains: number // The maximum number of subdomains allowed for this name, based on the tier purchased
     }
   };
   balances: {     // A list of all outstanding, positive, token balances
@@ -17,7 +18,12 @@ export interface ArNSState {
     [nameLength: string]: number;
   };
   approvedANTSourceCodeTxs: string[]; // An array of Smartweave Source Code transactions for whitelisted ANTs
-}
+  tiers: { // Different ArNS tiers provide different capabilities for a premium cost
+    [tier: number]: { 
+      maxSubdomains: number // The maximum number of subdomains allowed for this tier
+    }
+  };
+};
 
 export interface PstAction {
   input: PstInput;
@@ -32,23 +38,25 @@ export interface PstInput {
   contractTxId: string;
   years: number;
   qty: number;
+  tier: number;
   fees: {
     [nameLength: string]: number;
   }
-}
+};
 
 export interface PstResult {
   target: string;
   ticker: string;
   balance: number;
-}
+};
 
 export interface ArNSNameResult {
   name: string;
   contractTxId: string;
-  end: number;
-}
+  endTimestamp: number;
+  maxSubdomains: number;
+};
 
-export type PstFunction = "transfer" | "mint" | "setFees" | "evolve" | "buyRecord" | "removeRecord" | "addANTSourceCodeTx" | "removeANTSourceCodeTx" | "balance" | "record";
+export type PstFunction = "transfer" | "mint" | "setFees" | "evolve" | "buyRecord" | "extendRecord" | "removeRecord" | "addANTSourceCodeTx" | "removeANTSourceCodeTx" | "balance" | "record";
 
 export type ContractResult = { state: ArNSState } | { result: PstResult } | {result: ArNSNameResult};
