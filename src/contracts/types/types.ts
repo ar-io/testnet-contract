@@ -4,10 +4,10 @@ export interface ArNSState {
   name: string;   // The friendly name of the token, shown in block explorers and marketplaces
   owner: string;  // The owner of this contract who can execute specific methods
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
-  records: {     // A list of all subdomains and their corresponding ANT addresses and lease periods
+  records: {     // A list of all names and their corresponding attributes
     [name: string]: {
       contractTxId: string, // The ANT Contract used to manage this name
-      end: number, // At what unix time (seconds since epoch) the lease ends
+      endTimestamp: number, // At what unix time (seconds since epoch) the lease ends
     }
   };
   balances: {     // A list of all outstanding, positive, token balances
