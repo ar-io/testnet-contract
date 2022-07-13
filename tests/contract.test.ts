@@ -20,7 +20,9 @@ const EXPECTED_BALANCE_AFTER_INVALID_TX = 838750000; // 0 + 1000000000 - 1562500
 describe("Testing the ArNS Registry Contract", () => {
   let contractSrc: string;
   let wallet: JWKInterface;
+  let wallet2: JWKInterface;
   let walletAddress: string;
+  let walletAddress2: string;
   let initialState: ArNSState;
   let Warp: Warp;
   let arweave: Arweave;
@@ -46,6 +48,9 @@ describe("Testing the ArNS Registry Contract", () => {
     wallet = await arweave.wallets.generate();
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
     await addFunds(arweave, wallet);
+    wallet2 = await arweave.wallets.generate();
+    walletAddress2 = await arweave.wallets.jwkToAddress(wallet2);
+    await addFunds(arweave, wallet2);
 
     // ~~ Read contract source and initial state files ~~
     contractSrc = fs.readFileSync(
@@ -70,10 +75,16 @@ describe("Testing the ArNS Registry Contract", () => {
           contractTxId: "io9_QNUf4yBG0ErNKCmjGzZ-X9BJhmWOiVVQVyainlY",
           maxSubdomains: 100,
           endTimestamp: 100_000_000
+        },
+        ["grace"]: { // We set an expired name here so we can test overwriting it
+          contractTxId: "GRACENUf4yBG0ErNKCmjGzZ-X9BJhmWOiVVQVyainlY",
+          maxSubdomains: 10000,
+          endTimestamp: Math.round(Date.now() / 1000)
         }
       },
       balances: {
-        [walletAddress]: TOKENS_TO_CREATE,
+        [walletAddress]: 0, // create tokens during mint
+        [walletAddress2]: 1_000_000_000
       },
     };
 
@@ -107,7 +118,7 @@ describe("Testing the ArNS Registry Contract", () => {
   it("should properly mint tokens", async () => {
     await pst.writeInteraction({
       function: "mint",
-      qty: 1000000000,
+      qty: 1_000_000_000,
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
@@ -116,6 +127,17 @@ describe("Testing the ArNS Registry Contract", () => {
   });
 
   it("should properly buy records", async () => {
+    pst.connect(wallet2)
+    const tier2Name = "microsoft" // should cost 1000000 tokens
+    await pst.writeInteraction({
+      function: "buyRecord",
+      name: tier2Name,
+      contractTxId: "MSFTfeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU",
+      years: 6,
+      tier: 2
+    });
+    await mineBlock(arweave);
+    pst.connect(wallet)
     const nameToBuy = "permaWEB"; // this should be set to lower case, this name already exists but is expired
     const contractTxId = "lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU"
     const years = 3;
@@ -141,6 +163,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentState = await pst.currentState();
     const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
     const currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.records[tier2Name].maxSubdomains).toEqual(1000);
     expect(currentStateJSON.records[nameToBuy.toLowerCase()].contractTxId).toEqual("lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU");
     expect(currentStateJSON.records[anotherNameToBuy].contractTxId).toEqual("BBBBfeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU");
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
@@ -180,10 +203,20 @@ describe("Testing the ArNS Registry Contract", () => {
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
-    const existingNameToBuy = "permaweb"; // this name should already exist
+    const existingNameToBuy = "permaweb"; // this name should already exist and in its lease
     await pst.writeInteraction({
       function: "buyRecord",
       name: existingNameToBuy, // should cost 156250000 tokens
+      contractTxId,
+      years,
+      tier
+    });
+    await mineBlock(arweave);
+    expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
+    const gracePeriodNameToBuy = "grace"; // this name should already exist and in its grace period
+    await pst.writeInteraction({
+      function: "buyRecord",
+      name: gracePeriodNameToBuy, // should cost 156250000 tokens
       contractTxId,
       years,
       tier
@@ -220,10 +253,76 @@ describe("Testing the ArNS Registry Contract", () => {
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
+    const invalidYearsName = "years";
+    await pst.writeInteraction({
+      function: "buyRecord",
+      name: invalidYearsName,
+      contractTxId,
+      years: 0, // too many years
+      tier
+    });
+    await mineBlock(arweave);
+    expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
+    const invalidTierName = "tier";
+    await pst.writeInteraction({
+      function: "buyRecord",
+      name: invalidTierName,
+      contractTxId,
+      years,
+      tier: "Yep"
+    });
+    await mineBlock(arweave);
+    expect((await pst.currentState()).balances[walletAddress]).toEqual(EXPECTED_BALANCE_AFTER_INVALID_TX);
+
+  });
+
+  it("should extend record with enough balance", async () => {
+    pst.connect(wallet2)
+    await pst.writeInteraction({
+      function: "extendRecord",
+      name: "microsoft", // should cost 1000000 tokens
+      years: 10 // should bring to a total of 16 years
+    });
+    await mineBlock(arweave);
+    const currentState = await pst.currentState();
+    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
+    const currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.records["microsoft"].endTimestamp).toBeGreaterThanOrEqual(2162247010);
+    expect(currentStateJSON.balances[walletAddress2]).toEqual(998000000);
+  });
+
+  it("should not extend record with not enough balance or invalid parameters", async () => {
+    pst.connect(wallet2)
+    await pst.writeInteraction({
+      function: "extendRecord",
+      name: "doesnt-exist", // This name doesnt exist so it shouldnt be created
+      years: 5 
+    });
+    await mineBlock(arweave);
+    await pst.writeInteraction({
+      function: "extendRecord",
+      name: "microsoft", // should cost 1000000 tokens
+      years: 1000 // too many years
+    });
+    await mineBlock(arweave);
+    const newWallet = await arweave.wallets.generate();
+    pst.connect(newWallet)
+    await pst.writeInteraction({
+      function: "extendRecord",
+      name: "vile", // should cost too many tokens to extend this existing name with this empty wallet
+      years: 20
+    });
+    await mineBlock(arweave);
+    const currentState = await pst.currentState();
+    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
+    const currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.balances[walletAddress2]).toEqual(998000000);
+    expect(currentStateJSON.records["vile"].endTimestamp).toBeLessThan(1752400000);
 
   });
 
   it("should properly evolve contract's source code", async () => {
+    pst.connect(wallet)
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(0 + 1000000000 - 156250000 - 5000000);
 
     const newSource = fs.readFileSync(path.join(__dirname, '../src/tools/contract_evolve.js'), 'utf8');

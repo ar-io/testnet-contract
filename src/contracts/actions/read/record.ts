@@ -21,6 +21,7 @@ export const record = async (
         result: {
             name,
             contractTxId: records[name].contractTxId,
+            maxSubdomains: records[name].maxSubdomains,
             endTimestamp: records[name].endTimestamp
         },
     };

@@ -1,9 +1,14 @@
-import { MAX_NAME_LENGTH, MAX_YEARS, SECONDS_IN_A_YEAR, SECONDS_IN_GRACE_PERIOD, TX_ID_LENGTH } from "@/constants";
+import {
+  MAX_NAME_LENGTH,
+  MAX_YEARS,
+  SECONDS_IN_A_YEAR,
+  SECONDS_IN_GRACE_PERIOD,
+  TX_ID_LENGTH,
+} from "@/constants";
 import { PstAction, ArNSState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 declare const SmartWeave: any;
-
 
 export const buyRecord = async (
   state: ArNSState,
@@ -21,8 +26,10 @@ export const buyRecord = async (
   }
 
   // Check if it includes a valid number of years
-  if (!Number.isInteger(years) || years > MAX_YEARS) {
-    throw new ContractError('Invalid value for "years". Must be an integers and less than the max years');
+  if (!Number.isInteger(years) || years > MAX_YEARS || years <= 0) {
+    throw new ContractError(
+      'Invalid value for "years". Must be an integer greater than zero and less than the max years'
+    );
   }
 
   // Check if it includes a valid number of years
@@ -39,7 +46,10 @@ export const buyRecord = async (
   const maxSubdomains = tiers[tier].maxSubdomains;
 
   // set the end lease period for this based on number of years
-  const endTimestamp = currentBlockTime + (SECONDS_IN_A_YEAR * years);
+  const endTimestamp = currentBlockTime + SECONDS_IN_A_YEAR * years;
+
+  // enforce lower case names
+  name = name.toLowerCase();
 
   // check if it is a valid subdomain name for the smartweave contract
   const namePattern = new RegExp("^[a-zA-Z0-9-]+$");
@@ -53,9 +63,6 @@ export const buyRecord = async (
   ) {
     throw new ContractError("Invalid ArNS Record Name");
   }
-
-  // enforce lower case names
-  name = name.toLowerCase();
 
   // Determine price of name
   let qty = fees[name.length.toString()];
@@ -78,17 +85,17 @@ export const buyRecord = async (
   }
 
   // Check if the requested name already exists, if not reduce balance and add it
-  if (name in records) {
-    if (records[`${name}`].endTimestamp < (currentBlockTime + SECONDS_IN_GRACE_PERIOD)) { // This name's lease has expired and can be repurchased
-      balances[caller] -= qty;
-      records[`${name}`] = {contractTxId, endTimestamp, maxSubdomains};
-    } else {
-      throw new ContractError("This name already exists in an active lease");
-    }
-  } else { // The name does not exist in the registry at all, and can be purchased
+  if (!records[name]) {
+    // No name created, so make a new one
     balances[caller] -= qty;
-    records[`${name}`] = {contractTxId, endTimestamp, maxSubdomains};
-  };
+    records[name] = { contractTxId, endTimestamp, maxSubdomains };
+  } else if (records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD < currentBlockTime ) {
+    // This name's lease has expired and can be repurchased
+    balances[caller] -= qty;
+    records[name] = { contractTxId, endTimestamp, maxSubdomains };
+  } else {
+    throw new ContractError("This name already exists in an active lease");
+  }
 
   return { state };
 };
