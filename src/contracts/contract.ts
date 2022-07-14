@@ -5,6 +5,7 @@ import { balance } from "./actions/read/balance";
 import { record } from "./actions/read/record";
 import { buyRecord } from "./actions/write/buyRecord";
 import { extendRecord } from "./actions/write/extendRecord";
+import { upgradeTier } from "./actions/write/upgradeTier";
 import { removeRecord } from "./actions/write/removeRecord";
 import { addANTSourceCodeTx } from "./actions/write/addANTSourceCodeTx";
 import { removeANTSourceCodeTx } from "./actions/write/removeANTSourceCodeTx";
@@ -33,6 +34,8 @@ export async function handle(
       return await buyRecord(state, action);
     case "extendRecord":
       return await extendRecord(state, action);
+    case "upgradeTier":
+      return await upgradeTier(state, action);
     case "removeRecord":
       return await removeRecord(state, action);
     case "evolve":

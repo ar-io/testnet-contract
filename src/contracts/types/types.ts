@@ -52,12 +52,13 @@ export interface PstResult {
 };
 
 export interface ArNSNameResult {
-  name: string;
-  contractTxId: string;
-  endTimestamp: number;
-  maxSubdomains: number;
+  name: string; // The 
+  tier: number, // The tier of service that has been purchased
+  contractTxId: string, // The ANT Contract used to manage this name
+  endTimestamp: number, // At what unix time (seconds since epoch) the lease ends
+  maxSubdomains: number // The maximum number of subdomains allowed for this name, based on the tier purchased
 };
 
-export type PstFunction = "transfer" | "mint" | "setFees" | "evolve" | "buyRecord" | "extendRecord" | "removeRecord" | "addANTSourceCodeTx" | "removeANTSourceCodeTx" | "balance" | "record";
+export type PstFunction = "transfer" | "mint" | "setFees" | "evolve" | "buyRecord" | "extendRecord" | "upgradeTier" | "removeRecord" | "addANTSourceCodeTx" | "removeANTSourceCodeTx" | "balance" | "record";
 
 export type ContractResult = { state: ArNSState } | { result: PstResult } | {result: ArNSNameResult};

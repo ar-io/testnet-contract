@@ -1,4 +1,4 @@
-import { MAX_YEARS, SECONDS_IN_A_YEAR} from "@/constants";
+import { MAX_YEARS, SECONDS_IN_A_YEAR } from "@/constants";
 import { PstAction, ArNSState, ContractResult } from "../../types/types";
 
 declare const ContractError;
@@ -14,22 +14,22 @@ export const extendRecord = async (
   // Check if the user has enough tokens to purchase the name
   if (!balances[caller]) {
     throw new ContractError(`Caller balance is not defined!`);
-  };
+  }
 
   // check if record exists
   if (!records[name]) {
-    throw new ContractError(
-      `No record exists with this name ${name}`
-    );
-  };
+    throw new ContractError(`No record exists with this name ${name}`);
+  }
 
   // Check if it includes a valid number of years
   if (!Number.isInteger(years) || years > MAX_YEARS) {
-    throw new ContractError(`Invalid value for "years". Must be an integers and less than ${MAX_YEARS}`);
-  };
+    throw new ContractError(
+      `Invalid value for "years". Must be an integers and less than ${MAX_YEARS}`
+    );
+  }
 
-  // Determine price of extending this name
-  let qty = fees[name.length.toString()];
+  // Determine price of extending this name, must take into consideration
+  let qty = fees[name.length.toString()] * records[name].tier * years;
 
   if (balances[caller] < qty) {
     throw new ContractError(

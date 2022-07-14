@@ -20,6 +20,7 @@ export const record = async (
     return {
         result: {
             name,
+            tier: records[name].tier,
             contractTxId: records[name].contractTxId,
             maxSubdomains: records[name].maxSubdomains,
             endTimestamp: records[name].endTimestamp

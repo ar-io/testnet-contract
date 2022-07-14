@@ -65,7 +65,7 @@ export const buyRecord = async (
   }
 
   // Determine price of name
-  let qty = fees[name.length.toString()];
+  let qty = fees[name.length.toString()] * tier * years;
 
   if (balances[caller] < qty) {
     throw new ContractError(
@@ -89,7 +89,10 @@ export const buyRecord = async (
     // No name created, so make a new one
     balances[caller] -= qty;
     records[name] = { tier, contractTxId, endTimestamp, maxSubdomains };
-  } else if (records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD < currentBlockTime ) {
+  } else if (
+    records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD <
+    currentBlockTime
+  ) {
     // This name's lease has expired and can be repurchased
     balances[caller] -= qty;
     records[name] = { tier, contractTxId, endTimestamp, maxSubdomains };
