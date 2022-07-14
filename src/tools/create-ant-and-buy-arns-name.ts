@@ -68,6 +68,7 @@ import { keyfile } from "../constants";
     ticker: ticker,
     name,
     owner: walletAddress,
+    controller: walletAddress,
     evolve: null,
     records: {
       "@": {
