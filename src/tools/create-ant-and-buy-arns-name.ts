@@ -14,7 +14,7 @@ import { keyfile } from "../constants";
   const name = "Reefer Madness";
 
   // The Time To Live for this ANT to reside cached, the default and minimum is 900 seconds
-  const ttl = 900;
+  const ttlSeconds = 900;
 
   // This is the name that will be purchased in the Arweave Name System Registry
   const nameToBuy = "reefer-madness";
@@ -57,7 +57,10 @@ import { keyfile } from "../constants";
   const currentStateString = JSON.stringify(currentState);
   const currentStateJSON = JSON.parse(currentStateString);
   if (currentStateJSON.records[nameToBuy] !== undefined) {
-    console.log("This name %s is already taken and is not available for purchase.  Exiting.", nameToBuy);
+    console.log(
+      "This name %s is already taken and is not available for purchase.  Exiting.",
+      nameToBuy
+    );
     return;
   }
   // Create the initial state
@@ -68,13 +71,13 @@ import { keyfile } from "../constants";
     evolve: null,
     records: {
       "@": {
-        "transactionId": dataPointer,
-        "ttl": ttl
-      }
+        transactionId: dataPointer,
+        ttlSeconds: ttlSeconds,
+      },
     },
     balances: {
       [walletAddress]: 1,
-    }
+    },
   };
 
   // Deploy ANT Contract in order to link to the new record

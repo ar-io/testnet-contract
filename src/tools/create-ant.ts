@@ -11,6 +11,9 @@ import { keyfile } from "../constants";
   // A friendly name for the name of this token
   const name = "Example";
 
+  // The Time To Live for this ANT to reside cached, the default and minimum is 900 seconds
+  const ttlSeconds = 900;
+
   // The arweave data transaction that is to be proxied using the registered name
   const dataPointer = "zHpMN6UyTSSIo6WqER2527LvEvMKLlAcr3UR6ljd32Q";
 
@@ -45,7 +48,10 @@ import { keyfile } from "../constants";
     owner: walletAddress,
     evolve: null,
     records: {
-      ["@"]: dataPointer
+      "@": {
+        transactionId: dataPointer,
+        ttlSeconds: ttlSeconds,
+      },
     },
     balances: {
       [walletAddress]: 1,
