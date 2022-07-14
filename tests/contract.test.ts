@@ -72,11 +72,13 @@ describe("Testing the ArNS Registry Contract", () => {
       },
       records: {
         ["permaweb"]: { // We set an expired name here so we can test overwriting it
+          tier: 1,
           contractTxId: "io9_QNUf4yBG0ErNKCmjGzZ-X9BJhmWOiVVQVyainlY",
           maxSubdomains: 100,
           endTimestamp: 100_000_000
         },
         ["grace"]: { // We set an expired name here so we can test overwriting it
+          tier: 3,
           contractTxId: "GRACENUf4yBG0ErNKCmjGzZ-X9BJhmWOiVVQVyainlY",
           maxSubdomains: 10000,
           endTimestamp: Math.round(Date.now() / 1000)
@@ -310,14 +312,14 @@ describe("Testing the ArNS Registry Contract", () => {
     await pst.writeInteraction({
       function: "extendRecord",
       name: "vile", // should cost too many tokens to extend this existing name with this empty wallet
-      years: 20
+      years: 50
     });
     await mineBlock(arweave);
     const currentState = await pst.currentState();
     const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
     const currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.balances[walletAddress2]).toEqual(998000000);
-    expect(currentStateJSON.records["vile"].endTimestamp).toBeLessThan(1752400000);
+    expect(currentStateJSON.records["vile"].endTimestamp).toBeLessThan(1760000000);
 
   });
 

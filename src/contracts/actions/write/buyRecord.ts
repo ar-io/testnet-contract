@@ -88,11 +88,11 @@ export const buyRecord = async (
   if (!records[name]) {
     // No name created, so make a new one
     balances[caller] -= qty;
-    records[name] = { contractTxId, endTimestamp, maxSubdomains };
+    records[name] = { tier, contractTxId, endTimestamp, maxSubdomains };
   } else if (records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD < currentBlockTime ) {
     // This name's lease has expired and can be repurchased
     balances[caller] -= qty;
-    records[name] = { contractTxId, endTimestamp, maxSubdomains };
+    records[name] = { tier, contractTxId, endTimestamp, maxSubdomains };
   } else {
     throw new ContractError("This name already exists in an active lease");
   }

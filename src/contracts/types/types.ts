@@ -6,6 +6,7 @@ export interface ArNSState {
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
   records: {     // A list of all names and their corresponding attributes
     [name: string]: {
+      tier: number, // The tier of service that has been purchased
       contractTxId: string, // The ANT Contract used to manage this name
       endTimestamp: number, // At what unix time (seconds since epoch) the lease ends
       maxSubdomains: number // The maximum number of subdomains allowed for this name, based on the tier purchased
