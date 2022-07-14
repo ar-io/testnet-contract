@@ -178,6 +178,22 @@ describe("Testing the ArNS Registry Contract", () => {
     );
   });
 
+  it("should properly set tiers", async () => {
+    const tier = 4;
+    const maxSubdomains = 50000;
+    pst.connect(wallet);
+    await pst.writeInteraction({
+      function: "setTier",
+      tier,
+      maxSubdomains,
+    });
+    await mineBlock(arweave);
+    const currentState = await pst.currentState();
+    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
+    const currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.tiers[tier].maxSubdomains).toEqual(maxSubdomains);
+  });
+
   it("should not buy malformed, too long, existing, or too expensive records", async () => {
     const emptyNameToBuy = "";
     const contractTxId = "lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU";
@@ -856,6 +872,24 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentStateString = JSON.stringify(currentState);
     const currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.fees).toEqual(originalFees);
+  });
+
+  it("should not set tiers with incorrect ownership", async () => {
+    const newWallet = await arweave.wallets.generate();
+    await addFunds(arweave, newWallet);
+    pst.connect(newWallet);
+    const tier = 4;
+    const maxSubdomains = 150000;
+    await pst.writeInteraction({
+      function: "setTier",
+      tier,
+      maxSubdomains,
+    });
+    await mineBlock(arweave);
+    const currentState = await pst.currentState();
+    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
+    const currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.tiers[tier].maxSubdomains).toEqual(50000);
   });
 
   it("should add valid whitelisted ANT Smartweave Contract Source TX IDs with correct ownership", async () => {
