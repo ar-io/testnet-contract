@@ -17,7 +17,25 @@ export const setTier = async (
     throw new ContractError("Invalid tier configuration");
   }
 
-  state.tiers[tier] = { maxSubdomains };
+  if (state.tiers === undefined) {
+    state = {
+      ticker: state.ticker,
+      name: state.name,
+      owner: state.owner,
+      evolve: state.evolve,
+      records: state.records,
+      balances: state.balances,
+      approvedANTSourceCodeTxs: state.approvedANTSourceCodeTxs,
+      tiers: {
+        [tier]: {
+          maxSubdomains: maxSubdomains,
+        },
+      },
+      fees: state.fees,
+    };
+  } else {
+    state.tiers[tier] = { maxSubdomains };
+  }
 
   return { state };
 };
