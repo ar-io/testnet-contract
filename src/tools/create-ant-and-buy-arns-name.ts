@@ -19,6 +19,12 @@ import { keyfile } from "../constants";
   // This is the name that will be purchased in the Arweave Name System Registry
   const nameToBuy = "reefer-madness";
 
+  // The lease time for purchasing the name
+  const years = 1;
+
+  // the Tier of the name purchased.  Tier 1 = 100 subdoins, Tier 2 = 1000 subdomains, Tier 3 = 10000 subdomains
+  const tier = 1;
+
   // The arweave data transaction added to the ANT that is to be proxied using the registered name
   const dataPointer = "_tJ1Lrf9y04qvEIjeyWhvfGdaS9O4zLfUarJixyJCJ0";
 
@@ -102,7 +108,9 @@ import { keyfile } from "../constants";
   await pst.writeInteraction({
     function: "buyRecord",
     name: nameToBuy,
+    tier,
     contractTransactionId: contractTxId,
+    years,
   });
   console.log("Finished purchasing the record");
 })();
