@@ -67,7 +67,7 @@ import { testKeyfile } from "../constants";
     function: "buyRecord",
     name: nameToBuy,
     tier,
-    contractTransactionId: contractTxId,
+    contractTxId,
     years,
   });
   console.log("Finished purchasing the record. ID: %s", recordTxId);

@@ -8,7 +8,7 @@ import { keyfile } from "../constants";
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // This is the name that will be purchased in the Arweave Name System Registry
-  const nameToBuy = "ardrive-og-logo";
+  const nameToBuy = "feelsgood";
 
   // This is the ANT Smartweave Contract TX ID that will be added to the registry. It must follow the ArNS ANT Specification
   const contractTxId = "6dUiTQKJCVD7c9icQhbbzfI-Le_hC4sXRDx1OQQ6jMI";
@@ -21,8 +21,7 @@ import { keyfile } from "../constants";
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   // This is the production ArNS Registry Smartweave Contract TX ID
-  const arnsRegistryContractTxId =
-    "Ydv5pDoM6NBY1hySaWiRbe_2L3aeDDoLB7QNIu4BZpw"; // deployedContracts.contractTxId;
+  const arnsRegistryContractTxId = deployedContracts.contractTxId;
 
   // Initialize Arweave
   const arweave = Arweave.init({
