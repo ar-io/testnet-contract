@@ -17,7 +17,7 @@ import { keyfile } from "../constants";
   });
 
   // Initialize `LoggerFactory`
-  LoggerFactory.INST.logLevel("error");
+  LoggerFactory.INST.logLevel("debug");
 
   // Initialize SmartWeave
   const smartweave = WarpNodeFactory.memCached(arweave);

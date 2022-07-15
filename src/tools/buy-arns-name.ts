@@ -8,7 +8,7 @@ import { keyfile } from "../constants";
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // This is the name that will be purchased in the Arweave Name System Registry
-  const nameToBuy = "genesis";
+  const nameToBuy = "ardrive-og-logo";
 
   // This is the ANT Smartweave Contract TX ID that will be added to the registry. It must follow the ArNS ANT Specification
   const contractTxId = "6dUiTQKJCVD7c9icQhbbzfI-Le_hC4sXRDx1OQQ6jMI";
@@ -68,7 +68,7 @@ import { keyfile } from "../constants";
     function: "buyRecord",
     name: nameToBuy,
     tier,
-    contractTransactionId: contractTxId,
+    contractTxId,
     years,
   });
   console.log("Finished purchasing the record: %s", recordTxId);
