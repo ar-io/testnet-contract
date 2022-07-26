@@ -4,6 +4,9 @@
 import { balance } from "./actions/read/balance";
 import { record } from "./actions/read/record";
 import { buyRecord } from "./actions/write/buyRecord";
+import { extendRecord } from "./actions/write/extendRecord";
+import { upgradeTier } from "./actions/write/upgradeTier";
+import { setTier } from "./actions/write/setTier";
 import { removeRecord } from "./actions/write/removeRecord";
 import { addANTSourceCodeTx } from "./actions/write/addANTSourceCodeTx";
 import { removeANTSourceCodeTx } from "./actions/write/removeANTSourceCodeTx";
@@ -30,18 +33,24 @@ export async function handle(
       return await setFees(state, action);
     case "buyRecord":
       return await buyRecord(state, action);
+    case "extendRecord":
+      return await extendRecord(state, action);
+    case "upgradeTier":
+      return await upgradeTier(state, action);
+    case "setTier":
+      return await setTier(state, action);
     case "removeRecord":
       return await removeRecord(state, action);
     case "evolve":
       return await evolve(state, action);
     case "addANTSourceCodeTx":
-      return await addANTSourceCodeTx(state, action); 
+      return await addANTSourceCodeTx(state, action);
     case "removeANTSourceCodeTx":
-      return await removeANTSourceCodeTx(state, action);   
+      return await removeANTSourceCodeTx(state, action);
     case "balance":
       return await balance(state, action);
     case "record":
-      return await record(state, action); 
+      return await record(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognised: "${input.function}"`

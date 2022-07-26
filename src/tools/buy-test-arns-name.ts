@@ -6,9 +6,15 @@ import { deployedTestContracts } from "../deployed-contracts";
 import { testKeyfile } from "../constants";
 
 (async () => {
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // This is the name that will be purchased in the Arweave Name System Registry testnet
   const nameToBuy = "another-one";
+
+  // The lease time for purchasing the name
+  const years = 1;
+
+  // the Tier of the name purchased.  Tier 1 = 100 subdoins, Tier 2 = 1000 subdomains, Tier 3 = 10000 subdomains
+  const tier = 1;
 
   // This is the ANT Smartweave Contract TX ID that will be added to the testnet registry
   const contractTxId = "6-H14K04w-_5t4u_TFJyVCzkt2szBmyoWSMRbniOQzw";
@@ -44,7 +50,10 @@ import { testKeyfile } from "../constants";
   const currentStateString = JSON.stringify(currentState);
   const currentStateJSON = JSON.parse(currentStateString);
   if (currentStateJSON.records[nameToBuy] !== undefined) {
-    console.log("This name %s is already taken and is not available for purchase.  Exiting.", nameToBuy);
+    console.log(
+      "This name %s is already taken and is not available for purchase.  Exiting.",
+      nameToBuy
+    );
     return;
   }
 
@@ -57,7 +66,9 @@ import { testKeyfile } from "../constants";
   const recordTxId = await pst.writeInteraction({
     function: "buyRecord",
     name: nameToBuy,
-    contractTransactionId: contractTxId,
+    tier,
+    contractTxId,
+    years,
   });
   console.log("Finished purchasing the record. ID: %s", recordTxId);
 })();

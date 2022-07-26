@@ -14,16 +14,22 @@ import { keyfile } from "../constants";
   const name = "Reefer Madness";
 
   // The Time To Live for this ANT to reside cached, the default and minimum is 900 seconds
-  const ttl = 900;
+  const ttlSeconds = 900;
 
   // This is the name that will be purchased in the Arweave Name System Registry
   const nameToBuy = "reefer-madness";
+
+  // The lease time for purchasing the name
+  const years = 1;
+
+  // the Tier of the name purchased.  Tier 1 = 100 subdoins, Tier 2 = 1000 subdomains, Tier 3 = 10000 subdomains
+  const tier = 1;
 
   // The arweave data transaction added to the ANT that is to be proxied using the registered name
   const dataPointer = "_tJ1Lrf9y04qvEIjeyWhvfGdaS9O4zLfUarJixyJCJ0";
 
   // This is the ANT Smartweave Contract Source TX ID that will be used to create the new ANT
-  const antRecordContractTxId = "JIIB01pRbNK2-UyNxwQK-6eknrjENMTpTvQmB8ZDzQg";
+  const antRecordContractTxId = "PEI1efYrsX08HUwvc6y-h6TSpsNlo2r6_fWL2_GdwhY";
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   // This is the production ArNS Registry Smartweave Contract
@@ -57,7 +63,10 @@ import { keyfile } from "../constants";
   const currentStateString = JSON.stringify(currentState);
   const currentStateJSON = JSON.parse(currentStateString);
   if (currentStateJSON.records[nameToBuy] !== undefined) {
-    console.log("This name %s is already taken and is not available for purchase.  Exiting.", nameToBuy);
+    console.log(
+      "This name %s is already taken and is not available for purchase.  Exiting.",
+      nameToBuy
+    );
     return;
   }
   // Create the initial state
@@ -65,16 +74,17 @@ import { keyfile } from "../constants";
     ticker: ticker,
     name,
     owner: walletAddress,
+    controller: walletAddress,
     evolve: null,
     records: {
       "@": {
-        "transactionId": dataPointer,
-        "ttl": ttl
-      }
+        transactionId: dataPointer,
+        ttlSeconds: ttlSeconds,
+      },
     },
     balances: {
       [walletAddress]: 1,
-    }
+    },
   };
 
   // Deploy ANT Contract in order to link to the new record
@@ -98,7 +108,9 @@ import { keyfile } from "../constants";
   await pst.writeInteraction({
     function: "buyRecord",
     name: nameToBuy,
-    contractTransactionId: contractTxId,
+    tier,
+    contractTxId: contractTxId,
+    years,
   });
   console.log("Finished purchasing the record");
 })();
