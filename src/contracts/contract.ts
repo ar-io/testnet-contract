@@ -1,6 +1,5 @@
 // ~~ Put all the interactions from '../actions/` together to write the final handle function which will be exported
 // from the contract source. ~~
-
 import { balance } from "./actions/read/balance";
 import { record } from "./actions/read/record";
 import { buyRecord } from "./actions/write/buyRecord";
@@ -12,8 +11,11 @@ import { addANTSourceCodeTx } from "./actions/write/addANTSourceCodeTx";
 import { removeANTSourceCodeTx } from "./actions/write/removeANTSourceCodeTx";
 import { evolve } from "./actions/write/evolve";
 import { mintTokens } from "./actions/write/mintTokens";
+import { lock } from "./actions/write/lock";
+import { unlock } from "./actions/write/unlock";
 import { setFees } from "./actions/write/setFees";
 import { transferTokens } from "./actions/write/transferTokens";
+import { initiateFoundationTransfer } from "./actions/write/initiateFoundationTransfer";
 import { ContractResult, PstAction, ArNSState } from "./types/types";
 
 declare const ContractError;
@@ -27,6 +29,12 @@ export async function handle(
   switch (input.function) {
     case "transfer":
       return await transferTokens(state, action);
+    case "initiateFoundationTransfer":
+      return await initiateFoundationTransfer(state, action);
+    case "lock":
+      return await lock(state, action);
+    case "unlock":
+      return await unlock(state, action);
     case "mint":
       return await mintTokens(state, action);
     case "setFees":

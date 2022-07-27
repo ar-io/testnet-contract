@@ -8,7 +8,11 @@ export interface ArNSState {
     approvalPeriod: number; // the amount of blocks that must pass for all signers to approve a transfer
     minSignatures: number; // the minimum amount of signatures needed to move funds, must be less than the amount of total addresses
     addresses: string[]; // All of the foundation managed wallet addresses
-  }
+    transfers: FoundationTransferInterface[];
+  };
+  settings: {
+    [name: string]: number;
+  };
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
   records: {
     // A list of all names and their corresponding attributes
@@ -23,6 +27,15 @@ export interface ArNSState {
   balances: {
     // A list of all outstanding, positive, token balances
     [address: string]: number;
+  };
+  vaults: { // a list of all vaults that have locked balances
+    [address: string]: [ // a walelt can have multiple vaults
+      {
+        balance: number; // Positive integer, the amount held in this vault
+        start: number; // At what block the lock starts.
+        end: number; // At what block the lock ends.
+      }
+    ];
   };
   fees: {
     // A list of all fees for purchasing ArNS names
@@ -54,10 +67,28 @@ export interface PstInput {
   tier: number;
   maxSubdomains: number;
   minTtlSeconds: number;
+  note: string;
+  recipient: string;
+  lockLength: number;
+  id: number;
   fees: {
     [nameLength: string]: number;
   };
 }
+
+export interface FoundationTransferInterface {
+  status?: FoundationTransferStatus;
+  id?: number;
+  totalSignatures?: number;
+  recipient?: string;
+  qty?: number;
+  note?: string;
+  signed?: string[];
+  start?: number;
+  lockLength?: number;
+}
+
+export type FoundationTransferStatus = "active" | "multiSigFailed" | "transferred" | "failed";
 
 export interface PstResult {
   target: string;
@@ -87,7 +118,10 @@ export type PstFunction =
   | "addANTSourceCodeTx"
   | "removeANTSourceCodeTx"
   | "balance"
-  | "record";
+  | "record"
+  | "initiateFoundationTransfer"
+  | "lock"
+  | "unlock";
 
 export type ContractResult =
   | { state: ArNSState }

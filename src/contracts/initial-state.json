@@ -2,6 +2,10 @@
   "ticker": "ARNS-TEST",
   "name": "Arweave Name System Test v0.1.7",
   "owner": "",
+  "settings": {
+    "lockMinLength": 5,
+    "lockMaxLength": 10000
+  },
   "foundation": { 
     "balance": 0,
     "approvalPeriod": 720,
@@ -15,6 +19,7 @@
   "evolve": null,
   "records": {},
   "balances": {},
+  "vaults": {},
   "approvedANTSourceCodeTxs": [
     "7hL0La2KMapdJI6yIGnb4f4IjvhlGQyXnqpWc0i0d_w",
     "cNr6JPVu3rEOwIbdnu3lVipz9pwY5Pps9mxHSW7Jdtk"
