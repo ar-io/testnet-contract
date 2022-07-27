@@ -5,8 +5,8 @@ export interface ArNSState {
   owner: string; // The owner of this contract who can execute specific methods
   foundation: { // A list
     balance: number; // the amount of funds held by the foundation, collection from AR.IO services like ArNS
-    approvalPeriod: number; // the amount of blocks that must pass for all signers to approve a transfer
-    minSignatures: number; // the minimum amount of signatures needed to move funds, must be less than the amount of total addresses
+    transferPeriod: number; // the amount of blocks that must pass for all signers to approve a transfer
+    minSignatures: number; // the minimum amount of signatures/approvals needed to move funds, must be less than the amount of total addresses
     addresses: string[]; // All of the foundation managed wallet addresses
     transfers: FoundationTransferInterface[];
   };
@@ -121,6 +121,7 @@ export type PstFunction =
   | "balance"
   | "record"
   | "initiateFoundationTransfer"
+  | "approveFoundationTransfer"
   | "lock"
   | "unlock";
 

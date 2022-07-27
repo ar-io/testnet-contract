@@ -60,7 +60,7 @@ export const initiateFoundationTransfer = async (
     id: foundation.transfers.length, // Set the ID based on the amount of transfers that have been submitted.
     note,
     totalSignatures: 0, 
-    signed: [],
+    signed: [], // should the submitter automatically sign the first message?
     recipient,
     qty,
     lockLength,

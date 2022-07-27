@@ -4,12 +4,11 @@ declare const ContractError;
 declare const SmartWeave: any;
 
 // Sets an existing record and if one does not exist, it cre
-export const vote = async (
+export const approveFoundationTransfer = async (
   state: ArNSState,
   { caller, input: { id } }: PstAction
 ): Promise<ContractResult> => {
   const foundation = state.foundation;
-  const settings = state.settings;
 
   if (!Number.isInteger(id)) {
     throw new ContractError('Invalid value for "id". Must be an integer.');
@@ -25,7 +24,7 @@ export const vote = async (
     throw new ContractError("Caller has already signed this transfer.");
   }
 
-  if (+SmartWeave.block.height >= transfer.start + +settings["voteLength"] || transfer.status !== "active") {
+  if (+SmartWeave.block.height >= transfer.start + foundation.transferPeriod || transfer.status !== "active") {
     throw new ContractError("Transfer has already concluded or is not active.");
   }
 
@@ -36,9 +35,25 @@ export const vote = async (
   if (state.foundation.transfers[id].totalSignatures >= foundation.minSignatures) {
     const recipient = state.foundation.transfers[id].recipient
     const qty = state.foundation.transfers[id].qty;
-    // if there is a lock, then transfer lock
     if (state.foundation.transfers[id].lockLength) {
-      // transfer lock
+      // transfer tokens directly to a locked vault
+      const start = +SmartWeave.block.height;
+      const end = start + transfer.lockLength;
+      if (recipient in state.vaults) {
+        state.vaults[recipient].push({
+          balance: qty,
+          end,
+          start,
+        });
+      } else {
+        state.vaults[recipient] = [
+          {
+            balance: qty,
+            end,
+            start,
+          },
+        ];
+      }
     } else { // unlocked transfer
       if (recipient in state.balances) {
         state.balances[recipient] += qty;
