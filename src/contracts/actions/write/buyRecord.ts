@@ -42,8 +42,9 @@ export const buyRecord = async (
     throw new ContractError(`Tier is not defined!`);
   }
 
-  // Set the maximum amount of subdomains for this name based on the selected tier
+  // Set the maximum amount of subdomains and minimum TTLSeconds for this name based on the selected tier
   const maxSubdomains = tiers[tier].maxSubdomains;
+  const minTtlSeconds = tiers[tier].minTtlSeconds;
 
   // set the end lease period for this based on number of years
   const endTimestamp = currentBlockTime + SECONDS_IN_A_YEAR * years;
@@ -88,14 +89,26 @@ export const buyRecord = async (
   if (!records[name]) {
     // No name created, so make a new one
     balances[caller] -= qty;
-    records[name] = { tier, contractTxId, endTimestamp, maxSubdomains };
+    records[name] = {
+      tier,
+      contractTxId,
+      endTimestamp,
+      maxSubdomains,
+      minTtlSeconds,
+    };
   } else if (
     records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD <
     currentBlockTime
   ) {
     // This name's lease has expired and can be repurchased
     balances[caller] -= qty;
-    records[name] = { tier, contractTxId, endTimestamp, maxSubdomains };
+    records[name] = {
+      tier,
+      contractTxId,
+      endTimestamp,
+      maxSubdomains,
+      minTtlSeconds,
+    };
   } else {
     throw new ContractError("This name already exists in an active lease");
   }

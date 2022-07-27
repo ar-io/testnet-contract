@@ -4,7 +4,7 @@ declare const ContractError;
 // Modifies the fees for purchasing ArNS names
 export const setTier = async (
   state: ArNSState,
-  { caller, input: { tier, maxSubdomains } }: PstAction
+  { caller, input: { tier, maxSubdomains, minTtlSeconds } }: PstAction
 ): Promise<ContractResult> => {
   const owner = state.owner;
 
@@ -13,11 +13,16 @@ export const setTier = async (
     throw new ContractError("Caller cannot change tiers");
   }
 
-  if (!Number.isInteger(maxSubdomains) || !Number.isInteger(tier)) {
+  if (
+    !Number.isInteger(maxSubdomains) ||
+    !Number.isInteger(tier) ||
+    !Number.isInteger(minTtlSeconds)
+  ) {
     throw new ContractError("Invalid tier configuration");
   }
 
   if (state.tiers === undefined) {
+    // Do this if Tiers does not exist in the state of the contract.
     state = {
       ticker: state.ticker,
       name: state.name,
@@ -29,12 +34,14 @@ export const setTier = async (
       tiers: {
         [tier]: {
           maxSubdomains: maxSubdomains,
+          minTtlSeconds: minTtlSeconds,
         },
       },
       fees: state.fees,
     };
   } else {
-    state.tiers[tier] = { maxSubdomains };
+    // Tiers already exists in the state of the contract
+    state.tiers[tier] = { maxSubdomains, minTtlSeconds };
   }
 
   return { state };

@@ -21,7 +21,8 @@ import { keyfile } from "../constants";
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   // This is the production ArNS Registry Smartweave Contract TX ID
-  const arnsRegistryContractTxId = deployedContracts.contractTxId;
+  const arnsRegistryContractTxId =
+    "Ydv5pDoM6NBY1hySaWiRbe_2L3aeDDoLB7QNIu4BZpw"; // deployedContracts.contractTxId;
 
   // Initialize Arweave
   const arweave = Arweave.init({

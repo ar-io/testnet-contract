@@ -11,6 +11,7 @@ import { keyfile } from "../constants";
 
   const tier = 3;
   const maxSubdomains = 10000;
+  const minTtlSeconds = 900;
 
   // Initialize Arweave
   const arweave = Arweave.init({
@@ -38,6 +39,7 @@ import { keyfile } from "../constants";
     function: "setTier",
     tier,
     maxSubdomains,
+    minTtlSeconds,
   });
 
   console.log("Finished set the ArNS tier: %s", txId);

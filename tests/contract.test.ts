@@ -75,6 +75,7 @@ describe("Testing the ArNS Registry Contract", () => {
           tier: 1,
           contractTxId: "io9_QNUf4yBG0ErNKCmjGzZ-X9BJhmWOiVVQVyainlY",
           maxSubdomains: 100,
+          minTtlSeconds: 3600, // tier 1 default for TTL
           endTimestamp: 100_000_000,
         },
         ["grace"]: {
@@ -82,6 +83,7 @@ describe("Testing the ArNS Registry Contract", () => {
           tier: 3,
           contractTxId: "GRACENUf4yBG0ErNKCmjGzZ-X9BJhmWOiVVQVyainlY",
           maxSubdomains: 10000,
+          minTtlSeconds: 900, // tier 3 default for ttl
           endTimestamp: Math.round(Date.now() / 1000),
         },
       },
@@ -178,20 +180,38 @@ describe("Testing the ArNS Registry Contract", () => {
     );
   });
 
-  it("should properly set tiers", async () => {
-    const tier = 4;
-    const maxSubdomains = 50000;
+  it("should properly add new and update existing tiers", async () => {
+    let tier = 4;
+    let maxSubdomains = 50000;
+    let minTtlSeconds = 300;
     pst.connect(wallet);
     await pst.writeInteraction({
       function: "setTier",
       tier,
       maxSubdomains,
+      minTtlSeconds,
     });
     await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
-    const currentStateJSON = JSON.parse(currentStateString);
+    let currentState = await pst.currentState();
+    let currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
+    let currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.tiers[tier].maxSubdomains).toEqual(maxSubdomains);
+    expect(currentStateJSON.tiers[tier].minTtlSeconds).toEqual(minTtlSeconds);
+
+    tier = 1;
+    maxSubdomains = 100;
+    minTtlSeconds = 7200; // double the existing TTL
+    await pst.writeInteraction({
+      function: "setTier",
+      tier,
+      maxSubdomains,
+      minTtlSeconds,
+    });
+    await mineBlock(arweave);
+    currentState = await pst.currentState();
+    currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
+    currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.tiers[tier].minTtlSeconds).toEqual(minTtlSeconds);
   });
 
   it("should not buy malformed, too long, existing, or too expensive records", async () => {
