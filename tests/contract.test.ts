@@ -111,7 +111,7 @@ describe("Testing the ArNS Registry Contract", () => {
         transferPeriod: 10,
         minSignatures: 2,
         addresses: [walletAddress, walletAddress2, walletAddress3],
-        transfers: [],
+        actions: [],
       },
       balances: {
         [walletAddress]: 0, // create tokens during mint
@@ -578,7 +578,8 @@ describe("Testing the ArNS Registry Contract", () => {
     const overwrittenCaller = await arweave.wallets.jwkToAddress(newWallet);
     pst.connect(newWallet);
     await pst.writeInteraction({
-      function: "initiateFoundationTransfer",
+      function: "initiateFoundationAction",
+      type: "transfer",
       note: "Hacked",
       recipient: overwrittenCaller, // send the tokens to the hacker
       qty: 10000, // no lock length
@@ -587,7 +588,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentState = await pst.currentState();
     const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
     const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.foundation.transfers).toEqual([]); // no transfer should have been initiated
+    expect(currentStateJSON.foundation.actions).toEqual([]); // no transfer should have been initiated
   });
 
   it("should not evolve contract's source code without correct ownership", async () => {
@@ -650,14 +651,16 @@ describe("Testing the ArNS Registry Contract", () => {
     const lockLength = 50;
     pst.connect(wallet);
     await pst.writeInteraction({
-      function: "initiateFoundationTransfer",
+      function: "initiateFoundationAction",
+      type: "transfer",
       note: `Transferring unlocked to ${recipient}`,
       recipient,
       qty: 10000, // no lock length
     });
     await mineBlock(arweave);
     await pst.writeInteraction({
-      function: "initiateFoundationTransfer",
+      function: "initiateFoundationAction",
+      type: "transfer",
       note: `Transferring locked to ${recipient}`,
       recipient,
       qty: 50000,
@@ -665,7 +668,8 @@ describe("Testing the ArNS Registry Contract", () => {
     });
     await mineBlock(arweave);
     await pst.writeInteraction({
-      function: "initiateFoundationTransfer",
+      function: "initiateFoundationAction",
+      type: "transfer",
       note: `Elapsed test of transferring unlocked to ${recipient}`,
       recipient,
       qty: 666,
@@ -674,7 +678,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentState = await pst.currentState();
     const currentStateString = JSON.stringify(currentState);
     const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.foundation.transfers).toEqual([
+    expect(currentStateJSON.foundation.actions).toEqual([
       {
         id: 0,
         note: `Transferring unlocked to ${recipient}`,
@@ -684,6 +688,7 @@ describe("Testing the ArNS Registry Contract", () => {
         start: 36,
         status: "active",
         totalSignatures: 0,
+        type: "transfer",
       },
       {
         id: 1,
@@ -695,6 +700,7 @@ describe("Testing the ArNS Registry Contract", () => {
         start: 37,
         status: "active",
         totalSignatures: 0,
+        type: "transfer",
       },
       {
         id: 2,
@@ -705,6 +711,7 @@ describe("Testing the ArNS Registry Contract", () => {
         start: 38,
         status: "active",
         totalSignatures: 0,
+        type: "transfer",
       },
     ]); // two transfers should have been initialized
   });
@@ -721,7 +728,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentState = await pst.currentState();
     const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
     const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.foundation.transfers[id].signed).toEqual([]); // there should not be any signatures on this vote
+    expect(currentStateJSON.foundation.actions[id].signed).toEqual([]); // there should not be any signatures on this vote
   });
 
   it("should approve foundation token transfers with correct foundation wallets", async () => {
@@ -751,23 +758,23 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentState = await pst.currentState();
     const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
     const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.foundation.transfers[0].signed).toContain(
+    expect(currentStateJSON.foundation.actions[0].signed).toContain(
       walletAddress
     );
-    expect(currentStateJSON.foundation.transfers[0].signed).toContain(
+    expect(currentStateJSON.foundation.actions[0].signed).toContain(
       walletAddress2
     );
-    expect(currentStateJSON.foundation.transfers[1].signed).toContain(
+    expect(currentStateJSON.foundation.actions[1].signed).toContain(
       walletAddress
     );
-    expect(currentStateJSON.foundation.transfers[1].signed).toContain(
+    expect(currentStateJSON.foundation.actions[1].signed).toContain(
       walletAddress2
     );
     expect(
       currentStateJSON.balances[
-        currentStateJSON.foundation.transfers[0].recipient
+        currentStateJSON.foundation.actions[0].recipient
       ]
-    ).toEqual(currentStateJSON.foundation.transfers[0].qty);
+    ).toEqual(currentStateJSON.foundation.actions[0].qty);
   });
 
   it("should change fees with correct ownership", async () => {
@@ -1313,7 +1320,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentState = await pst.currentState();
     const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
     const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.foundation.transfers[2].status).toEqual("failed");
+    expect(currentStateJSON.foundation.actions[2].status).toEqual("failed");
   });
 
   it("should lock tokens correct ownership, amounts and locktimes", async () => {

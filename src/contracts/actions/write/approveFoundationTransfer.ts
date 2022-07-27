@@ -21,7 +21,7 @@ export const approveFoundationTransfer = async (
     );
   }
 
-  const transfer = foundation.transfers[id];
+  const transfer = foundation.actions[id];
   // the caller must not have already signed this transaction
   if (transfer.signed.includes(caller)) {
     throw new ContractError("Caller has already signed this transfer.");
@@ -32,7 +32,7 @@ export const approveFoundationTransfer = async (
     +SmartWeave.block.height >= transfer.start + foundation.transferPeriod &&
     transfer.status === "active"
   ) {
-    state.foundation.transfers[id].status = "failed"; // this vote has not completed within the transfer period
+    state.foundation.actions[id].status = "failed"; // this vote has not completed within the transfer period
     return { state };
   }
 
@@ -41,16 +41,16 @@ export const approveFoundationTransfer = async (
   }
 
   // This is a valid active transfer, so increase signatures
-  state.foundation.transfers[id].totalSignatures += 1;
-  state.foundation.transfers[id].signed.push(caller);
+  state.foundation.actions[id].totalSignatures += 1;
+  state.foundation.actions[id].signed.push(caller);
 
   // If this is enough signatures to complete the transaction, then it is is completed and the tokens are distributied to the recipient
   if (
-    state.foundation.transfers[id].totalSignatures >= foundation.minSignatures
+    state.foundation.actions[id].totalSignatures >= foundation.minSignatures
   ) {
-    const recipient = state.foundation.transfers[id].recipient;
-    const qty = state.foundation.transfers[id].qty;
-    if (state.foundation.transfers[id].lockLength) {
+    const recipient = state.foundation.actions[id].recipient;
+    const qty = state.foundation.actions[id].qty;
+    if (state.foundation.actions[id].lockLength) {
       // transfer tokens directly to a locked vault
       const start = +SmartWeave.block.height;
       const end = start + transfer.lockLength;
@@ -78,8 +78,8 @@ export const approveFoundationTransfer = async (
       }
     }
     // reduce quantity from the foundation balance
-    state.foundation.balance -= state.foundation.transfers[id].qty;
-    state.foundation.transfers[id].status = "transferred";
+    state.foundation.balance -= state.foundation.actions[id].qty;
+    state.foundation.actions[id].status = "passed";
   }
   return { state };
 };

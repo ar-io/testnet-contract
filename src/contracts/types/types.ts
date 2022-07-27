@@ -9,7 +9,7 @@ export interface ArNSState {
     transferPeriod: number; // the amount of blocks that must pass for all signers to approve a transfer
     minSignatures: number; // the minimum amount of signatures/approvals needed to move funds, must be less than the amount of total addresses
     addresses: string[]; // All of the foundation managed wallet addresses
-    transfers: FoundationTransferInterface[];
+    actions: FoundationActionInterface[];
   };
   settings: {
     [name: string]: number;
@@ -60,9 +60,10 @@ export interface PstAction {
 }
 
 export interface PstInput {
+  type: FoundationActionType;
   function: PstFunction;
   target: string;
-  value: string;
+  value: string | number;
   name: string;
   contractTxId: string;
   years: number;
@@ -79,10 +80,13 @@ export interface PstInput {
   };
 }
 
-export interface FoundationTransferInterface {
-  status?: FoundationTransferStatus;
+export interface FoundationActionInterface {
+  type: FoundationActionType;
+  status?: FoundationActionStatus;
   id?: number;
   totalSignatures?: number;
+  target?: string;
+  value?: string | number;
   recipient?: string;
   qty?: number;
   note?: string;
@@ -91,11 +95,13 @@ export interface FoundationTransferInterface {
   lockLength?: number;
 }
 
-export type FoundationTransferStatus =
-  | "active"
-  | "multiSigFailed"
-  | "transferred"
-  | "failed";
+export type FoundationActionStatus = "active" | "passed" | "failed";
+export type FoundationActionType =
+  | "transfer"
+  | "setMinSignatures"
+  | "setTransferPeriod"
+  | "addAddress"
+  | "removeAddress";
 
 export interface PstResult {
   target: string;
@@ -127,7 +133,7 @@ export type PstFunction =
   | "removeANTSourceCodeTx"
   | "balance"
   | "record"
-  | "initiateFoundationTransfer"
+  | "initiateFoundationAction"
   | "approveFoundationTransfer"
   | "lock"
   | "unlock"

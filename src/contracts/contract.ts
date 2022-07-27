@@ -18,7 +18,7 @@ import { increaseVaultBalance } from "./actions/write/increaseVaultBalance";
 import { setFees } from "./actions/write/setFees";
 import { transferTokens } from "./actions/write/transferTokens";
 import { transferTokensLocked } from "./actions/write/transferTokensLocked";
-import { initiateFoundationTransfer } from "./actions/write/initiateFoundationTransfer";
+import { initiateFoundationAction } from "./actions/write/initiateFoundationAction";
 import { approveFoundationTransfer } from "./actions/write/approveFoundationTransfer";
 import { ContractResult, PstAction, ArNSState } from "./types/types";
 
@@ -37,8 +37,8 @@ export async function handle(
       return await transferTokensLocked(state, action);
     case "approveFoundationTransfer":
       return await approveFoundationTransfer(state, action);
-    case "initiateFoundationTransfer":
-      return await initiateFoundationTransfer(state, action);
+    case "initiateFoundationAction":
+      return await initiateFoundationAction(state, action);
     case "lock":
       return await lock(state, action);
     case "unlock":
