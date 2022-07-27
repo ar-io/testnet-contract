@@ -11,13 +11,16 @@
   ],
   "tiers": {
     "1": {
-      "maxSubdomains": 100
+      "maxSubdomains": 100,
+      "minTtlSeconds": 3600
     },
     "2": {
-      "maxSubdomains": 1000
+      "maxSubdomains": 1000,
+      "minTtlSeconds": 1800
     },
     "3": {
-      "maxSubdomains": 10000
+      "maxSubdomains": 10000,
+      "minTtlSeconds": 900
     }
   },
   "fees": {

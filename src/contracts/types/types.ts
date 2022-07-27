@@ -11,6 +11,7 @@ export interface ArNSState {
       contractTxId: string; // The ANT Contract used to manage this name
       endTimestamp: number; // At what unix time (seconds since epoch) the lease ends
       maxSubdomains: number; // The maximum number of subdomains allowed for this name, based on the tier purchased
+      minTtlSeconds: number; // The minimum number of seconds allowed for the TTL, based on tier purchased
     };
   };
   balances: {
@@ -26,6 +27,7 @@ export interface ArNSState {
     // Different ArNS tiers provide different capabilities for a premium cost
     [tier: number]: {
       maxSubdomains: number; // The maximum number of subdomains allowed for this tier
+      minTtlSeconds: number; // The minimum number of seconds allowed for the TTL for this tier
     };
   };
 }
@@ -45,6 +47,7 @@ export interface PstInput {
   qty: number;
   tier: number;
   maxSubdomains: number;
+  minTtlSeconds: number;
   fees: {
     [nameLength: string]: number;
   };
@@ -62,6 +65,7 @@ export interface ArNSNameResult {
   contractTxId: string; // The ANT Contract used to manage this name
   endTimestamp: number; // At what unix time (seconds since epoch) the lease ends
   maxSubdomains: number; // The maximum number of subdomains allowed for this name, based on the tier purchased
+  minTtlSeconds: number; // The minimum number of seconds allowed for the TTL for this tier
 }
 
 export type PstFunction =

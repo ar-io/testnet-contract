@@ -69,6 +69,7 @@ export const upgradeTier = async (
   // Set the maximum amount of subdomains for this name based on the selected tier
   records[name].tier = tier;
   records[name].maxSubdomains = tiers[tier].maxSubdomains;
+  records[name].minTtlSeconds = tiers[tier].minTtlSeconds;
 
   return { state };
 };
