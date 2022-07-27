@@ -14,8 +14,11 @@ import { keyfile } from "../constants";
   // The arweave data transaction that is to be proxied using the registered name
   const dataPointer = "zHpMN6UyTSSIo6WqER2527LvEvMKLlAcr3UR6ljd32Q";
 
-  // This is the ANT Smartweave Contract Source TX ID that will be used to create the new ANT
-  const antRecordContractTxId = "JIIB01pRbNK2-UyNxwQK-6eknrjENMTpTvQmB8ZDzQg";
+  // The Time To Live for this ANT to reside cached, the default and minimum is 3600 seconds
+  const ttlSeconds = 3600;
+
+  // This is the ANT Smartweave Contract Source (v0.1.6) TX ID that will be used to create the new ANT
+  const antRecordContractTxId = "PEI1efYrsX08HUwvc6y-h6TSpsNlo2r6_fWL2_GdwhY";
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   // ~~ Initialize Arweave ~~
@@ -38,14 +41,18 @@ import { keyfile } from "../constants";
   const wallet = JSON.parse(await fs.readFileSync(keyfile).toString());
   const walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
-  // Create the initial state
+  // Create the initial state for ANT v0.1.6
   const initialState = {
     ticker: ticker,
     name,
     owner: walletAddress,
+    controller: walletAddress,
     evolve: null,
     records: {
-      ["@"]: dataPointer
+      "@": {
+        transactionId: dataPointer,
+        ttlSeconds: ttlSeconds,
+      },
     },
     balances: {
       [walletAddress]: 1,

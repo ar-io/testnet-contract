@@ -8,19 +8,22 @@ import { keyfile } from "../constants";
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // A short token symbol, typically with ANT- in front
-  const ticker = "ANT-REEFERMADNESS";
+  const ticker = "ANT-PARKINGLOT";
 
   // A friendly name for the name of this ANT
-  const name = "Reefer Madness";
+  const name = "Parking Lot";
 
   // This is the name that will be purchased in the Arweave Name System Registry
-  const nameToBuy = "reefer-madness";
+  const nameToBuy = "parking-lot";
+
+  // The Time To Live for this ANT to reside cached, the default and minimum is 3600 seconds
+  const ttlSeconds = 3600;
 
   // The arweave data transaction added to the ANT that is to be proxied using the registered name
-  const dataPointer = "_tJ1Lrf9y04qvEIjeyWhvfGdaS9O4zLfUarJixyJCJ0";
+  const dataPointer = "W5dFQhNFtrY7IGC9sPz87HGNut6OhIuLwx3NAch72DM";
 
-  // This is the ANT Smartweave Contract Source TX ID that will be used to create the new ANT
-  const antRecordContractTxId = "JIIB01pRbNK2-UyNxwQK-6eknrjENMTpTvQmB8ZDzQg";
+  // This is the ANT Smartweave Contract Source (v0.1.6) TX ID that will be used to create the new ANT
+  const antRecordContractTxId = "PEI1efYrsX08HUwvc6y-h6TSpsNlo2r6_fWL2_GdwhY";
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   // This is the production ArNS Registry Smartweave Contract
@@ -54,21 +57,28 @@ import { keyfile } from "../constants";
   const currentStateString = JSON.stringify(currentState);
   const currentStateJSON = JSON.parse(currentStateString);
   if (currentStateJSON.records[nameToBuy] !== undefined) {
-    console.log("This name %s is already taken and is not available for purchase.  Exiting.", nameToBuy);
+    console.log(
+      "This name %s is already taken and is not available for purchase.  Exiting.",
+      nameToBuy
+    );
     return;
   }
-  // Create the initial state
+  // Create the initial state for ANT v0.1.6
   const initialState = {
     ticker: ticker,
     name,
     owner: walletAddress,
+    controller: walletAddress,
     evolve: null,
     records: {
-      ["@"]: dataPointer
+      "@": {
+        transactionId: dataPointer,
+        ttlSeconds: ttlSeconds,
+      },
     },
     balances: {
       [walletAddress]: 1,
-    }
+    },
   };
 
   // Deploy ANT Contract in order to link to the new record
@@ -83,7 +93,7 @@ import { keyfile } from "../constants";
     srcTxId: antRecordContractTxId,
   });
 
-  // Buy the available record in ArNS Registry
+  // Buy the available record in ArNS Registry v0.1.5
   console.log(
     "Buying the record, %s using the ANT %s",
     nameToBuy,
