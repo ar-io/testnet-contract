@@ -20,8 +20,10 @@ describe("Testing the ArNS Registry Contract", () => {
   let contractSrc: string;
   let wallet: JWKInterface;
   let wallet2: JWKInterface;
+  let wallet3: JWKInterface;
   let walletAddress: string;
   let walletAddress2: string;
+  let walletAddress3: string;
   let initialState: ArNSState;
   let Warp: Warp;
   let arweave: Arweave;
@@ -50,6 +52,9 @@ describe("Testing the ArNS Registry Contract", () => {
     wallet2 = await arweave.wallets.generate();
     walletAddress2 = await arweave.wallets.jwkToAddress(wallet2);
     await addFunds(arweave, wallet2);
+    wallet3 = await arweave.wallets.generate();
+    walletAddress3 = await arweave.wallets.jwkToAddress(wallet3);
+    await addFunds(arweave, wallet3);
 
     // ~~ Read contract source and initial state files ~~
     contractSrc = fs.readFileSync(
@@ -91,6 +96,22 @@ describe("Testing the ArNS Registry Contract", () => {
         [walletAddress]: 0, // create tokens during mint
         [walletAddress2]: 1_000_000_000,
       },
+      vaults: {
+        [walletAddress]: [
+          {
+            balance: 500000, // Positive integer
+            end: 1000, // At what block the lock ends.
+            start: 0, // At what block the lock starts.
+          },
+        ],
+        [walletAddress3]: [
+          {
+            balance: 1000000, // Positive integer
+            end: 1000, // At what block the lock ends.
+            start: 0, // At what block the lock starts.
+          },
+        ]
+      }
     };
 
     // ~~ Deploy contract ~~
@@ -111,9 +132,9 @@ describe("Testing the ArNS Registry Contract", () => {
   afterAll(async () => {
     let totalBalance = 0;
     const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
+    const currentStateString = JSON.stringify(currentState, null, 4);
     const currentStateJSON = JSON.parse(currentStateString);
-    console.log(currentState);
+    console.log(currentStateString);
     for( let address in currentStateJSON.balances ) {
       if( currentStateJSON.balances.hasOwnProperty( address ) ) {
         totalBalance += parseFloat( currentStateJSON.balances[address] );
@@ -122,6 +143,7 @@ describe("Testing the ArNS Registry Contract", () => {
     console.log(`Non-Foundation Total Balances: ${totalBalance}`)
     console.log(`Foundation Balance: ${currentStateJSON.foundation.balance}`)
     console.log(`Total Tokens Minted: ${(totalBalance + currentStateJSON.foundation.balance)}`)
+    // NEED TO UPDATE TO INCLUDE VAULTED TOKENS
     // ~~ Stop ArLocal ~~
     await arlocal.stop();
   });
