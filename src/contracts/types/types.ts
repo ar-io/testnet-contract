@@ -107,6 +107,7 @@ export interface ArNSNameResult {
 
 export type PstFunction =
   | "transfer"
+  | "transferLocked"
   | "mint"
   | "setFees"
   | "evolve"
