@@ -6,16 +6,7 @@
     "lockMinLength": 5,
     "lockMaxLength": 10000
   },
-  "foundation": { 
-    "balance": 0,
-    "transferPeriod": 720,
-    "minSignatures": 2,
-    "addresses": [
-      "NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g", 
-      "K6AmqvbFSiNKJkfauWt68Qg8ISwwM-3wT_8wcryuS6U", 
-      "QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ"
-    ]
-  },
+  "foundation": {},
   "evolve": null,
   "records": {},
   "balances": {},

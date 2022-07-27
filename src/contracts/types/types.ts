@@ -3,7 +3,8 @@ export interface ArNSState {
   ticker: string; // A short token symbol, shown in block explorers and marketplaces
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
   owner: string; // The owner of this contract who can execute specific methods
-  foundation: { // A list
+  foundation: {
+    // A list
     balance: number; // the amount of funds held by the foundation, collection from AR.IO services like ArNS
     transferPeriod: number; // the amount of blocks that must pass for all signers to approve a transfer
     minSignatures: number; // the minimum amount of signatures/approvals needed to move funds, must be less than the amount of total addresses
@@ -28,8 +29,10 @@ export interface ArNSState {
     // A list of all outstanding, positive, token balances
     [address: string]: number;
   };
-  vaults: { // a list of all vaults that have locked balances
-    [address: string]: [ // a walelt can have multiple vaults
+  vaults: {
+    // a list of all vaults that have locked balances
+    [address: string]: [
+      // a walelt can have multiple vaults
       {
         balance: number; // Positive integer, the amount held in this vault
         start: number; // At what block the lock starts.
@@ -88,7 +91,11 @@ export interface FoundationTransferInterface {
   lockLength?: number;
 }
 
-export type FoundationTransferStatus = "active" | "multiSigFailed" | "transferred" | "failed";
+export type FoundationTransferStatus =
+  | "active"
+  | "multiSigFailed"
+  | "transferred"
+  | "failed";
 
 export interface PstResult {
   target: string;
