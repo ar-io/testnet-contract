@@ -13,6 +13,8 @@ import { evolve } from "./actions/write/evolve";
 import { mintTokens } from "./actions/write/mintTokens";
 import { lock } from "./actions/write/lock";
 import { unlock } from "./actions/write/unlock";
+import { increaseVaultLength } from "./actions/write/increaseVaultLength";
+import { increaseVaultBalance } from "./actions/write/increaseVaultBalance";
 import { setFees } from "./actions/write/setFees";
 import { transferTokens } from "./actions/write/transferTokens";
 import { transferTokensLocked } from "./actions/write/transferTokensLocked";
@@ -41,6 +43,10 @@ export async function handle(
       return await lock(state, action);
     case "unlock":
       return await unlock(state, action);
+    case "increaseVaultLength":
+      return await increaseVaultLength(state, action);
+    case "increaseVaultBalance":
+      return await increaseVaultBalance(state, action);
     case "mint":
       return await mintTokens(state, action);
     case "setFees":

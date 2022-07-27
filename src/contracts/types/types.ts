@@ -123,7 +123,9 @@ export type PstFunction =
   | "initiateFoundationTransfer"
   | "approveFoundationTransfer"
   | "lock"
-  | "unlock";
+  | "unlock"
+  | "increaseVaultBalance"
+  | "increaseVaultLength";
 
 export type ContractResult =
   | { state: ArNSState }
