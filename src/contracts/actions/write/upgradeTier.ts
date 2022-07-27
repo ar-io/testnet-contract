@@ -12,6 +12,7 @@ export const upgradeTier = async (
   const records = state.records;
   const fees = state.fees;
   const tiers = state.tiers;
+  const foundation = state.foundation;
   const currentBlockTime = +SmartWeave.block.timestamp;
 
   // Check if the user has enough tokens to upgrade the tier
@@ -61,7 +62,8 @@ export const upgradeTier = async (
   }
 
   // reduce balance set the end lease period for this record based on number of years
-  balances[caller] -= qty;
+  balances[caller] -= qty; // reduce callers balance
+  foundation.balance += qty; // increase foundation balance
 
   // Set the maximum amount of subdomains for this name based on the selected tier
   records[name].tier = tier;

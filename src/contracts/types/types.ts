@@ -3,6 +3,12 @@ export interface ArNSState {
   ticker: string; // A short token symbol, shown in block explorers and marketplaces
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
   owner: string; // The owner of this contract who can execute specific methods
+  foundation: { // A list
+    balance: number; // the amount of funds held by the foundation, collection from AR.IO services like ArNS
+    approvalPeriod: number; // the amount of blocks that must pass for all signers to approve a transfer
+    minSignatures: number; // the minimum amount of signatures needed to move funds, must be less than the amount of total addresses
+    addresses: string[]; // All of the foundation managed wallet addresses
+  }
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
   records: {
     // A list of all names and their corresponding attributes

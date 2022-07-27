@@ -18,6 +18,7 @@ export const buyRecord = async (
   const records = state.records;
   const fees = state.fees;
   const tiers = state.tiers;
+  const foundation = state.foundation;
   const currentBlockTime = +SmartWeave.block.timestamp;
 
   // Check if the user has enough tokens to purchase the name
@@ -89,7 +90,8 @@ export const buyRecord = async (
   // Check if the requested name already exists, if not reduce balance and add it
   if (!records[name]) {
     // No name created, so make a new one
-    balances[caller] -= qty;
+    balances[caller] -= qty; // reduce callers balance
+    foundation.balance += qty; // increase foundation balance
     records[name] = {
       tier,
       contractTxId,
@@ -102,7 +104,8 @@ export const buyRecord = async (
     currentBlockTime
   ) {
     // This name's lease has expired and can be repurchased
-    balances[caller] -= qty;
+    balances[caller] -= qty; // reduce callers balance
+    foundation.balance += qty; // increase foundation balance
     records[name] = {
       tier,
       contractTxId,

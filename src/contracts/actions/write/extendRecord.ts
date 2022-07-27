@@ -9,6 +9,7 @@ export const extendRecord = async (
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
+  const foundation = state.foundation;
   const fees = state.fees;
 
   // Check if the user has enough tokens to purchase the name
@@ -38,7 +39,9 @@ export const extendRecord = async (
   }
 
   // reduce balance set the end lease period for this record based on number of years
-  balances[caller] -= qty;
+  balances[caller] -= qty; // reduce callers balance
+  foundation.balance += qty; // increase foundation balance
+  
   records[name].endTimestamp += SECONDS_IN_A_YEAR * years;
 
   return { state };

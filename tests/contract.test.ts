@@ -109,7 +109,19 @@ describe("Testing the ArNS Registry Contract", () => {
   });
 
   afterAll(async () => {
-    console.log(await pst.currentState());
+    let totalBalance = 0;
+    const currentState = await pst.currentState();
+    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
+    const currentStateJSON = JSON.parse(currentStateString);
+    console.log(currentState);
+    for( let address in currentStateJSON.balances ) {
+      if( currentStateJSON.balances.hasOwnProperty( address ) ) {
+        totalBalance += parseFloat( currentStateJSON.balances[address] );
+      }
+    }
+    console.log(`Non-Foundation Total Balances: ${totalBalance}`)
+    console.log(`Foundation Balance: ${currentStateJSON.foundation.balance}`)
+    console.log(`Total Tokens Minted: ${(totalBalance + currentStateJSON.foundation.balance)}`)
     // ~~ Stop ArLocal ~~
     await arlocal.stop();
   });

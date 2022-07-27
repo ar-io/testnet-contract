@@ -1,7 +1,17 @@
 {
   "ticker": "ARNS-TEST",
-  "name": "Arweave Name System Test v0.1.6",
+  "name": "Arweave Name System Test v0.1.7",
   "owner": "",
+  "foundation": { 
+    "balance": 0,
+    "approvalPeriod": 720,
+    "minSignatures": 2,
+    "addresses": [
+      "NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g", 
+      "K6AmqvbFSiNKJkfauWt68Qg8ISwwM-3wT_8wcryuS6U", 
+      "QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ"
+    ]
+  },
   "evolve": null,
   "records": {},
   "balances": {},
