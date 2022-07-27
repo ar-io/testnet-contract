@@ -13,7 +13,7 @@ export const evolve = async (
     throw new ContractError("Caller cannot evolve the contract");
   }
 
-  state.evolve = value;
+  state.evolve = value.toString();
 
   return { state };
 };

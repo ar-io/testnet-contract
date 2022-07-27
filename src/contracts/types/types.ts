@@ -6,7 +6,7 @@ export interface ArNSState {
   foundation: {
     // A list
     balance: number; // the amount of funds held by the foundation, collection from AR.IO services like ArNS
-    transferPeriod: number; // the amount of blocks that must pass for all signers to approve a transfer
+    actionPeriod: number; // the amount of blocks that must pass for all signers to approve a transfer
     minSignatures: number; // the minimum amount of signatures/approvals needed to move funds, must be less than the amount of total addresses
     addresses: string[]; // All of the foundation managed wallet addresses
     actions: FoundationActionInterface[];
@@ -81,9 +81,10 @@ export interface PstInput {
 }
 
 export interface FoundationActionInterface {
+  id?: number;
   type: FoundationActionType;
   status?: FoundationActionStatus;
-  id?: number;
+  start?: number;
   totalSignatures?: number;
   target?: string;
   value?: string | number;
@@ -91,7 +92,6 @@ export interface FoundationActionInterface {
   qty?: number;
   note?: string;
   signed?: string[];
-  start?: number;
   lockLength?: number;
 }
 
@@ -99,7 +99,7 @@ export type FoundationActionStatus = "active" | "passed" | "failed";
 export type FoundationActionType =
   | "transfer"
   | "setMinSignatures"
-  | "setTransferPeriod"
+  | "setActionPeriod"
   | "addAddress"
   | "removeAddress";
 
@@ -134,7 +134,7 @@ export type PstFunction =
   | "balance"
   | "record"
   | "initiateFoundationAction"
-  | "approveFoundationTransfer"
+  | "approveFoundationAction"
   | "lock"
   | "unlock"
   | "increaseVaultBalance"

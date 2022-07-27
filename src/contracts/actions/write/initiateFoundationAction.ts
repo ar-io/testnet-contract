@@ -79,9 +79,10 @@ export const initiateFoundationAction = async (
     if (!target || typeof target !== "string") {
       throw new ContractError("No valid target specified");
     }
-    if (!(target in foundation.addresses)) {
+
+    if (!foundation.addresses.includes(target)) {
       throw new ContractError(
-        "Target is not int he list of Foundation addresses"
+        "Target is not in the list of Foundation addresses"
       );
     }
   } else if (type === "setMinSignatures") {
@@ -94,7 +95,7 @@ export const initiateFoundationAction = async (
         "Invalid value for minSignatures. Must be a positive integer and must not be greater than the total number of addresses in the foundation."
       );
     }
-  } else if (type === "setTransferPeriod") {
+  } else if (type === "setActionPeriod") {
     if (!Number.isInteger(value) || value <= 0) {
       throw new ContractError(
         "Invalid value for transfer period. Must be a positive integer"

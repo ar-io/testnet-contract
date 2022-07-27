@@ -19,7 +19,7 @@ import { setFees } from "./actions/write/setFees";
 import { transferTokens } from "./actions/write/transferTokens";
 import { transferTokensLocked } from "./actions/write/transferTokensLocked";
 import { initiateFoundationAction } from "./actions/write/initiateFoundationAction";
-import { approveFoundationTransfer } from "./actions/write/approveFoundationTransfer";
+import { approveFoundationAction } from "./actions/write/approveFoundationAction";
 import { ContractResult, PstAction, ArNSState } from "./types/types";
 
 declare const ContractError;
@@ -35,8 +35,8 @@ export async function handle(
       return await transferTokens(state, action);
     case "transferLocked":
       return await transferTokensLocked(state, action);
-    case "approveFoundationTransfer":
-      return await approveFoundationTransfer(state, action);
+    case "approveFoundationAction":
+      return await approveFoundationAction(state, action);
     case "initiateFoundationAction":
       return await initiateFoundationAction(state, action);
     case "lock":

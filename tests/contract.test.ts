@@ -108,7 +108,7 @@ describe("Testing the ArNS Registry Contract", () => {
       },
       foundation: {
         balance: 0,
-        transferPeriod: 10,
+        actionPeriod: 10,
         minSignatures: 2,
         addresses: [walletAddress, walletAddress2, walletAddress3],
         actions: [],
@@ -573,24 +573,6 @@ describe("Testing the ArNS Registry Contract", () => {
     expect(currentStateJSON.balances[overwrittenCaller]).toEqual(undefined);
   });
 
-  it("should not initiate foundation token transfer with incorrect ownership", async () => {
-    const newWallet = await arweave.wallets.generate();
-    const overwrittenCaller = await arweave.wallets.jwkToAddress(newWallet);
-    pst.connect(newWallet);
-    await pst.writeInteraction({
-      function: "initiateFoundationAction",
-      type: "transfer",
-      note: "Hacked",
-      recipient: overwrittenCaller, // send the tokens to the hacker
-      qty: 10000, // no lock length
-    });
-    await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.foundation.actions).toEqual([]); // no transfer should have been initiated
-  });
-
   it("should not evolve contract's source code without correct ownership", async () => {
     const newWallet = await arweave.wallets.generate();
     await addFunds(arweave, newWallet);
@@ -643,6 +625,56 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentStateString = JSON.stringify(currentState);
     const currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.records[nameToRemove]).toEqual(undefined);
+  });
+
+  it("should not initiate foundation actions with incorrect ownership", async () => {
+    const newWallet = await arweave.wallets.generate();
+    const overwrittenCaller = await arweave.wallets.jwkToAddress(newWallet);
+    pst.connect(newWallet);
+    await pst.writeInteraction({
+      function: "initiateFoundationAction",
+      type: "transfer",
+      note: "Hacked",
+      recipient: overwrittenCaller, // send the tokens to the hacker
+      qty: 10000, // no lock length
+    });
+    await pst.writeInteraction({
+      function: "initiateFoundationAction",
+      type: "transfer",
+      note: "Hacked",
+      recipient: overwrittenCaller, // send the tokens to the hacker
+      lockLength: 100,
+      qty: 10000,
+    });
+    await pst.writeInteraction({
+      function: "initiateFoundationAction",
+      type: "setMinSignatures",
+      note: "Hacked",
+      value: 1,
+    });
+    await pst.writeInteraction({
+      function: "initiateFoundationAction",
+      type: "setActionPeriod",
+      note: "Hacked",
+      value: 1,
+    });
+    await pst.writeInteraction({
+      function: "initiateFoundationAction",
+      type: "addAddress",
+      note: "Hacked",
+      target: overwrittenCaller, // try to add the caller
+    });
+    await pst.writeInteraction({
+      function: "initiateFoundationAction",
+      type: "removeAddress",
+      note: "Hacked",
+      target: walletAddress, // try to remove an existing wallet
+    });
+    await mineBlock(arweave);
+    const currentState = await pst.currentState();
+    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
+    const currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.foundation.actions).toEqual([]); // no actions should have been initiated
   });
 
   it("should initiate foundation token transfer (locked and unlocked) with correct ownership", async () => {
@@ -721,7 +753,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const id = 0;
     pst.connect(newWallet);
     await pst.writeInteraction({
-      function: "approveFoundationTransfer",
+      function: "approveFoundationAction",
       id,
     });
     await mineBlock(arweave);
@@ -734,24 +766,24 @@ describe("Testing the ArNS Registry Contract", () => {
   it("should approve foundation token transfers with correct foundation wallets", async () => {
     pst.connect(wallet);
     await pst.writeInteraction({
-      function: "approveFoundationTransfer",
+      function: "approveFoundationAction",
       id: 0,
     });
     await pst.writeInteraction({
-      function: "approveFoundationTransfer",
+      function: "approveFoundationAction",
       id: 1, // this is the locked transfer
     });
     await pst.writeInteraction({
-      function: "approveFoundationTransfer",
+      function: "approveFoundationAction",
       id: 2, // this transfer will elapse on purpose with a single vote
     });
     pst.connect(wallet2);
     await pst.writeInteraction({
-      function: "approveFoundationTransfer",
+      function: "approveFoundationAction",
       id: 0,
     });
     await pst.writeInteraction({
-      function: "approveFoundationTransfer",
+      function: "approveFoundationAction",
       id: 1, // this is the locked transfer
     });
     await mineBlock(arweave);
@@ -1313,7 +1345,7 @@ describe("Testing the ArNS Registry Contract", () => {
     await mineBlock(arweave);
     await mineBlock(arweave);
     await pst.writeInteraction({
-      function: "approveFoundationTransfer",
+      function: "approveFoundationAction",
       id: 2,
     });
     await mineBlock(arweave);
@@ -1657,5 +1689,41 @@ describe("Testing the ArNS Registry Contract", () => {
     expect(currentStateJSON.vaults[walletAddress4]).toEqual([
       { balance: 500, end: 243, start: 93 },
     ]);
+  });
+
+  it("should initiate other foundation actions (add/remove address, setactionPeriod, setMinSignatures) with correct ownership", async () => {
+    pst.connect(wallet);
+    await pst.writeInteraction({
+      function: "initiateFoundationAction",
+      type: "addAddress",
+      note: `Adding new foundation address ${walletAddress4}`,
+      target: walletAddress4,
+    });
+    await mineBlock(arweave);
+    await pst.writeInteraction({
+      function: "initiateFoundationAction",
+      type: "removeAddress",
+      note: `Removing foundation address ${walletAddress2}`,
+      target: walletAddress2,
+    });
+    await mineBlock(arweave);
+    await pst.writeInteraction({
+      function: "initiateFoundationAction",
+      type: "setActionPeriod",
+      note: `Changing transfer period to 9`,
+      value: 9,
+    });
+    await mineBlock(arweave);
+    await pst.writeInteraction({
+      function: "initiateFoundationAction",
+      type: "setMinSignatures",
+      note: `Lowering min signatures to 1`,
+      value: 1,
+    });
+    await mineBlock(arweave);
+    const currentState = await pst.currentState();
+    const currentStateString = JSON.stringify(currentState);
+    const currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.foundation.actions.length).toEqual(7); // 8 actions should be present
   });
 });

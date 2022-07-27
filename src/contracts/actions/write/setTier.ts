@@ -31,6 +31,9 @@ export const setTier = async (
       records: state.records,
       balances: state.balances,
       approvedANTSourceCodeTxs: state.approvedANTSourceCodeTxs,
+      foundation: state.foundation,
+      settings: state.settings,
+      vaults: state.vaults,
       tiers: {
         [tier]: {
           maxSubdomains: maxSubdomains,
