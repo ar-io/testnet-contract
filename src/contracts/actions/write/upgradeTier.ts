@@ -52,9 +52,6 @@ export const upgradeTier = async (
   let qty = Math.ceil(
     fees[name.length.toString()] * levelsUpgraded * amountOfYearsLeft
   );
-  console.log(
-    `This costs ${qty} to upgrade ${name} to tier ${tier} for ${amountOfYearsLeft} years`
-  );
 
   // Check if the caller has enough tokens to upgrade this tier
   if (balances[caller] < qty) {

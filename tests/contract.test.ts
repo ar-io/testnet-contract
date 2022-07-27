@@ -242,6 +242,42 @@ describe("Testing the ArNS Registry Contract", () => {
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
       EXPECTED_BALANCE_AFTER_INVALID_TX
     );
+    const leadingDashNameToBuy = "-lead";
+    await pst.writeInteraction({
+      function: "buyRecord",
+      name: leadingDashNameToBuy, // should not be purchased since it has a leading - which is invalid
+      contractTxId,
+      years,
+      tier,
+    });
+    await mineBlock(arweave);
+    expect((await pst.currentState()).balances[walletAddress]).toEqual(
+      EXPECTED_BALANCE_AFTER_INVALID_TX
+    );
+    const spaceNameToBuy = "name with spaces";
+    await pst.writeInteraction({
+      function: "buyRecord",
+      name: spaceNameToBuy, // should not be purchased since it has spaces
+      contractTxId,
+      years,
+      tier,
+    });
+    await mineBlock(arweave);
+    expect((await pst.currentState()).balances[walletAddress]).toEqual(
+      EXPECTED_BALANCE_AFTER_INVALID_TX
+    );
+    const objectToBuy = { thisName: "testname" };
+    await pst.writeInteraction({
+      function: "buyRecord",
+      name: objectToBuy, // should not be purchased since this is an object and not a string.
+      contractTxId,
+      years,
+      tier,
+    });
+    await mineBlock(arweave);
+    expect((await pst.currentState()).balances[walletAddress]).toEqual(
+      EXPECTED_BALANCE_AFTER_INVALID_TX
+    );
     const veryLongNameToBuy =
       "this-is-a-looong-name-a-verrrryyyyy-loooooong-name-that-is-too-long";
     await pst.writeInteraction({

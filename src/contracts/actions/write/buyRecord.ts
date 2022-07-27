@@ -56,6 +56,7 @@ export const buyRecord = async (
   const namePattern = new RegExp("^[a-zA-Z0-9-]+$");
   const nameRes = namePattern.test(name);
   if (
+    name.charAt(0) === "-" || // the name has a leading dash
     typeof name !== "string" ||
     name.length > MAX_NAME_LENGTH || // the name is too long
     !nameRes || // the name does not match our regular expression
