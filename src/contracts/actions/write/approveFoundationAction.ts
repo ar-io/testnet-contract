@@ -111,7 +111,7 @@ export const approveFoundationAction = async (
       }
       // Find the index of the existing foundation address and remove it
       const index = foundation.addresses.indexOf(target);
-      state.foundation.addresses.splice(0, index);
+      state.foundation.addresses.splice(index, 1);
       state.foundation.actions[id].status = "passed";
     } else if (state.foundation.actions[id].type === "setMinSignatures") {
       const value = state.foundation.actions[id].value;

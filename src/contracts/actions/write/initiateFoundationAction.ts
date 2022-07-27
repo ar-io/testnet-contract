@@ -107,9 +107,9 @@ export const initiateFoundationAction = async (
 
   // The vote interface contains the details about each vote type and is further setup below
   foundationAction = {
+    id: foundation.actions.length, // Set the ID based on the amount of transfers that have been submitted.
     type,
     status: "active",
-    id: foundation.actions.length, // Set the ID based on the amount of transfers that have been submitted.
     note,
     totalSignatures: 0,
     signed: [], // should the submitter automatically sign the first message?

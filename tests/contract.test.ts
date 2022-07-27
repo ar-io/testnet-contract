@@ -1726,4 +1726,70 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.foundation.actions.length).toEqual(7); // 8 actions should be present
   });
+
+  it("should approve foundation actions (add/remove address, setactionPeriod, setMinSignatures) with correct foundation wallets", async () => {
+    pst.connect(wallet);
+    await pst.writeInteraction({
+      function: "approveFoundationAction",
+      id: 3,
+    });
+    await pst.writeInteraction({
+      function: "approveFoundationAction",
+      id: 4, // this is the locked transfer
+    });
+    await pst.writeInteraction({
+      function: "approveFoundationAction",
+      id: 5, // this transfer will elapse on purpose with a single vote
+    });
+    await pst.writeInteraction({
+      function: "approveFoundationAction",
+      id: 6, // this transfer will elapse on purpose with a single vote
+    });
+    pst.connect(wallet3);
+    await pst.writeInteraction({
+      function: "approveFoundationAction",
+      id: 3,
+    });
+    await pst.writeInteraction({
+      function: "approveFoundationAction",
+      id: 4, // this is the locked transfer
+    });
+    await pst.writeInteraction({
+      function: "approveFoundationAction",
+      id: 5, // this transfer will elapse on purpose with a single vote
+    });
+    await pst.writeInteraction({
+      function: "approveFoundationAction",
+      id: 6, // this transfer will elapse on purpose with a single vote
+    });
+    await mineBlock(arweave);
+    const currentState = await pst.currentState();
+    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
+    const currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.foundation.actions[3].signed).toContain(
+      walletAddress
+    );
+    expect(currentStateJSON.foundation.actions[3].signed).toContain(
+      walletAddress3
+    );
+    expect(currentStateJSON.foundation.actions[4].signed).toContain(
+      walletAddress
+    );
+    expect(currentStateJSON.foundation.actions[4].signed).toContain(
+      walletAddress3
+    );
+    expect(currentStateJSON.foundation.actions[5].signed).toContain(
+      walletAddress
+    );
+    expect(currentStateJSON.foundation.actions[5].signed).toContain(
+      walletAddress3
+    );
+    expect(currentStateJSON.foundation.actions[6].signed).toContain(
+      walletAddress
+    );
+    expect(currentStateJSON.foundation.actions[6].signed).toContain(
+      walletAddress3
+    );
+    expect(currentStateJSON.foundation.minSignatures).toEqual(1);
+  });
 });
