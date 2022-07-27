@@ -102,7 +102,7 @@ import { keyfile } from "../constants";
   await pst.writeInteraction({
     function: "buyRecord",
     name: nameToBuy,
-    contractTransactionId: contractTxId,
+    contractTransactionId: contractTxId.contractTxId,
   });
   console.log("Finished purchasing the record");
 })();
