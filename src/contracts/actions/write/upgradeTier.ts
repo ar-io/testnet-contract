@@ -44,6 +44,14 @@ export const upgradeTier = async (
     throw new ContractError(`Tiers can only be upgraded, not lowered!`);
   }
 
+  // check if this is an active lease, if not it cannot be extended
+  if (records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD < currentBlockTime) {
+    // This name's lease has expired and cannot be extended
+    throw new ContractError(
+      `This name's lease has expired.  It must be purchased first before being extended.`
+    );
+  }
+
   // Determine price of upgrading this tier, prorating based on current time and amount of tiers left
   let amountOfSecondsLeft = records[name].endTimestamp - currentBlockTime;
   let amountOfYearsLeft = amountOfSecondsLeft / SECONDS_IN_A_YEAR;

@@ -1262,14 +1262,21 @@ describe("Testing the ArNS Registry Contract", () => {
     }
   });
 
-  it("should not upgrade tier without correct balance", async () => {
+  it("should not upgrade tier on expired name or without correct balance", async () => {
     const name = "permaweb";
     const newWallet = await arweave.wallets.generate();
     await addFunds(arweave, newWallet);
-    pst.connect(newWallet);
+    pst.connect(newWallet); // empty wallet
     await pst.writeInteraction({
       function: "upgradeTier",
       name: name,
+      tier: 2,
+    });
+    const expiredName = "expired";
+    pst.connect(wallet); // wallet with tokens
+    await pst.writeInteraction({
+      function: "upgradeTier",
+      name: expiredName,
       tier: 2,
     });
     await mineBlock(arweave);
@@ -1277,6 +1284,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentStateString = JSON.stringify(currentState);
     const currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.records[name].tier).toEqual(1); // the tier should remain unchanged
+    expect(currentStateJSON.records[expiredName].tier).toEqual(1); // the tier should remain unchanged
   });
 
   it("should upgrade tier with correct balance, regardless of ownership", async () => {
