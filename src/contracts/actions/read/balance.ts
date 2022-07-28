@@ -20,7 +20,6 @@ export const balance = async (
   return {
     result: {
       target,
-      ticker,
       balance: balances[target],
     },
   };

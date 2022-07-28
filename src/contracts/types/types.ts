@@ -105,7 +105,6 @@ export type FoundationActionType =
 
 export interface PstResult {
   target: string;
-  ticker: string;
   balance: number;
 }
 
