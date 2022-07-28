@@ -33,9 +33,9 @@ export const buyRecord = async (
     );
   }
 
-  // Check if it includes a valid number of years
+  // Check if it includes a valid tier
   if (!Number.isInteger(tier)) {
-    throw new ContractError('Invalid value for "tier". Must be an integers');
+    throw new ContractError('Invalid value for "tier". Must be an integer');
   }
 
   // Check if this is a valid tier

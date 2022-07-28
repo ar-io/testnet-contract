@@ -64,6 +64,7 @@ export const approveFoundationAction = async (
             start,
           });
         } else {
+          // unlocked transfer
           state.vaults[recipient] = [
             {
               balance: qty,

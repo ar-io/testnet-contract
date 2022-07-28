@@ -45,9 +45,9 @@ export const transferTokensLocked = async (
     );
   }
 
-  balances[caller] -= qty;
   const start = +SmartWeave.block.height;
   const end = start + lockLength;
+  balances[caller] -= qty;
   if (target in vaults) {
     // Wallet already exists in state, add new tokens
     state.vaults[target].push({

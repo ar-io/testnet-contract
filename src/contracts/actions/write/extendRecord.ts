@@ -55,8 +55,7 @@ export const extendRecord = async (
   // reduce balance set the end lease period for this record based on number of years
   balances[caller] -= qty; // reduce callers balance
   foundation.balance += qty; // increase foundation balance
-
-  records[name].endTimestamp += SECONDS_IN_A_YEAR * years;
+  records[name].endTimestamp += SECONDS_IN_A_YEAR * years; // set the new extended timestamp
 
   return { state };
 };

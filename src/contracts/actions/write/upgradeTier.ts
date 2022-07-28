@@ -25,11 +25,6 @@ export const upgradeTier = async (
     throw new ContractError(`No record exists with this name ${name}`);
   }
 
-  // check if the record is purchased, if not it must be purchased first
-  if (records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD < currentBlockTime) {
-    throw new ContractError(`This record ${name} needs to be purchased first`);
-  }
-
   // Check if it includes a valid tier number
   if (!Number.isInteger(tier)) {
     throw new ContractError('Invalid value for "tier". Must be an integers');
@@ -44,9 +39,8 @@ export const upgradeTier = async (
     throw new ContractError(`Tiers can only be upgraded, not lowered!`);
   }
 
-  // check if this is an active lease, if not it cannot be extended
+  // check if this is an active lease, if not it cannot be upgraded
   if (records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD < currentBlockTime) {
-    // This name's lease has expired and cannot be extended
     throw new ContractError(
       `This name's lease has expired.  It must be purchased first before being extended.`
     );

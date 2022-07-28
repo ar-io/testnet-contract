@@ -29,9 +29,9 @@ export const lock = async (
     throw new ContractError("Not enough balance.");
   }
 
-  state.balances[caller] -= qty;
   const start = +SmartWeave.block.height;
   const end = start + lockLength;
+  state.balances[caller] -= qty;
   if (caller in vaults) {
     state.vaults[caller].push({
       balance: qty,

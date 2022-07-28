@@ -6,7 +6,6 @@ export const balance = async (
   state: ArNSState,
   { input: { target } }: PstAction
 ): Promise<ContractResult> => {
-  const ticker = state.ticker;
   const balances = state.balances;
 
   if (typeof target !== "string") {
