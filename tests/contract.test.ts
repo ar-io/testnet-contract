@@ -82,6 +82,10 @@ describe("Testing the ArNS Registry Contract", () => {
       )
     );
 
+    // expired name date
+    let expiredDate = new Date();
+    expiredDate.setFullYear(expiredDate.getFullYear() - 1);
+
     // ~~ Update initial state ~~
     initialState = {
       ...stateFromFile,
@@ -98,12 +102,20 @@ describe("Testing the ArNS Registry Contract", () => {
           endTimestamp: 100_000_000,
         },
         ["grace"]: {
-          // We set an expired name here so we can test overwriting it
+          // We set a name in its grace period here
           tier: 3,
           contractTxId: "GRACENUf4yBG0ErNKCmjGzZ-X9BJhmWOiVVQVyainlY",
           maxSubdomains: 10000,
           minTtlSeconds: 900, // tier 3 default for ttl
           endTimestamp: Math.round(Date.now() / 1000),
+        },
+        ["expired"]: {
+          // We set an expired name here so we test extending
+          tier: 1,
+          contractTxId: "EXPIREUf4yBG0ErNKCmjGzZ-X9BJhmWOiVVQVyainlY",
+          maxSubdomains: 100,
+          minTtlSeconds: 3600, // tier 3 default for ttl
+          endTimestamp: Math.round(expiredDate.getTime() / 1000),
         },
       },
       foundation: {
@@ -286,9 +298,6 @@ describe("Testing the ArNS Registry Contract", () => {
       tier,
     });
     await mineBlock(arweave);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      EXPECTED_BALANCE_AFTER_INVALID_TX
-    );
     const malformedNameToBuy = "*&*##$%#";
     await pst.writeInteraction({
       function: "buyRecord",
@@ -298,9 +307,6 @@ describe("Testing the ArNS Registry Contract", () => {
       tier,
     });
     await mineBlock(arweave);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      EXPECTED_BALANCE_AFTER_INVALID_TX
-    );
     const leadingDashNameToBuy = "-lead";
     await pst.writeInteraction({
       function: "buyRecord",
@@ -310,9 +316,6 @@ describe("Testing the ArNS Registry Contract", () => {
       tier,
     });
     await mineBlock(arweave);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      EXPECTED_BALANCE_AFTER_INVALID_TX
-    );
     const spaceNameToBuy = "name with spaces";
     await pst.writeInteraction({
       function: "buyRecord",
@@ -322,9 +325,6 @@ describe("Testing the ArNS Registry Contract", () => {
       tier,
     });
     await mineBlock(arweave);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      EXPECTED_BALANCE_AFTER_INVALID_TX
-    );
     const objectToBuy = { thisName: "testname" };
     await pst.writeInteraction({
       function: "buyRecord",
@@ -334,9 +334,6 @@ describe("Testing the ArNS Registry Contract", () => {
       tier,
     });
     await mineBlock(arweave);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      EXPECTED_BALANCE_AFTER_INVALID_TX
-    );
     const veryLongNameToBuy =
       "this-is-a-looong-name-a-verrrryyyyy-loooooong-name-that-is-too-long";
     await pst.writeInteraction({
@@ -347,9 +344,6 @@ describe("Testing the ArNS Registry Contract", () => {
       tier,
     });
     await mineBlock(arweave);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      EXPECTED_BALANCE_AFTER_INVALID_TX
-    );
     const existingNameToBuy = "permaweb"; // this name should already exist and in its lease
     await pst.writeInteraction({
       function: "buyRecord",
@@ -359,9 +353,6 @@ describe("Testing the ArNS Registry Contract", () => {
       tier,
     });
     await mineBlock(arweave);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      EXPECTED_BALANCE_AFTER_INVALID_TX
-    );
     const gracePeriodNameToBuy = "grace"; // this name should already exist and in its grace period
     await pst.writeInteraction({
       function: "buyRecord",
@@ -371,9 +362,6 @@ describe("Testing the ArNS Registry Contract", () => {
       tier,
     });
     await mineBlock(arweave);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      EXPECTED_BALANCE_AFTER_INVALID_TX
-    );
     const expensiveNameToBuy = "v";
     await pst.writeInteraction({
       function: "buyRecord",
@@ -383,9 +371,6 @@ describe("Testing the ArNS Registry Contract", () => {
       tier,
     });
     await mineBlock(arweave);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      EXPECTED_BALANCE_AFTER_INVALID_TX
-    );
     const disallowedNameToBuy = "test.subdomain.name";
     await pst.writeInteraction({
       function: "buyRecord",
@@ -395,9 +380,6 @@ describe("Testing the ArNS Registry Contract", () => {
       tier,
     });
     await mineBlock(arweave);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      EXPECTED_BALANCE_AFTER_INVALID_TX
-    );
     const disallowedNameToBuy2 = "test_subdomain";
     await pst.writeInteraction({
       function: "buyRecord",
@@ -407,9 +389,6 @@ describe("Testing the ArNS Registry Contract", () => {
       tier,
     });
     await mineBlock(arweave);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      EXPECTED_BALANCE_AFTER_INVALID_TX
-    );
     const invalidYearsName = "years";
     await pst.writeInteraction({
       function: "buyRecord",
@@ -419,9 +398,6 @@ describe("Testing the ArNS Registry Contract", () => {
       tier,
     });
     await mineBlock(arweave);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      EXPECTED_BALANCE_AFTER_INVALID_TX
-    );
     const invalidTierName = "tier";
     await pst.writeInteraction({
       function: "buyRecord",
@@ -459,6 +435,11 @@ describe("Testing the ArNS Registry Contract", () => {
       function: "extendRecord",
       name: "doesnt-exist", // This name doesnt exist so it shouldnt be created
       years: 5,
+    });
+    await pst.writeInteraction({
+      function: "extendRecord",
+      name: "expired", // is already expired, so it should not be extendable
+      years: 1,
     });
     await mineBlock(arweave);
     await pst.writeInteraction({
@@ -1223,9 +1204,7 @@ describe("Testing the ArNS Registry Contract", () => {
   });
 
   it("should not add whitelisted ANT Smartweave Contract Source TX IDs with incorrect ownership", async () => {
-    const newWallet = await arweave.wallets.generate();
-    await addFunds(arweave, newWallet);
-    pst.connect(newWallet);
+    pst.connect(wallet4);
     const sourceTxIdToAdd = "BLAHhDwLZaLBA3lzpE7xl36Rms2NwUNZ7SKOTEWkbI";
     await pst.writeInteraction({
       function: "addANTSourceCodeTx",
@@ -1245,9 +1224,7 @@ describe("Testing the ArNS Registry Contract", () => {
   });
 
   it("should not remove whitelisted ANT Smartweave Contract Source TX IDs with incorrect ownership", async () => {
-    const newWallet = await arweave.wallets.generate();
-    await addFunds(arweave, newWallet);
-    pst.connect(newWallet);
+    pst.connect(wallet5);
     const currentState = await pst.currentState();
     const currentStateString = JSON.stringify(currentState);
     const currentStateJSON = JSON.parse(currentStateString);
@@ -1733,31 +1710,38 @@ describe("Testing the ArNS Registry Contract", () => {
       function: "approveFoundationAction",
       id: 3,
     });
+    await mineBlock(arweave);
     await pst.writeInteraction({
       function: "approveFoundationAction",
       id: 4, // this is the locked transfer
     });
+    await mineBlock(arweave);
     await pst.writeInteraction({
       function: "approveFoundationAction",
       id: 5, // this transfer will elapse on purpose with a single vote
     });
+    await mineBlock(arweave);
     await pst.writeInteraction({
       function: "approveFoundationAction",
-      id: 6, // this transfer will elapse on purpose with a single vote
+      id: 6, // this will set minimum signatures
     });
+    await mineBlock(arweave);
     pst.connect(wallet3);
     await pst.writeInteraction({
       function: "approveFoundationAction",
       id: 3,
     });
+    await mineBlock(arweave);
     await pst.writeInteraction({
       function: "approveFoundationAction",
       id: 4, // this is the locked transfer
     });
+    await mineBlock(arweave);
     await pst.writeInteraction({
       function: "approveFoundationAction",
       id: 5, // this transfer will elapse on purpose with a single vote
     });
+    await mineBlock(arweave);
     await pst.writeInteraction({
       function: "approveFoundationAction",
       id: 6, // this transfer will elapse on purpose with a single vote
