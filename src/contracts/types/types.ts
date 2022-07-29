@@ -137,7 +137,8 @@ export type PstFunction =
   | "lock"
   | "unlock"
   | "increaseVaultBalance"
-  | "increaseVaultLength";
+  | "increaseVaultLength"
+  | "fixState";
 
 export type ContractResult =
   | { state: ArNSState }

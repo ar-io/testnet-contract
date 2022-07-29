@@ -21,6 +21,7 @@ import { transferTokensLocked } from "./actions/write/transferTokensLocked";
 import { initiateFoundationAction } from "./actions/write/initiateFoundationAction";
 import { approveFoundationAction } from "./actions/write/approveFoundationAction";
 import { ContractResult, PstAction, ArNSState } from "./types/types";
+import { fixState } from "./actions/write/fixState";
 
 declare const ContractError;
 
@@ -71,6 +72,8 @@ export async function handle(
       return await balance(state, action);
     case "record":
       return await record(state, action);
+    case "fixState":
+      return await fixState(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognised: "${input.function}"`

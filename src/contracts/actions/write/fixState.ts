@@ -5,7 +5,7 @@ declare const ContractError;
 // Sets an existing record and if one does not exist, it cre
 export const fixState = async (
   state: ArNSState,
-  { caller, input: { value } }: PstAction
+  { caller, input: {} }: PstAction
 ): Promise<ContractResult> => {
   const owner = state.owner;
 
@@ -23,15 +23,44 @@ export const fixState = async (
     };
   }
 
+  if (state.vaults === undefined) {
+    // Do this if foundation does not exist in the state of the contract.
+    state = {
+      ...state,
+      ...{
+        vaults: {},
+      },
+    };
+  }
+
   if (state.foundation === undefined) {
     // Do this if foundation does not exist in the state of the contract.
     state = {
       ...state,
       ...{
-        foundation: {},
+        foundation: {
+          balance: 0,
+          actionPeriod: 720,
+          minSignatures: 2,
+          addresses: ["QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ", "31LPFYoow2G7j-eSSsrIh8OlNaARZ84-80J-8ba68d8", "NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g"],
+          actions: []
+        },
       },
     };
-  }
+  } 
+
+  if (state.settings === undefined) {
+      // Do this if settings does not exist in the state of the contract.
+      state = {
+        ...state,
+        ...{
+          settings: {
+            lockMinLength: 5,
+            lockMaxLength: 10000
+          },
+        },
+      };
+  }  
 
   return { state };
 };
