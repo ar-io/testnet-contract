@@ -21,31 +21,7 @@ export const setTier = async (
     throw new ContractError("Invalid tier configuration");
   }
 
-  if (state.tiers === undefined) {
-    // Do this if Tiers does not exist in the state of the contract.
-    state = {
-      ticker: state.ticker,
-      name: state.name,
-      owner: state.owner,
-      evolve: state.evolve,
-      records: state.records,
-      balances: state.balances,
-      approvedANTSourceCodeTxs: state.approvedANTSourceCodeTxs,
-      foundation: state.foundation,
-      settings: state.settings,
-      vaults: state.vaults,
-      tiers: {
-        [tier]: {
-          maxSubdomains: maxSubdomains,
-          minTtlSeconds: minTtlSeconds,
-        },
-      },
-      fees: state.fees,
-    };
-  } else {
-    // Tiers already exists in the state of the contract
-    state.tiers[tier] = { maxSubdomains, minTtlSeconds };
-  }
+  state.tiers[tier] = { maxSubdomains, minTtlSeconds };
 
   return { state };
 };
