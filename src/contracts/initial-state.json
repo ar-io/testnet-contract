@@ -4,13 +4,18 @@
   "owner": "",
   "settings": {
     "lockMinLength": 5,
-    "lockMaxLength": 10000
+    "lockMaxLength": 10000,
+    "minGatewayStakeAmount": 5000,
+    "gatewayJoinMinLength": 21600,
+    "gatewayLeaveMinLength": 21600,
+    "delegatedStakeStakeMinWithdrawLength": 21600
   },
   "foundation": {},
   "evolve": null,
   "records": {},
   "balances": {},
   "vaults": {},
+  "gateways": {},
   "approvedANTSourceCodeTxs": [
     "7hL0La2KMapdJI6yIGnb4f4IjvhlGQyXnqpWc0i0d_w",
     "cNr6JPVu3rEOwIbdnu3lVipz9pwY5Pps9mxHSW7Jdtk"

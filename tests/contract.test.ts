@@ -9,7 +9,6 @@ import {
   PstContract,
   PstState,
   Warp,
-  WarpNodeFactory,
 } from "warp-contracts";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import { ArNSState } from "../src/contracts/types/types";
@@ -47,8 +46,11 @@ describe("Testing the ArNS Registry Contract", () => {
     LoggerFactory.INST.logLevel("fatal");
 
     // ~~ Set up Warp ~~
-    Warp = WarpNodeFactory.forTesting(arweave);
-
+    //Warp = Warp.WarpNodeFactory.forTesting(arweave);
+    //warp = WarpFactory.forLocal(arweave)
+    //warp = WarpFactory.forLocal()
+    let warp: Warp;
+    warp = WarpFactory.forLocal(1820)
     // ~~ Generate wallet and add funds ~~
     wallet = await arweave.wallets.generate();
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
