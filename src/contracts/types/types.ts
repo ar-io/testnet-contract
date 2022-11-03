@@ -32,7 +32,7 @@ export interface ArNSState {
   vaults: {
     // a list of all vaults that have locked balances
     [address: string]: [
-      // a walelt can have multiple vaults
+      // a wallet can have multiple vaults
       {
         balance: number; // Positive integer, the amount held in this vault
         start: number; // At what block the lock starts.
@@ -54,19 +54,21 @@ export interface ArNSState {
   };
   gateways: {
     // a list of all registered gateways
-    [address: string]: [
-      // every gateway needs a wallet to act as the identity
-      {
-        balance: number; // Positive integer, the amount held by this registered gateway
-        settings: GatewaySettings; // All of the settings related to this gateway
-        delegates: {
-          // The delegates that have staked tokens with this gateway
-          [address: string]: {
-            balance: number; // The amount of tokens this wallet has delegated to this gateway
-          };
+    [address: string]: // every gateway needs a wallet to act as the identity
+    {
+      balance: number; // Positive integer, the amount held by this registered gateway
+      start: number; // At what block the join starts.
+      end: number; // At what block the join ends.
+      settings: GatewaySettings; // All of the settings related to this gateway
+      delegates: {
+        // The delegates that have staked tokens with this gateway
+        [address: string]: {
+          balance: number; // The amount of tokens this wallet has delegated to this gateway
+          start: number; // At what block the delegation starts.
+          end: number; // At what block the delegation ends.
         };
-      }
-    ];
+      };
+    };
   };
 }
 

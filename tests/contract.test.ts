@@ -172,7 +172,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentState = await pst.currentState();
     const currentStateString = JSON.stringify(currentState, null, 4);
     const currentStateJSON = JSON.parse(currentStateString);
-    console.log(currentStateString);
+    console.log(currentStateJSON.gateways);
     for (let address in currentStateJSON.balances) {
       if (currentStateJSON.balances.hasOwnProperty(address)) {
         totalBalance += parseFloat(currentStateJSON.balances[address]);
@@ -190,6 +190,7 @@ describe("Testing the ArNS Registry Contract", () => {
     await arlocal.stop();
   });
 
+  /*
   // PST TESTS
   it("should read pst state and balance data", async () => {
     expect(await pst.currentState()).toEqual(initialState);
@@ -1748,5 +1749,36 @@ describe("Testing the ArNS Registry Contract", () => {
     expect(currentStateJSON.vaults[walletAddress4]).toEqual([
       { balance: 500, end: 332, start: 182 },
     ]);
+  });
+  */
+
+  // Network Join
+  it("should join the network with right amount of tokens", async () => {
+    let qty = 5000; // must meet the minimum
+    let label = "Test Gateway"; // friendly label
+    let sslFingerprint = "282D6F79C9533C534EBD28826CB3D706139761AB";
+    let ipAddress = "192.168.1.40";
+    let url = "test.ar.io";
+    let port = 3000;
+    let protocol = "http";
+
+    pst.connect(wallet2); // only owns a vaulted balance
+
+    await pst.writeInteraction({
+      function: "joinNetwork",
+      qty,
+      label,
+      sslFingerprint,
+      ipAddress,
+      url,
+      port,
+      protocol,
+    });
+
+    await mineBlock(arweave);
+    let currentState = await pst.currentState();
+    let currentStateString = JSON.stringify(currentState);
+    let currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.gateways[walletAddress2].balance).toEqual(5000);
   });
 });
