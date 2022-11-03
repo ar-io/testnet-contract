@@ -23,6 +23,8 @@ import { approveFoundationAction } from "./actions/write/approveFoundationAction
 import { ContractResult, PstAction, ArNSState } from "./types/types";
 import { fixState } from "./actions/write/fixState";
 import { joinNetwork } from "./actions/write/joinNetwork";
+import { leaveNetwork } from "./actions/write/leaveNetwork";
+import { delegateStake } from "./actions/write/delegateStake";
 
 declare const ContractError;
 
@@ -77,6 +79,10 @@ export async function handle(
       return await fixState(state, action);
     case "joinNetwork":
       return await joinNetwork(state, action);
+    case "leaveNetwork":
+      return await leaveNetwork(state, action);
+    case "delegateStake":
+      return await delegateStake(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognised: "${input.function}"`

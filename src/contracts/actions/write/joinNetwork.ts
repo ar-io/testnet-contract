@@ -56,7 +56,11 @@ export const joinNetwork = async (
     // Join the network
     state.balances[caller] -= qty;
     state.gateways[caller] = {
-      balance: qty,
+      vaults: [{
+        balance: qty,
+        start: +SmartWeave.block.height,
+        end: 0,
+      }],
       settings: {
         label,
         sslFingerprint,

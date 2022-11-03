@@ -56,17 +56,19 @@ export interface ArNSState {
     // a list of all registered gateways
     [address: string]: // every gateway needs a wallet to act as the identity
     {
-      balance: number; // Positive integer, the amount held by this registered gateway
-      start: number; // At what block the join starts.
-      end: number; // At what block the join ends.
+      vaults: [{
+        balance: number; // Positive integer, the amount staked by the gateway operator
+        start: number; // At what block the join starts.
+        end: number; // At what block the join ends.
+      }]
       settings: GatewaySettings; // All of the settings related to this gateway
       delegates: {
         // The delegates that have staked tokens with this gateway
-        [address: string]: {
+        [address: string]: [{
           balance: number; // The amount of tokens this wallet has delegated to this gateway
           start: number; // At what block the delegation starts.
-          end: number; // At what block the delegation ends.
-        };
+          end?: number; // At what block the delegation ends.
+        }];
       };
     };
   };
