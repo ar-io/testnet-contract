@@ -56,6 +56,7 @@ export interface ArNSState {
     // a list of all registered gateways
     [address: string]: // every gateway needs a wallet to act as the identity
     {
+      stake: number; // the total stake of this gateway.  this is a combination of all vaults and delegate stake balances
       vaults: [{
         balance: number; // Positive integer, the amount staked by the gateway operator
         start: number; // At what block the join starts.
@@ -172,7 +173,6 @@ export type PstFunction =
   | "approveFoundationAction"
   | "lock"
   | "unlock"
-  | "increaseVaultBalance"
   | "increaseVaultLength"
   | "fixState"
   | "getRegisteredGateway"

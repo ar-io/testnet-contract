@@ -19,9 +19,14 @@ export const joinNetwork = async (
     throw new ContractError("Quantity must be a positive integer.");
   }
 
-  const balance = balances[caller];
-  if (isNaN(balance) || balance < qty) {
-    throw new ContractError("Not enough balance.");
+  if (!balances[caller]) {
+    throw new ContractError(`Caller balance is not defined!`);
+  }
+
+  if (balances[caller] < qty) {
+    throw new ContractError(
+      `Caller balance not high enough to stake ${qty} token(s)!`
+    );
   }
 
   if (qty < settings.minGatewayStakeAmount) {
@@ -56,6 +61,7 @@ export const joinNetwork = async (
     // Join the network
     state.balances[caller] -= qty;
     state.gateways[caller] = {
+      stake: qty,
       vaults: [{
         balance: qty,
         start: +SmartWeave.block.height,

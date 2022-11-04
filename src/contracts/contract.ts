@@ -14,7 +14,6 @@ import { mintTokens } from "./actions/write/mintTokens";
 import { lock } from "./actions/write/lock";
 import { unlock } from "./actions/write/unlock";
 import { increaseVaultLength } from "./actions/write/increaseVaultLength";
-import { increaseVaultBalance } from "./actions/write/increaseVaultBalance";
 import { setFees } from "./actions/write/setFees";
 import { transferTokens } from "./actions/write/transferTokens";
 import { transferTokensLocked } from "./actions/write/transferTokensLocked";
@@ -25,6 +24,8 @@ import { fixState } from "./actions/write/fixState";
 import { joinNetwork } from "./actions/write/joinNetwork";
 import { leaveNetwork } from "./actions/write/leaveNetwork";
 import { delegateStake } from "./actions/write/delegateStake";
+import { undelegateStake } from "./actions/write/undelegateStake";
+import { increaseGatewayStake } from "./actions/write/increaseGatewayStake";
 
 declare const ContractError;
 
@@ -49,8 +50,6 @@ export async function handle(
       return await unlock(state, action);
     case "increaseVaultLength":
       return await increaseVaultLength(state, action);
-    case "increaseVaultBalance":
-      return await increaseVaultBalance(state, action);
     case "mint":
       return await mintTokens(state, action);
     case "setFees":
@@ -83,6 +82,10 @@ export async function handle(
       return await leaveNetwork(state, action);
     case "delegateStake":
       return await delegateStake(state, action);
+    case "undelegateStake":
+      return await undelegateStake(state, action);
+      case "increaseGatewayStake":
+        return await increaseGatewayStake(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognised: "${input.function}"`

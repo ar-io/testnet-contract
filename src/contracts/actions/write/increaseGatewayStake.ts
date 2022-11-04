@@ -4,11 +4,11 @@ declare const ContractError;
 declare const SmartWeave: any;
 
 // Sets an existing record and if one does not exist, it cre
-export const delegateStake = async (
+export const increaseGatewayStake = async (
   state: ArNSState,
   {
     caller,
-    input: { qty, target },
+    input: { qty },
   }: PstAction
 ): Promise<ContractResult> => {
   const balances = state.balances;
@@ -28,25 +28,14 @@ export const delegateStake = async (
     );
   }
 
-  if (target in gateways) {
-    if (caller in state.gateways[target].delegates) {
-      // this caller is already delegated, so increase existing stake by adding a new vault
-      state.balances[caller] -= qty;
-      state.gateways[target].stake += qty;
-      state.gateways[target].delegates[caller].push({
-        balance: qty,
-        start: +SmartWeave.block.height,
-        end: 0,
-      });
-    } else {
-      state.balances[caller] -= qty;
-      state.gateways[target].stake += qty;
-      state.gateways[target].delegates[caller] = [{
-        balance: qty,
-        start: +SmartWeave.block.height,
-        end: 0,
-      }];
-    }
+  if (caller in gateways) {
+    state.balances[caller] -= qty;
+    state.gateways[caller].stake += qty;
+    state.gateways[caller].vaults.push({
+      balance: qty,
+      start: +SmartWeave.block.height,
+      end: 0,
+    });
   } else {
     throw new ContractError("This Gateway's wallet is not registered");
   }

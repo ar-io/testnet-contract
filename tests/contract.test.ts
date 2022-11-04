@@ -17,6 +17,7 @@ import { ArNSState } from "../src/contracts/types/types";
 let WALLET_STARTING_TOKENS = 1_000_000_000_0;
 let GATEWAY_STARTING_TOKENS = 1_000_000
 let DELEGATE_STARTING_TOKENS = 1_000
+let DELEGATE2_STARTING_TOKENS = 50_000
 let EXPECTED_BALANCE_AFTER_INVALID_TX = 9515750000;
 
 describe("Testing the ArNS Registry Contract", () => {
@@ -155,7 +156,8 @@ describe("Testing the ArNS Registry Contract", () => {
         [walletAddress]: 0, // create tokens during mint
         [walletAddress2]: 1_000_000_000,
         [gatewayWalletAddress]: GATEWAY_STARTING_TOKENS,
-        [delegateWalletAddress]: DELEGATE_STARTING_TOKENS
+        [delegateWalletAddress]: DELEGATE_STARTING_TOKENS,
+        [delegateWalletAddress2]: DELEGATE2_STARTING_TOKENS
       },
       vaults: {
         [walletAddress]: [
@@ -169,6 +171,13 @@ describe("Testing the ArNS Registry Contract", () => {
           {
             balance: 1000000, // Positive integer
             end: 1000, // At what block the lock ends.
+            start: 0, // At what block the lock starts.
+          },
+        ],
+        [delegateWalletAddress2]: [
+          {
+            balance: 300000, // Positive integer
+            end: 5000, // At what block the lock ends.
             start: 0, // At what block the lock starts.
           },
         ],
@@ -1777,7 +1786,7 @@ describe("Testing the ArNS Registry Contract", () => {
   */
 
   // Network Join and Delegated Stake
-  it("should join the network with right amount of tokens", async () => {
+  it("should join the network with correct parameters", async () => {
     let qty = 5000; // must meet the minimum
     let label = "Test Gateway"; // friendly label
     let sslFingerprint = "282D6F79C9533C534EBD28826CB3D706139761AB";
@@ -1805,25 +1814,122 @@ describe("Testing the ArNS Registry Contract", () => {
     let currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.gateways[gatewayWalletAddress].vaults[0].balance).toEqual(5000);
     expect(currentStateJSON.balances[gatewayWalletAddress]).toEqual(GATEWAY_STARTING_TOKENS - 5000);
+    expect(currentStateJSON.gateways[gatewayWalletAddress].stake).toEqual(qty);
   });
 
-  it("should delegated stake with right amount of tokens", async () => {
+  it("should increase gateway stake with correct balance", async () => {
+    let qty = 1000;
+    pst.connect(gatewayWallet); // only owns a vaulted balance
+    await pst.writeInteraction({
+      function: "increaseGatewayStake",
+      qty,
+    });
+    await mineBlock(arweave);
+    let currentState = await pst.currentState();
+    let currentStateString = JSON.stringify(currentState);
+    let currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.gateways[gatewayWalletAddress].stake).toEqual(5000 + 1000);
+    expect(currentStateJSON.gateways[gatewayWalletAddress].vaults[1].balance).toEqual(1000);
+  });
+
+  it("should delegate stake with correct balance", async () => {
     let qty = 100; // must meet the minimum
     let target = gatewayWalletAddress
     pst.connect(delegateWallet); // only owns a vaulted balance
-
     await pst.writeInteraction({
       function: "delegateStake",
       qty,
       target
     });
-
+    await pst.writeInteraction({
+      function: "delegateStake",
+      qty,
+      target
+    });
+    pst.connect(delegateWallet2); // only owns a vaulted balance
+    qty = 1000
+    await pst.writeInteraction({
+      function: "delegateStake",
+      qty,
+      target
+    });
+    await mineBlock(arweave);
+    qty = 5000
+    await pst.writeInteraction({
+      function: "delegateStake",
+      qty,
+      target
+    });
+    await mineBlock(arweave);
+    qty = 25000
+    await pst.writeInteraction({
+      function: "delegateStake",
+      qty,
+      target
+    });
     await mineBlock(arweave);
     let currentState = await pst.currentState();
     let currentStateString = JSON.stringify(currentState);
     let currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.gateways[gatewayWalletAddress].delegates[delegateWalletAddress][0].balance).toEqual(100);
+    expect(currentStateJSON.balances[delegateWalletAddress]).toEqual(DELEGATE_STARTING_TOKENS - 100 * 2);
+    expect(currentStateJSON.gateways[gatewayWalletAddress].delegates[delegateWalletAddress2].length).toEqual(3);
+    expect(currentStateJSON.gateways[gatewayWalletAddress].stake).toEqual(5000 + 1000 + 100 + 100 + 1000 + 5000 + 25000);
+  });
+
+  it("should undelegate stake with correct ownership", async () => {
+    let target = gatewayWalletAddress;
+    let id = 1;
+    pst.connect(delegateWallet); 
+    // remove a single stake
+    await pst.writeInteraction({
+      function: "undelegateStake",
+      id,
+      target
+    });
+    pst.connect(delegateWallet2); 
+    // remove all stakes
+    await pst.writeInteraction({
+      function: "undelegateStake",
+      target
+    });
+    await mineBlock(arweave);
+    await mineBlock(arweave);
+    await mineBlock(arweave);
+    await mineBlock(arweave);
+    await mineBlock(arweave);
+    let currentState = await pst.currentState();
+    let currentStateString = JSON.stringify(currentState);
+    let currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.gateways[gatewayWalletAddress].delegates[delegateWalletAddress][1].end).toBeGreaterThan(0);
+    expect(currentStateJSON.gateways[gatewayWalletAddress].delegates[delegateWalletAddress2][0].end).toBeGreaterThan(0);
+    expect(currentStateJSON.gateways[gatewayWalletAddress].delegates[delegateWalletAddress2][1].end).toBeGreaterThan(0);
+    expect(currentStateJSON.gateways[gatewayWalletAddress].delegates[delegateWalletAddress2][2].end).toBeGreaterThan(0);
+    pst.connect(delegateWallet); 
+    // finish removing a single stake
+    await pst.writeInteraction({
+      function: "undelegateStake",
+      id,
+      target
+    });
+    pst.connect(delegateWallet2); 
+    // finish removing all stakes
+    await pst.writeInteraction({
+      function: "undelegateStake",
+      target
+    });
+    await mineBlock(arweave);
+    currentState = await pst.currentState();
+    currentStateString = JSON.stringify(currentState);
+    currentStateJSON = JSON.parse(currentStateString);
+    console.log(JSON.stringify(currentStateJSON.gateways[gatewayWalletAddress], null, 5));
+    expect(currentStateJSON.gateways[gatewayWalletAddress].delegates[delegateWalletAddress][1].balance).toEqual(0);
+    expect(currentStateJSON.gateways[gatewayWalletAddress].delegates[delegateWalletAddress2][0].balance).toEqual(0);
+    expect(currentStateJSON.gateways[gatewayWalletAddress].delegates[delegateWalletAddress2][1].balance).toEqual(0);
+    expect(currentStateJSON.gateways[gatewayWalletAddress].delegates[delegateWalletAddress2][2].balance).toEqual(0);
     expect(currentStateJSON.balances[delegateWalletAddress]).toEqual(DELEGATE_STARTING_TOKENS - 100);
+    expect(currentStateJSON.balances[delegateWalletAddress2]).toEqual(DELEGATE2_STARTING_TOKENS);
+    expect(currentStateJSON.gateways[gatewayWalletAddress].stake).toEqual(5000 + 1000 + 100);
   });
 
   it("should leave the network with correct ownership", async () => {
