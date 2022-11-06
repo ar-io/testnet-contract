@@ -9,7 +9,7 @@ import {
 declare const ContractError;
 declare const SmartWeave: any;
 
-// Sets an existing record and if one does not exist, it cre
+// Proposes a foundation action 
 export const initiateFoundationAction = async (
   state: ArNSState,
   {

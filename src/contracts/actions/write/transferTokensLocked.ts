@@ -4,6 +4,7 @@ import { PstAction, ArNSState, ContractResult } from "../../types/types";
 declare const ContractError;
 declare const SmartWeave: any;
 
+// transfers tokens directly to a locked vault owned by the recipient
 export const transferTokensLocked = async (
   state: ArNSState,
   { caller, input: { target, qty, lockLength } }: PstAction

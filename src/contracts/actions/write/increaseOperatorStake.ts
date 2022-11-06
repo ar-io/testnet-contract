@@ -3,8 +3,8 @@ import { PstAction, ArNSState, ContractResult } from "../../types/types";
 declare const ContractError;
 declare const SmartWeave: any;
 
-// Sets an existing record and if one does not exist, it cre
-export const increaseGatewayStake = async (
+// Locks tokens into a new gateway operator vault
+export const increaseOperatorStake = async (
   state: ArNSState,
   {
     caller,
@@ -30,7 +30,7 @@ export const increaseGatewayStake = async (
 
   if (caller in gateways) {
     state.balances[caller] -= qty;
-    state.gateways[caller].stake += qty;
+    state.gateways[caller].operatorStake += qty;
     state.gateways[caller].vaults.push({
       balance: qty,
       start: +SmartWeave.block.height,

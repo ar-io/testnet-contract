@@ -2,7 +2,7 @@ import { PstAction, ArNSState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 
-// Sets an existing record and if one does not exist, it cre
+// Updates this contract to new source code
 export const evolve = async (
   state: ArNSState,
   { caller, input: { value } }: PstAction

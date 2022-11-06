@@ -3,7 +3,7 @@ import { PstAction, ArNSState, ContractResult } from "../../types/types";
 declare const ContractError;
 declare const SmartWeave: any;
 
-// Sets an existing record and if one does not exist, it cre
+// Locks tokens into a community staker owned vault
 export const lock = async (
   state: ArNSState,
   { caller, input: { qty, lockLength } }: PstAction

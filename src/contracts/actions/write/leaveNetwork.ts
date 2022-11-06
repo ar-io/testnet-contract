@@ -3,7 +3,7 @@ import { PstAction, ArNSState, ContractResult } from "../../types/types";
 declare const ContractError;
 declare const SmartWeave: any;
 
-// Sets an existing record and if one does not exist, it cre
+// Removes gateway from the gateway address registry after the removal period completes
 export const leaveNetwork = async (
   state: ArNSState,
   {
@@ -22,7 +22,7 @@ export const leaveNetwork = async (
       // Finish leave process and return all funds
       for (let i = 0; i < state.gateways[caller].vaults.length; i ++) { // iterate through each gateway vault
         state.balances[caller] += state.gateways[caller].vaults[i].balance;
-        state.gateways[caller].stake -= state.gateways[caller].vaults[i].balance; // deduct from primary gateway stake
+        state.gateways[caller].operatorStake -= state.gateways[caller].vaults[i].balance; // deduct from primary gateway stake
         state.gateways[caller].vaults[i].balance = 0; // zero out this balance        
       };
       for (const key of Object.keys(state.gateways[caller].delegates)) { // iterate through each delegate
@@ -32,7 +32,7 @@ export const leaveNetwork = async (
           } else {
             state.balances[key] = state.gateways[caller].delegates[key][i].balance;
           }
-          state.gateways[caller].stake -= state.gateways[caller].delegates[key][i].balance;  // deduct from primary gateway stake
+          state.gateways[caller].delegatedStake -= state.gateways[caller].delegates[key][i].balance;  // deduct from primary gateway stake
           state.gateways[caller].delegates[key][i].balance = 0; // zero out this balance
         };
       }

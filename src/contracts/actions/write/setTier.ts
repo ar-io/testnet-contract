@@ -1,7 +1,7 @@
 import { PstAction, ArNSState, ContractResult } from "../../types/types";
 declare const ContractError;
 
-// Modifies the fees for purchasing ArNS names
+// Modifies an existing tier or creates a new one.
 export const setTier = async (
   state: ArNSState,
   { caller, input: { tier, maxSubdomains, minTtlSeconds } }: PstAction

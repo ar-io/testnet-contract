@@ -2,7 +2,7 @@ import { PstAction, ArNSState, ContractResult } from "../../types/types";
 import { TX_ID_LENGTH } from "@/constants";
 declare const ContractError;
 
-// Modifies the fees for purchasing ArNS names
+// Removes a white listed ANT source code transaction
 export const removeANTSourceCodeTx = async (
   state: ArNSState,
   { caller, input: { contractTxId } }: PstAction

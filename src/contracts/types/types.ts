@@ -56,7 +56,8 @@ export interface ArNSState {
     // a list of all registered gateways
     [address: string]: // every gateway needs a wallet to act as the identity
     {
-      stake: number; // the total stake of this gateway.  this is a combination of all vaults and delegate stake balances
+      operatorStake: number; // the total stake of this gateway.  this is a combination of all vaults
+      delegatedStake: number; // the total stake of this gateway's delegates.
       vaults: [
         {
           balance: number; // Positive integer, the amount staked by the gateway operator
@@ -71,7 +72,7 @@ export interface ArNSState {
           {
             balance: number; // The amount of tokens this wallet has delegated to this gateway
             start: number; // At what block the delegation starts.
-            end?: number; // At what block the delegation ends.
+            end: number; // At what block the delegation ends.
           }
         ];
       };
@@ -182,8 +183,8 @@ export type PstFunction =
   | "getRegisteredGateway"
   | "getGatewayAddressRegistry"
   | "delegateStake"
-  | "increaseGatewayStake"
-  | "decreaseGatewayStake"
+  | "increaseOperatorStake"
+  | "decreaseOperatorStake"
   | "joinNetwork"
   | "leaveNetwork"
   | "updateRegisteredGateway"

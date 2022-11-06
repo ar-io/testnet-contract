@@ -34,6 +34,8 @@ describe("Testing the ArNS Registry Contract", () => {
   let walletAddress5: string;
   let gatewayWallet: JWKInterface;
   let gatewayWalletAddress: string;
+  let gatewayWallet2: JWKInterface;
+  let gatewayWalletAddress2: string;
   let delegateWallet: JWKInterface;
   let delegateWalletAddress: string;
   let delegateWallet2: JWKInterface;
@@ -88,6 +90,10 @@ describe("Testing the ArNS Registry Contract", () => {
     gatewayWallet = await arweave.wallets.generate();
     gatewayWalletAddress = await arweave.wallets.jwkToAddress(gatewayWallet);
     await addFunds(arweave, gatewayWallet);
+
+    gatewayWallet2 = await arweave.wallets.generate();
+    gatewayWalletAddress2 = await arweave.wallets.jwkToAddress(gatewayWallet2);
+    await addFunds(arweave, gatewayWallet2);
 
     delegateWallet = await arweave.wallets.generate();
     delegateWalletAddress = await arweave.wallets.jwkToAddress(delegateWallet);
@@ -156,6 +162,7 @@ describe("Testing the ArNS Registry Contract", () => {
         [walletAddress]: 0, // create tokens during mint
         [walletAddress2]: 1_000_000_000,
         [gatewayWalletAddress]: GATEWAY_STARTING_TOKENS,
+        [gatewayWalletAddress2]: GATEWAY_STARTING_TOKENS * 2,
         [delegateWalletAddress]: DELEGATE_STARTING_TOKENS,
         [delegateWalletAddress2]: DELEGATE2_STARTING_TOKENS
       },
@@ -181,6 +188,36 @@ describe("Testing the ArNS Registry Contract", () => {
             start: 0, // At what block the lock starts.
           },
         ],
+      },
+      gateways: {
+        [gatewayWalletAddress2]: {
+          operatorStake: 80_000,
+          delegatedStake: 300_000,
+          vaults: [
+            {
+              balance: 40_000, // Positive integer
+              end: 0, // At what block the lock ends.
+              start: 1, // At what block the lock starts.
+            }
+          ],
+          delegates: {
+            [delegateWalletAddress2]: [
+              {
+                balance: 300_000, // Positive integer
+                end: 5_000, // At what block the lock ends.
+                start: 0, // At what block the lock starts.
+              },
+            ],
+          },
+          settings: {
+            label: "Arweave Community Gateway", // The friendly name used to label this gateway
+            sslFingerprint: "BLAH BLAH BLAH SSL FINGERPRINT", // the SHA-256 Fingerprint used by SSL certificate used by this gateway eg. 5C 5D 05 16 C3 3C A3 34 51 78 1E 67 49 14 D4 66 31 A9 19 3C 63 8E F9 9E 54 84 1A F0 4C C2 1A 36
+            ipAddress: "10.230.70.22", // the IP address this gateway can be reached at eg. 10.124.72.100
+            url: "arweave.net", // the fully qualified domain name this gateway can be reached at. eg arweave.net
+            port: 443, // The port used by this gateway eg. 443
+            protocol: "https", // The protocol used by this gateway, either http or https
+          },
+        },
       },
     };
 
@@ -211,13 +248,6 @@ describe("Testing the ArNS Registry Contract", () => {
         totalBalance += parseFloat(currentStateJSON.balances[address]);
       }
     }
-    console.log(`Non-Foundation Total Balances: ${totalBalance}`);
-    console.log(`Foundation Balance: ${currentStateJSON.foundation.balance}`);
-    console.log(
-      `Total Tokens Minted: ${
-        totalBalance + currentStateJSON.foundation.balance
-      }`
-    );
     // NEED TO UPDATE TO INCLUDE VAULTED TOKENS
     // ~~ Stop ArLocal ~~
     await arlocal.stop();
@@ -1814,22 +1844,55 @@ describe("Testing the ArNS Registry Contract", () => {
     let currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.gateways[gatewayWalletAddress].vaults[0].balance).toEqual(5000);
     expect(currentStateJSON.balances[gatewayWalletAddress]).toEqual(GATEWAY_STARTING_TOKENS - 5000);
-    expect(currentStateJSON.gateways[gatewayWalletAddress].stake).toEqual(qty);
+    expect(currentStateJSON.gateways[gatewayWalletAddress].operatorStake).toEqual(qty);
   });
 
   it("should increase gateway stake with correct balance", async () => {
     let qty = 1000;
     pst.connect(gatewayWallet); // only owns a vaulted balance
     await pst.writeInteraction({
-      function: "increaseGatewayStake",
+      function: "increaseOperatorStake",
+      qty,
+    });
+    qty = 9999;
+    await pst.writeInteraction({
+      function: "increaseOperatorStake",
       qty,
     });
     await mineBlock(arweave);
     let currentState = await pst.currentState();
     let currentStateString = JSON.stringify(currentState);
     let currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.gateways[gatewayWalletAddress].stake).toEqual(5000 + 1000);
+    expect(currentStateJSON.balances[gatewayWalletAddress]).toEqual(GATEWAY_STARTING_TOKENS - 5000 - 1000 - 9999)
+    expect(currentStateJSON.gateways[gatewayWalletAddress].operatorStake).toEqual(5000 + 1000 + 9999);
     expect(currentStateJSON.gateways[gatewayWalletAddress].vaults[1].balance).toEqual(1000);
+  });
+
+  it("should decrease gateway stake with correct balance", async () => {
+    let id = 2;
+    pst.connect(gatewayWallet); // owns 2 vaulted balances
+    await pst.writeInteraction({
+      function: "decreaseOperatorStake",
+      id,
+    });
+    await mineBlock(arweave);
+    await mineBlock(arweave);
+    await mineBlock(arweave);
+    await mineBlock(arweave);
+    let currentState = await pst.currentState();
+    let currentStateString = JSON.stringify(currentState);
+    let currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.gateways[gatewayWalletAddress].vaults[2].end).toBeGreaterThan(0);
+    await pst.writeInteraction({
+      function: "decreaseOperatorStake",
+      id,
+    });
+    await mineBlock(arweave);
+    currentState = await pst.currentState();
+    currentStateString = JSON.stringify(currentState);
+    currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.gateways[gatewayWalletAddress].operatorStake).toEqual(5000 + 1000);
+    expect(currentStateJSON.gateways[gatewayWalletAddress].vaults[2].balance).toEqual(0);
   });
 
   it("should delegate stake with correct balance", async () => {
@@ -1874,7 +1937,7 @@ describe("Testing the ArNS Registry Contract", () => {
     expect(currentStateJSON.gateways[gatewayWalletAddress].delegates[delegateWalletAddress][0].balance).toEqual(100);
     expect(currentStateJSON.balances[delegateWalletAddress]).toEqual(DELEGATE_STARTING_TOKENS - 100 * 2);
     expect(currentStateJSON.gateways[gatewayWalletAddress].delegates[delegateWalletAddress2].length).toEqual(3);
-    expect(currentStateJSON.gateways[gatewayWalletAddress].stake).toEqual(5000 + 1000 + 100 + 100 + 1000 + 5000 + 25000);
+    expect(currentStateJSON.gateways[gatewayWalletAddress].delegatedStake).toEqual(100 + 100 + 1000 + 5000 + 25000);
   });
 
   it("should undelegate stake with correct ownership", async () => {
@@ -1922,14 +1985,13 @@ describe("Testing the ArNS Registry Contract", () => {
     currentState = await pst.currentState();
     currentStateString = JSON.stringify(currentState);
     currentStateJSON = JSON.parse(currentStateString);
-    console.log(JSON.stringify(currentStateJSON.gateways[gatewayWalletAddress], null, 5));
     expect(currentStateJSON.gateways[gatewayWalletAddress].delegates[delegateWalletAddress][1].balance).toEqual(0);
     expect(currentStateJSON.gateways[gatewayWalletAddress].delegates[delegateWalletAddress2][0].balance).toEqual(0);
     expect(currentStateJSON.gateways[gatewayWalletAddress].delegates[delegateWalletAddress2][1].balance).toEqual(0);
     expect(currentStateJSON.gateways[gatewayWalletAddress].delegates[delegateWalletAddress2][2].balance).toEqual(0);
     expect(currentStateJSON.balances[delegateWalletAddress]).toEqual(DELEGATE_STARTING_TOKENS - 100);
     expect(currentStateJSON.balances[delegateWalletAddress2]).toEqual(DELEGATE2_STARTING_TOKENS);
-    expect(currentStateJSON.gateways[gatewayWalletAddress].stake).toEqual(5000 + 1000 + 100);
+    expect(currentStateJSON.gateways[gatewayWalletAddress].delegatedStake).toEqual(100);
   });
 
   it("should leave the network with correct ownership", async () => {

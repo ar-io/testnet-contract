@@ -4,7 +4,7 @@ import { PstAction, ArNSState, ContractResult } from "../../types/types";
 declare const ContractError;
 declare const SmartWeave: any;
 
-// Sets an existing record and if one does not exist, it cre
+// Signals an approval for a proposed foundation action
 export const approveFoundationAction = async (
   state: ArNSState,
   { caller, input: { id } }: PstAction

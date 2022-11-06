@@ -2,7 +2,7 @@ import { PstAction, ArNSState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 
-// Sets an existing record and if one does not exist, it cre
+// Temporary method to fix a broken contract state
 export const fixState = async (
   state: ArNSState,
   { caller, input: {} }: PstAction

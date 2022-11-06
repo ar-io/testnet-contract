@@ -3,16 +3,21 @@ import { PstAction, ArNSState, ContractResult } from "../../types/types";
 declare const ContractError;
 declare const SmartWeave: any;
 
-// Sets an existing record and if one does not exist, it cre
+// Delegates an amount of tokens to a joined gateway
 export const delegateStake = async (
   state: ArNSState,
   { caller, input: { qty, target } }: PstAction
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const gateways = state.gateways;
+  const settings = state.settings;
 
   if (!Number.isInteger(qty) || qty <= 0) {
     throw new ContractError("Quantity must be a positive integer.");
+  }
+
+  if (qty < settings.minDelegatedStakeAmount) {
+    throw new ContractError("Quantity is not about the minimum delegated stake")
   }
 
   if (!balances[caller]) {
@@ -29,7 +34,7 @@ export const delegateStake = async (
     if (caller in state.gateways[target].delegates) {
       // this caller is already delegated, so increase existing stake by adding a new vault
       state.balances[caller] -= qty;
-      state.gateways[target].stake += qty;
+      state.gateways[target].delegatedStake += qty;
       state.gateways[target].delegates[caller].push({
         balance: qty,
         start: +SmartWeave.block.height,
@@ -38,7 +43,7 @@ export const delegateStake = async (
     } else {
       // create a new stake
       state.balances[caller] -= qty;
-      state.gateways[target].stake += qty;
+      state.gateways[target].delegatedStake += qty;
       state.gateways[target].delegates[caller] = [
         {
           balance: qty,

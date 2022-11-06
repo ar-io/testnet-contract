@@ -3,7 +3,7 @@ import { PstAction, ArNSState, ContractResult } from "../../types/types";
 declare const ContractError;
 declare const SmartWeave: any;
 
-// Sets an existing record and if one does not exist, it cre
+// Undelegates a single stake or all stakes from a gateway
 export const undelegateStake = async (
   state: ArNSState,
   { caller, input: { id, target } }: PstAction
@@ -50,7 +50,7 @@ export const undelegateStake = async (
       } else {
         state.balances[caller] = gateways[target].delegates[caller][id].balance;
       }
-      state.gateways[target].stake -=
+      state.gateways[target].delegatedStake -=
         state.gateways[target].delegates[caller][id].balance; // deduct from primary gateway stake
       state.gateways[target].delegates[caller][id].balance = 0; // zero out this balance but do not delete the record
     } else {
@@ -75,7 +75,7 @@ export const undelegateStake = async (
             gateways[target].delegates[caller][i].balance;
         }
         // gateways[target].delegates[caller].splice(i, 1); can remove entire stake
-        state.gateways[target].stake -=
+        state.gateways[target].delegatedStake -=
           state.gateways[target].delegates[caller][i].balance; // deduct from primary gateway stake
         state.gateways[target].delegates[caller][i].balance = 0; // zero out this balance but do not delete the record
       } else {

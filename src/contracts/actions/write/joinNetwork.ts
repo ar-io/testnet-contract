@@ -3,7 +3,7 @@ import { PstAction, ArNSState, ContractResult } from "../../types/types";
 declare const ContractError;
 declare const SmartWeave: any;
 
-// Sets an existing record and if one does not exist, it cre
+// Adds a gateway into the address registry and joins it to the ar.io network
 export const joinNetwork = async (
   state: ArNSState,
   {
@@ -61,7 +61,8 @@ export const joinNetwork = async (
     // Join the network
     state.balances[caller] -= qty;
     state.gateways[caller] = {
-      stake: qty,
+      operatorStake: qty,
+      delegatedStake: 0,
       vaults: [{
         balance: qty,
         start: +SmartWeave.block.height,
