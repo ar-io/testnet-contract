@@ -31,14 +31,8 @@ export interface ArNSState {
   };
   vaults: {
     // a list of all vaults that have locked balances
-    [address: string]: [
-      // a wallet can have multiple vaults
-      {
-        balance: number; // Positive integer, the amount held in this vault
-        start: number; // At what block the lock starts.
-        end: number; // At what block the lock ends.
-      }
-    ];
+    [address: string]: [TokenVault];
+    // a wallet can have multiple vaults
   };
   fees: {
     // A list of all fees for purchasing ArNS names
@@ -56,28 +50,32 @@ export interface ArNSState {
     // a list of all registered gateways
     [address: string]: // every gateway needs a wallet to act as the identity
     {
-      operatorStake: number; // the total stake of this gateway.  this is a combination of all vaults
+      operatorStake: number; // the total stake of this gateway's operator.
       delegatedStake: number; // the total stake of this gateway's delegates.
-      vaults: [
-        {
-          balance: number; // Positive integer, the amount staked by the gateway operator
-          start: number; // At what block the join starts.
-          end: number; // At what block the join ends.
-        }
-      ];
-      settings: GatewaySettings; // All of the settings related to this gateway
+      settings: GatewaySettings;
+      vaults: [TokenVault]; // the locked tokens staked by this gateway operator
       delegates: {
         // The delegates that have staked tokens with this gateway
-        [address: string]: [
-          {
-            balance: number; // The amount of tokens this wallet has delegated to this gateway
-            start: number; // At what block the delegation starts.
-            end: number; // At what block the delegation ends.
-          }
-        ];
+        [address: string]: [TokenVault];
       };
     };
   };
+}
+
+export interface TokenVault {
+  balance: number; // Positive integer, the amount locked
+  start: number; // At what block the lock starts.
+  end: number; // At what block the lock ends.  0 means no end date.
+}
+
+export interface GatewaySettings {
+  // All of the settings related to this gateway
+  label: string; // The friendly name used to label this gateway
+  sslFingerprint: string; // the SHA-256 Fingerprint used by SSL certificate used by this gateway eg. 5C 5D 05 16 C3 3C A3 34 51 78 1E 67 49 14 D4 66 31 A9 19 3C 63 8E F9 9E 54 84 1A F0 4C C2 1A 36
+  ipAddress?: string; // the IP address this gateway can be reached at eg. 10.124.72.100
+  url: string; // the fully qualified domain name this gateway can be reached at. eg arweave.net
+  port: number; // The port used by this gateway eg. 443
+  protocol: AllowedProtocols; // The protocol used by this gateway, either http or https
 }
 
 export interface PstAction {
@@ -125,15 +123,6 @@ export interface FoundationActionInterface {
   note?: string;
   signed?: string[];
   lockLength?: number;
-}
-
-export interface GatewaySettings {
-  label?: string; // The friendly name used to label this gateway
-  sslFingerprint: string; // the SHA-256 Fingerprint used by SSL certificate used by this gateway eg. 5C 5D 05 16 C3 3C A3 34 51 78 1E 67 49 14 D4 66 31 A9 19 3C 63 8E F9 9E 54 84 1A F0 4C C2 1A 36
-  ipAddress?: string; // the IP address this gateway can be reached at eg. 10.124.72.100
-  url: string; // the fully qualified domain name this gateway can be reached at. eg arweave.net
-  port: number; // The port used by this gateway eg. 443
-  protocol: AllowedProtocols; // The protocol used by this gateway, either http or https
 }
 
 export type AllowedProtocols = "http" | "https";
