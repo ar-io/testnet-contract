@@ -48,17 +48,18 @@ export interface ArNSState {
   };
   gateways: {
     // a list of all registered gateways
-    [address: string]: // every gateway needs a wallet to act as the identity
-    {
-      operatorStake: number; // the total stake of this gateway's operator.
-      delegatedStake: number; // the total stake of this gateway's delegates.
-      settings: GatewaySettings;
-      vaults: [TokenVault]; // the locked tokens staked by this gateway operator
-      delegates: {
-        // The delegates that have staked tokens with this gateway
-        [address: string]: [TokenVault];
-      };
-    };
+    [address: string]: Gateway; // every gateway needs a wallet to act as the identity
+  };
+}
+
+export interface Gateway {
+  operatorStake: number; // the total stake of this gateway's operator.
+  delegatedStake: number; // the total stake of this gateway's delegates.
+  settings: GatewaySettings;
+  vaults: [TokenVault]; // the locked tokens staked by this gateway operator
+  delegates: {
+    // The delegates that have staked tokens with this gateway
+    [address: string]: [TokenVault];
   };
 }
 

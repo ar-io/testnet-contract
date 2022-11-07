@@ -177,22 +177,22 @@ describe("Testing the ArNS Registry Contract", () => {
       vaults: {
         [walletAddress]: [
           {
-            balance: 500000, // Positive integer
-            end: 1000, // At what block the lock ends.
+            balance: 500_000, // Positive integer
+            end: 1_000, // At what block the lock ends.
             start: 0, // At what block the lock starts.
           },
         ],
         [walletAddress3]: [
           {
-            balance: 1000000, // Positive integer
-            end: 1000, // At what block the lock ends.
+            balance: 1_000_000, // Positive integer
+            end: 1_000, // At what block the lock ends.
             start: 0, // At what block the lock starts.
           },
         ],
         [delegateWalletAddress2]: [
           {
-            balance: 300000, // Positive integer
-            end: 5000, // At what block the lock ends.
+            balance: 300_000, // Positive integer
+            end: 5_000, // At what block the lock ends.
             start: 0, // At what block the lock starts.
           },
         ],
@@ -227,8 +227,8 @@ describe("Testing the ArNS Registry Contract", () => {
           },
         },
         [slashedWalletAddress]: {
-          operatorStake: 5_000,
-          delegatedStake: 200,
+          operatorStake: 6_000, // this includes the additional vault we add below
+          delegatedStake: 866, // this includes the additional delegate we add below
           vaults: [
             {
               balance: 5_000, // Positive integer
@@ -247,7 +247,8 @@ describe("Testing the ArNS Registry Contract", () => {
           },
           settings: {
             label: "Slashme", // The friendly name used to label this gateway
-            sslFingerprint: "B7 BC 55 10 CC 1C 63 7B 5E 5F B7 85 81 6A 77 3D BB 39 4B 68 33 7B 1B 11 7C A5 AB 43 CC F7 78 CF", // the SHA-256 Fingerprint used by SSL certificate used by this gateway eg. 5C 5D 05 16 C3 3C A3 34 51 78 1E 67 49 14 D4 66 31 A9 19 3C 63 8E F9 9E 54 84 1A F0 4C C2 1A 36
+            sslFingerprint:
+              "B7 BC 55 10 CC 1C 63 7B 5E 5F B7 85 81 6A 77 3D BB 39 4B 68 33 7B 1B 11 7C A5 AB 43 CC F7 78 CF", // the SHA-256 Fingerprint used by SSL certificate used by this gateway eg. 5C 5D 05 16 C3 3C A3 34 51 78 1E 67 49 14 D4 66 31 A9 19 3C 63 8E F9 9E 54 84 1A F0 4C C2 1A 36
             ipAddress: "75.10.113.66", // the IP address this gateway can be reached at eg. 10.124.72.100
             url: "slash-this-gateway.io", // the fully qualified domain name this gateway can be reached at. eg arweave.net
             port: 443, // The port used by this gateway eg. 443
@@ -257,11 +258,29 @@ describe("Testing the ArNS Registry Contract", () => {
       },
     };
 
-    initialState.gateways[slashedWalletAddress].delegates[delegateWalletAddress2] = [{
-          balance: 100, // Positive integer
-          end: 0, // At what block the lock ends.
-          start: 1, // At what block the lock starts.
-        }]    
+    initialState.gateways[slashedWalletAddress].delegates[
+      delegateWalletAddress
+    ].push({
+      balance: 100, // Positive integer
+      end: 0, // At what block the lock ends.
+      start: 1, // At what block the lock starts.
+    });
+
+    initialState.gateways[slashedWalletAddress].delegates[
+      delegateWalletAddress2
+    ] = [
+      {
+        balance: 666, // Positive integer
+        end: 0, // At what block the lock ends.
+        start: 1, // At what block the lock starts.
+      },
+    ];
+
+    initialState.gateways[slashedWalletAddress].vaults.push({
+      balance: 1_000, // Positive integer
+      end: 0, // At what block the lock ends.
+      start: 1, // At what block the lock starts.
+    });
 
     // ~~ Deploy contract ~~
     const deploy = await warp.createContract.deploy({
@@ -2054,21 +2073,39 @@ describe("Testing the ArNS Registry Contract", () => {
     await pst.writeInteraction({
       function: "proposeGatewaySlash",
       target,
-      penalty
+      penalty,
     });
     await mineBlock(arweave);
     let currentState = await pst.currentState();
     let currentStateString = JSON.stringify(currentState);
     let currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.balances[gatewayWalletAddress]).toEqual(
-      GATEWAY_STARTING_TOKENS - 5000 - 1000 - 9999
-    );
     expect(
-      currentStateJSON.gateways[gatewayWalletAddress].operatorStake
-    ).toEqual(5000 + 1000 + 9999);
+      currentStateJSON.gateways[slashedWalletAddress].delegatedStake
+    ).toEqual(780);
     expect(
-      currentStateJSON.gateways[gatewayWalletAddress].vaults[1].balance
-    ).toEqual(1000);
+      currentStateJSON.gateways[slashedWalletAddress].operatorStake
+    ).toEqual(5400);
+    expect(
+      currentStateJSON.gateways[slashedWalletAddress].vaults[0].balance
+    ).toEqual(4500);
+    expect(
+      currentStateJSON.gateways[slashedWalletAddress].vaults[1].balance
+    ).toEqual(900);
+    expect(
+      currentStateJSON.gateways[slashedWalletAddress].delegates[
+        delegateWalletAddress
+      ][0].balance
+    ).toEqual(90);
+    expect(
+      currentStateJSON.gateways[slashedWalletAddress].delegates[
+        delegateWalletAddress
+      ][1].balance
+    ).toEqual(90);
+    expect(
+      currentStateJSON.gateways[slashedWalletAddress].delegates[
+        delegateWalletAddress2
+      ][0].balance
+    ).toEqual(600);
   });
 
   it("should leave the network with correct ownership", async () => {
