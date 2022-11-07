@@ -27,6 +27,7 @@ import { delegateStake } from "./actions/write/delegateStake";
 import { undelegateStake } from "./actions/write/undelegateStake";
 import { increaseOperatorStake } from "./actions/write/increaseOperatorStake";
 import { decreaseOperatorStake } from "./actions/write/decreaseOperatorStake";
+import { proposeGatewaySlash } from "./actions/write/proposeGatewaySlash";
 
 declare const ContractError;
 
@@ -89,6 +90,8 @@ export async function handle(
       return await increaseOperatorStake(state, action);
     case "decreaseOperatorStake":
       return await decreaseOperatorStake(state, action);
+    case "proposeGatewaySlash":
+      return await proposeGatewaySlash(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognised: "${input.function}"`
