@@ -40,6 +40,8 @@ describe("Testing the ArNS Registry Contract", () => {
   let delegateWalletAddress: string;
   let delegateWallet2: JWKInterface;
   let delegateWalletAddress2: string;
+  let slashedWallet: JWKInterface;
+  let slashedWalletAddress: string;
   let initialState: ArNSState;
   let Warp: Warp;
   let arweave: Arweave;
@@ -104,6 +106,10 @@ describe("Testing the ArNS Registry Contract", () => {
       delegateWallet2
     );
     await addFunds(arweave, delegateWallet2);
+
+    slashedWallet = await arweave.wallets.generate();
+    slashedWalletAddress = await arweave.wallets.jwkToAddress(slashedWallet);
+    await addFunds(arweave, slashedWallet);
 
     // ~~ Read contract source and initial state files ~~
     contractSrc = fs.readFileSync(
@@ -220,8 +226,42 @@ describe("Testing the ArNS Registry Contract", () => {
             protocol: "https", // The protocol used by this gateway, either http or https
           },
         },
+        [slashedWalletAddress]: {
+          operatorStake: 5_000,
+          delegatedStake: 200,
+          vaults: [
+            {
+              balance: 5_000, // Positive integer
+              end: 0, // At what block the lock ends.
+              start: 1, // At what block the lock starts.
+            },
+          ],
+          delegates: {
+            [delegateWalletAddress]: [
+              {
+                balance: 100, // Positive integer
+                end: 0, // At what block the lock ends.
+                start: 1, // At what block the lock starts.
+              },
+            ],
+          },
+          settings: {
+            label: "Slashme", // The friendly name used to label this gateway
+            sslFingerprint: "B7 BC 55 10 CC 1C 63 7B 5E 5F B7 85 81 6A 77 3D BB 39 4B 68 33 7B 1B 11 7C A5 AB 43 CC F7 78 CF", // the SHA-256 Fingerprint used by SSL certificate used by this gateway eg. 5C 5D 05 16 C3 3C A3 34 51 78 1E 67 49 14 D4 66 31 A9 19 3C 63 8E F9 9E 54 84 1A F0 4C C2 1A 36
+            ipAddress: "75.10.113.66", // the IP address this gateway can be reached at eg. 10.124.72.100
+            url: "slash-this-gateway.io", // the fully qualified domain name this gateway can be reached at. eg arweave.net
+            port: 443, // The port used by this gateway eg. 443
+            protocol: "https", // The protocol used by this gateway, either http or https
+          },
+        },
       },
     };
+
+    initialState.gateways[slashedWalletAddress].delegates[delegateWalletAddress2] = [{
+          balance: 100, // Positive integer
+          end: 0, // At what block the lock ends.
+          start: 1, // At what block the lock starts.
+        }]    
 
     // ~~ Deploy contract ~~
     const deploy = await warp.createContract.deploy({
@@ -261,7 +301,7 @@ describe("Testing the ArNS Registry Contract", () => {
     expect((await pst.currentState()).owner).toEqual(walletAddress);
   });
 
-  it("should properly mint tokens", async () => {
+  /*it("should properly mint tokens", async () => {
     await pst.writeInteraction({
       function: "mint",
       qty: WALLET_STARTING_TOKENS,
@@ -1151,7 +1191,7 @@ describe("Testing the ArNS Registry Contract", () => {
       "utf8"
     );
 
-    const newSrcTxId = await pst.save({ src: newSource });
+    const newSrcTxId = await pst.save({ src: newSource} );
     if (newSrcTxId === null) {
       return 0;
     }
@@ -1163,7 +1203,7 @@ describe("Testing the ArNS Registry Contract", () => {
     // note: the evolved balance always returns -1
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(-1);
 
-    const updatedContractTxId = await pst.save({ src: contractSrc });
+    const updatedContractTxId = await pst.save(contractSrc, );
     if (updatedContractTxId === null) {
       return 0;
     }
@@ -1758,6 +1798,7 @@ describe("Testing the ArNS Registry Contract", () => {
       { balance: 500, end: 322, start: 172 },
     ]);
   });
+  */
 
   // Network Join and Delegated Stake
   it("should join the network with correct parameters", async () => {
@@ -1824,7 +1865,7 @@ describe("Testing the ArNS Registry Contract", () => {
     ).toEqual(1000);
   });
 
-  it("should decrease gateway stake with correct balance", async () => {
+  it("should decrease gateway stake with correct ownership", async () => {
     let id = 2;
     pst.connect(gatewayWallet); // owns 2 vaulted balances
     await pst.writeInteraction({
@@ -2004,6 +2045,30 @@ describe("Testing the ArNS Registry Contract", () => {
     expect(
       currentStateJSON.gateways[gatewayWalletAddress].delegatedStake
     ).toEqual(100);
+  });
+
+  it("should slash gateway and its delegates", async () => {
+    let target = slashedWalletAddress;
+    let penalty = 10;
+    pst.connect(wallet); // only owns a vaulted balance
+    await pst.writeInteraction({
+      function: "proposeGatewaySlash",
+      target,
+      penalty
+    });
+    await mineBlock(arweave);
+    let currentState = await pst.currentState();
+    let currentStateString = JSON.stringify(currentState);
+    let currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.balances[gatewayWalletAddress]).toEqual(
+      GATEWAY_STARTING_TOKENS - 5000 - 1000 - 9999
+    );
+    expect(
+      currentStateJSON.gateways[gatewayWalletAddress].operatorStake
+    ).toEqual(5000 + 1000 + 9999);
+    expect(
+      currentStateJSON.gateways[gatewayWalletAddress].vaults[1].balance
+    ).toEqual(1000);
   });
 
   it("should leave the network with correct ownership", async () => {

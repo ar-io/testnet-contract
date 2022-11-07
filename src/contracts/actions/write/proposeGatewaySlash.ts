@@ -10,54 +10,42 @@ export const proposeGatewaySlash = async (
 ): Promise<ContractResult> => {
   const settings = state.settings;
   const gateways = state.gateways;
+  const owner = state.owner;
 
-  // penalty must be a positive number between 1-100
+  // This is to be replaced with on-chain governance
+  if (caller !== owner) {
+    throw new ContractError(`Caller is not the owner of the ArNS!`);
+  }
+
+  // penalty must be a positive number between 1-75%
+  if (!Number.isInteger(penalty) || penalty > 75 || penalty <= 0) {
+    throw new ContractError("Penalty must be a positive integer, between 1 and 75");
+  }
+
+  if (!target) {
+    throw new ContractError("No target specified");
+  }
+
+  const penaltyPercentage = penalty / 100;
+
   if (target in gateways) {
-    if (
-      state.gateways[caller].vaults[0].start + settings.gatewayJoinLength >
-      +SmartWeave.block.height
-    ) {
-      throw new ContractError(
-        "This Gateway has not been in the network long enough to leave"
-      );
-    } else if (state.gateways[caller].vaults[0].end === 0) {
-      // Begin leave process
-      // We use the root vault to determine the gateway end block height
-      state.gateways[caller].vaults[0].end =
-        +SmartWeave.block.height + settings.gatewayLeaveLength;
-    } else if (
-      state.gateways[caller].vaults[0].end <= +SmartWeave.block.height
-    ) {
-      // Finish leave process and return all funds
-      for (let i = 0; i < state.gateways[caller].vaults.length; i++) {
-        // iterate through each gateway vault
-        state.balances[caller] += state.gateways[caller].vaults[i].balance;
-        state.gateways[caller].operatorStake -=
-          state.gateways[caller].vaults[i].balance; // deduct from primary gateway stake
-        state.gateways[caller].vaults[i].balance = 0; // zero out this balance
+    // iterate through each gateway vault and slash all balances using the penalty percentage
+    for (let i = 0; i < state.gateways[target].vaults.length; i++) {
+      const newBalance = Math.floor(state.gateways[target].vaults[i].balance * penaltyPercentage);
+      state.gateways[target].vaults[i].balance -= newBalance;
+      state.gateways[target].operatorStake -= newBalance;
+    };
+    // iterate through each delegate and slash all balances using the penalty percentage
+    for (const key of Object.keys(state.gateways[target].delegates)) {
+      for (let i = 0; i < state.gateways[target].delegates[key].length; i++) {
+        // iterate through each delegate's vault
+        const newBalance = Math.floor(state.gateways[target].delegates[key][i].balance * penaltyPercentage);
+        state.gateways[target].delegates[key][i].balance -= newBalance;
+        state.gateways[target].delegatedStake -= newBalance;
       }
-      for (const key of Object.keys(state.gateways[caller].delegates)) {
-        // iterate through each delegate
-        for (let i = 0; i < state.gateways[caller].delegates[key].length; i++) {
-          // iterate through each delegate's vault
-          if (key in state.balances) {
-            state.balances[key] +=
-              state.gateways[caller].delegates[key][i].balance;
-          } else {
-            state.balances[key] =
-              state.gateways[caller].delegates[key][i].balance;
-          }
-          state.gateways[caller].delegatedStake -=
-            state.gateways[caller].delegates[key][i].balance; // deduct from primary gateway stake
-          state.gateways[caller].delegates[key][i].balance = 0; // zero out this balance
-        }
-      }
-      delete state.gateways[caller]; // clean up the state
-    } else {
-      throw new ContractError("This Gateway can not leave the network yet");
-    }
+  }
   } else {
-    throw new ContractError("This Gateway's wallet is not registered");
+      throw new ContractError("This target is not a registered gateway.");
   }
   return { state };
 };

@@ -16,6 +16,10 @@ export const delegateStake = async (
     throw new ContractError("Quantity must be a positive integer.");
   }
 
+  if (!target) {
+    throw new ContractError("No target specified");
+  }
+
   if (qty < settings.minDelegatedStakeAmount) {
     throw new ContractError("Quantity is not about the minimum delegated stake")
   }
