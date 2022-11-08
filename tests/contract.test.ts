@@ -2108,6 +2108,27 @@ describe("Testing the ArNS Registry Contract", () => {
     ).toEqual(600);
   });
 
+  it("should slash gateway and its delegates and remove when stake is too low", async () => {
+    let target = slashedWalletAddress;
+    let penalty = 50;
+    pst.connect(wallet); // contract owner
+    await pst.writeInteraction({
+      function: "proposeGatewaySlash",
+      target,
+      penalty,
+    });
+    await mineBlock(arweave);
+    let currentState = await pst.currentState();
+    let currentStateString = JSON.stringify(currentState);
+    let currentStateJSON = JSON.parse(currentStateString);
+    expect(
+      currentStateJSON.balances[slashedWalletAddress]).toEqual(2700);
+    expect(
+      currentStateJSON.balances[delegateWalletAddress]).toEqual(990);
+    expect(
+      currentStateJSON.balances[delegateWalletAddress2]).toEqual(50300);
+  });
+
   it("should leave the network with correct ownership", async () => {
     pst.connect(gatewayWallet); // only owns a vaulted balance
     await pst.writeInteraction({
@@ -2135,7 +2156,7 @@ describe("Testing the ArNS Registry Contract", () => {
       GATEWAY_STARTING_TOKENS
     );
     expect(currentStateJSON.balances[delegateWalletAddress]).toEqual(
-      DELEGATE_STARTING_TOKENS
+      DELEGATE_STARTING_TOKENS + 90
     );
   });
 });

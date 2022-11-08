@@ -47,5 +47,36 @@ export const proposeGatewaySlash = async (
   } else {
       throw new ContractError("This target is not a registered gateway.");
   }
+
+  if (state.gateways[target].operatorStake < settings.minGatewayStakeAmount) {
+    // This gateway does not have minimum stake and should be ejected
+    for (let i = 0; i < state.gateways[target].vaults.length; i++) {
+      // iterate through each gateway vault
+      if (target in state.balances) {
+        state.balances[target] += state.gateways[target].vaults[i].balance;
+      } else {
+        state.balances[target] = state.gateways[target].vaults[i].balance; // deduct from primary gateway stake
+      }
+      state.gateways[target].operatorStake -= state.gateways[target].vaults[i].balance;
+      state.gateways[target].vaults[i].balance = 0; // zero out this balance
+    }
+    for (const key of Object.keys(state.gateways[target].delegates)) {
+      // iterate through each delegate
+      for (let i = 0; i < state.gateways[target].delegates[key].length; i++) {
+        // iterate through each delegate's vault
+        if (key in state.balances) {
+          state.balances[key] +=
+            state.gateways[target].delegates[key][i].balance;
+        } else {
+          state.balances[key] =
+            state.gateways[target].delegates[key][i].balance;
+        }
+        state.gateways[target].delegatedStake -=
+          state.gateways[target].delegates[key][i].balance; // deduct from primary gateway stake
+        state.gateways[target].delegates[key][i].balance = 0; // zero out this balance
+      }
+    }
+    delete state.gateways[target]; // clean up the state
+  }
   return { state };
 };
