@@ -70,7 +70,7 @@ export const joinNetwork = async (
     );
   }
 
-  if (!isipV4Address(ipV4Address)) {
+  if (ipV4Address && !isipV4Address(ipV4Address)) {
     throw new ContractError("Not a valid ipv4 address.");
   }
 
