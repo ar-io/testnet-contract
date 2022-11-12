@@ -73,10 +73,11 @@ export interface GatewaySettings {
   // All of the settings related to this gateway
   label: string; // The friendly name used to label this gateway
   sslFingerprint: string; // the SHA-256 Fingerprint used by SSL certificate used by this gateway eg. 5C 5D 05 16 C3 3C A3 34 51 78 1E 67 49 14 D4 66 31 A9 19 3C 63 8E F9 9E 54 84 1A F0 4C C2 1A 36
-  ipAddress?: string; // the IP address this gateway can be reached at eg. 10.124.72.100
+  ipV4Address?: string; // the IP address this gateway can be reached at eg. 10.124.72.100
   url: string; // the fully qualified domain name this gateway can be reached at. eg arweave.net
   port: number; // The port used by this gateway eg. 443
   protocol: AllowedProtocols; // The protocol used by this gateway, either http or https
+  note?: string; // An additional note (256 character max) the gateway operator can set to indicate things like maintenance or other operational updates.
 }
 
 export interface PstAction {
@@ -105,7 +106,7 @@ export interface PstInput {
   };
   label: string;
   sslFingerprint: string;
-  ipAddress?: string;
+  ipV4Address?: string;
   url: string;
   port: number;
   protocol: AllowedProtocols;
@@ -178,7 +179,7 @@ export type PstFunction =
   | "decreaseOperatorStake"
   | "joinNetwork"
   | "leaveNetwork"
-  | "updateRegisteredGateway"
+  | "updateGatewaySettings"
   | "undelegateStake"
   | "proposeGatewaySlash";
 

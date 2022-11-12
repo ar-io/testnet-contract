@@ -20,12 +20,14 @@ export const leaveNetwork = async (
     for (let i = 0; i < state.gateways[caller].vaults.length; i++) {
       // iterate through each gateway vault and set the end date
       state.gateways[caller].vaults[i].end =
-      +SmartWeave.block.height + settings.gatewayLeaveLength;
+        +SmartWeave.block.height + settings.gatewayLeaveLength;
     }
     state.gateways[caller].settings.url = "";
-    state.gateways[caller].settings.ipAddress = "";
-
-  } else if (state.gateways[caller].settings.url === "" && state.gateways[caller].vaults[0].end <= +SmartWeave.block.height) {
+    state.gateways[caller].settings.ipV4Address = "";
+  } else if (
+    state.gateways[caller].settings.url === "" &&
+    state.gateways[caller].vaults[0].end <= +SmartWeave.block.height
+  ) {
     // Finish leave process and return all funds
     for (let i = 0; i < state.gateways[caller].vaults.length; i++) {
       // iterate through each gateway vault
@@ -35,7 +37,8 @@ export const leaveNetwork = async (
         state.gateways[caller].operatorStake -=
           state.gateways[caller].vaults[i].balance; // deduct from primary gateway stake
       }
-      state.gateways[caller].operatorStake -= state.gateways[caller].vaults[i].balance;
+      state.gateways[caller].operatorStake -=
+        state.gateways[caller].vaults[i].balance;
       state.gateways[caller].vaults[i].balance = 0; // zero out this balance
     }
     for (const key of Object.keys(state.gateways[caller].delegates)) {

@@ -1,3 +1,5 @@
+import { MAX_NOTE_LENGTH } from "@/constants";
+import { isipV4Address } from "@/contracts/utilities";
 import { PstAction, ArNSState, ContractResult } from "../../types/types";
 
 declare const ContractError;
@@ -8,7 +10,16 @@ export const joinNetwork = async (
   state: ArNSState,
   {
     caller,
-    input: { qty, label, sslFingerprint, ipAddress, url, port, protocol },
+    input: {
+      qty,
+      label,
+      sslFingerprint,
+      ipV4Address,
+      url,
+      port,
+      protocol,
+      note,
+    },
   }: PstAction
 ): Promise<ContractResult> => {
   const balances = state.balances;
@@ -35,6 +46,10 @@ export const joinNetwork = async (
     );
   }
 
+  if (typeof label !== "string") {
+    throw new ContractError("Label format not recognized.");
+  }
+
   if (!Number.isInteger(port) || port > 65535) {
     throw new ContractError("Invalid port number.");
   }
@@ -49,10 +64,23 @@ export const joinNetwork = async (
     );
   }
 
-  if (ipAddress === undefined && url === undefined) {
+  if (ipV4Address === undefined && url === undefined) {
     throw new ContractError(
       "Please provide an IP address or URL to access this gateway"
     );
+  }
+
+  if (!isipV4Address(ipV4Address)) {
+    throw new ContractError("Not a valid ipv4 address.");
+  }
+
+  if (note) {
+    if (typeof note !== "string") {
+      throw new ContractError("Note format not recognized.");
+    }
+    if (note.length > MAX_NOTE_LENGTH) {
+      throw new ContractError("Note is too long.");
+    }
   }
 
   if (caller in gateways) {
@@ -63,15 +91,17 @@ export const joinNetwork = async (
     state.gateways[caller] = {
       operatorStake: qty,
       delegatedStake: 0,
-      vaults: [{
-        balance: qty,
-        start: +SmartWeave.block.height,
-        end: 0,
-      }],
+      vaults: [
+        {
+          balance: qty,
+          start: +SmartWeave.block.height,
+          end: 0,
+        },
+      ],
       settings: {
         label,
         sslFingerprint,
-        ipAddress,
+        ipV4Address,
         url,
         port,
         protocol,

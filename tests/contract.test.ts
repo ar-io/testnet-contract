@@ -221,7 +221,7 @@ describe("Testing the ArNS Registry Contract", () => {
           settings: {
             label: "Arweave Community Gateway", // The friendly name used to label this gateway
             sslFingerprint: "BLAH BLAH BLAH SSL FINGERPRINT", // the SHA-256 Fingerprint used by SSL certificate used by this gateway eg. 5C 5D 05 16 C3 3C A3 34 51 78 1E 67 49 14 D4 66 31 A9 19 3C 63 8E F9 9E 54 84 1A F0 4C C2 1A 36
-            ipAddress: "10.230.70.22", // the IP address this gateway can be reached at eg. 10.124.72.100
+            ipV4Address: "10.230.70.22", // the IP address this gateway can be reached at eg. 10.124.72.100
             url: "arweave.net", // the fully qualified domain name this gateway can be reached at. eg arweave.net
             port: 443, // The port used by this gateway eg. 443
             protocol: "https", // The protocol used by this gateway, either http or https
@@ -250,7 +250,7 @@ describe("Testing the ArNS Registry Contract", () => {
             label: "Slashme", // The friendly name used to label this gateway
             sslFingerprint:
               "B7 BC 55 10 CC 1C 63 7B 5E 5F B7 85 81 6A 77 3D BB 39 4B 68 33 7B 1B 11 7C A5 AB 43 CC F7 78 CF", // the SHA-256 Fingerprint used by SSL certificate used by this gateway eg. 5C 5D 05 16 C3 3C A3 34 51 78 1E 67 49 14 D4 66 31 A9 19 3C 63 8E F9 9E 54 84 1A F0 4C C2 1A 36
-            ipAddress: "75.10.113.66", // the IP address this gateway can be reached at eg. 10.124.72.100
+            ipV4Address: "75.10.113.66", // the IP address this gateway can be reached at eg. 10.124.72.100
             url: "slash-this-gateway.io", // the fully qualified domain name this gateway can be reached at. eg arweave.net
             port: 443, // The port used by this gateway eg. 443
             protocol: "https", // The protocol used by this gateway, either http or https
@@ -1826,11 +1826,13 @@ describe("Testing the ArNS Registry Contract", () => {
   it("should join the network with correct parameters", async () => {
     let qty = 5000; // must meet the minimum
     let label = "Test Gateway"; // friendly label
-    let sslFingerprint = "282D6F79C9533C534EBD28826CB3D706139761AB";
-    let ipAddress = "192.168.1.40";
+    let sslFingerprint = "";
+    let ipV4Address = "192.168.1.40";
     let url = "test.ar.io";
     let port = 3000;
     let protocol = "http";
+    let note =
+      "Our gateway is the best test gateway. Contact bob@ar.io for more.";
 
     pst.connect(gatewayWallet); // only owns a vaulted balance
 
@@ -1839,10 +1841,11 @@ describe("Testing the ArNS Registry Contract", () => {
       qty,
       label,
       sslFingerprint,
-      ipAddress,
+      ipV4Address,
       url,
       port,
       protocol,
+      note,
     });
 
     await mineBlock(arweave);
@@ -1858,6 +1861,36 @@ describe("Testing the ArNS Registry Contract", () => {
     expect(
       currentStateJSON.gateways[gatewayWalletAddress].operatorStake
     ).toEqual(qty);
+  });
+
+  it("should update gateway settings with correct parameters", async () => {
+    let label = "Test Gateway SSL"; // friendly label
+    let port = 443;
+    let protocol = "https";
+    let sslFingerprint = "282D6F79C9533C534EBD28826CB3D706139761AB";
+    let note = "MAINTENANCE MODE";
+
+    pst.connect(gatewayWallet); // only owns a vaulted balance
+
+    await pst.writeInteraction({
+      function: "updateGatewaySettings",
+      label,
+      port,
+      sslFingerprint,
+      protocol,
+      note,
+    });
+
+    await mineBlock(arweave);
+    let currentState = await pst.currentState();
+    let currentStateString = JSON.stringify(currentState);
+    let currentStateJSON = JSON.parse(currentStateString);
+    expect(
+      currentStateJSON.gateways[gatewayWalletAddress].settings.label
+    ).toEqual(label);
+    expect(
+      currentStateJSON.gateways[gatewayWalletAddress].settings.port
+    ).toEqual(port);
   });
 
   it("should increase gateway stake with correct balance", async () => {
