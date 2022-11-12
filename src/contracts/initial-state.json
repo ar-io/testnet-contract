@@ -2,6 +2,7 @@
   "ticker": "ARNS-TEST",
   "name": "Arweave Name System Test v0.1.7",
   "owner": "",
+  "rewards": 0,
   "settings": {
     "lockMinLength": 5,
     "lockMaxLength": 10000,

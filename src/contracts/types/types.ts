@@ -3,6 +3,7 @@ export interface ArNSState {
   ticker: string; // A short token symbol, shown in block explorers and marketplaces
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
   owner: string; // The owner of this contract who can execute specific methods
+  rewards: number; // the balance of rewards used by the ar.io protocol to incentivize network participants
   foundation: {
     // The settings and wallets used by the AR.IO Foundation.  This is for testing purposes only
     balance: number; // the amount of funds held by the foundation, collection from AR.IO services like ArNS

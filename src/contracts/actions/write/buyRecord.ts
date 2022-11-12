@@ -1,4 +1,5 @@
 import {
+  FOUNDATION_PERCENTAGE,
   MAX_NAME_LENGTH,
   MAX_YEARS,
   SECONDS_IN_A_YEAR,
@@ -91,7 +92,8 @@ export const buyRecord = async (
   if (!records[name]) {
     // No name created, so make a new one
     balances[caller] -= qty; // reduce callers balance
-    foundation.balance += qty; // increase foundation balance
+    foundation.balance += Math.floor(qty * (FOUNDATION_PERCENTAGE / 100)); // increase foundation balance using the foundation percentage
+    state.rewards += Math.floor(qty * ((100 - FOUNDATION_PERCENTAGE) / 100)); // increase protocol rewards without the foundation percentage
     records[name] = {
       tier,
       contractTxId,
@@ -105,7 +107,8 @@ export const buyRecord = async (
   ) {
     // This name's lease has expired and can be repurchased
     balances[caller] -= qty; // reduce callers balance
-    foundation.balance += qty; // increase foundation balance
+    foundation.balance += Math.floor(qty * (FOUNDATION_PERCENTAGE / 100)); // increase foundation balance using the foundation percentage
+    state.rewards += Math.floor(qty * ((100 - FOUNDATION_PERCENTAGE) / 100)); // increase protocol rewards without the foundation percentage
     records[name] = {
       tier,
       contractTxId,

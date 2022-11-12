@@ -305,6 +305,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentStateJSON = JSON.parse(currentStateString);
     console.log(JSON.stringify(currentStateJSON.balances, null, 5));
     console.log(JSON.stringify(currentStateJSON.gateways, null, 5));
+    console.log(JSON.stringify(currentStateJSON, null, 10));
     for (let address in currentStateJSON.balances) {
       if (currentStateJSON.balances.hasOwnProperty(address)) {
         totalBalance += parseFloat(currentStateJSON.balances[address]);
