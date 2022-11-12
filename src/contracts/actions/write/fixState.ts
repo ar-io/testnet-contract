@@ -24,7 +24,7 @@ export const fixState = async (
   }
 
   if (state.vaults === undefined) {
-    // Do this if foundation does not exist in the state of the contract.
+    // Do this if vaults do not exist in the state of the contract.
     state = {
       ...state,
       ...{
@@ -42,25 +42,39 @@ export const fixState = async (
           balance: 0,
           actionPeriod: 720,
           minSignatures: 2,
-          addresses: ["QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ", "31LPFYoow2G7j-eSSsrIh8OlNaARZ84-80J-8ba68d8", "NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g"],
-          actions: []
+          addresses: [
+            "QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ",
+            "31LPFYoow2G7j-eSSsrIh8OlNaARZ84-80J-8ba68d8",
+            "NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g",
+          ],
+          actions: [],
         },
       },
     };
-  } 
+  }
 
   if (state.settings === undefined) {
-      // Do this if settings does not exist in the state of the contract.
-      state = {
-        ...state,
-        ...{
-          settings: {
-            lockMinLength: 5,
-            lockMaxLength: 10000
-          },
+    // Do this if settings does not exist in the state of the contract.
+    state = {
+      ...state,
+      ...{
+        settings: {
+          lockMinLength: 5,
+          lockMaxLength: 10000,
         },
-      };
-  }  
+      },
+    };
+  }
+
+  if (state.gateways === undefined) {
+    // Do this if gateways do not exist in the state of the contract.
+    state = {
+      ...state,
+      ...{
+        gateways: {},
+      },
+    };
+  }
 
   return { state };
 };

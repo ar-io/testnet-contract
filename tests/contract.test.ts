@@ -14,6 +14,9 @@ import {
 import { JWKInterface } from "arweave/node/lib/wallet";
 import { ArNSState } from "../src/contracts/types/types";
 
+let warp: Warp;
+warp = WarpFactory.forLocal(1820);
+
 let WALLET_STARTING_TOKENS = 1_000_000_000_0;
 let GATEWAY_STARTING_TOKENS = 1_000_000;
 let DELEGATE_STARTING_TOKENS = 1_000;
@@ -65,8 +68,6 @@ describe("Testing the ArNS Registry Contract", () => {
     //Warp = warp.WarpNodeFactory.forTesting(arweave);
     //warp = WarpFactory.forLocal(arweave)
     //warp = WarpFactory.forLocal()
-    let warp: Warp;
-    warp = WarpFactory.forLocal(1820);
 
     // ~~ Generate wallet and add funds ~~
     wallet = await arweave.wallets.generate();
@@ -320,7 +321,7 @@ describe("Testing the ArNS Registry Contract", () => {
     expect((await pst.currentState()).owner).toEqual(walletAddress);
   });
 
-  /*it("should properly mint tokens", async () => {
+  it("should properly mint tokens", async () => {
     await pst.writeInteraction({
       function: "mint",
       qty: WALLET_STARTING_TOKENS,
@@ -1210,7 +1211,7 @@ describe("Testing the ArNS Registry Contract", () => {
       "utf8"
     );
 
-    const newSrcTxId = await pst.save({ src: newSource} );
+    const newSrcTxId = await pst.save({ src: newSource }, warp.environment);
     if (newSrcTxId === null) {
       return 0;
     }
@@ -1222,7 +1223,10 @@ describe("Testing the ArNS Registry Contract", () => {
     // note: the evolved balance always returns -1
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(-1);
 
-    const updatedContractTxId = await pst.save(contractSrc, );
+    const updatedContractTxId = await pst.save(
+      { src: contractSrc },
+      warp.environment
+    );
     if (updatedContractTxId === null) {
       return 0;
     }
@@ -1248,7 +1252,7 @@ describe("Testing the ArNS Registry Contract", () => {
       path.join(__dirname, "../src/tools/contract_evolve.js"),
       "utf8"
     );
-    const newSrcTxId = await pst.save({ src: newSource });
+    const newSrcTxId = await pst.save({ src: newSource }, warp.environment);
     if (newSrcTxId === null) {
       return 0;
     }
@@ -1817,7 +1821,6 @@ describe("Testing the ArNS Registry Contract", () => {
       { balance: 500, end: 322, start: 172 },
     ]);
   });
-  */
 
   // Network Join and Delegated Stake
   it("should join the network with correct parameters", async () => {
@@ -2121,12 +2124,9 @@ describe("Testing the ArNS Registry Contract", () => {
     let currentState = await pst.currentState();
     let currentStateString = JSON.stringify(currentState);
     let currentStateJSON = JSON.parse(currentStateString);
-    expect(
-      currentStateJSON.balances[slashedWalletAddress]).toEqual(2700);
-    expect(
-      currentStateJSON.balances[delegateWalletAddress]).toEqual(990);
-    expect(
-      currentStateJSON.balances[delegateWalletAddress2]).toEqual(50300);
+    expect(currentStateJSON.balances[slashedWalletAddress]).toEqual(2700);
+    expect(currentStateJSON.balances[delegateWalletAddress]).toEqual(990);
+    expect(currentStateJSON.balances[delegateWalletAddress2]).toEqual(50300);
   });
 
   it("should leave the network with correct ownership", async () => {
