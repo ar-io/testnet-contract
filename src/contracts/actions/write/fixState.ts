@@ -76,5 +76,14 @@ export const fixState = async (
     };
   }
 
+  if (state.rewards === undefined) {
+    state = {
+      ...state,
+      ...{
+        rewards: 0
+      },
+    };
+  }
+
   return { state };
 };

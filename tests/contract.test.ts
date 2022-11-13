@@ -170,6 +170,7 @@ describe("Testing the ArNS Registry Contract", () => {
       balances: {
         [walletAddress]: 0, // create tokens during mint
         [walletAddress2]: 1_000_000_000,
+        [walletAddress3]: 1_000_000_000,
         [gatewayWalletAddress]: GATEWAY_STARTING_TOKENS,
         [gatewayWalletAddress2]: GATEWAY_STARTING_TOKENS * 2,
         [delegateWalletAddress]: DELEGATE_STARTING_TOKENS,
@@ -432,6 +433,30 @@ describe("Testing the ArNS Registry Contract", () => {
     );
   });
 
+  it("should properly split record purchases between protocol rewards and foundation balance", async () => {
+    const name = "split";
+    pst.connect(wallet3);
+    let currentState = await pst.currentState();
+    let currentStateString = JSON.stringify(currentState);
+    let currentStateJSON = JSON.parse(currentStateString);
+    let rewards = +currentStateJSON.rewards;
+    let foundationBalance = currentStateJSON.foundation.balance;
+    let fee = +currentStateJSON.fees[name.length.toString()];
+    await pst.writeInteraction({
+      function: "buyRecord",
+      name: name,
+      contractTxId: "MSFTfeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU",
+      years: 1,
+      tier: 1,
+    });
+    await mineBlock(arweave);
+    currentState = await pst.currentState();
+    currentStateString = JSON.stringify(currentState);
+    currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.rewards).toEqual(rewards + (fee * .9));
+    expect(currentStateJSON.foundation.balance).toEqual(foundationBalance + (fee * .1));
+  });
+
   it("should not buy malformed, too long, existing, or too expensive records", async () => {
     pst.connect(wallet2);
     const emptyNameToBuy = "";
@@ -445,7 +470,6 @@ describe("Testing the ArNS Registry Contract", () => {
       years,
       tier,
     });
-    await mineBlock(arweave);
     const malformedNameToBuy = "*&*##$%#";
     await pst.writeInteraction({
       function: "buyRecord",
@@ -560,7 +584,7 @@ describe("Testing the ArNS Registry Contract", () => {
     );
   });
 
-  it("should properly add new and update existing tiers", async () => {
+  it("should properly add new tiers and update existing tiers", async () => {
     let tier = 4;
     let maxSubdomains = 50000;
     let minTtlSeconds = 300;
@@ -627,6 +651,28 @@ describe("Testing the ArNS Registry Contract", () => {
       currentStateJSON.records["microsoft"].endTimestamp
     ).toBeGreaterThanOrEqual(2162247010);
     expect(currentStateJSON.balances[walletAddress2]).toEqual(968000000);
+  });
+
+  it("should extend record and split extensions between protocol rewards and foundation balance", async () => {
+    pst.connect(wallet3);
+    const name = "split"
+    let currentState = await pst.currentState();
+    let currentStateString = JSON.stringify(currentState);
+    let currentStateJSON = JSON.parse(currentStateString);
+    let rewards = +currentStateJSON.rewards;
+    let foundationBalance = currentStateJSON.foundation.balance;
+    let fee = +currentStateJSON.fees[name.length.toString()];
+    await pst.writeInteraction({
+      function: "extendRecord",
+      name,
+      years: 1, // should bring to a total of 2 years
+    });
+    await mineBlock(arweave);
+    currentState = await pst.currentState();
+    currentStateString = JSON.stringify(currentState);
+    currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.rewards).toEqual(rewards + (fee * .9));
+    expect(currentStateJSON.foundation.balance).toEqual(foundationBalance + (fee * .1));
   });
 
   it("should not extend record with not enough balance or invalid parameters", async () => {
@@ -1680,11 +1726,11 @@ describe("Testing the ArNS Registry Contract", () => {
     let currentStateString = JSON.stringify(currentState);
     let currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.vaults[walletAddress].length).toEqual(2); // we should only have 2 vaults now
-    expect(currentStateJSON.vaults[walletAddress][1].end).toEqual(717); // the second vault should end at 590 blocks
+    expect(currentStateJSON.vaults[walletAddress][1].end).toEqual(720); // the second vault should end at 590 blocks
   });
 
   it("should not increase vault lock time length with invalid length", async () => {
-    const vaultEnds = 717;
+    const vaultEnds = 720;
     await pst.writeInteraction({
       function: "increaseVaultLength",
       id: 1,
@@ -1757,7 +1803,7 @@ describe("Testing the ArNS Registry Contract", () => {
       currentBalance - qty
     );
     expect(currentStateJSON.vaults[target]).toEqual([
-      { balance: qty, end: 322, start: 172 },
+      { balance: qty, end: 325, start: 175 },
     ]);
   });
 
@@ -1782,7 +1828,7 @@ describe("Testing the ArNS Registry Contract", () => {
     let currentStateString = JSON.stringify(currentState);
     let currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.vaults[walletAddress4]).toEqual([
-      { balance: 500, end: 322, start: 172 },
+      { balance: 500, end: 325, start: 175 },
     ]); // this vault should not be changed from its original balance of 500
     expect(currentStateJSON.balances[walletAddress4]).toEqual(undefined); //  this wallet should still have an empty unlocked balance
     expect(currentStateJSON.vaults[walletAddress5]).toEqual(undefined); // no tokens should have been transfer locked
@@ -1802,7 +1848,7 @@ describe("Testing the ArNS Registry Contract", () => {
     currentStateString = JSON.stringify(currentState);
     currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.vaults[walletAddress4]).toEqual([
-      { balance: 500, end: 322, start: 172 },
+      { balance: 500, end: 325, start: 175 },
     ]);
     expect(currentStateJSON.balances[walletAddress5]).toEqual(undefined);
 
@@ -1819,7 +1865,7 @@ describe("Testing the ArNS Registry Contract", () => {
     currentStateString = JSON.stringify(currentState);
     currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.vaults[walletAddress4]).toEqual([
-      { balance: 500, end: 322, start: 172 },
+      { balance: 500, end: 325, start: 175 },
     ]);
   });
 
