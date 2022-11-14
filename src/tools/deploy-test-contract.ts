@@ -47,6 +47,44 @@ let wallet2: JWKInterface;
   const walletAddress = await arweave.wallets.jwkToAddress(wallet);
   await addFunds(arweave, wallet);
 
+  wallet2 = await arweave.wallets.generate();
+  walletAddress2 = await arweave.wallets.jwkToAddress(wallet2);
+  await addFunds(arweave, wallet2);
+
+  wallet3 = await arweave.wallets.generate();
+  walletAddress3 = await arweave.wallets.jwkToAddress(wallet3);
+  await addFunds(arweave, wallet3);
+
+  wallet4 = await arweave.wallets.generate();
+  walletAddress4 = await arweave.wallets.jwkToAddress(wallet4);
+  await addFunds(arweave, wallet4);
+
+  wallet5 = await arweave.wallets.generate();
+  walletAddress5 = await arweave.wallets.jwkToAddress(wallet5);
+  await addFunds(arweave, wallet5);
+
+  gatewayWallet = await arweave.wallets.generate();
+  gatewayWalletAddress = await arweave.wallets.jwkToAddress(gatewayWallet);
+  await addFunds(arweave, gatewayWallet);
+
+  gatewayWallet2 = await arweave.wallets.generate();
+  gatewayWalletAddress2 = await arweave.wallets.jwkToAddress(gatewayWallet2);
+  await addFunds(arweave, gatewayWallet2);
+
+  delegateWallet = await arweave.wallets.generate();
+  delegateWalletAddress = await arweave.wallets.jwkToAddress(delegateWallet);
+  await addFunds(arweave, delegateWallet);
+
+  delegateWallet2 = await arweave.wallets.generate();
+  delegateWalletAddress2 = await arweave.wallets.jwkToAddress(
+    delegateWallet2
+  );
+  await addFunds(arweave, delegateWallet2);
+
+  slashedWallet = await arweave.wallets.generate();
+  slashedWalletAddress = await arweave.wallets.jwkToAddress(slashedWallet);
+  await addFunds(arweave, slashedWallet);
+
   // ~~ Read contract source and initial state files ~~
   const contractSrc = fs.readFileSync(
     path.join(__dirname, "../../dist/contract.js"),

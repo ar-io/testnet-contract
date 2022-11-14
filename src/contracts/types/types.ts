@@ -112,6 +112,9 @@ export interface PstInput {
   port: number;
   protocol: AllowedProtocols;
   penalty: number;
+  settings: {
+    [name: string]: number;
+  };
 }
 
 export interface FoundationActionInterface {
@@ -182,7 +185,8 @@ export type PstFunction =
   | "leaveNetwork"
   | "updateGatewaySettings"
   | "undelegateStake"
-  | "proposeGatewaySlash";
+  | "proposeGatewaySlash"
+  | "setSettings";
 
 export type ContractResult =
   | { state: ArNSState }

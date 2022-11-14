@@ -1,6 +1,7 @@
 import ArLocal from "arlocal";
 import Arweave from "arweave";
 import { addFunds, mineBlock } from "../utils/_helpers";
+
 import * as fs from "fs";
 import path from "path";
 import {
@@ -13,6 +14,7 @@ import {
 } from "warp-contracts";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import { ArNSState } from "../src/contracts/types/types";
+import { getTotalSupply } from "../src/contracts/utilities";
 
 let warp: Warp;
 warp = WarpFactory.forLocal(1820);
@@ -300,19 +302,14 @@ describe("Testing the ArNS Registry Contract", () => {
   });
 
   afterAll(async () => {
-    let totalBalance = 0;
     const currentState = await pst.currentState();
     const currentStateString = JSON.stringify(currentState, null, 5);
     const currentStateJSON = JSON.parse(currentStateString);
     console.log(JSON.stringify(currentStateJSON.balances, null, 5));
     console.log(JSON.stringify(currentStateJSON.gateways, null, 5));
     console.log(JSON.stringify(currentStateJSON, null, 10));
-    for (let address in currentStateJSON.balances) {
-      if (currentStateJSON.balances.hasOwnProperty(address)) {
-        totalBalance += parseFloat(currentStateJSON.balances[address]);
-      }
-    }
-    // NEED TO UPDATE TO INCLUDE VAULTED TOKENS
+    const totalSupply = getTotalSupply(currentStateJSON);
+    console.log (`The total supply is ${totalSupply}`);
     // ~~ Stop ArLocal ~~
     await arlocal.stop();
   });
@@ -711,7 +708,7 @@ describe("Testing the ArNS Registry Contract", () => {
     );
   });
 
-  it("should change fees with correct ownership", async () => {
+  it("should change fees and settings with correct ownership", async () => {
     pst.connect(wallet); // connect the original owning wallet
     const feesToChange = {
       "1": 5000000000,
@@ -747,15 +744,29 @@ describe("Testing the ArNS Registry Contract", () => {
       "31": 5,
       "32": 5,
     };
+    const settingsToChange = {
+      "delegatedStakeWithdrawLength":2,
+      "gatewayJoinLength":10000,
+      "gatewayLeaveLength":2,
+      "lockMaxLength":10000,
+      "lockMinLength":5,
+      "minDelegatedStakeAmount":100,
+      "minGatewayStakeAmount":5000,
+    }
     await pst.writeInteraction({
       function: "setFees",
       fees: feesToChange,
+    });
+    await pst.writeInteraction({
+      function: "setSettings",
+      settings: settingsToChange,
     });
     await mineBlock(arweave);
     const currentState = await pst.currentState();
     const currentStateString = JSON.stringify(currentState);
     const currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.fees).toEqual(feesToChange);
+    expect(currentStateJSON.settings).toEqual(settingsToChange);
   });
 
   it("should not change malformed fees with correct ownership", async () => {
@@ -1726,11 +1737,11 @@ describe("Testing the ArNS Registry Contract", () => {
     let currentStateString = JSON.stringify(currentState);
     let currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.vaults[walletAddress].length).toEqual(2); // we should only have 2 vaults now
-    expect(currentStateJSON.vaults[walletAddress][1].end).toEqual(720); // the second vault should end at 590 blocks
+    expect(currentStateJSON.vaults[walletAddress][1].end).toEqual(721); // the second vault should end at 590 blocks
   });
 
   it("should not increase vault lock time length with invalid length", async () => {
-    const vaultEnds = 720;
+    const vaultEnds = 721;
     await pst.writeInteraction({
       function: "increaseVaultLength",
       id: 1,
@@ -1803,7 +1814,7 @@ describe("Testing the ArNS Registry Contract", () => {
       currentBalance - qty
     );
     expect(currentStateJSON.vaults[target]).toEqual([
-      { balance: qty, end: 325, start: 175 },
+      { balance: qty, end: 326, start: 176 },
     ]);
   });
 
@@ -1828,7 +1839,7 @@ describe("Testing the ArNS Registry Contract", () => {
     let currentStateString = JSON.stringify(currentState);
     let currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.vaults[walletAddress4]).toEqual([
-      { balance: 500, end: 325, start: 175 },
+      { balance: 500, end: 326, start: 176 },
     ]); // this vault should not be changed from its original balance of 500
     expect(currentStateJSON.balances[walletAddress4]).toEqual(undefined); //  this wallet should still have an empty unlocked balance
     expect(currentStateJSON.vaults[walletAddress5]).toEqual(undefined); // no tokens should have been transfer locked
@@ -1848,7 +1859,7 @@ describe("Testing the ArNS Registry Contract", () => {
     currentStateString = JSON.stringify(currentState);
     currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.vaults[walletAddress4]).toEqual([
-      { balance: 500, end: 325, start: 175 },
+      { balance: 500, end: 326, start: 176 },
     ]);
     expect(currentStateJSON.balances[walletAddress5]).toEqual(undefined);
 
@@ -1865,7 +1876,7 @@ describe("Testing the ArNS Registry Contract", () => {
     currentStateString = JSON.stringify(currentState);
     currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.vaults[walletAddress4]).toEqual([
-      { balance: 500, end: 325, start: 175 },
+      { balance: 500, end: 326, start: 176 },
     ]);
   });
 
