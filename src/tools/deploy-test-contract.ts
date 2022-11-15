@@ -92,7 +92,7 @@ let wallet2: JWKInterface;
   );
   const stateFromFile: ArNSState = JSON.parse(
     fs.readFileSync(
-      path.join(__dirname, "../../dist/contracts/initial-state.json"),
+      path.join(__dirname, "../../dist/contracts/old-initial-state.json"),
       "utf8"
     )
   );
@@ -101,7 +101,7 @@ let wallet2: JWKInterface;
   let expiredDate = new Date();
   expiredDate.setFullYear(expiredDate.getFullYear() - 1);
   
-
+/*
   let initialState = {
     ...stateFromFile,
     ...{
@@ -256,11 +256,11 @@ let wallet2: JWKInterface;
     end: 0, // At what block the lock ends.
     start: 1, // At what block the lock starts.
   });
-
+*/
   // ~~ Deploy contract ~~
   const contractTxId = await warp.createContract.deploy({
     wallet,
-    initState: JSON.stringify(initialState),
+    initState: JSON.stringify(stateFromFile),
     src: contractSrc,
   });
 
