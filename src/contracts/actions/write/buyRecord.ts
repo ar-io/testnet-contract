@@ -107,7 +107,7 @@ export const buyRecord = async (
   ) {
     // This name's lease has expired and can be repurchased
     balances[caller] -= qty; // reduce callers balance
-    foundation.balance += Math.floor(qty * (FOUNDATION_PERCENTAGE / 100)); // increase foundation balance using the foundation percentage
+    state.foundation.balance += Math.floor(qty * (FOUNDATION_PERCENTAGE / 100)); // increase foundation balance using the foundation percentage
     state.rewards += Math.floor(qty * ((100 - FOUNDATION_PERCENTAGE) / 100)); // increase protocol rewards without the foundation percentage
     records[name] = {
       tier,
