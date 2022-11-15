@@ -8,9 +8,9 @@
     "lockMaxLength": 10000,
     "minGatewayStakeAmount": 5000,
     "minDelegatedStakeAmount": 100,
-    "gatewayJoinLength": 2,
-    "gatewayLeaveLength": 2,
-    "delegatedStakeWithdrawLength": 2
+    "gatewayJoinLength": 720,
+    "gatewayLeaveLength": 10080,
+    "delegatedStakeWithdrawLength": 10080
   },
   "foundation": {},
   "evolve": null,

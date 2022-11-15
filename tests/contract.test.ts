@@ -227,6 +227,8 @@ describe("Testing the ArNS Registry Contract", () => {
             ipV4Address: "10.230.70.22", // the IP address this gateway can be reached at eg. 10.124.72.100
             url: "arweave.net", // the fully qualified domain name this gateway can be reached at. eg arweave.net
             port: 443, // The port used by this gateway eg. 443
+            openDelegation: false,
+            delegateAllowList: [delegateWalletAddress, walletAddress],
             protocol: "https", // The protocol used by this gateway, either http or https
           },
         },
@@ -256,6 +258,8 @@ describe("Testing the ArNS Registry Contract", () => {
             ipV4Address: "75.10.113.66", // the IP address this gateway can be reached at eg. 10.124.72.100
             url: "slash-this-gateway.io", // the fully qualified domain name this gateway can be reached at. eg arweave.net
             port: 443, // The port used by this gateway eg. 443
+            openDelegation: true,
+            delegateAllowList: [],
             protocol: "https", // The protocol used by this gateway, either http or https
           },
         },
@@ -286,6 +290,16 @@ describe("Testing the ArNS Registry Contract", () => {
       start: 1, // At what block the lock starts.
     });
 
+    initialState.settings = {
+      lockMinLength: 5,
+      lockMaxLength: 10000,
+      minGatewayStakeAmount: 5000,
+      minDelegatedStakeAmount: 100,
+      gatewayJoinLength: 720,
+      gatewayLeaveLength: 2,
+      delegatedStakeWithdrawLength: 2,
+    };
+
     // ~~ Deploy contract ~~
     const deploy = await warp.createContract.deploy({
       wallet,
@@ -309,7 +323,7 @@ describe("Testing the ArNS Registry Contract", () => {
     console.log(JSON.stringify(currentStateJSON.gateways, null, 5));
     console.log(JSON.stringify(currentStateJSON, null, 10));
     const totalSupply = getTotalSupply(currentStateJSON);
-    console.log (`The total supply is ${totalSupply}`);
+    console.log(`The total supply is ${totalSupply}`);
     // ~~ Stop ArLocal ~~
     await arlocal.stop();
   });
@@ -450,8 +464,10 @@ describe("Testing the ArNS Registry Contract", () => {
     currentState = await pst.currentState();
     currentStateString = JSON.stringify(currentState);
     currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.rewards).toEqual(rewards + (fee * .9));
-    expect(currentStateJSON.foundation.balance).toEqual(foundationBalance + (fee * .1));
+    expect(currentStateJSON.rewards).toEqual(rewards + fee * 0.9);
+    expect(currentStateJSON.foundation.balance).toEqual(
+      foundationBalance + fee * 0.1
+    );
   });
 
   it("should not buy malformed, too long, existing, or too expensive records", async () => {
@@ -652,7 +668,7 @@ describe("Testing the ArNS Registry Contract", () => {
 
   it("should extend record and split extensions between protocol rewards and foundation balance", async () => {
     pst.connect(wallet3);
-    const name = "split"
+    const name = "split";
     let currentState = await pst.currentState();
     let currentStateString = JSON.stringify(currentState);
     let currentStateJSON = JSON.parse(currentStateString);
@@ -668,8 +684,10 @@ describe("Testing the ArNS Registry Contract", () => {
     currentState = await pst.currentState();
     currentStateString = JSON.stringify(currentState);
     currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.rewards).toEqual(rewards + (fee * .9));
-    expect(currentStateJSON.foundation.balance).toEqual(foundationBalance + (fee * .1));
+    expect(currentStateJSON.rewards).toEqual(rewards + fee * 0.9);
+    expect(currentStateJSON.foundation.balance).toEqual(
+      foundationBalance + fee * 0.1
+    );
   });
 
   it("should not extend record with not enough balance or invalid parameters", async () => {
@@ -745,14 +763,14 @@ describe("Testing the ArNS Registry Contract", () => {
       "32": 5,
     };
     const settingsToChange = {
-      "delegatedStakeWithdrawLength":2,
-      "gatewayJoinLength":10000,
-      "gatewayLeaveLength":2,
-      "lockMaxLength":10000,
-      "lockMinLength":5,
-      "minDelegatedStakeAmount":100,
-      "minGatewayStakeAmount":5000,
-    }
+      delegatedStakeWithdrawLength: 2,
+      gatewayJoinLength: 10000,
+      gatewayLeaveLength: 2,
+      lockMaxLength: 10000,
+      lockMinLength: 5,
+      minDelegatedStakeAmount: 100,
+      minGatewayStakeAmount: 5000,
+    };
     await pst.writeInteraction({
       function: "setFees",
       fees: feesToChange,
@@ -1927,6 +1945,13 @@ describe("Testing the ArNS Registry Contract", () => {
     let protocol = "https";
     let sslFingerprint = "282D6F79C9533C534EBD28826CB3D706139761AB";
     let note = "MAINTENANCE MODE";
+    let openDelegation = false;
+    let delegateAllowList = [
+      walletAddress,
+      walletAddress2,
+      walletAddress3,
+      walletAddress4,
+    ];
 
     pst.connect(gatewayWallet); // only owns a vaulted balance
 
@@ -1936,6 +1961,8 @@ describe("Testing the ArNS Registry Contract", () => {
       port,
       sslFingerprint,
       protocol,
+      openDelegation,
+      delegateAllowList,
       note,
     });
 
@@ -2066,6 +2093,42 @@ describe("Testing the ArNS Registry Contract", () => {
     expect(
       currentStateJSON.gateways[gatewayWalletAddress].delegatedStake
     ).toEqual(100 + 100 + 1000 + 5000 + 25000);
+  });
+
+  it("should delegate stake to a closed gateway if in the allow list", async () => {
+    let qty = 1000; // must meet the minimum
+    let target = gatewayWalletAddress2; // this gateway only allows delegatedWallet
+    pst.connect(wallet);
+    await pst.writeInteraction({
+      function: "delegateStake",
+      qty,
+      target,
+    });
+    await mineBlock(arweave);
+    let currentState = await pst.currentState();
+    let currentStateString = JSON.stringify(currentState);
+    let currentStateJSON = JSON.parse(currentStateString);
+    expect(
+      currentStateJSON.gateways[target].delegates[walletAddress][0].balance
+    ).toEqual(qty);
+  });
+
+  it("should not delegate stake to a closed gateway", async () => {
+    let qty = 1000; // must meet the minimum
+    let target = gatewayWalletAddress2; // this gateway only allows delegatedWallet
+    pst.connect(wallet3);
+    await pst.writeInteraction({
+      function: "delegateStake",
+      qty,
+      target,
+    });
+    await mineBlock(arweave);
+    let currentState = await pst.currentState();
+    let currentStateString = JSON.stringify(currentState);
+    let currentStateJSON = JSON.parse(currentStateString);
+    expect(currentStateJSON.gateways[target].delegates[walletAddress3]).toEqual(
+      undefined
+    );
   });
 
   it("should undelegate stake with correct ownership", async () => {

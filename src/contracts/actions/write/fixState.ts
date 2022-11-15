@@ -61,6 +61,11 @@ export const fixState = async (
         settings: {
           lockMinLength: 5,
           lockMaxLength: 10000,
+          minGatewayStakeAmount: 5000,
+          minDelegatedStakeAmount: 100,
+          gatewayJoinLength: 720,
+          gatewayLeaveLength: 10080,
+          delegatedStakeWithdrawLength: 10080,
         },
       },
     };
@@ -80,7 +85,7 @@ export const fixState = async (
     state = {
       ...state,
       ...{
-        rewards: 0
+        rewards: 0,
       },
     };
   }

@@ -18,6 +18,8 @@ export const joinNetwork = async (
       url,
       port,
       protocol,
+      openDelegation,
+      delegateAllowList,
       note,
     },
   }: PstAction
@@ -83,6 +85,24 @@ export const joinNetwork = async (
     }
   }
 
+  if (openDelegation) {
+    if (typeof openDelegation !== "boolean") {
+      throw new ContractError("Open Delegation must be true or false.");
+    }
+  } else {
+    openDelegation = true; // by default, gateways are open for delegation
+  }
+
+  if (delegateAllowList) {
+    if (!Array.isArray(delegateAllowList)) {
+      throw new ContractError(
+        "Delegate allow list must contain arweave addresses."
+      );
+    }
+  } else {
+    delegateAllowList = []; // by default, gateways allow any community delegate
+  }
+
   if (caller in gateways) {
     throw new ContractError("This Gateway's wallet is already registered");
   } else {
@@ -104,6 +124,8 @@ export const joinNetwork = async (
         ipV4Address,
         url,
         port,
+        openDelegation,
+        delegateAllowList,
         protocol,
       }, // All of the settings related to this gateway
       delegates: {},

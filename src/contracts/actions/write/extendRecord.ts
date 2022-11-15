@@ -56,7 +56,7 @@ export const extendRecord = async (
 
   // reduce balance set the end lease period for this record based on number of years
   balances[caller] -= qty; // reduce callers balance
-  foundation.balance += Math.floor(qty * (FOUNDATION_PERCENTAGE / 100)); // increase foundation balance using the foundation percentage
+  state.foundation.balance += Math.floor(qty * (FOUNDATION_PERCENTAGE / 100)); // increase foundation balance using the foundation percentage
   state.rewards += Math.floor(qty * ((100 - FOUNDATION_PERCENTAGE) / 100)); // increase protocol rewards without the foundation percentage
   records[name].endTimestamp += SECONDS_IN_A_YEAR * years; // set the new extended timestamp
 

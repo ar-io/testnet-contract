@@ -16,12 +16,18 @@ export const delegateStake = async (
     throw new ContractError("Quantity must be a positive integer.");
   }
 
+  if (caller === target) {
+    throw new ContractError("Gateways cannot delegate tokens to themselves");
+  }
+
   if (!target) {
     throw new ContractError("No target specified");
   }
 
   if (qty < settings.minDelegatedStakeAmount) {
-    throw new ContractError("Quantity is not about the minimum delegated stake")
+    throw new ContractError(
+      "Quantity is not about the minimum delegated stake"
+    );
   }
 
   if (!balances[caller]) {
@@ -35,6 +41,17 @@ export const delegateStake = async (
   }
 
   if (target in gateways) {
+    // Check if this gateway is accepting delegates
+    if (state.gateways[target].settings.openDelegation === false) {
+      // if the gateway is not accepting delegates, check if this caller is in the delegate allow list
+      if (
+        state.gateways[target].settings.delegateAllowList.indexOf(caller) <= -1
+      ) {
+        throw new ContractError(
+          "This Gateway is not accepting non-allowed, community delegates"
+        );
+      }
+    }
     if (caller in state.gateways[target].delegates) {
       // this caller is already delegated, so increase existing stake by adding a new vault
       state.balances[caller] -= qty;

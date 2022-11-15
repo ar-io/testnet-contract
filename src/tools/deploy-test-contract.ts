@@ -7,25 +7,25 @@ import { ArNSState } from "../contracts/types/types";
 import { testKeyfile } from "../constants";
 import { JWKInterface } from "arweave/node/lib/wallet";
 
-const TOKENS_TO_CREATE = 1_000_000_000; // one billion tokens
+let initialState: ArNSState;
 let wallet2: JWKInterface;
-  let walletAddress2: string;
-  let wallet3: JWKInterface;
-  let walletAddress3: string;
-  let wallet4: JWKInterface;
-  let walletAddress4: string;
-  let wallet5: JWKInterface;
-  let walletAddress5: string;
-  let gatewayWallet: JWKInterface;
-  let gatewayWalletAddress: string;
-  let gatewayWallet2: JWKInterface;
-  let gatewayWalletAddress2: string;
-  let delegateWallet: JWKInterface;
-  let delegateWalletAddress: string;
-  let delegateWallet2: JWKInterface;
-  let delegateWalletAddress2: string;
-  let slashedWallet: JWKInterface;
-  let slashedWalletAddress: string;
+let walletAddress2: string;
+let wallet3: JWKInterface;
+let walletAddress3: string;
+let wallet4: JWKInterface;
+let walletAddress4: string;
+let wallet5: JWKInterface;
+let walletAddress5: string;
+let gatewayWallet: JWKInterface;
+let gatewayWalletAddress: string;
+let gatewayWallet2: JWKInterface;
+let gatewayWalletAddress2: string;
+let delegateWallet: JWKInterface;
+let delegateWalletAddress: string;
+let delegateWallet2: JWKInterface;
+let delegateWalletAddress2: string;
+let slashedWallet: JWKInterface;
+let slashedWalletAddress: string;
 
 (async () => {
   // ~~ Initialize Arweave ~~
@@ -37,7 +37,7 @@ let wallet2: JWKInterface;
   });
 
   // ~~ Initialize warp ~~
-  LoggerFactory.INST.logLevel('error');
+  LoggerFactory.INST.logLevel("error");
   const warp = WarpFactory.forTestnet();
 
   // ~~ Generate Wallet and add funds ~~
@@ -76,9 +76,7 @@ let wallet2: JWKInterface;
   await addFunds(arweave, delegateWallet);
 
   delegateWallet2 = await arweave.wallets.generate();
-  delegateWalletAddress2 = await arweave.wallets.jwkToAddress(
-    delegateWallet2
-  );
+  delegateWalletAddress2 = await arweave.wallets.jwkToAddress(delegateWallet2);
   await addFunds(arweave, delegateWallet2);
 
   slashedWallet = await arweave.wallets.generate();
@@ -92,7 +90,7 @@ let wallet2: JWKInterface;
   );
   const stateFromFile: ArNSState = JSON.parse(
     fs.readFileSync(
-      path.join(__dirname, "../../dist/contracts/old-initial-state.json"),
+      path.join(__dirname, "../../dist/contracts/initial-state.json"),
       "utf8"
     )
   );
@@ -100,9 +98,9 @@ let wallet2: JWKInterface;
   // expired name date
   let expiredDate = new Date();
   expiredDate.setFullYear(expiredDate.getFullYear() - 1);
-  
-/*
-  let initialState = {
+
+  // ~~ Update initial state ~~
+  initialState = {
     ...stateFromFile,
     ...{
       owner: walletAddress,
@@ -121,7 +119,7 @@ let wallet2: JWKInterface;
         tier: 3,
         contractTxId: "GRACENUf4yBG0ErNKCmjGzZ-X9BJhmWOiVVQVyainlY",
         maxSubdomains: 10000,
-        minTtlSeconds: 900, // tier 3 default for ttl
+        minTtlSeconds: 900, // tier 1 default for ttl
         endTimestamp: Math.round(Date.now() / 1000),
       },
       ["expired"]: {
@@ -132,6 +130,20 @@ let wallet2: JWKInterface;
         minTtlSeconds: 3600, // tier 3 default for ttl
         endTimestamp: Math.round(expiredDate.getTime() / 1000),
       },
+      ["ardrive-og-logo"]: {
+        tier: 1,
+        contractTxId: "6dUiTQKJCVD7c9icQhbbzfI-Le_hC4sXRDx1OQQ6jMI",
+        maxSubdomains: 100,
+        minTtlSeconds: 900, // tier 1 default for ttl
+        endTimestamp: 1689431978,
+      },
+      ["gorilla"]: {
+        contractTxId: "PsrA7IPJJHdK0kQ-4PJYJ0HzAgx8qsWVyeQvTSumr4w",
+        endTimestamp: 1690590616,
+        maxSubdomains: 100,
+        minTtlSeconds: 3600,
+        tier: 1,
+      },
     },
     foundation: {
       balance: 0,
@@ -141,13 +153,13 @@ let wallet2: JWKInterface;
       actions: [],
     },
     balances: {
-      [walletAddress]: 0, // create tokens during mint
-      [walletAddress2]: 1_000_000,
-      [walletAddress3]: 1_000_000,
-      [gatewayWalletAddress]: 2_000_000,
-      [gatewayWalletAddress2]: 1_000_000,
+      [walletAddress]: 8_000_000_000, // create tokens during mint
+      [walletAddress2]: 5_000_000,
+      [walletAddress3]: 5_000_000,
+      [gatewayWalletAddress]: 1_000_000,
+      [gatewayWalletAddress2]: 3_250_000,
       [delegateWalletAddress]: 5_000,
-      [delegateWalletAddress2]: 7_000,
+      [delegateWalletAddress2]: 1_000,
     },
     vaults: {
       [walletAddress]: [
@@ -194,7 +206,7 @@ let wallet2: JWKInterface;
         },
         settings: {
           label: "Arweave Community Gateway", // The friendly name used to label this gateway
-          sslFingerprint: "BLAH BLAH BLAH SSL FINGERPRINT", // the SHA-256 Fingerprint used by SSL certificate used by this gateway eg. 5C 5D 05 16 C3 3C A3 34 51 78 1E 67 49 14 D4 66 31 A9 19 3C 63 8E F9 9E 54 84 1A F0 4C C2 1A 36
+          sslFingerprint: "SHA-256 FINGERPRINT", // the SHA-256 Fingerprint used by SSL certificate used by this gateway eg. 5C 5D 05 16 C3 3C A3 34 51 78 1E 67 49 14 D4 66 31 A9 19 3C 63 8E F9 9E 54 84 1A F0 4C C2 1A 36
           ipV4Address: "10.230.70.22", // the IP address this gateway can be reached at eg. 10.124.72.100
           url: "arweave.net", // the fully qualified domain name this gateway can be reached at. eg arweave.net
           port: 443, // The port used by this gateway eg. 443
@@ -256,11 +268,11 @@ let wallet2: JWKInterface;
     end: 0, // At what block the lock ends.
     start: 1, // At what block the lock starts.
   });
-*/
+
   // ~~ Deploy contract ~~
   const contractTxId = await warp.createContract.deploy({
     wallet,
-    initState: JSON.stringify(stateFromFile),
+    initState: JSON.stringify(initialState),
     src: contractSrc,
   });
 

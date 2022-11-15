@@ -10,7 +10,17 @@ export const updateGatewaySettings = async (
   state: ArNSState,
   {
     caller,
-    input: { label, sslFingerprint, ipV4Address, url, port, protocol, note },
+    input: {
+      label,
+      sslFingerprint,
+      ipV4Address,
+      url,
+      port,
+      protocol,
+      openDelegation,
+      delegateAllowList,
+      note,
+    },
   }: PstAction
 ): Promise<ContractResult> => {
   const gateways = state.gateways;
@@ -70,6 +80,24 @@ export const updateGatewaySettings = async (
         throw new ContractError("Note is too long.");
       }
       state.gateways[caller].settings.note = note;
+    }
+
+    if (openDelegation) {
+      if (typeof openDelegation !== "boolean") {
+        throw new ContractError("Open Delegation must be true or false.");
+      } else {
+        state.gateways[caller].settings.openDelegation = openDelegation;
+      }
+    }
+
+    if (delegateAllowList) {
+      if (!Array.isArray(delegateAllowList)) {
+        throw new ContractError(
+          "Delegate allow list must contain arweave addresses."
+        );
+      } else {
+        state.gateways[caller].settings.delegateAllowList = delegateAllowList;
+      }
     }
   } else {
     throw new ContractError("This Gateway is not joined to the network");
