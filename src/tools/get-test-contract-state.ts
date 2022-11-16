@@ -6,7 +6,7 @@ import { testKeyfile } from "../constants";
 (async () => {
   // This is the testnet ArNS Registry Smartweave Contract TX ID
   const arnsRegistryContractTxId =
-    "J121VPOHa9pT2QKOs2ub0bZh9LqHesubdnfwW2v126w";
+    "ddFhy9E3P364rW5AxPJ2U1u5hPrNW1A0NOkxb4FwL9w";
 
   // ~~ Initialize warp ~~
   LoggerFactory.INST.logLevel("error");

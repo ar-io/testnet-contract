@@ -91,9 +91,9 @@ let slashedWalletAddress: string;
     path.join(__dirname, "../../dist/contract.js"),
     "utf8"
   );
-  const stateFromFile: IOState = JSON.parse(
+  const initialState: IOState = JSON.parse(
     fs.readFileSync(
-      path.join(__dirname, "../../dist/contracts/initial-state.json"),
+      path.join(__dirname, "../../dist/contracts/old-initial-state.json"),
       "utf8"
     )
   );
@@ -103,7 +103,7 @@ let slashedWalletAddress: string;
   expiredDate.setFullYear(expiredDate.getFullYear() - 1);
 
   // ~~ Update initial state ~~
-  initialState = {
+  /*initialState = {
     ...stateFromFile,
     ...{
       owner: walletAddress,
@@ -260,7 +260,7 @@ let slashedWalletAddress: string;
     balance: 1_000, // Positive integer
     end: 0, // At what block the lock ends.
     start: 1, // At what block the lock starts.
-  });
+  }); */
 
   // ~~ Deploy contract ~~
   const contractTxId = await warp.createContract.deploy({

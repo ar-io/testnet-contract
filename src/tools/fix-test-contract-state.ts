@@ -7,10 +7,10 @@ import { testKeyfile } from "../constants";
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID
   const arnsRegistryContractTxId =
-    "iGAvbHDz0WVwc4Yh1fwKdC0iX02DWXPVXbztgvx-J58";
+    "ddFhy9E3P364rW5AxPJ2U1u5hPrNW1A0NOkxb4FwL9w";
 
   // ~~ Initialize warp ~~
-  LoggerFactory.INST.logLevel('error');
+  LoggerFactory.INST.logLevel("error");
   const warp = WarpFactory.forTestnet();
 
   // Get the key file used for the distribution

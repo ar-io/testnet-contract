@@ -12,7 +12,7 @@ import { keyfile } from "../constants";
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID
   const arnsRegistryContractTxId =
-    "Ydv5pDoM6NBY1hySaWiRbe_2L3aeDDoLB7QNIu4BZpw";
+    "R-DRqVv97e8cCya95qsH_Tpvmb9vidURYWlBL5LpSzo";
 
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel("error");
@@ -40,7 +40,7 @@ import { keyfile } from "../constants";
     path.join(__dirname, "../../dist/contract.js"),
     "utf8"
   );
-  console.log(newSource);
+
   const newSrcTxId = await pst.save({ src: newSource }, warp.environment);
   if (newSrcTxId === null) {
     return 0;
@@ -49,5 +49,5 @@ import { keyfile } from "../constants";
   const evolvedTxId = await pst.evolve(newSrcTxId);
 
   console.log("Finished evolving the ArNS Smartweave Contract %s.", newSrcTxId);
-  console.log(`New Contract Tx Id ${evolvedTxId}`);
+  console.log(`New Contract Tx Id ${evolvedTxId.originalTxId}`);
 })();

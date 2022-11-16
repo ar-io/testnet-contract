@@ -10,7 +10,7 @@ import { keyfile } from "../constants";
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID
   const arnsRegistryContractTxId =
-    "Ydv5pDoM6NBY1hySaWiRbe_2L3aeDDoLB7QNIu4BZpw";
+    "R-DRqVv97e8cCya95qsH_Tpvmb9vidURYWlBL5LpSzo";
 
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel("error");

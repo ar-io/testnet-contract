@@ -88,7 +88,10 @@ const arweave = Arweave.init({
   );
   const stateFromFile: IOState = JSON.parse(
     fs.readFileSync(
-      path.join(__dirname, "../../dist/contracts/initial-state.json"),
+      path.join(
+        __dirname,
+        "../../dist/contracts/old-initial-state-no-balances.json"
+      ),
       "utf8"
     )
   );
@@ -97,6 +100,7 @@ const arweave = Arweave.init({
   let expiredDate = new Date();
   expiredDate.setFullYear(expiredDate.getFullYear() - 1);
 
+  /*
   // ~~ Update initial state ~~
   initialState = {
     ...stateFromFile,
@@ -265,12 +269,12 @@ const arweave = Arweave.init({
     balance: 1_000, // Positive integer
     end: 0, // At what block the lock ends.
     start: 1, // At what block the lock starts.
-  });
+  }); */
 
   // ~~ Deploy contract ~~
   const contractTxId = await warp.createContract.deploy({
     wallet,
-    initState: JSON.stringify(initialState),
+    initState: JSON.stringify(stateFromFile),
     src: contractSrc,
   });
 

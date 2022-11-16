@@ -1,35 +1,25 @@
-import Arweave from "arweave";
-import { LoggerFactory, WarpNodeFactory } from "warp-contracts";
+import { LoggerFactory, WarpFactory } from "warp-contracts";
 import * as fs from "fs";
 import path from "path";
 import { JWKInterface } from "arweave/node/lib/wallet";
-import { deployedTestContracts } from "../deployed-contracts";
 import { testKeyfile } from "../constants";
 
 (async () => {
   // This is the testnet ArNS Registry Smartweave Contract TX ID
-  const arnsRegistryContractTxId = deployedTestContracts.contractTxId;
+  const arnsRegistryContractTxId =
+    "rNR8SmcQLefBHZ-d-oJ9jbqmQxHGB_9bjdNipmsio-s";
 
-  // Initialize Arweave
-  const arweave = Arweave.init({
-    host: "testnet.redstone.tools",
-    port: 443,
-    protocol: "https",
-  });
-
-  // Initialize `LoggerFactory`
+  // ~~ Initialize warp ~~
   LoggerFactory.INST.logLevel("error");
+  const warp = WarpFactory.forTestnet();
 
-  // Initialize SmartWeave
-  const smartweave = WarpNodeFactory.memCached(arweave);
-
-  // Get the key file used
+  // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
     await fs.readFileSync(testKeyfile).toString()
   );
 
   // Read the ArNS Registry Contract
-  const pst = smartweave.pst(arnsRegistryContractTxId);
+  const pst = warp.pst(arnsRegistryContractTxId);
   pst.connect(wallet);
 
   // ~~ Read test contract source and initial state files ~~
@@ -37,11 +27,13 @@ import { testKeyfile } from "../constants";
     path.join(__dirname, "../../dist/contract.js"),
     "utf8"
   );
-  const newSrcTxId = await pst.save({ src: newSource });
+  const newSrcTxId = await pst.save({ src: newSource }, warp.environment);
   if (newSrcTxId === null) {
     return 0;
   }
-  await pst.evolve(newSrcTxId);
+  console.log(newSrcTxId);
+  const evolvedTxId = await pst.evolve(newSrcTxId);
 
-  console.log("Finished evolving the Test ArNS Smartweave Contract %s.", newSrcTxId);
+  console.log("Finished evolving the ArNS Smartweave Contract %s.", newSrcTxId);
+  console.log(`New Contract Tx Id ${evolvedTxId.originalTxId}`);
 })();
