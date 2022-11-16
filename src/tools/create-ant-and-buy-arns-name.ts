@@ -103,7 +103,7 @@ import { keyfile } from "../constants";
     name,
     antRecordContractTxId
   );
-  const deployedContract = await smartweave.createContract.deployFromSourceTx({
+  const deployedContract = await warp.createContract.deployFromSourceTx({
     wallet,
     initState: JSON.stringify(initialState),
     srcTxId: antRecordContractTxId,
