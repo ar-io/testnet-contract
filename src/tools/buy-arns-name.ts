@@ -1,8 +1,11 @@
 import Arweave from "arweave";
-import { LoggerFactory, WarpNodeFactory } from "warp-contracts";
+import {
+  defaultCacheOptions,
+  LoggerFactory,
+  WarpFactory,
+} from "warp-contracts";
 import * as fs from "fs";
 import { JWKInterface } from "arweave/node/lib/wallet";
-import { deployedContracts } from "../deployed-contracts";
 import { keyfile } from "../constants";
 
 (async () => {
@@ -22,20 +25,19 @@ import { keyfile } from "../constants";
 
   // This is the production ArNS Registry Smartweave Contract TX ID
   const arnsRegistryContractTxId =
-    "Ydv5pDoM6NBY1hySaWiRbe_2L3aeDDoLB7QNIu4BZpw"; // deployedContracts.contractTxId;
-
-  // Initialize Arweave
-  const arweave = Arweave.init({
-    host: "arweave.net",
-    port: 443,
-    protocol: "https",
-  });
+    "J121VPOHa9pT2QKOs2ub0bZh9LqHesubdnfwW2v126w"; // deployedContracts.contractTxId;
 
   // Initialize `LoggerFactory`
   LoggerFactory.INST.logLevel("error");
 
-  // Initialize SmartWeave
-  const smartweave = WarpNodeFactory.memCached(arweave);
+  // ~~ Initialize SmartWeave ~~
+  const warp = WarpFactory.forMainnet(
+    {
+      ...defaultCacheOptions,
+      inMemory: true,
+    },
+    true
+  );
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
@@ -43,7 +45,7 @@ import { keyfile } from "../constants";
   );
 
   // Read the ANT Registry Contract
-  const pst = smartweave.pst(arnsRegistryContractTxId);
+  const pst = warp.pst(arnsRegistryContractTxId);
   pst.connect(wallet);
 
   // check if this name exists in the registry, if not exit the script.
