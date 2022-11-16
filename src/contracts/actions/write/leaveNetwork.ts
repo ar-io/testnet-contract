@@ -1,11 +1,11 @@
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 declare const SmartWeave: any;
 
 // Removes gateway from the gateway address registry after the removal period completes
 export const leaveNetwork = async (
-  state: ArNSState,
+  state: IOState,
   { caller }: PstAction
 ): Promise<ContractResult> => {
   const settings = state.settings;
@@ -13,6 +13,13 @@ export const leaveNetwork = async (
 
   if (!(caller in gateways)) {
     throw new ContractError("This Gateway's wallet is not registered");
+  }
+
+  if (
+    state.gateways[caller].vaults[0].start + settings.gatewayJoinLength >
+    +SmartWeave.block.height
+  ) {
+    throw new ContractError("This Gateway has not been joined long enough");
   }
 
   if (state.gateways[caller].settings.url !== "") {

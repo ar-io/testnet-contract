@@ -1,12 +1,12 @@
 import { isArweaveAddress } from "@/contracts/utilities";
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 declare const SmartWeave: any;
 
 // Signals an approval for a proposed foundation action
 export const approveFoundationAction = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { id } }: PstAction
 ): Promise<ContractResult> => {
   const foundation = state.foundation;

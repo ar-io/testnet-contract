@@ -1,9 +1,9 @@
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 declare const ContractError;
 
 // Modifies an existing tier or creates a new one.
 export const setTier = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { tier, maxSubdomains, minTtlSeconds } }: PstAction
 ): Promise<ContractResult> => {
   const owner = state.owner;

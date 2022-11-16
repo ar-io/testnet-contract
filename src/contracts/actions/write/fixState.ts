@@ -1,10 +1,10 @@
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 
 // Temporary method to fix a broken contract state
 export const fixState = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: {} }: PstAction
 ): Promise<ContractResult> => {
   const owner = state.owner;

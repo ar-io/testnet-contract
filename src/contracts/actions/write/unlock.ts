@@ -1,4 +1,4 @@
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 declare const SmartWeave: any;
@@ -6,7 +6,7 @@ declare const SmartWeave: any;
 // After the time has passed for locked tokens, unlock them calling this function.
 // Optionally pass a vault index to unlock a specific vault
 export const unlock = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { id } }: PstAction
 ): Promise<ContractResult> => {
   const vaults = state.vaults;

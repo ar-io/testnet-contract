@@ -3,14 +3,14 @@ import { LoggerFactory, WarpFactory } from "warp-contracts";
 import * as fs from "fs";
 import path from "path";
 import { addFunds } from "../../utils/_helpers";
-import { ArNSState } from "../contracts/types/types";
+import { IOState } from "../contracts/types/types";
 import { testKeyfile } from "../constants";
 import { JWKInterface } from "arweave/node/lib/wallet";
 
 let GATEWAY_STARTING_TOKENS = 1_000_000;
 let DELEGATE_STARTING_TOKENS = 1_000;
 let DELEGATE2_STARTING_TOKENS = 50_000;
-let initialState: ArNSState;
+let initialState: IOState;
 let wallet2: JWKInterface;
 let walletAddress2: string;
 let wallet3: JWKInterface;
@@ -91,7 +91,7 @@ let slashedWalletAddress: string;
     path.join(__dirname, "../../dist/contract.js"),
     "utf8"
   );
-  const stateFromFile: ArNSState = JSON.parse(
+  const stateFromFile: IOState = JSON.parse(
     fs.readFileSync(
       path.join(__dirname, "../../dist/contracts/initial-state.json"),
       "utf8"

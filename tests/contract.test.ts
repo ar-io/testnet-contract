@@ -13,7 +13,7 @@ import {
   WarpFactory,
 } from "warp-contracts";
 import { JWKInterface } from "arweave/node/lib/wallet";
-import { ArNSState } from "../src/contracts/types/types";
+import { IOState } from "../src/contracts/types/types";
 import { getTotalSupply } from "../src/contracts/utilities";
 
 let warp: Warp;
@@ -47,7 +47,7 @@ describe("Testing the ArNS Registry Contract", () => {
   let delegateWalletAddress2: string;
   let slashedWallet: JWKInterface;
   let slashedWalletAddress: string;
-  let initialState: ArNSState;
+  let initialState: IOState;
   let Warp: Warp;
   let arweave: Arweave;
   let pst: PstContract;
@@ -119,7 +119,7 @@ describe("Testing the ArNS Registry Contract", () => {
       path.join(__dirname, "../dist/contract.js"),
       "utf8"
     );
-    const stateFromFile: ArNSState = JSON.parse(
+    const stateFromFile: IOState = JSON.parse(
       fs.readFileSync(
         path.join(__dirname, "../dist/contracts/initial-state.json"),
         "utf8"
@@ -295,7 +295,7 @@ describe("Testing the ArNS Registry Contract", () => {
       lockMaxLength: 10000,
       minGatewayStakeAmount: 5000,
       minDelegatedStakeAmount: 100,
-      gatewayJoinLength: 720,
+      gatewayJoinLength: 2,
       gatewayLeaveLength: 2,
       delegatedStakeWithdrawLength: 2,
     };
@@ -319,8 +319,6 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentState = await pst.currentState();
     const currentStateString = JSON.stringify(currentState, null, 5);
     const currentStateJSON = JSON.parse(currentStateString);
-    console.log(JSON.stringify(currentStateJSON.balances, null, 5));
-    console.log(JSON.stringify(currentStateJSON.gateways, null, 5));
     console.log(JSON.stringify(currentStateJSON, null, 10));
     const totalSupply = getTotalSupply(currentStateJSON);
     console.log(`The total supply is ${totalSupply}`);
@@ -764,7 +762,7 @@ describe("Testing the ArNS Registry Contract", () => {
     };
     const settingsToChange = {
       delegatedStakeWithdrawLength: 2,
-      gatewayJoinLength: 10000,
+      gatewayJoinLength: 3,
       gatewayLeaveLength: 2,
       lockMaxLength: 10000,
       lockMinLength: 5,

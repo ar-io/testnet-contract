@@ -4,14 +4,14 @@ import {
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
 } from "@/constants";
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 declare const SmartWeave: any;
 
 // Increases the lease time for an existing record
 export const extendRecord = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { name, years } }: PstAction
 ): Promise<ContractResult> => {
   const balances = state.balances;

@@ -4,7 +4,7 @@ import {
   LoggerFactory,
   WarpFactory,
 } from "warp-contracts";
-import { ArNSState } from "../contracts/types/types";
+import { IOState } from "../contracts/types/types";
 import * as fs from "fs";
 import path from "path";
 import { keyfile } from "../constants";
@@ -19,7 +19,7 @@ const arweave = Arweave.init({
 });
 
 (async () => {
-  let initialState: ArNSState;
+  let initialState: IOState;
   let wallet2: JWKInterface;
   let walletAddress2: string;
   let wallet3: JWKInterface;
@@ -86,7 +86,7 @@ const arweave = Arweave.init({
     path.join(__dirname, "../../dist/contract.js"),
     "utf8"
   );
-  const stateFromFile: ArNSState = JSON.parse(
+  const stateFromFile: IOState = JSON.parse(
     fs.readFileSync(
       path.join(__dirname, "../../dist/contracts/initial-state.json"),
       "utf8"

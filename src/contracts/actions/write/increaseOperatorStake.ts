@@ -1,15 +1,12 @@
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 declare const SmartWeave: any;
 
 // Locks tokens into a new gateway operator vault
 export const increaseOperatorStake = async (
-  state: ArNSState,
-  {
-    caller,
-    input: { qty },
-  }: PstAction
+  state: IOState,
+  { caller, input: { qty } }: PstAction
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const gateways = state.gateways;

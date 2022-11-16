@@ -19,7 +19,7 @@ import { transferTokens } from "./actions/write/transferTokens";
 import { transferTokensLocked } from "./actions/write/transferTokensLocked";
 import { initiateFoundationAction } from "./actions/write/initiateFoundationAction";
 import { approveFoundationAction } from "./actions/write/approveFoundationAction";
-import { ContractResult, PstAction, ArNSState } from "./types/types";
+import { ContractResult, PstAction, IOState } from "./types/types";
 import { fixState } from "./actions/write/fixState";
 import { joinNetwork } from "./actions/write/joinNetwork";
 import { leaveNetwork } from "./actions/write/leaveNetwork";
@@ -34,7 +34,7 @@ import { setSettings } from "./actions/write/setSettings";
 declare const ContractError;
 
 export async function handle(
-  state: ArNSState,
+  state: IOState,
   action: PstAction
 ): Promise<ContractResult> {
   const input = action.input;

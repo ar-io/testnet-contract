@@ -1,30 +1,14 @@
-// ~~ Write types for your contract ~~
-export interface ArNSState {
+export interface IOState {
   ticker: string; // A short token symbol, shown in block explorers and marketplaces
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
   owner: string; // The owner of this contract who can execute specific methods
   rewards: number; // the balance of rewards used by the ar.io protocol to incentivize network participants
-  foundation: {
-    // The settings and wallets used by the AR.IO Foundation.  This is for testing purposes only
-    balance: number; // the amount of funds held by the foundation, collection from AR.IO services like ArNS
-    actionPeriod: number; // the amount of blocks that must pass for all signers to approve a transfer
-    minSignatures: number; // the minimum amount of signatures/approvals needed to move funds, must be less than the amount of total addresses
-    addresses: string[]; // All of the foundation managed wallet addresses
-    actions: FoundationActionInterface[];
-  };
-  settings: {
-    [name: string]: number;
-  };
+  foundation: Foundation;
+  settings: ContractSettings;
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
   records: {
     // A list of all names and their corresponding attributes
-    [name: string]: {
-      tier: number; // The tier of service that has been purchased
-      contractTxId: string; // The ANT Contract used to manage this name
-      endTimestamp: number; // At what unix time (seconds since epoch) the lease ends
-      maxSubdomains: number; // The maximum number of subdomains allowed for this name, based on the tier purchased
-      minTtlSeconds: number; // The minimum number of seconds allowed for the TTL, based on tier purchased
-    };
+    [name: string]: ArNSName;
   };
   balances: {
     // A list of all outstanding, positive, token balances
@@ -41,16 +25,24 @@ export interface ArNSState {
   };
   approvedANTSourceCodeTxs: string[]; // An array of Smartweave Source Code transactions for whitelisted ANTs
   tiers: {
-    // Different ArNS tiers provide different capabilities for a premium cost
-    [tier: number]: {
-      maxSubdomains: number; // The maximum number of subdomains allowed for this tier
-      minTtlSeconds: number; // The minimum number of seconds allowed for the TTL for this tier
-    };
+    // Different service tiers provide different premium capabilities for a higher cost
+    [tier: number]: ServiceTier;
   };
   gateways: {
     // a list of all registered gateways
     [address: string]: Gateway; // every gateway needs a wallet to act as the identity
   };
+}
+
+export interface ContractSettings {
+  // these settings can be modified via on-chain governance
+  lockMinLength: number; // the minimum amount of blocks tokens can be locked in a community vault
+  lockMaxLength: number; // the maximum amount of blocks tokens can be locked in a community vault
+  minGatewayStakeAmount: number; // the minimum amount of tokens needed to stake to join the ar.io network as a gateway
+  minDelegatedStakeAmount: number; // the minimum amount of tokens needed to delegate stake to an ar.io network gateway
+  gatewayJoinLength: number; // the minimum amount of blocks a gateway can be joined to the ar.io network
+  gatewayLeaveLength: number; // the amount of blocks that have to elapse before a gateway leaves the network
+  delegatedStakeWithdrawLength: number; // the amount of blocks that have to elapse before a delegated stake is returned
 }
 
 export interface Gateway {
@@ -63,13 +55,6 @@ export interface Gateway {
     [address: string]: [TokenVault];
   };
 }
-
-export interface TokenVault {
-  balance: number; // Positive integer, the amount locked
-  start: number; // At what block the lock starts.
-  end: number; // At what block the lock ends.  0 means no end date.
-}
-
 export interface GatewaySettings {
   // All of the settings related to this gateway
   label: string; // The friendly name used to label this gateway
@@ -81,6 +66,59 @@ export interface GatewaySettings {
   openDelegation?: boolean; // If true, community token holders can delegate stake to this gateway
   delegateAllowList?: string[]; // A list of allowed arweave wallets that can act as delegates, if empty then anyone can delegate their tokens to this gateway
   note?: string; // An additional note (256 character max) the gateway operator can set to indicate things like maintenance or other operational updates.
+}
+
+export type AllowedProtocols = "http" | "https";
+
+export interface ArNSName {
+  tier: number; // The tier of service that has been purchased
+  contractTxId: string; // The ANT Contract used to manage this name
+  endTimestamp: number; // At what unix time (seconds since epoch) the lease ends
+  maxSubdomains: number; // The maximum number of subdomains allowed for this name, based on the tier purchased
+  minTtlSeconds: number; // The minimum number of seconds allowed for the TTL, based on tier purchased
+}
+
+export interface ServiceTier {
+  maxSubdomains: number; // The maximum number of subdomains (undernames) allowed for this tier
+  minTtlSeconds: number; // The minimum number of seconds allowed for the TTL for this tier
+}
+
+export interface Foundation {
+  // The settings and wallets used by the AR.IO Foundation.  This is for testing purposes only
+  balance: number; // the amount of funds held by the foundation, collection from AR.IO services like ArNS
+  actionPeriod: number; // the amount of blocks that must pass for all signers to approve a transfer
+  minSignatures: number; // the minimum amount of signatures/approvals needed to move funds, must be less than the amount of total addresses
+  addresses: string[]; // All of the foundation managed wallet addresses
+  actions: FoundationAction[]; // A list of all on-chain actions performed by the foundation
+}
+
+export interface FoundationAction {
+  id?: number;
+  type: FoundationActionType;
+  status?: FoundationActionStatus;
+  start?: number;
+  totalSignatures?: number;
+  target?: string;
+  value?: string | number;
+  recipient?: string;
+  qty?: number;
+  note?: string;
+  signed?: string[];
+  lockLength?: number;
+}
+
+export type FoundationActionStatus = "active" | "passed" | "failed";
+export type FoundationActionType =
+  | "transfer"
+  | "setMinSignatures"
+  | "setActionPeriod"
+  | "addAddress"
+  | "removeAddress";
+
+export interface TokenVault {
+  balance: number; // Positive integer, the amount locked
+  start: number; // At what block the lock starts.
+  end: number; // At what block the lock ends.  0 means no end date.
 }
 
 export interface PstAction {
@@ -114,36 +152,10 @@ export interface PstInput {
   port: number;
   protocol: AllowedProtocols;
   penalty: number;
-  settings: {
-    [name: string]: number;
-  };
+  settings: ContractSettings;
   openDelegation: boolean;
   delegateAllowList: string[];
 }
-
-export interface FoundationActionInterface {
-  id?: number;
-  type: FoundationActionType;
-  status?: FoundationActionStatus;
-  start?: number;
-  totalSignatures?: number;
-  target?: string;
-  value?: string | number;
-  recipient?: string;
-  qty?: number;
-  note?: string;
-  signed?: string[];
-  lockLength?: number;
-}
-
-export type AllowedProtocols = "http" | "https";
-export type FoundationActionStatus = "active" | "passed" | "failed";
-export type FoundationActionType =
-  | "transfer"
-  | "setMinSignatures"
-  | "setActionPeriod"
-  | "addAddress"
-  | "removeAddress";
 
 export interface PstResult {
   target: string;
@@ -193,6 +205,6 @@ export type PstFunction =
   | "setSettings";
 
 export type ContractResult =
-  | { state: ArNSState }
+  | { state: IOState }
   | { result: PstResult }
   | { result: ArNSNameResult };

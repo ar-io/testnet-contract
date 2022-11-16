@@ -1,17 +1,17 @@
 import { isArweaveAddress } from "@/contracts/utilities";
 import {
   PstAction,
-  ArNSState,
+  IOState,
   ContractResult,
-  FoundationActionInterface,
+  FoundationAction,
 } from "../../types/types";
 
 declare const ContractError;
 declare const SmartWeave: any;
 
-// Proposes a foundation action 
+// Proposes a foundation action
 export const initiateFoundationAction = async (
-  state: ArNSState,
+  state: IOState,
   {
     caller,
     input: { type, note, recipient, qty, lockLength, value, target },
@@ -19,7 +19,7 @@ export const initiateFoundationAction = async (
 ): Promise<ContractResult> => {
   const foundation = state.foundation;
   const settings = state.settings;
-  let foundationAction: FoundationActionInterface;
+  let foundationAction: FoundationAction;
 
   // The caller must be in the foundation, or else this transfer cannot be initiated
   if (!foundation.addresses.includes(caller)) {

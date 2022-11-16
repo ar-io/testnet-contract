@@ -1,10 +1,10 @@
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 
 // Updates this contract to new source code
 export const evolve = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { value } }: PstAction
 ): Promise<ContractResult> => {
   const owner = state.owner;

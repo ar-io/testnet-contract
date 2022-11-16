@@ -1,11 +1,11 @@
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 declare const SmartWeave: any;
 
 // Delegates an amount of tokens to a joined gateway
 export const delegateStake = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { qty, target } }: PstAction
 ): Promise<ContractResult> => {
   const balances = state.balances;

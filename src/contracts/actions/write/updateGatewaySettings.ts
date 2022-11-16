@@ -1,13 +1,13 @@
 import { MAX_NOTE_LENGTH } from "@/constants";
 import { isipV4Address } from "@/contracts/utilities";
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 declare const SmartWeave: any;
 
 // Adds a gateway into the address registry and joins it to the ar.io network
 export const updateGatewaySettings = async (
-  state: ArNSState,
+  state: IOState,
   {
     caller,
     input: {

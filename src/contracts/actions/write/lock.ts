@@ -1,11 +1,11 @@
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 declare const SmartWeave: any;
 
 // Locks tokens into a community staker owned vault
 export const lock = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { qty, lockLength } }: PstAction
 ): Promise<ContractResult> => {
   const balances = state.balances;

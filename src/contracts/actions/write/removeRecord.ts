@@ -1,9 +1,9 @@
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 
 export const removeRecord = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { name } }: PstAction
 ): Promise<ContractResult> => {
   const owner = state.owner;

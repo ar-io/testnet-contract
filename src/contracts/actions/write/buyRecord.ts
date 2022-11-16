@@ -6,13 +6,13 @@ import {
   SECONDS_IN_GRACE_PERIOD,
   TX_ID_LENGTH,
 } from "@/constants";
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 declare const SmartWeave: any;
 
 export const buyRecord = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { name, contractTxId, years, tier } }: PstAction
 ): Promise<ContractResult> => {
   const balances = state.balances;

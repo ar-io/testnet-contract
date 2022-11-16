@@ -1,11 +1,11 @@
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 declare const SmartWeave: any;
 
 // Unlocks the vault of a gateway operator
 export const decreaseOperatorStake = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { id } }: PstAction
 ): Promise<ContractResult> => {
   const settings = state.settings;
@@ -22,8 +22,13 @@ export const decreaseOperatorStake = async (
     throw new ContractError("Invalid vault index provided");
   }
 
-  if (gateways[caller].operatorStake - gateways[caller].vaults[id].balance < settings.minGatewayStakeAmount) {
-    throw new ContractError("Not enough operator stake to maintain the minimum");
+  if (
+    gateways[caller].operatorStake - gateways[caller].vaults[id].balance <
+    settings.minGatewayStakeAmount
+  ) {
+    throw new ContractError(
+      "Not enough operator stake to maintain the minimum"
+    );
   }
 
   // Unstake a single gateway vault
@@ -38,7 +43,8 @@ export const decreaseOperatorStake = async (
     } else {
       state.balances[caller] = gateways[caller].vaults[id].balance;
     }
-    state.gateways[caller].operatorStake -= state.gateways[caller].vaults[id].balance; // deduct from operator stake
+    state.gateways[caller].operatorStake -=
+      state.gateways[caller].vaults[id].balance; // deduct from operator stake
     state.gateways[caller].vaults[id].balance = 0; // zero out this balance but do not delete the record
   } else {
     throw new ContractError("This stake cannot be decreased yet yet");

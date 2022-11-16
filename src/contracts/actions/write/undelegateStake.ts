@@ -1,11 +1,11 @@
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 declare const SmartWeave: any;
 
 // Undelegates a single stake or all stakes from a gateway
 export const undelegateStake = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { id, target } }: PstAction
 ): Promise<ContractResult> => {
   const settings = state.settings;
