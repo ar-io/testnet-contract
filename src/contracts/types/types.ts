@@ -32,6 +32,7 @@ export interface IOState {
     // a list of all registered gateways
     [address: string]: Gateway; // every gateway needs a wallet to act as the identity
   };
+  votes: VoteInterface[]; // on-chain governance proposals and votes
 }
 
 export interface ContractSettings {
@@ -93,18 +94,18 @@ export interface Foundation {
 }
 
 export interface FoundationAction {
-  id?: number;
-  type: FoundationActionType;
-  status?: FoundationActionStatus;
-  start?: number;
-  totalSignatures?: number;
-  target?: string;
-  value?: string | number;
-  recipient?: string;
-  qty?: number;
-  note?: string;
-  signed?: string[];
-  lockLength?: number;
+  id?: number; // the id number for this action
+  type: FoundationActionType; // the specific kind of action being performed
+  status?: FoundationActionStatus; // the latest status of this action
+  start?: number; // the block height that this action started at
+  totalSignatures?: number; // the amount of signatures collected for this action
+  target?: string; // the target wallet added to the foundation addresses list
+  value?: string | number; // the value for setting a specific configuration
+  recipient?: string; // the target recipient of a foundation balance distribution
+  qty?: number; // the amount of tokens distributed from the foundation balance
+  note?: string; // a description of this foundation action
+  signed?: string[]; // a list of the foundation wallets that have signed this action
+  lockLength?: number; // determines the amount of blocks a foundation balance distribution is locked for
 }
 
 export type FoundationActionStatus = "active" | "passed" | "failed";
@@ -120,6 +121,38 @@ export interface TokenVault {
   start: number; // At what block the lock starts.
   end: number; // At what block the lock ends.  0 means no end date.
 }
+
+export interface VaultParamsInterface {
+  balance: number;
+  start: number;
+  end: number;
+}
+
+export interface VoteInterface {
+  status?: VoteStatus;
+  type: VoteType;
+  id?: number;
+  totalWeight?: number;
+  recipient?: string;
+  target?: string;
+  qty?: number;
+  key?: string;
+  value?: number | string;
+  note?: string;
+  yays?: number;
+  nays?: number;
+  voted?: string[];
+  start?: number;
+  lockLength?: number;
+}
+
+export type VoteStatus = "active" | "quorumFailed" | "passed" | "failed";
+export type VoteType =
+  | "mint"
+  | "mintLocked"
+  | "burnVault"
+  | "indicative"
+  | "set";
 
 export interface PstAction {
   input: PstInput;
