@@ -35,7 +35,7 @@ export const decreaseOperatorStake = async (
   if (gateways[caller].vaults[id].end === 0) {
     // Begin unstake process
     state.gateways[caller].vaults[id].end =
-      +SmartWeave.block.height + settings.delegatedStakeWithdrawLength;
+      +SmartWeave.block.height + settings.operatorStakeWithdrawLength;
   } else if (gateways[caller].vaults[id].end <= +SmartWeave.block.height) {
     // Finish unstake process for this specific vault and return funds to gateway operator
     if (caller in state.balances) {

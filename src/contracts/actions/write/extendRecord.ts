@@ -16,7 +16,6 @@ export const extendRecord = async (
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
-  const foundation = state.foundation;
   const fees = state.fees;
   const currentBlockTime = +SmartWeave.block.timestamp;
 

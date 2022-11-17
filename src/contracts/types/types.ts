@@ -44,6 +44,7 @@ export interface ContractSettings {
   gatewayJoinLength: number; // the minimum amount of blocks a gateway can be joined to the ar.io network
   gatewayLeaveLength: number; // the amount of blocks that have to elapse before a gateway leaves the network
   delegatedStakeWithdrawLength: number; // the amount of blocks that have to elapse before a delegated stake is returned
+  operatorStakeWithdrawLength: number; // the amount of blocks that have to elapse before a delegated stake is returned
 }
 
 export interface Gateway {

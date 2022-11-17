@@ -10,7 +10,8 @@
     "minDelegatedStakeAmount": 100,
     "gatewayJoinLength": 720,
     "gatewayLeaveLength": 10080,
-    "delegatedStakeWithdrawLength": 10080
+    "delegatedStakeWithdrawLength": 10080,
+    "operatorStakeWithdrawLength": 10080
   },
   "foundation": {},
   "evolve": null,

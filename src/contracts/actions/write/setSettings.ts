@@ -13,6 +13,8 @@ export const setSettings = async (
     throw new ContractError("Caller cannot change settings");
   }
 
+  // need to validate the settings being passed
+
   state.settings = settings;
 
   return { state };
