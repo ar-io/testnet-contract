@@ -298,6 +298,7 @@ describe("Testing the ArNS Registry Contract", () => {
       gatewayJoinLength: 2,
       gatewayLeaveLength: 2,
       delegatedStakeWithdrawLength: 2,
+      operatorStakeWithdrawLength: 2,
     };
 
     // ~~ Deploy contract ~~
@@ -720,8 +721,8 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.balances[walletAddress2]).toEqual(968000000);
     expect(currentStateJSON.records["vile"].endTimestamp).toBeLessThan(
-      1765000000
-    );
+      1770000000
+    ); // this should show that the record was not extended
   });
 
   it("should change fees and settings with correct ownership", async () => {
@@ -762,6 +763,7 @@ describe("Testing the ArNS Registry Contract", () => {
     };
     const settingsToChange = {
       delegatedStakeWithdrawLength: 2,
+      operatorStakeWithdrawLength: 2,
       gatewayJoinLength: 3,
       gatewayLeaveLength: 2,
       lockMaxLength: 10000,
@@ -1974,6 +1976,24 @@ describe("Testing the ArNS Registry Contract", () => {
     expect(
       currentStateJSON.gateways[gatewayWalletAddress].settings.port
     ).toEqual(port);
+  });
+
+  it("should not up gateway settings with incorrect parameters", async () => {
+    let label = "Test Gateway SSL"; // friendly label
+
+    pst.connect(gatewayWallet); // only owns a vaulted balance
+    await pst.writeInteraction({
+      function: "updateGatewaySettings",
+      label: "",
+    });
+
+    await mineBlock(arweave);
+    let currentState = await pst.currentState();
+    let currentStateString = JSON.stringify(currentState);
+    let currentStateJSON = JSON.parse(currentStateString);
+    expect(
+      currentStateJSON.gateways[gatewayWalletAddress].settings.label
+    ).toEqual(label);
   });
 
   it("should increase gateway stake with correct balance", async () => {

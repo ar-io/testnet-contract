@@ -1,3 +1,6 @@
+import axios, { AxiosResponse } from "axios";
+import axiosRetry, { exponentialDelay } from "axios-retry";
+
 declare const ContractError;
 
 export function isArweaveAddress(address: string) {
@@ -28,18 +31,46 @@ export function getTotalSupply(state: any) {
     // iterate through each gateway and add all operator and delegated stakes
     totalSupply += state.gateways[key].operatorStake;
     totalSupply += state.gateways[key].delegatedStake;
-  };
+  }
 
   for (const key of Object.keys(state.vaults)) {
     // iterate through each vault and add all community stakes
     for (let i = 0; i < state.vaults[key].length; i++) {
       totalSupply += state.vaults[key][i].balance;
     }
-  };
+  }
 
   for (const key of Object.keys(state.balances)) {
-    totalSupply += state.balances[key]
+    totalSupply += state.balances[key];
   }
 
   return totalSupply;
+}
+
+export async function retryFetch(reqURL: string): Promise<AxiosResponse<any>> {
+  const axiosInstance = axios.create();
+  const maxRetries = 10;
+  axiosRetry(axiosInstance, {
+    retries: maxRetries,
+    retryDelay: (retryNumber) => {
+      console.error(
+        `Retry attempt ${retryNumber}/${maxRetries} of request to ${reqURL}`
+      );
+      return exponentialDelay(retryNumber);
+    },
+  });
+  return await axiosInstance.get(reqURL, {
+    responseType: "arraybuffer",
+  });
+}
+
+// Gets the latest block height
+export async function getCurrentBlockHeight() {
+  let height = 0;
+  try {
+    const response = await retryFetch(`https://arweave.net/height`);
+    height = await response.data;
+    return height;
+  } catch (err) {}
+  return height;
 }

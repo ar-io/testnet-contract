@@ -13,6 +13,8 @@
     "arlocal": "^1.1.53",
     "arweave": "1.11.4",
     "arweave-js": "^1.0.0",
+    "axios": "^0.26.0",
+    "axios-retry": "^3.2.4",
     "babel-jest": "^27.5.0",
     "core-js": "^3.6.5",
     "sass-loader": "^10",

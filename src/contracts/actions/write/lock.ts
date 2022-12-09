@@ -24,9 +24,20 @@ export const lock = async (
       `lockLength is out of range. lockLength must be between ${settings["lockMinLength"]} - ${settings["lockMaxLength"]}.`
     );
   }
-  const balance = balances[caller];
-  if (isNaN(balance) || balance < qty) {
-    throw new ContractError("Not enough balance.");
+
+  if (
+    !balances[caller] ||
+    balances[caller] == undefined ||
+    balances[caller] == null ||
+    isNaN(balances[caller])
+  ) {
+    throw new ContractError(`Caller balance is not defined!`);
+  }
+
+  if (balances[caller] < qty) {
+    throw new ContractError(
+      `Caller balance not high enough to send ${qty} token(s)!`
+    );
   }
 
   const start = +SmartWeave.block.height;

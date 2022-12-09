@@ -6,11 +6,12 @@ import {
 import * as fs from "fs";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import { keyfile } from "../constants";
+import { getCurrentBlockHeight } from "../contracts/utilities";
 
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID
   const arnsRegistryContractTxId =
-    "R-DRqVv97e8cCya95qsH_Tpvmb9vidURYWlBL5LpSzo";
+    "bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U";
 
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel("error");
@@ -33,11 +34,15 @@ import { keyfile } from "../constants";
   const pst = warp.pst(arnsRegistryContractTxId);
   pst.connect(wallet);
   const currentState = await pst.currentState();
-  const currentStateString = JSON.stringify(currentState);
+  const currentStateString = JSON.stringify(currentState, null, 5);
   const currentStateJSON = JSON.parse(currentStateString);
   console.log(currentStateJSON);
+
+  const block = await getCurrentBlockHeight();
+  const fileName = "ArNS_State_" + block.toString() + ".json";
+  fs.writeFileSync(fileName, currentStateString);
   console.log(
-    "Finished set the ArNS state for the registry: %s",
+    "Finished getting the ArNS state for the registry: %s",
     arnsRegistryContractTxId
   );
 })();

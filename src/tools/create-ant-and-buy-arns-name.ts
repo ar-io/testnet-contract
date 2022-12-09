@@ -12,16 +12,16 @@ import { keyfile } from "../constants";
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // A short token symbol, typically with ANT- in front
-  const ticker = "ANT-REEFERMADNESS";
+  const ticker = "ANT-ARDRIVE";
 
   // A friendly name for the name of this ANT
-  const name = "Reefer Madness";
+  const name = "ArDrive.io";
 
   // The Time To Live for this ANT to reside cached, the default and minimum is 900 seconds
-  const ttlSeconds = 900;
+  const ttlSeconds = 3600;
 
   // This is the name that will be purchased in the Arweave Name System Registry
-  const nameToBuy = "reefer-madness";
+  const nameToBuy = "ardrive";
 
   // The lease time for purchasing the name
   const years = 1;
@@ -30,14 +30,15 @@ import { keyfile } from "../constants";
   const tier = 1;
 
   // The arweave data transaction added to the ANT that is to be proxied using the registered name
-  const dataPointer = "_tJ1Lrf9y04qvEIjeyWhvfGdaS9O4zLfUarJixyJCJ0";
+  const dataPointer = "nOXJjj_vk0Dc1yCgdWD8kti_1iHruGzLQLNNBHVpN0Y";
 
   // This is the ANT Smartweave Contract Source TX ID that will be used to create the new ANT
   const antRecordContractTxId = "PEI1efYrsX08HUwvc6y-h6TSpsNlo2r6_fWL2_GdwhY";
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   // This is the production ArNS Registry Smartweave Contract
-  const arnsRegistryContractTxId = deployedContracts.contractTxId;
+  const arnsRegistryContractTxId =
+    "bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U";
 
   // Initialize Arweave
   const arweave = Arweave.init({

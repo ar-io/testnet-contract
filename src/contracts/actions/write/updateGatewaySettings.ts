@@ -65,11 +65,19 @@ export const updateGatewaySettings = async (
     }
 
     if (url) {
-      state.gateways[caller].settings.url = url;
+      if (typeof url !== "string") {
+        throw new ContractError("Label format not recognized.");
+      } else {
+        state.gateways[caller].settings.url = url;
+      }
     }
 
     if (label) {
-      state.gateways[caller].settings.label = label;
+      if (typeof label !== "string") {
+        throw new ContractError("Label format not recognized.");
+      } else {
+        state.gateways[caller].settings.label = label;
+      }
     }
 
     if (note) {

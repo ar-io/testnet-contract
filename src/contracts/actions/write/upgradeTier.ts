@@ -20,7 +20,12 @@ export const upgradeTier = async (
   const currentBlockTime = +SmartWeave.block.timestamp;
 
   // Check if the user has enough tokens to upgrade the tier
-  if (!balances[caller]) {
+  if (
+    !balances[caller] ||
+    balances[caller] == undefined ||
+    balances[caller] == null ||
+    isNaN(balances[caller])
+  ) {
     throw new ContractError(`Caller balance is not defined!`);
   }
 

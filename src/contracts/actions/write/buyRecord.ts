@@ -23,7 +23,12 @@ export const buyRecord = async (
   const currentBlockTime = +SmartWeave.block.timestamp;
 
   // Check if the user has enough tokens to purchase the name
-  if (!balances[caller]) {
+  if (
+    !balances[caller] ||
+    balances[caller] == undefined ||
+    balances[caller] == null ||
+    isNaN(balances[caller])
+  ) {
     throw new ContractError(`Caller balance is not defined!`);
   }
 

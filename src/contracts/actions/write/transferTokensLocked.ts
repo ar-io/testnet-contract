@@ -26,7 +26,12 @@ export const transferTokensLocked = async (
     throw new ContractError("Invalid token transfer");
   }
 
-  if (!balances[caller]) {
+  if (
+    !balances[caller] ||
+    balances[caller] == undefined ||
+    balances[caller] == null ||
+    isNaN(balances[caller])
+  ) {
     throw new ContractError(`Caller balance is not defined!`);
   }
 

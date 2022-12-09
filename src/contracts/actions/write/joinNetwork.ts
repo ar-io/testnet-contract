@@ -32,7 +32,12 @@ export const joinNetwork = async (
     throw new ContractError("Quantity must be a positive integer.");
   }
 
-  if (!balances[caller]) {
+  if (
+    !balances[caller] ||
+    balances[caller] == undefined ||
+    balances[caller] == null ||
+    isNaN(balances[caller])
+  ) {
     throw new ContractError(`Caller balance is not defined!`);
   }
 
