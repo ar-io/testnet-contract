@@ -1,5 +1,9 @@
 import Arweave from "arweave";
-import { LoggerFactory, WarpNodeFactory } from "warp-contracts";
+import {
+  defaultCacheOptions,
+  LoggerFactory,
+  WarpFactory,
+} from "warp-contracts";
 import * as fs from "fs";
 import { keyfile } from "../constants";
 
@@ -33,7 +37,13 @@ import { keyfile } from "../constants";
   LoggerFactory.INST.logLevel("error");
 
   // ~~ Initialize SmartWeave ~~
-  const smartweave = WarpNodeFactory.memCached(arweave);
+  const warp = WarpFactory.forMainnet(
+    {
+      ...defaultCacheOptions,
+      inMemory: true,
+    },
+    true
+  );
 
   // ~~ Generate Wallet and add funds ~~
   // const wallet = await arweave.wallets.generate();
@@ -61,7 +71,7 @@ import { keyfile } from "../constants";
 
   // ~~ Deploy contract ~~
   console.log("Creating ANT for %s", name);
-  const contractTxId = await smartweave.createContract.deployFromSourceTx({
+  const contractTxId = await warp.createContract.deployFromSourceTx({
     wallet,
     initState: JSON.stringify(initialState),
     srcTxId: antRecordContractTxId,

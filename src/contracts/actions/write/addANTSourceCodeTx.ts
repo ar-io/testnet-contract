@@ -1,10 +1,10 @@
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 import { TX_ID_LENGTH } from "@/constants";
 declare const ContractError;
 
 // Modifies the fees for purchasing ArNS names
 export const addANTSourceCodeTx = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { contractTxId } }: PstAction
 ): Promise<ContractResult> => {
   const owner = state.owner;
@@ -27,9 +27,11 @@ export const addANTSourceCodeTx = async (
   }
 
   if (approvedANTSourceCodeTxs.indexOf(contractTxId) > -1) {
-    throw new ContractError("This ANT Source Code Transaction ID is already allowed.");
+    throw new ContractError(
+      "This ANT Source Code Transaction ID is already allowed."
+    );
   } else {
-      state.approvedANTSourceCodeTxs.push(contractTxId);
+    state.approvedANTSourceCodeTxs.push(contractTxId);
   }
 
   return { state };

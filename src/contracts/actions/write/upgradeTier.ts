@@ -1,32 +1,37 @@
-import { SECONDS_IN_A_YEAR, SECONDS_IN_GRACE_PERIOD } from "@/constants";
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import {
+  FOUNDATION_PERCENTAGE,
+  SECONDS_IN_A_YEAR,
+  SECONDS_IN_GRACE_PERIOD,
+} from "@/constants";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 declare const SmartWeave: any;
 
 export const upgradeTier = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { name, tier } }: PstAction
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
   const fees = state.fees;
   const tiers = state.tiers;
+  const foundation = state.foundation;
   const currentBlockTime = +SmartWeave.block.timestamp;
 
   // Check if the user has enough tokens to upgrade the tier
-  if (!balances[caller]) {
+  if (
+    !balances[caller] ||
+    balances[caller] == undefined ||
+    balances[caller] == null ||
+    isNaN(balances[caller])
+  ) {
     throw new ContractError(`Caller balance is not defined!`);
   }
 
   // check if record exists
   if (!records[name]) {
     throw new ContractError(`No record exists with this name ${name}`);
-  }
-
-  // check if the record is purchased, if not it must be purchased first
-  if (records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD < currentBlockTime) {
-    throw new ContractError(`This record ${name} needs to be purchased first`);
   }
 
   // Check if it includes a valid tier number
@@ -41,6 +46,13 @@ export const upgradeTier = async (
 
   if (tier <= records[name].tier) {
     throw new ContractError(`Tiers can only be upgraded, not lowered!`);
+  }
+
+  // check if this is an active lease, if not it cannot be upgraded
+  if (records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD < currentBlockTime) {
+    throw new ContractError(
+      `This name's lease has expired.  It must be purchased first before being extended.`
+    );
   }
 
   // Determine price of upgrading this tier, prorating based on current time and amount of tiers left
@@ -61,7 +73,9 @@ export const upgradeTier = async (
   }
 
   // reduce balance set the end lease period for this record based on number of years
-  balances[caller] -= qty;
+  balances[caller] -= qty; // reduce callers balance
+  state.foundation.balance += Math.floor(qty * (FOUNDATION_PERCENTAGE / 100)); // increase foundation balance using the foundation percentage
+  state.rewards += Math.floor(qty * ((100 - FOUNDATION_PERCENTAGE) / 100)); // increase protocol rewards without the foundation percentage
 
   // Set the maximum amount of subdomains for this name based on the selected tier
   records[name].tier = tier;

@@ -1,27 +1,34 @@
 import {
+  FOUNDATION_PERCENTAGE,
   MAX_NAME_LENGTH,
   MAX_YEARS,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
   TX_ID_LENGTH,
 } from "@/constants";
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 declare const SmartWeave: any;
 
 export const buyRecord = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { name, contractTxId, years, tier } }: PstAction
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
   const fees = state.fees;
   const tiers = state.tiers;
+  const foundation = state.foundation;
   const currentBlockTime = +SmartWeave.block.timestamp;
 
   // Check if the user has enough tokens to purchase the name
-  if (!balances[caller]) {
+  if (
+    !balances[caller] ||
+    balances[caller] == undefined ||
+    balances[caller] == null ||
+    isNaN(balances[caller])
+  ) {
     throw new ContractError(`Caller balance is not defined!`);
   }
 
@@ -32,9 +39,9 @@ export const buyRecord = async (
     );
   }
 
-  // Check if it includes a valid number of years
+  // Check if it includes a valid tier
   if (!Number.isInteger(tier)) {
-    throw new ContractError('Invalid value for "tier". Must be an integers');
+    throw new ContractError('Invalid value for "tier". Must be an integer');
   }
 
   // Check if this is a valid tier
@@ -89,7 +96,9 @@ export const buyRecord = async (
   // Check if the requested name already exists, if not reduce balance and add it
   if (!records[name]) {
     // No name created, so make a new one
-    balances[caller] -= qty;
+    balances[caller] -= qty; // reduce callers balance
+    foundation.balance += Math.floor(qty * (FOUNDATION_PERCENTAGE / 100)); // increase foundation balance using the foundation percentage
+    state.rewards += Math.floor(qty * ((100 - FOUNDATION_PERCENTAGE) / 100)); // increase protocol rewards without the foundation percentage
     records[name] = {
       tier,
       contractTxId,
@@ -102,7 +111,9 @@ export const buyRecord = async (
     currentBlockTime
   ) {
     // This name's lease has expired and can be repurchased
-    balances[caller] -= qty;
+    balances[caller] -= qty; // reduce callers balance
+    state.foundation.balance += Math.floor(qty * (FOUNDATION_PERCENTAGE / 100)); // increase foundation balance using the foundation percentage
+    state.rewards += Math.floor(qty * ((100 - FOUNDATION_PERCENTAGE) / 100)); // increase protocol rewards without the foundation percentage
     records[name] = {
       tier,
       contractTxId,

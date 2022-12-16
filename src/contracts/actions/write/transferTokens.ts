@@ -1,9 +1,9 @@
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 
 export const transferTokens = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { target, qty } }: PstAction
 ): Promise<ContractResult> => {
   const balances = state.balances;
@@ -19,7 +19,12 @@ export const transferTokens = async (
     throw new ContractError("Invalid token transfer");
   }
 
-  if (!balances[caller]) {
+  if (
+    !balances[caller] ||
+    balances[caller] == undefined ||
+    balances[caller] == null ||
+    isNaN(balances[caller])
+  ) {
     throw new ContractError(`Caller balance is not defined!`);
   }
 

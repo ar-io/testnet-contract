@@ -1,10 +1,10 @@
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 import { TX_ID_LENGTH } from "@/constants";
 declare const ContractError;
 
-// Modifies the fees for purchasing ArNS names
+// Removes a white listed ANT source code transaction
 export const removeANTSourceCodeTx = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { contractTxId } }: PstAction
 ): Promise<ContractResult> => {
   const owner = state.owner;
@@ -12,7 +12,9 @@ export const removeANTSourceCodeTx = async (
 
   // Only the owner of the contract can perform this method
   if (caller !== owner) {
-    throw new ContractError("Caller cannot add ANT Source Code Transaction IDs");
+    throw new ContractError(
+      "Caller cannot add ANT Source Code Transaction IDs"
+    );
   }
 
   // check if it is a valid arweave transaction id for the smartweave contract
@@ -27,9 +29,13 @@ export const removeANTSourceCodeTx = async (
   }
 
   if (approvedANTSourceCodeTxs.indexOf(contractTxId) > -1) {
-    state.approvedANTSourceCodeTxs.splice(approvedANTSourceCodeTxs.indexOf(contractTxId));
+    state.approvedANTSourceCodeTxs.splice(
+      approvedANTSourceCodeTxs.indexOf(contractTxId)
+    );
   } else {
-    throw new ContractError("This ANT Source Code Transaction ID not in the list.");
+    throw new ContractError(
+      "This ANT Source Code Transaction ID not in the list."
+    );
   }
 
   return { state };

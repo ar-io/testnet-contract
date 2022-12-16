@@ -4,9 +4,7 @@ import {
   WarpFactory,
 } from "warp-contracts";
 import * as fs from "fs";
-import path from "path";
 import { JWKInterface } from "arweave/node/lib/wallet";
-// import { deployedContracts } from "../deployed-contracts";
 import { keyfile } from "../constants";
 
 (async () => {
@@ -26,28 +24,18 @@ import { keyfile } from "../constants";
     true
   );
 
-  // Get the key file used
+  // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
     await fs.readFileSync(keyfile).toString()
   );
 
-  // Read the ArNS Registry Contract
+  // Read the ANT Registry Contract
   const pst = warp.pst(arnsRegistryContractTxId);
   pst.connect(wallet);
 
-  // ~~ Read contract source and initial state files ~~
-  const newSource = fs.readFileSync(
-    path.join(__dirname, "../../dist/contract.js"),
-    "utf8"
-  );
+  const txId = await pst.writeInteraction({
+    function: "fixState",
+  });
 
-  const newSrcTxId = await pst.save({ src: newSource }, warp.environment);
-  if (newSrcTxId === null) {
-    return 0;
-  }
-  console.log(newSrcTxId);
-  const evolvedTxId = await pst.evolve(newSrcTxId);
-
-  console.log("Finished evolving the ArNS Smartweave Contract %s.", newSrcTxId);
-  console.log(`New Contract Tx Id ${evolvedTxId.originalTxId}`);
+  console.log("Finished fixing the contract: %s", txId);
 })();

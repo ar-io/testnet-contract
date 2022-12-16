@@ -1,13 +1,12 @@
 import { LoggerFactory, WarpFactory } from "warp-contracts";
 import * as fs from "fs";
-import path from "path";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import { testKeyfile } from "../constants";
 
 (async () => {
   // This is the testnet ArNS Registry Smartweave Contract TX ID
   const arnsRegistryContractTxId =
-    "rNR8SmcQLefBHZ-d-oJ9jbqmQxHGB_9bjdNipmsio-s";
+    "ddFhy9E3P364rW5AxPJ2U1u5hPrNW1A0NOkxb4FwL9w";
 
   // ~~ Initialize warp ~~
   LoggerFactory.INST.logLevel("error");
@@ -18,22 +17,15 @@ import { testKeyfile } from "../constants";
     await fs.readFileSync(testKeyfile).toString()
   );
 
-  // Read the ArNS Registry Contract
+  // Read the ANT Registry Contract
   const pst = warp.pst(arnsRegistryContractTxId);
   pst.connect(wallet);
-
-  // ~~ Read test contract source and initial state files ~~
-  const newSource = fs.readFileSync(
-    path.join(__dirname, "../../dist/contract.js"),
-    "utf8"
+  const currentState = await pst.currentState();
+  const currentStateString = JSON.stringify(currentState);
+  const currentStateJSON = JSON.parse(currentStateString);
+  console.log(currentStateJSON);
+  console.log(
+    "Finished getting the test ArNS state for the registry: %s",
+    arnsRegistryContractTxId
   );
-  const newSrcTxId = await pst.save({ src: newSource }, warp.environment);
-  if (newSrcTxId === null) {
-    return 0;
-  }
-  console.log(newSrcTxId);
-  const evolvedTxId = await pst.evolve(newSrcTxId);
-
-  console.log("Finished evolving the ArNS Smartweave Contract %s.", newSrcTxId);
-  console.log(`New Contract Tx Id ${evolvedTxId.originalTxId}`);
 })();

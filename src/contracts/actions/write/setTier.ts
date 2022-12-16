@@ -1,9 +1,9 @@
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 declare const ContractError;
 
-// Modifies the fees for purchasing ArNS names
+// Modifies an existing tier or creates a new one.
 export const setTier = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { tier, maxSubdomains, minTtlSeconds } }: PstAction
 ): Promise<ContractResult> => {
   const owner = state.owner;
@@ -21,28 +21,7 @@ export const setTier = async (
     throw new ContractError("Invalid tier configuration");
   }
 
-  if (state.tiers === undefined) {
-    // Do this if Tiers does not exist in the state of the contract.
-    state = {
-      ticker: state.ticker,
-      name: state.name,
-      owner: state.owner,
-      evolve: state.evolve,
-      records: state.records,
-      balances: state.balances,
-      approvedANTSourceCodeTxs: state.approvedANTSourceCodeTxs,
-      tiers: {
-        [tier]: {
-          maxSubdomains: maxSubdomains,
-          minTtlSeconds: minTtlSeconds,
-        },
-      },
-      fees: state.fees,
-    };
-  } else {
-    // Tiers already exists in the state of the contract
-    state.tiers[tier] = { maxSubdomains, minTtlSeconds };
-  }
+  state.tiers[tier] = { maxSubdomains, minTtlSeconds };
 
   return { state };
 };

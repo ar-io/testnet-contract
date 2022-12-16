@@ -1,10 +1,10 @@
-import { PstAction, ArNSState, ContractResult } from "../../types/types";
+import { PstAction, IOState, ContractResult } from "../../types/types";
 
 declare const ContractError;
 
-// Sets an existing record and if one does not exist, it cre
+// Updates this contract to new source code
 export const evolve = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { value } }: PstAction
 ): Promise<ContractResult> => {
   const owner = state.owner;
@@ -13,7 +13,7 @@ export const evolve = async (
     throw new ContractError("Caller cannot evolve the contract");
   }
 
-  state.evolve = value;
+  state.evolve = value.toString();
 
   return { state };
 };
