@@ -43,7 +43,39 @@
     "31": 5,
     "32": 5
   },
-  "gateways": {},
+  "foundation":{
+    "actionPeriod": 720,
+    "actions":[],
+    "addresses":[
+    "QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ",
+    "31LPFYoow2G7j-eSSsrIh8OlNaARZ84-80J-8ba68d8",
+    "NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g",
+    ],
+    "balance":0,
+    "minSignatures":2
+  },
+  "gateways": {
+    "QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ": {
+      "operatorStake": 5000,
+      "vaults": [
+        {
+          "balance": 5000, 
+          "end": 0,
+          "start": 1000000
+        }
+      ],
+      "settings": {
+        "label": "Arweave Community Gateway",
+        "sslFingerprint": "E1 CE 96 20 16 E8 B2 58 E2 CD 43 D8 83 EF 48 29 DE B2 EE 1A 72 0C 5C 83 7A 1F 45 03 F1 06 AE 67",
+        "ipV4Address": "13.225.223.116",
+        "url": "arweave.net",
+        "port": 443,
+        "openDelegation": false,
+        "delegateAllowList": [],
+        "protocol": "https"
+      }
+    }
+  },
   "name": "Arweave Name System Test",
   "owner": "QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ",
   "records": {
@@ -647,5 +679,5 @@
     }
   },
   "vaults": {},
-  "version":"0.0.17"
+  "version":"0.0.18"
 }
