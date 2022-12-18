@@ -238,7 +238,8 @@ export type PstFunction =
   | "updateGatewaySettings"
   | "undelegateStake"
   | "proposeGatewaySlash"
-  | "setSettings";
+  | "setSettings"
+  | "setName";
 
 export type ContractResult =
   | { state: IOState }

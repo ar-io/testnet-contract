@@ -12,7 +12,7 @@ import { keyfile } from "../constants";
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID version 1.7
   const arnsRegistryContractTxId =
-    "ar5dUFsVjY36aTCflni6DUrWFXDSsfvkZPcBDvzmjww";
+    "R-DRqVv97e8cCya95qsH_Tpvmb9vidURYWlBL5LpSzo";
 
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel("error");
@@ -33,7 +33,6 @@ import { keyfile } from "../constants";
 
   // Read the ArNS Registry Contract
   const pst = warp.pst(arnsRegistryContractTxId);
-  pst.connect(wallet);
 
   // ~~ Read contract source and initial state files ~~
   const newSource = fs.readFileSync(
@@ -41,13 +40,20 @@ import { keyfile } from "../constants";
     "utf8"
   );
 
-  const newSrcTxId = await pst.save({ src: newSource }, warp.environment);
-  if (newSrcTxId === null) {
+  const evolveSrcTx = await warp.createSourceTx({ src: newSource }, wallet);
+  const evolveSrcTxId = await warp.saveSourceTx(evolveSrcTx);
+  if (evolveSrcTxId === null) {
     return 0;
   }
-  console.log(newSrcTxId);
-  const evolvedTxId = await pst.evolve(newSrcTxId);
+  const evolveTx = await pst.writeInteraction({
+    function: "evolve",
+    value: evolveSrcTxId,
+    version: "0.1.0",
+  });
 
-  console.log("Finished evolving the ArNS Smartweave Contract %s.", newSrcTxId);
-  console.log(`New Contract Tx Id ${evolvedTxId.originalTxId}`);
+  console.log(
+    "Finished evolving the ArNS Smartweave Contract %s with TX %s.",
+    arnsRegistryContractTxId,
+    evolveTx.originalTxId
+  );
 })();

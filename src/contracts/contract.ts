@@ -30,6 +30,7 @@ import { decreaseOperatorStake } from "./actions/write/decreaseOperatorStake";
 import { proposeGatewaySlash } from "./actions/write/proposeGatewaySlash";
 import { updateGatewaySettings } from "./actions/write/updateGatewaySettings";
 import { setSettings } from "./actions/write/setSettings";
+import { setName } from "./actions/write/setName";
 
 declare const ContractError;
 
@@ -98,6 +99,8 @@ export async function handle(
       return await updateGatewaySettings(state, action);
     case "setSettings":
       return await setSettings(state, action);
+    case "setName":
+      return await setName(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognised: "${input.function}"`
