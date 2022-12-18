@@ -90,7 +90,7 @@ const arweave = Arweave.init({
     fs.readFileSync(
       path.join(
         __dirname,
-        "../../dist/contracts/old-initial-state-no-balances.json"
+        "../../dist/contracts/example-state-no-balances.json"
       ),
       "utf8"
     )

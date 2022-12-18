@@ -29,9 +29,22 @@
     "17": 175000,
     "18": 150000,
     "19": 125000,
-    "20": 100000
+    "20": 5,
+    "21": 5,
+    "22": 5,
+    "23": 5,
+    "24": 5,
+    "25": 5,
+    "26": 5,
+    "27": 5,
+    "28": 5,
+    "29": 5,
+    "30": 5,
+    "31": 5,
+    "32": 5
   },
-  "name": "Arweave Name System Test v0.1.5",
+  "gateways": {},
+  "name": "Arweave Name System Test",
   "owner": "QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ",
   "records": {
     "111111": "fLDRJlVn3IwGD4R7d10k_sIz5k53KJCdCcX4Pq9u2NE",
@@ -607,5 +620,32 @@
     "graphtronautsindexer": "_6NGaH30DNXd4LDNvZMQ4O_FYUoqUGFYUnuKUBrco6M",
     "nameserver": "_DXtKXn19hNE_7NXXIHfscFAMBn6FuXbMYUTufEk22M"
   },
-  "ticker": "ARNS-TEST"
+  "rewards": 0,
+  "settings": {
+    "lockMinLength": 5,
+    "lockMaxLength": 10000,
+    "minGatewayStakeAmount": 5000,
+    "minDelegatedStakeAmount": 100,
+    "gatewayJoinLength": 720,
+    "gatewayLeaveLength": 10080,
+    "delegatedStakeWithdrawLength": 10080,
+    "operatorStakeWithdrawLength": 10080
+  },
+  "ticker": "ARNS-TEST",
+  "tiers": {
+    "1": {
+      "maxSubdomains": 100,
+      "minTtlSeconds": 3600
+    },
+    "2": {
+      "maxSubdomains": 1000,
+      "minTtlSeconds": 1800
+    },
+    "3": {
+      "maxSubdomains": 10000,
+      "minTtlSeconds": 900
+    }
+  },
+  "vaults": {},
+  "version":"0.0.17"
 }
