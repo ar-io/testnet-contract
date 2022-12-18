@@ -10,9 +10,9 @@ import { JWKInterface } from "arweave/node/lib/wallet";
 import { keyfile } from "../constants";
 
 (async () => {
-  // This is the mainnet ArNS Registry Smartweave Contract TX ID
+  // This is the mainnet ArNS Registry Smartweave Contract TX ID version 1.7
   const arnsRegistryContractTxId =
-    "R-DRqVv97e8cCya95qsH_Tpvmb9vidURYWlBL5LpSzo";
+    "ar5dUFsVjY36aTCflni6DUrWFXDSsfvkZPcBDvzmjww";
 
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel("error");

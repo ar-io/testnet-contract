@@ -32,6 +32,7 @@ export interface IOState {
     // a list of all registered gateways
     [address: string]: Gateway; // every gateway needs a wallet to act as the identity
   };
+  version: string; // the semversion of this smartweave contract in MAJOR.MINOR.PATCH format eg. 0.5.1
   votes: VoteInterface[]; // on-chain governance proposals and votes
 }
 
@@ -189,6 +190,7 @@ export interface PstInput {
   settings: ContractSettings;
   openDelegation: boolean;
   delegateAllowList: string[];
+  version: string;
 }
 
 export interface PstResult {

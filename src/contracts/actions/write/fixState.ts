@@ -35,6 +35,16 @@ export const fixState = async (
     };
   }
 
+  if (state.version === undefined) {
+    // Do this if vaults do not exist in the state of the contract.
+    state = {
+      ...state,
+      ...{
+        version: "0.0.1",
+      },
+    };
+  }
+
   if (state.foundation === undefined) {
     // Do this if foundation does not exist in the state of the contract.
     state = {
@@ -68,6 +78,7 @@ export const fixState = async (
           gatewayJoinLength: 720,
           gatewayLeaveLength: 10080,
           delegatedStakeWithdrawLength: 10080,
+          operatorStakeWithdrawLength: 10080,
         },
       },
     };

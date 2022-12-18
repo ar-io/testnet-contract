@@ -1286,28 +1286,36 @@ describe("Testing the ArNS Registry Contract", () => {
       path.join(__dirname, "../src/tools/contract_evolve.js"),
       "utf8"
     );
-
-    const newSrcTxId = await pst.save({ src: newSource }, warp.environment);
-    if (newSrcTxId === null) {
+    const evolveSrcTx = await warp.createSourceTx({ src: newSource }, wallet);
+    const evolveSrcTxId = await warp.saveSourceTx(evolveSrcTx);
+    if (evolveSrcTxId === null) {
       return 0;
     }
     await mineBlock(arweave);
 
-    await pst.evolve(newSrcTxId);
+    // await pst.evolve(evolveSrcTxId, {});
+    await pst.writeInteraction({
+      function: "evolve",
+      value: evolveSrcTxId,
+      version: "0.1.0",
+    });
     await mineBlock(arweave);
 
     // note: the evolved balance always returns -1
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(-1);
 
-    const updatedContractTxId = await pst.save(
-      { src: contractSrc },
-      warp.environment
-    );
-    if (updatedContractTxId === null) {
+    const newSrcTx = await warp.createSourceTx({ src: contractSrc }, wallet);
+    const newSrcTxId = await warp.saveSourceTx(newSrcTx);
+    if (newSrcTxId === null) {
       return 0;
     }
     await mineBlock(arweave);
-    await pst.evolve(updatedContractTxId);
+    // await pst.evolve(newSrcTxId);
+    await pst.writeInteraction({
+      function: "evolve",
+      value: newSrcTxId,
+      version: "1.0.0",
+    });
     await mineBlock(arweave);
 
     // note: the balance should return correctly now
@@ -1328,16 +1336,17 @@ describe("Testing the ArNS Registry Contract", () => {
       path.join(__dirname, "../src/tools/contract_evolve.js"),
       "utf8"
     );
-    const newSrcTxId = await pst.save({ src: newSource }, warp.environment);
-    if (newSrcTxId === null) {
+    const evolveSrcTx = await warp.createSourceTx({ src: newSource }, wallet);
+    const evolveSrcTxId = await warp.saveSourceTx(evolveSrcTx);
+    if (evolveSrcTxId === null) {
       return 0;
     }
     await mineBlock(arweave);
 
-    await pst.evolve(newSrcTxId);
+    await pst.evolve(evolveSrcTxId);
     await mineBlock(arweave);
 
-    // note: the evolved balance always returns 1 because the contract did not change
+    // note: the evolved balance should not change since no evolution should have happened
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(
       EXPECTED_BALANCE_AFTER_INVALID_TX
     );
