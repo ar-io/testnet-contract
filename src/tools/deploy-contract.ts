@@ -88,10 +88,7 @@ const arweave = Arweave.init({
   );
   const stateFromFile: IOState = JSON.parse(
     fs.readFileSync(
-      path.join(
-        __dirname,
-        "../../dist/contracts/example-state-no-balances.json"
-      ),
+      path.join(__dirname, "../../dist/contracts/example-state.json"),
       "utf8"
     )
   );
