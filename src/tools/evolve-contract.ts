@@ -33,6 +33,7 @@ import { keyfile } from "../constants";
 
   // Read the ArNS Registry Contract
   const pst = warp.pst(arnsRegistryContractTxId);
+  pst.connect(wallet);
 
   // ~~ Read contract source and initial state files ~~
   const newSource = fs.readFileSync(
