@@ -82,6 +82,10 @@ export const buyRecord = async (
     );
   }
 
+  if (contractTxId === undefined) {
+    contractTxId = SmartWeave.transaction.id;
+  }
+
   // check if it is a valid arweave transaction id for the smartweave contract
   const txIdPattern = new RegExp("^[a-zA-Z0-9_-]{43}$");
   const txIdres = txIdPattern.test(contractTxId);

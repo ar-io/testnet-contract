@@ -419,11 +419,9 @@ describe("Testing the ArNS Registry Contract", () => {
       tier,
     });
     const anotherNameToBuy = "vile";
-    const anothercontractTxId = "BBBBfeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU";
-    await pst.writeInteraction({
+    let interactionTxId = await pst.writeInteraction({
       function: "buyRecord",
       name: anotherNameToBuy, // should cost 156250000 tokens
-      contractTxId: anothercontractTxId,
       years,
       tier,
     });
@@ -436,7 +434,7 @@ describe("Testing the ArNS Registry Contract", () => {
       currentStateJSON.records[nameToBuy.toLowerCase()].contractTxId
     ).toEqual("lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU");
     expect(currentStateJSON.records[anotherNameToBuy].contractTxId).toEqual(
-      "BBBBfeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU"
+      interactionTxId?.originalTxId
     );
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
       EXPECTED_BALANCE_AFTER_INVALID_TX
