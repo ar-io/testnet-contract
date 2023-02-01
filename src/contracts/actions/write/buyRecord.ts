@@ -82,19 +82,18 @@ export const buyRecord = async (
     );
   }
 
-  if (contractTxId === undefined) {
+  if (typeof contractTxId !== "string") {
+    throw new ContractError("ANT Smartweave Contract Address must be a string");
+  } else if (contractTxId.toLowerCase() === "atomic") {
+    // if this is an atomic name registration, then the transaction ID for this interaction is used for the ANT smartweave contract address
     contractTxId = SmartWeave.transaction.id;
-  }
-
-  // check if it is a valid arweave transaction id for the smartweave contract
-  const txIdPattern = new RegExp("^[a-zA-Z0-9_-]{43}$");
-  const txIdres = txIdPattern.test(contractTxId);
-  if (
-    typeof contractTxId !== "string" ||
-    contractTxId.length !== TX_ID_LENGTH ||
-    !txIdres
-  ) {
-    throw new ContractError("Invalid ANT Smartweave Contract Address");
+  } else {
+    // check if it is a valid arweave transaction id for the smartweave contract
+    const txIdPattern = new RegExp("^[a-zA-Z0-9_-]{43}$");
+    const txIdres = txIdPattern.test(contractTxId);
+    if (contractTxId.length !== TX_ID_LENGTH || !txIdres) {
+      throw new ContractError("Invalid ANT Smartweave Contract Address");
+    }
   }
 
   // Check if the requested name already exists, if not reduce balance and add it

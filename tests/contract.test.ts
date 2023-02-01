@@ -422,6 +422,7 @@ describe("Testing the ArNS Registry Contract", () => {
     let interactionTxId = await pst.writeInteraction({
       function: "buyRecord",
       name: anotherNameToBuy, // should cost 156250000 tokens
+      contractTxId: "atomic", // should perform an atomic name registration, where the name is registered using the underlying interactions TX id
       years,
       tier,
     });
