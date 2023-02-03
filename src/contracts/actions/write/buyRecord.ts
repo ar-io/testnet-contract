@@ -2,6 +2,7 @@ import {
   FOUNDATION_PERCENTAGE,
   MAX_NAME_LENGTH,
   MAX_YEARS,
+  RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
   TX_ID_LENGTH,
@@ -84,7 +85,7 @@ export const buyRecord = async (
 
   if (typeof contractTxId !== "string") {
     throw new ContractError("ANT Smartweave Contract Address must be a string");
-  } else if (contractTxId.toLowerCase() === "atomic") {
+  } else if (contractTxId.toLowerCase() === RESERVED_ATOMIC_TX_ID) {
     // if this is an atomic name registration, then the transaction ID for this interaction is used for the ANT smartweave contract address
     contractTxId = SmartWeave.transaction.id;
   } else {
