@@ -1,16 +1,22 @@
-import { defaultCacheOptions, LoggerFactory, WarpFactory } from "warp-contracts";
+import {
+  defaultCacheOptions,
+  LoggerFactory,
+  WarpFactory,
+} from "warp-contracts";
 import * as fs from "fs";
 import path from "path";
 import { JWKInterface } from "arweave/node/lib/wallet";
-import { testKeyfile } from "../constants";
+// import { deployedContracts } from "../deployed-contracts";
+import { keyfile } from "../constants";
 
 (async () => {
-  // This is the testnet ArNS Registry Smartweave Contract TX ID
+  // This is the mainnet ArNS Registry Smartweave Contract TX ID version 1.7
   const arnsRegistryContractTxId =
-    "rNR8SmcQLefBHZ-d-oJ9jbqmQxHGB_9bjdNipmsio-s";
+    "R-DRqVv97e8cCya95qsH_Tpvmb9vidURYWlBL5LpSzo";
 
+  // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel("error");
-  
+
   // ~~ Initialize SmartWeave ~~
   const warp = WarpFactory.forMainnet(
     {
@@ -19,9 +25,10 @@ import { testKeyfile } from "../constants";
     },
     true
   );
-  // Get the key file used for the distribution
+
+  // Get the key file used
   const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(testKeyfile).toString()
+    await fs.readFileSync(keyfile).toString()
   );
 
   // Read the ArNS Registry Contract
@@ -42,6 +49,7 @@ import { testKeyfile } from "../constants";
   const evolveTx = await pst.writeInteraction({
     function: "evolve",
     value: evolveSrcTxId,
+    version: "0.1.0",
   });
 
   console.log(

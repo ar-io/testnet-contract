@@ -1,5 +1,9 @@
-import Arweave from "arweave";
-import { LoggerFactory, WarpNodeFactory } from "warp-contracts";
+import Arweave from 'arweave';
+import {
+  defaultCacheOptions,
+  LoggerFactory,
+  WarpFactory,
+} from "warp-contracts";
 import * as fs from "fs";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import { deployedContracts } from "../deployed-contracts";
@@ -40,8 +44,13 @@ import { keyfile } from "../constants";
   LoggerFactory.INST.logLevel("error");
 
   // Initialize SmartWeave
-  const smartweave = WarpNodeFactory.memCached(arweave);
-
+  const warp = WarpFactory.forMainnet(
+    {
+      ...defaultCacheOptions,
+      inMemory: true,
+    },
+    true
+  );
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
     await fs.readFileSync(keyfile).toString()
@@ -49,7 +58,7 @@ import { keyfile } from "../constants";
   const walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
   // Read the ANT Registry Contract
-  const pst = smartweave.pst(arnsRegistryContractTxId);
+  const pst = warp.pst(arnsRegistryContractTxId);
   pst.connect(wallet);
 
   // check if this name exists in the registry, if not exit the script.
@@ -87,7 +96,7 @@ import { keyfile } from "../constants";
     name,
     antRecordContractTxId
   );
-  const deployedContract = await smartweave.createContract.deployFromSourceTx({
+  const deployedContract = await warp.createContract.deployFromSourceTx({
     wallet,
     initState: JSON.stringify(initialState),
     srcTxId: antRecordContractTxId,

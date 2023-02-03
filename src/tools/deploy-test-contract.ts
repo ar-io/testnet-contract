@@ -1,5 +1,9 @@
-import Arweave from "arweave";
-import { LoggerFactory, WarpNodeFactory } from "warp-contracts";
+import Arweave from 'arweave';
+import {
+  defaultCacheOptions,
+  LoggerFactory,
+  WarpFactory,
+} from "warp-contracts";
 import * as fs from "fs";
 import path from "path";
 import { addFunds } from "../../utils/_helpers";
@@ -21,8 +25,13 @@ const TOKENS_TO_CREATE = 10000000000000; // ten trillion tokens
   LoggerFactory.INST.logLevel("error");
 
   // ~~ Initialize SmartWeave ~~
-  const smartweave = WarpNodeFactory.memCached(arweave);
-
+  const warp = WarpFactory.forMainnet(
+    {
+      ...defaultCacheOptions,
+      inMemory: true,
+    },
+    true
+  );
   // ~~ Generate Wallet and add funds ~~
   // const wallet = await arweave.wallets.generate();
   // const walletAddress = await arweave.wallets.jwkToAddress(wallet);
@@ -52,7 +61,7 @@ const TOKENS_TO_CREATE = 10000000000000; // ten trillion tokens
   };
 
   // ~~ Deploy contract ~~
-  const contractTxId = await smartweave.createContract.deploy({
+  const contractTxId = await warp.deploy({
     wallet,
     initState: JSON.stringify(initialState),
     src: contractSrc,

@@ -4,12 +4,13 @@ import { addFunds, mineBlock } from "../utils/_helpers";
 import * as fs from "fs";
 import path from "path";
 import {
+  defaultCacheOptions,
   InteractionResult,
   LoggerFactory,
   PstContract,
   PstState,
   Warp,
-  WarpNodeFactory,
+  WarpFactory,
 } from "warp-contracts";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import { ArNSState } from "../src/contracts/types/types";
@@ -18,29 +19,26 @@ const TOKENS_TO_CREATE = 0; // ten million tokens
 const EXPECTED_BALANCE_AFTER_INVALID_TX = 838750000; // 0 + 1000000000 - 156250000 - 5000000
 
 describe("Testing the ArNS Registry Contract", () => {
+
+  const arlocal = new ArLocal(1820, false);
+  const warp: Warp = WarpFactory.forLocal(1820);
+  const arweave = Arweave.init({
+    host: "localhost",
+    port: 1820,
+    protocol: "http",
+  });
+  
   let contractSrc: string;
   let wallet: JWKInterface;
   let walletAddress: string;
   let initialState: ArNSState;
-  let Warp: Warp;
-  let arweave: Arweave;
   let pst: PstContract;
-  const arlocal = new ArLocal(1820, false);
   beforeAll(async () => {
     // ~~ Set up ArLocal and instantiate Arweave ~~
     await arlocal.start();
 
-    arweave = Arweave.init({
-      host: "localhost",
-      port: 1820,
-      protocol: "http",
-    });
-
     // ~~ Initialize 'LoggerFactory' ~~
     LoggerFactory.INST.logLevel("fatal");
-
-    // ~~ Set up Warp ~~
-    Warp = WarpNodeFactory.forTesting(arweave);
 
     // ~~ Generate wallet and add funds ~~
     wallet = await arweave.wallets.generate();
@@ -71,14 +69,14 @@ describe("Testing the ArNS Registry Contract", () => {
     };
 
     // ~~ Deploy contract ~~
-    const deployedContract = await Warp.createContract.deploy({
+    const deployedContract = await warp.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc,
     });
 
     // ~~ Connect to the pst contract ~~
-    pst = Warp.pst(deployedContract.contractTxId);
+    pst = warp.pst(deployedContract.contractTxId);
     pst.connect(wallet);
 
     // ~~ Mine block ~~
@@ -204,72 +202,85 @@ describe("Testing the ArNS Registry Contract", () => {
     );
   });
 
+  // EVOLUTION
   it("should properly evolve contract's source code", async () => {
+    pst.connect(wallet);
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(
-      0 + 1000000000 - 156250000 - 5000000
+      EXPECTED_BALANCE_AFTER_INVALID_TX
     );
 
     const newSource = fs.readFileSync(
       path.join(__dirname, "../src/tools/contract_evolve.js"),
       "utf8"
     );
-
-    const newSrcTxId = await pst.save({ src: newSource });
-    if (newSrcTxId === null) {
+    const evolveSrcTx = await warp.createSourceTx({ src: newSource }, wallet);
+    const evolveSrcTxId = await warp.saveSourceTx(evolveSrcTx);
+    if (evolveSrcTxId === null) {
       return 0;
     }
     await mineBlock(arweave);
 
-    await pst.evolve(newSrcTxId);
+    // await pst.evolve(evolveSrcTxId, {});
+    await pst.writeInteraction({
+      function: "evolve",
+      value: evolveSrcTxId,
+    });
     await mineBlock(arweave);
 
     // note: the evolved balance always returns -1
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(-1);
 
-    const updatedContractTxId = await pst.save({ src: contractSrc });
-    if (updatedContractTxId === null) {
+    const newSrcTx = await warp.createSourceTx({ src: contractSrc }, wallet);
+    const newSrcTxId = await warp.saveSourceTx(newSrcTx);
+    if (newSrcTxId === null) {
       return 0;
     }
     await mineBlock(arweave);
-    await pst.evolve(updatedContractTxId);
+    // await pst.evolve(newSrcTxId);
+    await pst.writeInteraction({
+      function: "evolve",
+      value: newSrcTxId,
+    });
     await mineBlock(arweave);
 
     // note: the balance should return correctly now
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(
-      0 + 1000000000 - 156250000 - 5000000
+      EXPECTED_BALANCE_AFTER_INVALID_TX
     );
   });
 
   it("should properly transfer and perform dry write with overwritten caller", async () => {
     const newWallet = await arweave.wallets.generate();
     const overwrittenCaller = await arweave.wallets.jwkToAddress(newWallet);
+    const TRANSFER_QTY = 500000
+    const INTERACTION_QTY = 2500
     await pst.transfer({
       target: overwrittenCaller.toString(),
-      qty: 500000,
+      qty: TRANSFER_QTY,
     });
 
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      1000000000 - 156250000 - 5000000 - 500000
+     EXPECTED_BALANCE_AFTER_INVALID_TX - TRANSFER_QTY
     );
     expect((await pst.currentState()).balances[overwrittenCaller]).toEqual(
-      0 + 500000
+      0 + TRANSFER_QTY
     );
     const result: InteractionResult<PstState, unknown> = await pst.dryWrite(
       {
         function: "transfer",
         target: "NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g",
-        qty: 25000,
+        qty: INTERACTION_QTY,
       },
       overwrittenCaller
     );
 
     expect(result.state.balances[overwrittenCaller]).toEqual(
-      0 + 500000 - 25000
+      0 + TRANSFER_QTY - INTERACTION_QTY
     );
     expect(
       result.state.balances["NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g"]
-    ).toEqual(0 + 25000);
+    ).toEqual(0 + INTERACTION_QTY);
   });
 
   it("should not transfer tokens with incorrect ownership", async () => {
@@ -282,7 +293,7 @@ describe("Testing the ArNS Registry Contract", () => {
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      1000000000 - 156250000 - 5000000 - 500000
+     EXPECTED_BALANCE_AFTER_INVALID_TX - 500000
     );
     expect((await pst.currentState()).balances[overwrittenCaller]).toEqual(
       undefined
@@ -294,25 +305,26 @@ describe("Testing the ArNS Registry Contract", () => {
     await addFunds(arweave, newWallet);
     pst.connect(newWallet);
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(
-      1000000000 - 156250000 - 5000000 - 500000
+     EXPECTED_BALANCE_AFTER_INVALID_TX - 500000
     );
 
     const newSource = fs.readFileSync(
       path.join(__dirname, "../src/tools/contract_evolve.js"),
       "utf8"
     );
-    const newSrcTxId = await pst.save({ src: newSource });
-    if (newSrcTxId === null) {
+    const evolveSrcTx = await warp.createSourceTx({ src: newSource }, wallet);
+    const evolveSrcTxId = await warp.saveSourceTx(evolveSrcTx);
+    if (evolveSrcTxId === null) {
       return 0;
     }
     await mineBlock(arweave);
 
-    await pst.evolve(newSrcTxId);
+    await pst.evolve(evolveSrcTxId);
     await mineBlock(arweave);
 
-    // note: the evolved balance always returns 1 because the contract did not change
+    // note: the evolved balance should not change since no evolution should have happened
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(
-      1000000000 - 156250000 - 5000000 - 500000
+      EXPECTED_BALANCE_AFTER_INVALID_TX - 500000
     );
   });
 
