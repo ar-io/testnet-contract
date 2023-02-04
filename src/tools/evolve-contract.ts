@@ -49,7 +49,6 @@ import { keyfile } from "../constants";
   const evolveTx = await pst.writeInteraction({
     function: "evolve",
     value: evolveSrcTxId,
-    version: "0.1.0",
   });
 
   console.log(
