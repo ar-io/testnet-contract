@@ -14,14 +14,14 @@ import {
 import { JWKInterface } from "arweave/node/lib/wallet";
 import { ArNSState } from "../src/contracts/types/types";
 
-const INITIAL_TOKEN_COUNT = 0
+const INITIAL_TOKEN_COUNT = 0;
 const TOKENS_TO_CREATE = 1000000000; // ten million tokens
 const ARNS_NAME_PURCHASE_COST = 156250000;
 const TRANSFER_COST = 5000000;
-const INTERACTION_COST = 2500
-const EXPECTED_BALANCE_AFTER_INVALID_TX = TOKENS_TO_CREATE - ARNS_NAME_PURCHASE_COST - TRANSFER_COST;
+const INTERACTION_COST = 2500;
+const EXPECTED_BALANCE_AFTER_INVALID_TX =
+  TOKENS_TO_CREATE - ARNS_NAME_PURCHASE_COST - TRANSFER_COST;
 describe("Testing the ArNS Registry Contract", () => {
-
   const arlocal = new ArLocal(1820, false);
   const warp: Warp = WarpFactory.forLocal(1820);
   const arweave = Arweave.init({
@@ -29,7 +29,7 @@ describe("Testing the ArNS Registry Contract", () => {
     port: 1820,
     protocol: "http",
   });
-  
+
   let contractSrc: string;
   let wallet: JWKInterface;
   let walletAddress: string;
@@ -120,10 +120,10 @@ describe("Testing the ArNS Registry Contract", () => {
     const anotherNameToBuy = "vile";
     const anotherContractTransactionId =
       "BBBBfeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU";
-    await pst.writeInteraction({
+    let interaction = await pst.writeInteraction({
       function: "buyRecord",
       name: anotherNameToBuy, // should cost 156250000 tokens
-      contractTransactionId: anotherContractTransactionId,
+      contractTransactionId: "atomic",
     });
     await mineBlock(arweave);
     const currentState = await pst.currentState();
@@ -133,7 +133,7 @@ describe("Testing the ArNS Registry Contract", () => {
       contractTransactionId
     );
     expect(currentStateJSON.records[anotherNameToBuy]).toEqual(
-      anotherContractTransactionId
+      interaction?.originalTxId
     );
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
       EXPECTED_BALANCE_AFTER_INVALID_TX
@@ -260,7 +260,7 @@ describe("Testing the ArNS Registry Contract", () => {
 
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
-     EXPECTED_BALANCE_AFTER_INVALID_TX - TRANSFER_COST
+      EXPECTED_BALANCE_AFTER_INVALID_TX - TRANSFER_COST
     );
     expect((await pst.currentState()).balances[overwrittenCaller]).toEqual(
       TRANSFER_COST
@@ -292,7 +292,7 @@ describe("Testing the ArNS Registry Contract", () => {
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
-     EXPECTED_BALANCE_AFTER_INVALID_TX - TRANSFER_COST
+      EXPECTED_BALANCE_AFTER_INVALID_TX - TRANSFER_COST
     );
     expect((await pst.currentState()).balances[overwrittenCaller]).toEqual(
       undefined
@@ -304,7 +304,7 @@ describe("Testing the ArNS Registry Contract", () => {
     await addFunds(arweave, newWallet);
     pst.connect(newWallet);
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(
-     EXPECTED_BALANCE_AFTER_INVALID_TX - TRANSFER_COST
+      EXPECTED_BALANCE_AFTER_INVALID_TX - TRANSFER_COST
     );
 
     const newSource = fs.readFileSync(
@@ -328,7 +328,8 @@ describe("Testing the ArNS Registry Contract", () => {
   });
 
   it("should not remove names with incorrect ownership", async () => {
-    const nameToRemove = "vile";
+    const nameToRemove = "permaweb";
+    const contractTransactionId = "lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU";
     await pst.writeInteraction({
       function: "removeRecord",
       name: nameToRemove,
@@ -338,7 +339,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentStateString = JSON.stringify(currentState);
     const currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.records[nameToRemove]).toEqual(
-      "BBBBfeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU"
+      contractTransactionId
     );
   });
 
