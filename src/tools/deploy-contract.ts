@@ -5,8 +5,6 @@ import * as fs from "fs";
 import path from "path";
 import { keyfile } from "../constants";
 
-const TOKENS_TO_CREATE = 10000000000000; // ten trillion tokens
-
 (async () => {
   // ~~ Initialize Arweave ~~
   const arweave = Arweave.init({

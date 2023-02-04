@@ -118,9 +118,7 @@ describe("Testing the ArNS Registry Contract", () => {
     });
     await mineBlock(arweave);
     const anotherNameToBuy = "vile";
-    const anotherContractTransactionId =
-      "BBBBfeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU";
-    let interaction = await pst.writeInteraction({
+    const interaction = await pst.writeInteraction({
       function: "buyRecord",
       name: anotherNameToBuy, // should cost 156250000 tokens
       contractTransactionId: "atomic",

@@ -25,10 +25,14 @@ const TOKENS_TO_CREATE = 10000000000000; // ten trillion tokens
   LoggerFactory.INST.logLevel("error");
 
   // ~~ Initialize SmartWeave ~~
-  const warp = WarpFactory.forTestnet({
-    ...defaultCacheOptions,
-    inMemory: true,
-  });
+  const warp = WarpFactory.forTestnet(
+    {
+      ...defaultCacheOptions,
+      inMemory: true,
+    },
+    true
+  );
+  
   // ~~ Generate Wallet and add funds ~~
   // const wallet = await arweave.wallets.generate();
   // const walletAddress = await arweave.wallets.jwkToAddress(wallet);

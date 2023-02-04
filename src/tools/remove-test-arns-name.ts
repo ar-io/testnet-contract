@@ -22,7 +22,7 @@ import { testKeyfile } from "../constants";
   LoggerFactory.INST.logLevel("error");
 
   // Initialize SmartWeave
-  const warp = WarpFactory.forMainnet(
+  const warp = WarpFactory.forTestnet(
     {
       ...defaultCacheOptions,
       inMemory: true,

@@ -12,13 +12,14 @@ import { testKeyfile } from "../constants";
   LoggerFactory.INST.logLevel("error");
   
   // ~~ Initialize SmartWeave ~~
-  const warp = WarpFactory.forMainnet(
+  const warp = WarpFactory.forTestnet(
     {
       ...defaultCacheOptions,
       inMemory: true,
     },
     true
   );
+
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
     await fs.readFileSync(testKeyfile).toString()

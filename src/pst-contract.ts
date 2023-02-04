@@ -1,15 +1,24 @@
 import Arweave from "arweave";
-import { Warp, WarpWebFactory } from "warp-contracts";
+import { Warp, WarpFactory, defaultCacheOptions } from "warp-contracts";
 
 export const arweave: Arweave = Arweave.init({
-  //host: "testnet.redstone.tools",
   host: "arweave.net",
   port: 443,
   protocol: "https",
 });
 
-export const smartweave: Warp = WarpWebFactory.memCachedBased(
-  arweave
-)
-  .useArweaveGateway()
-  .build();
+export const warpTestnet: Warp = WarpFactory.forTestnet(
+  {
+    ...defaultCacheOptions,
+    inMemory: true,
+  },
+  true
+);
+
+export const warpMainnet: Warp = WarpFactory.forMainnet(
+  {
+    ...defaultCacheOptions,
+    inMemory: true,
+  },
+  true
+);
