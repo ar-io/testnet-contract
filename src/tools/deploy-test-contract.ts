@@ -1,4 +1,4 @@
-import Arweave from 'arweave';
+import Arweave from "arweave";
 import {
   defaultCacheOptions,
   LoggerFactory,
@@ -25,13 +25,10 @@ const TOKENS_TO_CREATE = 10000000000000; // ten trillion tokens
   LoggerFactory.INST.logLevel("error");
 
   // ~~ Initialize SmartWeave ~~
-  const warp = WarpFactory.forMainnet(
-    {
-      ...defaultCacheOptions,
-      inMemory: true,
-    },
-    true
-  );
+  const warp = WarpFactory.forTestnet({
+    ...defaultCacheOptions,
+    inMemory: true,
+  });
   // ~~ Generate Wallet and add funds ~~
   // const wallet = await arweave.wallets.generate();
   // const walletAddress = await arweave.wallets.jwkToAddress(wallet);
