@@ -5,6 +5,12 @@ node_modules
 .secrets
 logs
 
+# keys
+*.json
+
+# warp
+cache/*
+
 # local env files
 .env.local
 .env.*.local

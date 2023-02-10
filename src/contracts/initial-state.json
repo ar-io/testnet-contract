@@ -1,10 +1,24 @@
 {
   "ticker": "ARNS-TEST",
   "name": "Arweave Name System Test v0.1.5",
-  "owner": "",
+  "owner": "QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ",
   "evolve": null,
-  "records": {},
-  "balances": {},
+  "records": {
+    "black-fox": "4FftM3u83NKE4taZcIO2Kd8O4IMrOcLmhuOzq9Kv1fk",
+    "genesis": "xEL3QuBjrJtlJm4DSHn7BKB5S-riLc1qCkmn3r-xkiE",
+    "sam": "JRlbzWbl9J3MDdobdIxkvfX4IC_VFCrNw5kuz_a8I6I",
+    "vilenarios": "XJnC9jPXpwAvrNnmeYYo69I6RrSf9MNabGDGaQws8dQ",
+    "wavelength": "2drG0kM9eHBA4KTEvJb1b_ngu1VcBxde-cKLpf0PVN4",
+    "laserilla": "vmSTnLo58jMISCUDWtk-b2AhRXe-hPnP0RzAXdQaHtA",
+    "almostgreat": "uFA2OlsLGJe-4BjbT8OtvH0KT6EZJQMccOVx332lMSI",
+    "ardrive": "dyx91X6sqb2WbJiM5jA5XfmCh0LWJjILmFN7mxTR2Fs",
+    "nosferatu": "da51nhDwLZaLBA3lzpE7xl36Rms2NwUNZ7SKOTEWkbI",
+    "permanotes": "2SMd2AcYG9RXtFkNzhCB-l1yvE9yKfA8aPztorCvWXI",
+    "rakis-me": "E0Aat6fRC6pEPsCVZy1RhvmOgzc3xV0_fdu5BkSIrjo"
+  },
+  "balances": {
+    "QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ": 10000000000000
+  },
   "approvedANTSourceCodeTxs": [
     "7hL0La2KMapdJI6yIGnb4f4IjvhlGQyXnqpWc0i0d_w",
     "cNr6JPVu3rEOwIbdnu3lVipz9pwY5Pps9mxHSW7Jdtk"

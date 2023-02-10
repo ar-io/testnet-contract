@@ -15,39 +15,41 @@ import { testKeyfile } from "../constants";
   const warp = WarpFactory.forTestnet(
     {
       ...defaultCacheOptions,
-      inMemory: true,
     },
     true
   );
 
-  // Get the key file used for the distribution
-  const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(testKeyfile).toString()
-  );
+    // Get the key file used
+    const wallet: JWKInterface = JSON.parse(
+      await fs.readFileSync(testKeyfile).toString()
+    );
+  
+    // Read the ArNS Registry Contract
+    const contract = warp.pst(arnsRegistryContractTxId);
+    contract.connect(wallet);
 
-  // Read the ArNS Registry Contract
-  const pst = warp.pst(arnsRegistryContractTxId);
-  pst.connect(wallet);
+    // ~~ Read contract source and initial state files ~~
+    const newSource = fs.readFileSync(
+      path.join(__dirname, "../../dist/contract.js"),
+      "utf8"
+    );
 
-  // ~~ Read contract source and initial state files ~~
-  const newSource = fs.readFileSync(
-    path.join(__dirname, "../../dist/contract.js"),
-    "utf8"
-  );
+    // Create the evolved source code tx
+    const evolveSrcTx = await warp.createSourceTx({ src: newSource }, wallet);
+    const evolveSrcTxId = await warp.saveSourceTx(evolveSrcTx, true);
+    if (evolveSrcTxId === null) {
+      return 0;
+    }
 
-  const evolveSrcTx = await warp.createSourceTx({ src: newSource }, wallet);
-  const evolveSrcTxId = await warp.saveSourceTx(evolveSrcTx);
-  if (evolveSrcTxId === null) {
-    return 0;
-  }
-  const evolveTx = await pst.writeInteraction({
-    function: "evolve",
-    value: evolveSrcTxId,
-  });
+    // stick to L1's for now
+    const evolveInteractionTXId = await contract.evolve(evolveSrcTxId, {
+      disableBundling: true
+    });
 
-  console.log(
-    "Finished evolving the ArNS Smartweave Contract %s with TX %s.",
-    arnsRegistryContractTxId,
-    evolveTx.originalTxId
-  );
+    console.log(
+      "Finished evolving the ArNS Smartweave Contract %s with TX %s. New contract id is: %s",
+      arnsRegistryContractTxId,
+      evolveInteractionTXId.originalTxId,
+      evolveSrcTxId,
+    );
 })();
