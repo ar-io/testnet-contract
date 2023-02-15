@@ -1,5 +1,8 @@
-import Arweave from "arweave";
-import { LoggerFactory, WarpNodeFactory } from "warp-contracts";
+import {
+  defaultCacheOptions,
+  LoggerFactory,
+  WarpFactory,
+} from "warp-contracts";
 import * as fs from "fs";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import { deployedTestContracts } from "../deployed-contracts";
@@ -15,26 +18,25 @@ import { testKeyfile } from "../constants";
   // This is the testnet ArNS Registry Smartweave Contract TX ID
   const arnsRegistryContractTxId = deployedTestContracts.contractTxId;
 
-  // Initialize Arweave
-  const arweave = Arweave.init({
-    host: "testnet.redstone.tools",
-    port: 443,
-    protocol: "https",
-  });
-
   // Initialize `LoggerFactory`
   LoggerFactory.INST.logLevel("error");
 
   // Initialize SmartWeave
-  const smartweave = WarpNodeFactory.memCached(arweave);
-
+  const warp = WarpFactory.forTestnet(
+    {
+      ...defaultCacheOptions,
+      inMemory: true,
+    },
+    true
+  );
+  
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
     await fs.readFileSync(testKeyfile).toString()
   );
 
   // Read the ANT Registry Contract
-  const pst = smartweave.pst(arnsRegistryContractTxId);
+  const pst = warp.pst(arnsRegistryContractTxId);
   pst.connect(wallet);
 
   // Buy the available record in ArNS Registry

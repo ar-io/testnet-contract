@@ -9,38 +9,38 @@ import {
   PstContract,
   PstState,
   Warp,
-  WarpNodeFactory,
+  WarpFactory,
 } from "warp-contracts";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import { ArNSState } from "../src/contracts/types/types";
 
-const TOKENS_TO_CREATE = 0; // ten million tokens
-const EXPECTED_BALANCE_AFTER_INVALID_TX = 838750000; // 0 + 1000000000 - 156250000 - 5000000
-
+const INITIAL_TOKEN_COUNT = 0;
+const TOKENS_TO_CREATE = 1000000000; // ten million tokens
+const ARNS_NAME_PURCHASE_COST = 156250000;
+const TRANSFER_COST = 5000000;
+const INTERACTION_COST = 2500;
+const EXPECTED_BALANCE_AFTER_INVALID_TX =
+  TOKENS_TO_CREATE - ARNS_NAME_PURCHASE_COST - TRANSFER_COST;
 describe("Testing the ArNS Registry Contract", () => {
+  const arlocal = new ArLocal(1820, false);
+  const warp: Warp = WarpFactory.forLocal(1820);
+  const arweave = Arweave.init({
+    host: "localhost",
+    port: 1820,
+    protocol: "http",
+  });
+
   let contractSrc: string;
   let wallet: JWKInterface;
   let walletAddress: string;
   let initialState: ArNSState;
-  let Warp: Warp;
-  let arweave: Arweave;
   let pst: PstContract;
-  const arlocal = new ArLocal(1820, false);
   beforeAll(async () => {
     // ~~ Set up ArLocal and instantiate Arweave ~~
     await arlocal.start();
 
-    arweave = Arweave.init({
-      host: "localhost",
-      port: 1820,
-      protocol: "http",
-    });
-
     // ~~ Initialize 'LoggerFactory' ~~
     LoggerFactory.INST.logLevel("fatal");
-
-    // ~~ Set up Warp ~~
-    Warp = WarpNodeFactory.forTesting(arweave);
 
     // ~~ Generate wallet and add funds ~~
     wallet = await arweave.wallets.generate();
@@ -66,19 +66,19 @@ describe("Testing the ArNS Registry Contract", () => {
         owner: walletAddress,
       },
       balances: {
-        [walletAddress]: TOKENS_TO_CREATE,
+        [walletAddress]: INITIAL_TOKEN_COUNT,
       },
     };
 
     // ~~ Deploy contract ~~
-    const deployedContract = await Warp.createContract.deploy({
+    const deployedContract = await warp.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc,
     });
 
     // ~~ Connect to the pst contract ~~
-    pst = Warp.pst(deployedContract.contractTxId);
+    pst = warp.pst(deployedContract.contractTxId);
     pst.connect(wallet);
 
     // ~~ Mine block ~~
@@ -100,11 +100,11 @@ describe("Testing the ArNS Registry Contract", () => {
   it("should properly mint tokens", async () => {
     await pst.writeInteraction({
       function: "mint",
-      qty: 1000000000,
+      qty: TOKENS_TO_CREATE,
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      0 + 1000000000
+      INITIAL_TOKEN_COUNT + TOKENS_TO_CREATE
     );
   });
 
@@ -118,12 +118,10 @@ describe("Testing the ArNS Registry Contract", () => {
     });
     await mineBlock(arweave);
     const anotherNameToBuy = "vile";
-    const anotherContractTransactionId =
-      "BBBBfeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU";
-    await pst.writeInteraction({
+    const interaction = await pst.writeInteraction({
       function: "buyRecord",
       name: anotherNameToBuy, // should cost 156250000 tokens
-      contractTransactionId: anotherContractTransactionId,
+      contractTransactionId: "atomic",
     });
     await mineBlock(arweave);
     const currentState = await pst.currentState();
@@ -133,7 +131,7 @@ describe("Testing the ArNS Registry Contract", () => {
       contractTransactionId
     );
     expect(currentStateJSON.records[anotherNameToBuy]).toEqual(
-      anotherContractTransactionId
+      interaction?.originalTxId
     );
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
       EXPECTED_BALANCE_AFTER_INVALID_TX
@@ -204,72 +202,82 @@ describe("Testing the ArNS Registry Contract", () => {
     );
   });
 
+  // EVOLUTION
   it("should properly evolve contract's source code", async () => {
+    pst.connect(wallet);
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(
-      0 + 1000000000 - 156250000 - 5000000
+      EXPECTED_BALANCE_AFTER_INVALID_TX
     );
 
     const newSource = fs.readFileSync(
       path.join(__dirname, "../src/tools/contract_evolve.js"),
       "utf8"
     );
-
-    const newSrcTxId = await pst.save({ src: newSource });
-    if (newSrcTxId === null) {
+    const evolveSrcTx = await warp.createSourceTx({ src: newSource }, wallet);
+    const evolveSrcTxId = await warp.saveSourceTx(evolveSrcTx);
+    if (evolveSrcTxId === null) {
       return 0;
     }
     await mineBlock(arweave);
 
-    await pst.evolve(newSrcTxId);
+    await pst.writeInteraction({
+      function: "evolve",
+      value: evolveSrcTxId,
+    });
     await mineBlock(arweave);
 
     // note: the evolved balance always returns -1
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(-1);
 
-    const updatedContractTxId = await pst.save({ src: contractSrc });
-    if (updatedContractTxId === null) {
+    const newSrcTx = await warp.createSourceTx({ src: contractSrc }, wallet);
+    const newSrcTxId = await warp.saveSourceTx(newSrcTx);
+    if (newSrcTxId === null) {
       return 0;
     }
     await mineBlock(arweave);
-    await pst.evolve(updatedContractTxId);
+    await pst.writeInteraction({
+      function: "evolve",
+      value: newSrcTxId,
+    });
     await mineBlock(arweave);
 
     // note: the balance should return correctly now
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(
-      0 + 1000000000 - 156250000 - 5000000
+      EXPECTED_BALANCE_AFTER_INVALID_TX
     );
   });
 
   it("should properly transfer and perform dry write with overwritten caller", async () => {
     const newWallet = await arweave.wallets.generate();
     const overwrittenCaller = await arweave.wallets.jwkToAddress(newWallet);
+
     await pst.transfer({
       target: overwrittenCaller.toString(),
-      qty: 500000,
+      qty: TRANSFER_COST,
     });
 
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      1000000000 - 156250000 - 5000000 - 500000
+      EXPECTED_BALANCE_AFTER_INVALID_TX - TRANSFER_COST
     );
     expect((await pst.currentState()).balances[overwrittenCaller]).toEqual(
-      0 + 500000
+      TRANSFER_COST
     );
     const result: InteractionResult<PstState, unknown> = await pst.dryWrite(
       {
         function: "transfer",
         target: "NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g",
-        qty: 25000,
+        qty: INTERACTION_COST,
       },
       overwrittenCaller
     );
 
     expect(result.state.balances[overwrittenCaller]).toEqual(
-      0 + 500000 - 25000
+      TRANSFER_COST - INTERACTION_COST
     );
     expect(
       result.state.balances["NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g"]
-    ).toEqual(0 + 25000);
+    ).toEqual(INTERACTION_COST);
   });
 
   it("should not transfer tokens with incorrect ownership", async () => {
@@ -278,11 +286,11 @@ describe("Testing the ArNS Registry Contract", () => {
     pst.connect(newWallet);
     await pst.transfer({
       target: walletAddress.toString(),
-      qty: 1000000000,
+      qty: TOKENS_TO_CREATE,
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      1000000000 - 156250000 - 5000000 - 500000
+      EXPECTED_BALANCE_AFTER_INVALID_TX - TRANSFER_COST
     );
     expect((await pst.currentState()).balances[overwrittenCaller]).toEqual(
       undefined
@@ -294,30 +302,32 @@ describe("Testing the ArNS Registry Contract", () => {
     await addFunds(arweave, newWallet);
     pst.connect(newWallet);
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(
-      1000000000 - 156250000 - 5000000 - 500000
+      EXPECTED_BALANCE_AFTER_INVALID_TX - TRANSFER_COST
     );
 
     const newSource = fs.readFileSync(
       path.join(__dirname, "../src/tools/contract_evolve.js"),
       "utf8"
     );
-    const newSrcTxId = await pst.save({ src: newSource });
-    if (newSrcTxId === null) {
+    const evolveSrcTx = await warp.createSourceTx({ src: newSource }, wallet);
+    const evolveSrcTxId = await warp.saveSourceTx(evolveSrcTx);
+    if (evolveSrcTxId === null) {
       return 0;
     }
     await mineBlock(arweave);
 
-    await pst.evolve(newSrcTxId);
+    await pst.evolve(evolveSrcTxId);
     await mineBlock(arweave);
 
-    // note: the evolved balance always returns 1 because the contract did not change
+    // note: the evolved balance should not change since no evolution should have happened
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(
-      1000000000 - 156250000 - 5000000 - 500000
+      EXPECTED_BALANCE_AFTER_INVALID_TX - TRANSFER_COST
     );
   });
 
   it("should not remove names with incorrect ownership", async () => {
-    const nameToRemove = "vile";
+    const nameToRemove = "permaweb";
+    const contractTransactionId = "lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU";
     await pst.writeInteraction({
       function: "removeRecord",
       name: nameToRemove,
@@ -327,7 +337,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const currentStateString = JSON.stringify(currentState);
     const currentStateJSON = JSON.parse(currentStateString);
     expect(currentStateJSON.records[nameToRemove]).toEqual(
-      "BBBBfeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU"
+      contractTransactionId
     );
   });
 
@@ -368,6 +378,18 @@ describe("Testing the ArNS Registry Contract", () => {
       "18": 150000,
       "19": 125000,
       "20": 5,
+      "21": 5,
+      "22": 5,
+      "23": 5,
+      "24": 5,
+      "25": 5,
+      "26": 5,
+      "27": 5,
+      "28": 5,
+      "29": 5,
+      "30": 5,
+      "31": 5,
+      "32": 5,
     };
     await pst.writeInteraction({
       function: "setFees",
@@ -403,6 +425,18 @@ describe("Testing the ArNS Registry Contract", () => {
       "18": 150000,
       "19": 125000,
       "20": 5,
+      "21": 5,
+      "22": 5,
+      "23": 5,
+      "24": 5,
+      "25": 5,
+      "26": 5,
+      "27": 5,
+      "28": 5,
+      "29": 5,
+      "30": 5,
+      "31": 5,
+      "32": 5,
     };
 
     let feesToChange = {
@@ -427,6 +461,18 @@ describe("Testing the ArNS Registry Contract", () => {
       "18": 150000,
       "19": 125000,
       "20": 5,
+      "21": 5,
+      "22": 5,
+      "23": 5,
+      "24": 5,
+      "25": 5,
+      "26": 5,
+      "27": 5,
+      "28": 5,
+      "29": 5,
+      "30": 5,
+      "31": 5,
+      "32": 5,
     };
     await pst.writeInteraction({
       function: "setFees",
@@ -460,6 +506,18 @@ describe("Testing the ArNS Registry Contract", () => {
       "18": 150000,
       "19": 125000,
       "20": 5,
+      "21": 5,
+      "22": 5,
+      "23": 5,
+      "24": 5,
+      "25": 5,
+      "26": 5,
+      "27": 5,
+      "28": 5,
+      "29": 5,
+      "30": 5,
+      "31": 5,
+      "32": 5,
     };
     await pst.writeInteraction({
       function: "setFees",
@@ -493,6 +551,18 @@ describe("Testing the ArNS Registry Contract", () => {
       "18": 150000,
       "19": 125000,
       "20": 5,
+      "21": 5,
+      "22": 5,
+      "23": 5,
+      "24": 5,
+      "25": 5,
+      "26": 5,
+      "27": 5,
+      "28": 5,
+      "29": 5,
+      "30": 5,
+      "31": 5,
+      "32": 5,
     };
     await pst.writeInteraction({
       function: "setFees",
@@ -544,7 +614,19 @@ describe("Testing the ArNS Registry Contract", () => {
       "18": 150000,
       "19": 125000,
       "20": 5,
-      "21": 1000000000,
+      "21": 5,
+      "22": 5,
+      "23": 5,
+      "24": 5,
+      "25": 5,
+      "26": 5,
+      "27": 5,
+      "28": 5,
+      "29": 5,
+      "30": 5,
+      "31": 5,
+      "32": 5,
+      "33": 1000000,
     };
     await pst.writeInteraction({
       function: "setFees",
@@ -578,6 +660,18 @@ describe("Testing the ArNS Registry Contract", () => {
       "18": 150000,
       "19": 125000,
       "20": 5.666,
+      "21": 5,
+      "22": 5,
+      "23": 5,
+      "24": 5,
+      "25": 5,
+      "26": 5,
+      "27": 5,
+      "28": 5,
+      "29": 5,
+      "30": 5,
+      "31": 5,
+      "32": 5,
     };
     await pst.writeInteraction({
       function: "setFees",
@@ -612,6 +706,18 @@ describe("Testing the ArNS Registry Contract", () => {
       "18": 150000,
       "19": 125000,
       "20": 5,
+      "21": 5,
+      "22": 5,
+      "23": 5,
+      "24": 5,
+      "25": 5,
+      "26": 5,
+      "27": 5,
+      "28": 5,
+      "29": 5,
+      "30": 5,
+      "31": 5,
+      "32": 5,
     };
     const newWallet = await arweave.wallets.generate();
     await addFunds(arweave, newWallet);
@@ -637,6 +743,18 @@ describe("Testing the ArNS Registry Contract", () => {
       "18": 1,
       "19": 1,
       "20": 1,
+      "21": 5,
+      "22": 5,
+      "23": 5,
+      "24": 5,
+      "25": 5,
+      "26": 5,
+      "27": 5,
+      "28": 5,
+      "29": 5,
+      "30": 5,
+      "31": 5,
+      "32": 5,
     };
     await pst.writeInteraction({
       function: "setFees",
