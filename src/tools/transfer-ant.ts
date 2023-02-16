@@ -1,4 +1,4 @@
-import Arweave from 'arweave';
+import Arweave from "arweave";
 import {
   defaultCacheOptions,
   LoggerFactory,

@@ -13,9 +13,7 @@ export const SECONDS_IN_GRACE_PERIOD = 1_814_400; // Three weeks, 7 days per wee
 export const RESERVED_ATOMIC_TX_ID = "atomic";
 
 // The mainnet wallet that will be used in the creation of contracts, ants and record purchases.
-export const keyfile =
-  "";
+export const keyfile = "personal_key.json";
 
 // The Redstone Testnet wallet that will be used in the creation of contracts, ants and record purchases.
-export const testKeyfile =
-  "";
+export const testKeyfile = "";

@@ -1,4 +1,4 @@
-import Arweave from 'arweave';
+import Arweave from "arweave";
 import {
   defaultCacheOptions,
   LoggerFactory,
@@ -17,7 +17,7 @@ import { keyfile } from "../constants";
   // The amount of tokens to be transferred
   const qty = 10000000000;
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  
+
   // This is the production ArNS Registry Smartweave Contract
   const arnsRegistryContractTxId = deployedContracts.contractTxId;
 
@@ -39,7 +39,6 @@ import { keyfile } from "../constants";
     },
     true
   );
-
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(

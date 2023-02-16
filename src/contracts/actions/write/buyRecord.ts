@@ -1,4 +1,8 @@
-import { MAX_NAME_LENGTH, RESERVED_ATOMIC_TX_ID, TX_ID_LENGTH } from "@/constants";
+import {
+  MAX_NAME_LENGTH,
+  RESERVED_ATOMIC_TX_ID,
+  TX_ID_LENGTH,
+} from "@/constants";
 import { PstAction, ArNSState, ContractResult } from "../../types/types";
 
 declare const ContractError;

@@ -9,10 +9,10 @@ export async function addFunds(
   const walletAddress = await arweave.wallets.getAddress(wallet);
   await arweave.api.get(`/mint/${walletAddress}/1000000000000000`);
   return true;
-};
+}
 
 // ~~ Write function responsible for mining block on the Arweave testnet ~~
 export async function mineBlock(arweave: Arweave): Promise<boolean> {
   await arweave.api.get("mine");
   return true;
-};
+}

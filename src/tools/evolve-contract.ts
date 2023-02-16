@@ -12,7 +12,7 @@ import { keyfile } from "../constants";
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID version 1.7
   const arnsRegistryContractTxId =
-    "P2uO35poKTVIIZaWNtWwO9RgDUPrjqu9WSENmtrs8Iw";
+    "bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U";
 
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel("error");
@@ -50,13 +50,13 @@ import { keyfile } from "../constants";
 
   // stick to L1's for now
   const evolveInteractionTXId = await contract.evolve(evolveSrcTxId, {
-    disableBundling: true
+    disableBundling: true,
   });
 
   console.log(
     "Finished evolving the ArNS Smartweave Contract %s with TX %s. New contract id is: %s",
     arnsRegistryContractTxId,
     evolveInteractionTXId.originalTxId,
-    evolveSrcTxId,
+    evolveSrcTxId
   );
 })();

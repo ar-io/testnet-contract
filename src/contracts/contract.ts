@@ -35,13 +35,13 @@ export async function handle(
     case "evolve":
       return await evolve(state, action);
     case "addANTSourceCodeTx":
-      return await addANTSourceCodeTx(state, action); 
+      return await addANTSourceCodeTx(state, action);
     case "removeANTSourceCodeTx":
-      return await removeANTSourceCodeTx(state, action);   
+      return await removeANTSourceCodeTx(state, action);
     case "balance":
       return await balance(state, action);
     case "record":
-      return await record(state, action); 
+      return await record(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognised: "${input.function}"`

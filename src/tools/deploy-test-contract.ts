@@ -32,7 +32,7 @@ const TOKENS_TO_CREATE = 10000000000000; // ten trillion tokens
     },
     true
   );
-  
+
   // ~~ Generate Wallet and add funds ~~
   // const wallet = await arweave.wallets.generate();
   // const walletAddress = await arweave.wallets.jwkToAddress(wallet);

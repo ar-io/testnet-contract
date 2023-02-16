@@ -13,8 +13,8 @@
       result: {
         target,
         ticker,
-        balance: -1
-      }
+        balance: -1,
+      },
     };
   };
 
@@ -31,7 +31,13 @@
     }
     const namePattern = new RegExp("^[a-zA-Z0-9_-]");
     const nameRes = namePattern.test(name);
-    if (typeof name !== "string" || name.length > MAX_NAME_LENGTH || !nameRes || name === "www" || name === "") {
+    if (
+      typeof name !== "string" ||
+      name.length > MAX_NAME_LENGTH ||
+      !nameRes ||
+      name === "www" ||
+      name === ""
+    ) {
       throw new ContractError("Invalid ArNS Record Name");
     }
     let qty;
@@ -100,11 +106,17 @@
         throw new ContractError("Invalid string length");
     }
     if (balances[caller] < qty) {
-      throw new ContractError(`Caller balance not high enough to purchase this name for ${qty} token(s)!`);
+      throw new ContractError(
+        `Caller balance not high enough to purchase this name for ${qty} token(s)!`
+      );
     }
     const txIdPattern = new RegExp("^[a-zA-Z0-9_-]{43}$");
     const txIdres = txIdPattern.test(contractTransactionId);
-    if (typeof contractTransactionId !== "string" || contractTransactionId.length !== TX_ID_LENGTH || !txIdres) {
+    if (
+      typeof contractTransactionId !== "string" ||
+      contractTransactionId.length !== TX_ID_LENGTH ||
+      !txIdres
+    ) {
       throw new ContractError("Invalid ANT Smartweave Contract Address");
     }
     if (records.some((existingRecord) => existingRecord.name === record.name)) {
@@ -138,7 +150,7 @@
     if (caller !== owner) {
       throw new ContractError("Caller cannot mint tokes");
     }
-    balances[caller] ? balances[caller] += qty : balances[caller] = qty;
+    balances[caller] ? (balances[caller] += qty) : (balances[caller] = qty);
     return { state };
   };
 
@@ -158,7 +170,9 @@
       throw new ContractError(`Caller balance is not defined!`);
     }
     if (balances[caller] < qty) {
-      throw new ContractError(`Caller balance not high enough to send ${qty} token(s)!`);
+      throw new ContractError(
+        `Caller balance not high enough to send ${qty} token(s)!`
+      );
     }
     balances[caller] -= qty;
     if (target in balances) {
@@ -184,7 +198,9 @@
       case "balance":
         return await balance(state, action);
       default:
-        throw new ContractError(`No function supplied or function not recognised: "${input.function}"`);
+        throw new ContractError(
+          `No function supplied or function not recognised: "${input.function}"`
+        );
     }
   }
 })();

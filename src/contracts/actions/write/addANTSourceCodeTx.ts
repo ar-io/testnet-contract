@@ -27,9 +27,11 @@ export const addANTSourceCodeTx = async (
   }
 
   if (approvedANTSourceCodeTxs.indexOf(contractTransactionId) > -1) {
-    throw new ContractError("This ANT Source Code Transaction ID is already allowed.");
+    throw new ContractError(
+      "This ANT Source Code Transaction ID is already allowed."
+    );
   } else {
-      state.approvedANTSourceCodeTxs.push(contractTransactionId);
+    state.approvedANTSourceCodeTxs.push(contractTransactionId);
   }
 
   return { state };

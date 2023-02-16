@@ -1,5 +1,9 @@
 import Arweave from "arweave";
-import { defaultCacheOptions, LoggerFactory, WarpFactory } from "warp-contracts";
+import {
+  defaultCacheOptions,
+  LoggerFactory,
+  WarpFactory,
+} from "warp-contracts";
 import * as fs from "fs";
 import { keyfile } from "../constants";
 

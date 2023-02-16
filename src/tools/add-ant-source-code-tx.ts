@@ -9,7 +9,7 @@ import { deployedContracts } from "../deployed-contracts";
 import { keyfile } from "../constants";
 
 (async () => {
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // This is the Smartweave Source Code Transaction that will be added to the approved white list of ANTs
   const antSourceCodeTxToAdd = "JIIB01pRbNK2-UyNxwQK-6eknrjENMTpTvQmB8ZDzQg";
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -39,13 +39,13 @@ import { keyfile } from "../constants";
   pst.connect(wallet);
 
   // Remove the record in ArNS Registry
-  console.log(
-    "Whitelisting the ANT Source Code: %s",
-    antSourceCodeTxToAdd,
-  );
+  console.log("Whitelisting the ANT Source Code: %s", antSourceCodeTxToAdd);
   const txId = await pst.writeInteraction({
     function: "addANTSourceCodeTx",
     contractTransactionId: antSourceCodeTxToAdd,
   });
-  console.log("Finished adding the ANT Source Code TX to the approved white list with txid: %s", txId);
+  console.log(
+    "Finished adding the ANT Source Code TX to the approved white list with txid: %s",
+    txId
+  );
 })();

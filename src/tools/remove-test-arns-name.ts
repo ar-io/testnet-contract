@@ -9,7 +9,7 @@ import { deployedTestContracts } from "../deployed-contracts";
 import { testKeyfile } from "../constants";
 
 (async () => {
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // This is the name that will be removed from the Arweave Name System Registry testnet
   const nameToRemove = "another-one";
 
@@ -29,7 +29,7 @@ import { testKeyfile } from "../constants";
     },
     true
   );
-  
+
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
     await fs.readFileSync(testKeyfile).toString()
@@ -40,10 +40,7 @@ import { testKeyfile } from "../constants";
   pst.connect(wallet);
 
   // Buy the available record in ArNS Registry
-  console.log(
-    "Removing the test record, %s",
-    nameToRemove,
-  );
+  console.log("Removing the test record, %s", nameToRemove);
   const recordTxId = await pst.writeInteraction({
     function: "removeRecord",
     name: nameToRemove,

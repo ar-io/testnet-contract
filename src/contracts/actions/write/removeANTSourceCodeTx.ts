@@ -12,7 +12,9 @@ export const removeANTSourceCodeTx = async (
 
   // Only the owner of the contract can perform this method
   if (caller !== owner) {
-    throw new ContractError("Caller cannot add ANT Source Code Transaction IDs");
+    throw new ContractError(
+      "Caller cannot add ANT Source Code Transaction IDs"
+    );
   }
 
   // check if it is a valid arweave transaction id for the smartweave contract
@@ -27,9 +29,13 @@ export const removeANTSourceCodeTx = async (
   }
 
   if (approvedANTSourceCodeTxs.indexOf(contractTransactionId) > -1) {
-    state.approvedANTSourceCodeTxs.splice(approvedANTSourceCodeTxs.indexOf(contractTransactionId));
+    state.approvedANTSourceCodeTxs.splice(
+      approvedANTSourceCodeTxs.indexOf(contractTransactionId)
+    );
   } else {
-    throw new ContractError("This ANT Source Code Transaction ID not in the list.");
+    throw new ContractError(
+      "This ANT Source Code Transaction ID not in the list."
+    );
   }
 
   return { state };
