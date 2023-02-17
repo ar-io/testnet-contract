@@ -12,7 +12,7 @@ import { setFees } from './actions/write/setFees';
 import { transferTokens } from './actions/write/transferTokens';
 import { ArNSState, ContractResult, PstAction } from './types/types';
 
-declare const ContractError: Error;
+declare const ContractError;
 
 export async function handle(
   state: ArNSState,

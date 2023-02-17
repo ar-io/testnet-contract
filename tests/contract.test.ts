@@ -87,13 +87,11 @@ describe('Testing the ArNS Registry Contract', () => {
   });
 
   afterAll(async () => {
-    console.log(await pst.currentState());
     // ~~ Stop ArLocal ~~
     await arlocal.stop();
   });
 
   it('should read pst state and balance data', async () => {
-    console.log(await pst.currentState());
     expect(await pst.currentState()).toEqual(initialState);
     expect((await pst.currentState()).owner).toEqual(walletAddress);
   });
@@ -109,7 +107,7 @@ describe('Testing the ArNS Registry Contract', () => {
     );
   });
 
-  it('should properly buy records', async () => {
+  it('should properly buy records with atomic ant creation', async () => {
     const nameToBuy = 'permaWEB'; // this should be set to lower case
     const contractTransactionId = 'lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU';
     await pst.writeInteraction({
@@ -206,40 +204,20 @@ describe('Testing the ArNS Registry Contract', () => {
   // EVOLUTION
   it("should properly evolve contract's source code", async () => {
     pst.connect(wallet);
-    expect((await pst.currentBalance(walletAddress)).balance).toEqual(
-      EXPECTED_BALANCE_AFTER_INVALID_TX,
-    );
 
     const newSource = fs.readFileSync(
-      path.join(__dirname, '../src/tools/contract_evolve.js'),
+      path.join(__dirname, '../dist/contract.js'),
       'utf8',
     );
     const evolveSrcTx = await warp.createSourceTx({ src: newSource }, wallet);
-    const evolveSrcTxId = await warp.saveSourceTx(evolveSrcTx);
+    const evolveSrcTxId = await warp.saveSourceTx(evolveSrcTx, true);
     if (evolveSrcTxId === null) {
       return 0;
     }
     await mineBlock(arweave);
 
-    await pst.writeInteraction({
-      function: 'evolve',
-      value: evolveSrcTxId,
-    });
-    await mineBlock(arweave);
+    await pst.evolve(evolveSrcTxId);
 
-    // note: the evolved balance always returns -1
-    expect((await pst.currentBalance(walletAddress)).balance).toEqual(-1);
-
-    const newSrcTx = await warp.createSourceTx({ src: contractSrc }, wallet);
-    const newSrcTxId = await warp.saveSourceTx(newSrcTx);
-    if (newSrcTxId === null) {
-      return 0;
-    }
-    await mineBlock(arweave);
-    await pst.writeInteraction({
-      function: 'evolve',
-      value: newSrcTxId,
-    });
     await mineBlock(arweave);
 
     // note: the balance should return correctly now
@@ -307,7 +285,7 @@ describe('Testing the ArNS Registry Contract', () => {
     );
 
     const newSource = fs.readFileSync(
-      path.join(__dirname, '../src/tools/contract_evolve.js'),
+      path.join(__dirname, '../dist/contract.js'),
       'utf8',
     );
     const evolveSrcTx = await warp.createSourceTx({ src: newSource }, wallet);
