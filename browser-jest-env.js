@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 
-const JsDomEnv = require("jest-environment-jsdom");
-const { TextDecoder, TextEncoder } = require("util");
+const JsDomEnv = require('jest-environment-jsdom');
+const { TextDecoder, TextEncoder } = require('util');
 class MyEnvironment extends JsDomEnv {
   constructor(config) {
     super(
@@ -13,7 +13,7 @@ class MyEnvironment extends JsDomEnv {
           setImmediate: null,
           clearImmediate: null,
         }),
-      })
+      }),
     );
   }
 }

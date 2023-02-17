@@ -1,21 +1,22 @@
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import * as fs from 'fs';
+import path from 'path';
 import {
-  defaultCacheOptions,
   LoggerFactory,
   WarpFactory,
-} from "warp-contracts";
-import * as fs from "fs";
-import path from "path";
-import { JWKInterface } from "arweave/node/lib/wallet";
+  defaultCacheOptions,
+} from 'warp-contracts';
+
 // import { deployedContracts } from "../deployed-contracts";
-import { keyfile } from "../constants";
+import { keyfile } from '../constants';
 
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID version 1.7
   const arnsRegistryContractTxId =
-    "bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U";
+    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // ~~ Initialize `LoggerFactory` ~~
-  LoggerFactory.INST.logLevel("error");
+  LoggerFactory.INST.logLevel('error');
 
   // ~~ Initialize SmartWeave ~~
   const warp = WarpFactory.forMainnet(
@@ -23,12 +24,12 @@ import { keyfile } from "../constants";
       ...defaultCacheOptions,
       inMemory: true,
     },
-    true
+    true,
   );
 
   // Get the key file used
   const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(keyfile).toString()
+    await fs.readFileSync(keyfile).toString(),
   );
 
   // Read the ArNS Registry Contract
@@ -37,8 +38,8 @@ import { keyfile } from "../constants";
 
   // ~~ Read contract source and initial state files ~~
   const newSource = fs.readFileSync(
-    path.join(__dirname, "../../dist/contract.js"),
-    "utf8"
+    path.join(__dirname, '../../dist/contract.js'),
+    'utf8',
   );
 
   // Create the evolved source code tx
@@ -54,9 +55,9 @@ import { keyfile } from "../constants";
   });
 
   console.log(
-    "Finished evolving the ArNS Smartweave Contract %s with TX %s. New contract id is: %s",
+    'Finished evolving the ArNS Smartweave Contract %s with TX %s. New contract id is: %s',
     arnsRegistryContractTxId,
     evolveInteractionTXId.originalTxId,
-    evolveSrcTxId
+    evolveSrcTxId,
   );
 })();

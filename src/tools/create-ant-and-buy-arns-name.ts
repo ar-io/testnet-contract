@@ -1,33 +1,34 @@
-import Arweave from "arweave";
+import Arweave from 'arweave';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import * as fs from 'fs';
 import {
-  defaultCacheOptions,
   LoggerFactory,
   WarpFactory,
-} from "warp-contracts";
-import * as fs from "fs";
-import { JWKInterface } from "arweave/node/lib/wallet";
-import { deployedContracts } from "../deployed-contracts";
-import { keyfile } from "../constants";
+  defaultCacheOptions,
+} from 'warp-contracts';
+
+import { keyfile } from '../constants';
+import { deployedContracts } from '../deployed-contracts';
 
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // A short token symbol, typically with ANT- in front
-  const ticker = "ANT-PARKINGLOT";
+  const ticker = 'ANT-PARKINGLOT';
 
   // A friendly name for the name of this ANT
-  const name = "Parking Lot";
+  const name = 'Parking Lot';
 
   // This is the name that will be purchased in the Arweave Name System Registry
-  const nameToBuy = "parking-lot";
+  const nameToBuy = 'parking-lot';
 
   // The Time To Live for this ANT to reside cached, the default and minimum is 3600 seconds
   const ttlSeconds = 3600;
 
   // The arweave data transaction added to the ANT that is to be proxied using the registered name
-  const dataPointer = "W5dFQhNFtrY7IGC9sPz87HGNut6OhIuLwx3NAch72DM";
+  const dataPointer = 'W5dFQhNFtrY7IGC9sPz87HGNut6OhIuLwx3NAch72DM';
 
   // This is the ANT Smartweave Contract Source (v0.1.6) TX ID that will be used to create the new ANT
-  const antRecordContractTxId = "PEI1efYrsX08HUwvc6y-h6TSpsNlo2r6_fWL2_GdwhY";
+  const antRecordContractTxId = 'PEI1efYrsX08HUwvc6y-h6TSpsNlo2r6_fWL2_GdwhY';
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   // This is the production ArNS Registry Smartweave Contract
@@ -35,13 +36,13 @@ import { keyfile } from "../constants";
 
   // Initialize Arweave
   const arweave = Arweave.init({
-    host: "arweave.net",
+    host: 'arweave.net',
     port: 443,
-    protocol: "https",
+    protocol: 'https',
   });
 
   // Initialize `LoggerFactory`
-  LoggerFactory.INST.logLevel("error");
+  LoggerFactory.INST.logLevel('error');
 
   // Initialize SmartWeave
   const warp = WarpFactory.forMainnet(
@@ -49,11 +50,11 @@ import { keyfile } from "../constants";
       ...defaultCacheOptions,
       inMemory: true,
     },
-    true
+    true,
   );
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(keyfile).toString()
+    await fs.readFileSync(keyfile).toString(),
   );
   const walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
@@ -67,8 +68,8 @@ import { keyfile } from "../constants";
   const currentStateJSON = JSON.parse(currentStateString);
   if (currentStateJSON.records[nameToBuy] !== undefined) {
     console.log(
-      "This name %s is already taken and is not available for purchase.  Exiting.",
-      nameToBuy
+      'This name %s is already taken and is not available for purchase.  Exiting.',
+      nameToBuy,
     );
     return;
   }
@@ -80,7 +81,7 @@ import { keyfile } from "../constants";
     controller: walletAddress,
     evolve: null,
     records: {
-      "@": {
+      '@': {
         transactionId: dataPointer,
         ttlSeconds: ttlSeconds,
       },
@@ -92,9 +93,9 @@ import { keyfile } from "../constants";
 
   // Deploy ANT Contract in order to link to the new record
   console.log(
-    "Creating ANT for %s using sourceTx",
+    'Creating ANT for %s using sourceTx',
     name,
-    antRecordContractTxId
+    antRecordContractTxId,
   );
   const deployedContract = await warp.createContract.deployFromSourceTx({
     wallet,
@@ -104,14 +105,14 @@ import { keyfile } from "../constants";
 
   // Buy the available record in ArNS Registry v0.1.5
   console.log(
-    "Buying the record, %s using the ANT %s",
+    'Buying the record, %s using the ANT %s',
     nameToBuy,
-    deployedContract.contractTxId
+    deployedContract.contractTxId,
   );
   await pst.writeInteraction({
-    function: "buyRecord",
+    function: 'buyRecord',
     name: nameToBuy,
     contractTransactionId: deployedContract.contractTxId,
   });
-  console.log("Finished purchasing the record");
+  console.log('Finished purchasing the record');
 })();

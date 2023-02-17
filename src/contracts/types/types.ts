@@ -48,16 +48,16 @@ export interface ArNSNameResult {
 }
 
 export type PstFunction =
-  | "transfer"
-  | "mint"
-  | "setFees"
-  | "evolve"
-  | "buyRecord"
-  | "removeRecord"
-  | "addANTSourceCodeTx"
-  | "removeANTSourceCodeTx"
-  | "balance"
-  | "record";
+  | 'transfer'
+  | 'mint'
+  | 'setFees'
+  | 'evolve'
+  | 'buyRecord'
+  | 'removeRecord'
+  | 'addANTSourceCodeTx'
+  | 'removeANTSourceCodeTx'
+  | 'balance'
+  | 'record';
 
 export type ContractResult =
   | { state: ArNSState }

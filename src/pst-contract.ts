@@ -1,10 +1,10 @@
-import Arweave from "arweave";
-import { Warp, WarpFactory, defaultCacheOptions } from "warp-contracts";
+import Arweave from 'arweave';
+import { Warp, WarpFactory, defaultCacheOptions } from 'warp-contracts';
 
 export const arweave: Arweave = Arweave.init({
-  host: "arweave.net",
+  host: 'arweave.net',
   port: 443,
-  protocol: "https",
+  protocol: 'https',
 });
 
 export const warpTestnet: Warp = WarpFactory.forTestnet(
@@ -12,7 +12,7 @@ export const warpTestnet: Warp = WarpFactory.forTestnet(
     ...defaultCacheOptions,
     inMemory: true,
   },
-  true
+  true,
 );
 
 export const warpMainnet: Warp = WarpFactory.forMainnet(
@@ -20,5 +20,5 @@ export const warpMainnet: Warp = WarpFactory.forMainnet(
     ...defaultCacheOptions,
     inMemory: true,
   },
-  true
+  true,
 );
