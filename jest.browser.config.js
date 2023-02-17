@@ -5,8 +5,6 @@ module.exports = {
 
   testPathIgnorePatterns: ['/.yalc/', '/data/', '/_helpers'],
 
-  testEnvironment: 'node',
-
   transform: {
     '^.+\\.(ts)$': 'ts-jest',
   },

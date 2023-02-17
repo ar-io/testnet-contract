@@ -1,27 +1,28 @@
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import * as fs from 'fs';
 import {
-  defaultCacheOptions,
   LoggerFactory,
   WarpFactory,
-} from "warp-contracts";
-import * as fs from "fs";
-import { JWKInterface } from "arweave/node/lib/wallet";
-import { deployedTestContracts } from "../deployed-contracts";
-import { testKeyfile } from "../constants";
+  defaultCacheOptions,
+} from 'warp-contracts';
+
+import { testKeyfile } from '../constants';
+import { deployedTestContracts } from '../deployed-contracts';
 
 (async () => {
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // This is the name that will be purchased in the Arweave Name System Registry testnet
-  const nameToBuy = "another-one";
+  const nameToBuy = 'another-one';
 
   // This is the ANT Smartweave Contract TX ID that will be added to the testnet registry
-  const contractTxId = "6-H14K04w-_5t4u_TFJyVCzkt2szBmyoWSMRbniOQzw";
+  const contractTxId = '6-H14K04w-_5t4u_TFJyVCzkt2szBmyoWSMRbniOQzw';
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   // This is the testnet ArNS Registry Smartweave Contract TX ID
   const arnsRegistryContractTxId = deployedTestContracts.contractTxId;
 
   // Initialize `LoggerFactory`
-  LoggerFactory.INST.logLevel("error");
+  LoggerFactory.INST.logLevel('error');
 
   // ~~ Initialize SmartWeave ~~
   const warp = WarpFactory.forTestnet(
@@ -29,12 +30,12 @@ import { testKeyfile } from "../constants";
       ...defaultCacheOptions,
       inMemory: true,
     },
-    true
+    true,
   );
-  
+
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(testKeyfile).toString()
+    await fs.readFileSync(testKeyfile).toString(),
   );
 
   // Read the ANT Registry Contract
@@ -46,20 +47,23 @@ import { testKeyfile } from "../constants";
   const currentStateString = JSON.stringify(currentState);
   const currentStateJSON = JSON.parse(currentStateString);
   if (currentStateJSON.records[nameToBuy] !== undefined) {
-    console.log("This name %s is already taken and is not available for purchase.  Exiting.", nameToBuy);
+    console.log(
+      'This name %s is already taken and is not available for purchase.  Exiting.',
+      nameToBuy,
+    );
     return;
   }
 
   // Buy the available record in ArNS Registry
   console.log(
-    "Buying the test record, %s using the ANT %s",
+    'Buying the test record, %s using the ANT %s',
     nameToBuy,
-    contractTxId
+    contractTxId,
   );
   const recordTxId = await pst.writeInteraction({
-    function: "buyRecord",
+    function: 'buyRecord',
     name: nameToBuy,
     contractTransactionId: contractTxId,
   });
-  console.log("Finished purchasing the record. ID: %s", recordTxId);
+  console.log('Finished purchasing the record. ID: %s', recordTxId);
 })();

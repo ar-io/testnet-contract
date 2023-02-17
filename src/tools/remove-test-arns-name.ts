@@ -1,17 +1,18 @@
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import * as fs from 'fs';
 import {
-  defaultCacheOptions,
   LoggerFactory,
   WarpFactory,
-} from "warp-contracts";
-import * as fs from "fs";
-import { JWKInterface } from "arweave/node/lib/wallet";
-import { deployedTestContracts } from "../deployed-contracts";
-import { testKeyfile } from "../constants";
+  defaultCacheOptions,
+} from 'warp-contracts';
+
+import { testKeyfile } from '../constants';
+import { deployedTestContracts } from '../deployed-contracts';
 
 (async () => {
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // This is the name that will be removed from the Arweave Name System Registry testnet
-  const nameToRemove = "another-one";
+  const nameToRemove = 'another-one';
 
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -19,7 +20,7 @@ import { testKeyfile } from "../constants";
   const arnsRegistryContractTxId = deployedTestContracts.contractTxId;
 
   // Initialize `LoggerFactory`
-  LoggerFactory.INST.logLevel("error");
+  LoggerFactory.INST.logLevel('error');
 
   // Initialize SmartWeave
   const warp = WarpFactory.forTestnet(
@@ -27,12 +28,12 @@ import { testKeyfile } from "../constants";
       ...defaultCacheOptions,
       inMemory: true,
     },
-    true
+    true,
   );
-  
+
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(testKeyfile).toString()
+    await fs.readFileSync(testKeyfile).toString(),
   );
 
   // Read the ANT Registry Contract
@@ -40,13 +41,10 @@ import { testKeyfile } from "../constants";
   pst.connect(wallet);
 
   // Buy the available record in ArNS Registry
-  console.log(
-    "Removing the test record, %s",
-    nameToRemove,
-  );
+  console.log('Removing the test record, %s', nameToRemove);
   const recordTxId = await pst.writeInteraction({
-    function: "removeRecord",
+    function: 'removeRecord',
     name: nameToRemove,
   });
-  console.log("Finished removing the record. ID: %s", recordTxId);
+  console.log('Finished removing the record. ID: %s', recordTxId);
 })();

@@ -13,7 +13,7 @@ class MyEnvironment extends JsDomEnv {
           setImmediate: null,
           clearImmediate: null,
         }),
-      })
+      }),
     );
   }
 }
