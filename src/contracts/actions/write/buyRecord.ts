@@ -2,8 +2,7 @@ import {
   MAX_NAME_LENGTH,
   RESERVED_ATOMIC_TX_ID,
   TX_ID_LENGTH,
-} from '../constants';
-
+} from '../../../constants';
 import { ArNSState, ContractResult, PstAction } from '../../types/types';
 
 declare const ContractError;

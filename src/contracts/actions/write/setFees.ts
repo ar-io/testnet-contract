@@ -1,5 +1,4 @@
-import { MAX_NAME_LENGTH } from '../constants';
-
+import { MAX_NAME_LENGTH } from '../../../constants';
 import { ArNSState, ContractResult, PstAction } from '../../types/types';
 
 declare const ContractError;

@@ -1,5 +1,4 @@
-import { TX_ID_LENGTH } from '../constants';
-
+import { TX_ID_LENGTH } from '../../../constants';
 import { ArNSState, ContractResult, PstAction } from '../../types/types';
 
 declare const ContractError;
