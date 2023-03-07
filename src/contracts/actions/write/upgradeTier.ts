@@ -74,8 +74,9 @@ export const upgradeTier = async (
 
   // reduce balance set the end lease period for this record based on number of years
   balances[caller] -= qty; // reduce callers balance
-  state.foundation.balance += Math.floor(qty * (FOUNDATION_PERCENTAGE / 100)); // increase foundation balance using the foundation percentage
-  state.rewards += Math.floor(qty * ((100 - FOUNDATION_PERCENTAGE) / 100)); // increase protocol rewards without the foundation percentage
+  // TODO: logic for protocol balance
+  // state.foundation.balance += Math.floor(qty * (FOUNDATION_PERCENTAGE / 100)); // increase foundation balance using the foundation percentage
+  // state.rewards += Math.floor(qty * ((100 - FOUNDATION_PERCENTAGE) / 100)); // increase protocol rewards without the foundation percentage
 
   // Set the maximum amount of subdomains for this name based on the selected tier
   records[name].tier = tier;
