@@ -1,4 +1,4 @@
-import { PstState } from "warp-contracts";
+import { PstState } from 'warp-contracts';
 
 export interface IOState extends PstState {
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
@@ -55,7 +55,7 @@ export interface GatewaySettings {
   note?: string; // An additional note (256 character max) the gateway operator can set to indicate things like maintenance or other operational updates.
 }
 
-export type AllowedProtocols = "http" | "https";
+export type AllowedProtocols = 'http' | 'https';
 
 export interface ArNSName {
   tier: number; // The tier of service that has been purchased
@@ -94,13 +94,13 @@ export interface FoundationAction {
   lockLength?: number; // determines the amount of blocks a foundation balance distribution is locked for
 }
 
-export type FoundationActionStatus = "active" | "passed" | "failed";
+export type FoundationActionStatus = 'active' | 'passed' | 'failed';
 export type FoundationActionType =
-  | "transfer"
-  | "setMinSignatures"
-  | "setActionPeriod"
-  | "addAddress"
-  | "removeAddress";
+  | 'transfer'
+  | 'setMinSignatures'
+  | 'setActionPeriod'
+  | 'addAddress'
+  | 'removeAddress';
 
 export interface TokenVault {
   balance: number; // Positive integer, the amount locked
@@ -132,13 +132,13 @@ export interface VoteInterface {
   lockLength?: number;
 }
 
-export type VoteStatus = "active" | "quorumFailed" | "passed" | "failed";
+export type VoteStatus = 'active' | 'quorumFailed' | 'passed' | 'failed';
 export type VoteType =
-  | "mint"
-  | "mintLocked"
-  | "burnVault"
-  | "indicative"
-  | "set";
+  | 'mint'
+  | 'mintLocked'
+  | 'burnVault'
+  | 'indicative'
+  | 'set';
 
 export interface PstAction {
   input: PstInput;
@@ -192,22 +192,22 @@ export interface ArNSNameResult {
 }
 
 export type PstFunction =
-  | "transfer"
-  | "transferLocked"
-  | "mint"
-  | "setFees"
-  | "evolve"
-  | "buyRecord"
-  | "extendRecord"
-  | "setTier"
-  | "upgradeTier"
-  | "removeRecord"
-  | "addANTSourceCodeTx"
-  | "removeANTSourceCodeTx"
-  | "balance"
-  | "record"
-  | "fixState"
-  | "setName";
+  | 'transfer'
+  | 'transferLocked'
+  | 'mint'
+  | 'setFees'
+  | 'evolve'
+  | 'buyRecord'
+  | 'extendRecord'
+  | 'setTier'
+  | 'upgradeTier'
+  | 'removeRecord'
+  | 'addANTSourceCodeTx'
+  | 'removeANTSourceCodeTx'
+  | 'balance'
+  | 'record'
+  | 'fixState'
+  | 'setName';
 
 export type ContractResult =
   | { state: IOState }

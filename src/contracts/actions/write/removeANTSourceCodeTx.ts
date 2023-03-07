@@ -1,11 +1,13 @@
-import { PstAction, IOState, ContractResult } from "../../types/types";
-import { TX_ID_LENGTH } from "@/constants";
+import { TX_ID_LENGTH } from '@/constants';
+
+import { ContractResult, IOState, PstAction } from '../../types/types';
+
 declare const ContractError;
 
 // Removes a white listed ANT source code transaction
 export const removeANTSourceCodeTx = async (
   state: IOState,
-  { caller, input: { contractTxId } }: PstAction
+  { caller, input: { contractTxId } }: PstAction,
 ): Promise<ContractResult> => {
   const owner = state.owner;
   const approvedANTSourceCodeTxs = state.approvedANTSourceCodeTxs;

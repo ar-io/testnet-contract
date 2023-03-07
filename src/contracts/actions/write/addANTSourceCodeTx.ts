@@ -1,11 +1,13 @@
-import { PstAction, IOState, ContractResult } from "../../types/types";
-import { TX_ID_LENGTH } from "@/constants";
+import { TX_ID_LENGTH } from '@/constants';
+
+import { ContractResult, IOState, PstAction } from '../../types/types';
+
 declare const ContractError;
 
 // Modifies the fees for purchasing ArNS names
 export const addANTSourceCodeTx = async (
   state: IOState,
-  { caller, input: { contractTxId } }: PstAction
+  { caller, input: { contractTxId } }: PstAction,
 ): Promise<ContractResult> => {
   const owner = state.owner;
   const approvedANTSourceCodeTxs = state.approvedANTSourceCodeTxs;
@@ -16,10 +18,10 @@ export const addANTSourceCodeTx = async (
   }
 
   // check if it is a valid arweave transaction id for the smartweave contract
-  const txIdPattern = new RegExp("^[a-zA-Z0-9_-]{43}$");
+  const txIdPattern = new RegExp('^[a-zA-Z0-9_-]{43}$');
   const txIdres = txIdPattern.test(contractTxId);
   if (
-    typeof contractTxId !== "string" ||
+    typeof contractTxId !== 'string' ||
     contractTxId.length !== TX_ID_LENGTH ||
     !txIdres
   ) {
@@ -28,7 +30,7 @@ export const addANTSourceCodeTx = async (
 
   if (approvedANTSourceCodeTxs.indexOf(contractTxId) > -1) {
     throw new ContractError(
-      "This ANT Source Code Transaction ID is already allowed."
+      'This ANT Source Code Transaction ID is already allowed.',
     );
   } else {
     state.approvedANTSourceCodeTxs.push(contractTxId);

@@ -1,24 +1,23 @@
-import { ServiceTier } from "./contracts/types/types";
+import { ServiceTier } from './contracts/types/types';
 
 export const url = {
   redstoneGateway: '',
 };
 
-export const DEFAULT_TIERS: {[x: number]: ServiceTier } = {
-  1: 
-  { 
+export const DEFAULT_TIERS: { [x: number]: ServiceTier } = {
+  1: {
     maxSubdomains: 100,
-    minTtlSeconds: 3600 
+    minTtlSeconds: 3600,
   },
   2: {
     maxSubdomains: 1000,
-    minTtlSeconds: 1800 
-  }, 
+    minTtlSeconds: 1800,
+  },
   3: {
     maxSubdomains: 10000,
-    minTtlSeconds: 900 
-  }
-}
+    minTtlSeconds: 900,
+  },
+};
 export const MAX_DELEGATES = 1000; // the maximum amount of delegates that can be added to a single gateway
 export const MAX_YEARS = 200; // the maximum amount of years an arns name could be leased for
 export const MAX_NAME_LENGTH = 32; // the maximum length of an arns name

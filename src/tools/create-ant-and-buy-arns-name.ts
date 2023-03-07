@@ -57,7 +57,7 @@ import { deployedContracts } from '../deployed-contracts';
       ...defaultCacheOptions,
       inMemory: true,
     },
-    true
+    true,
   );
 
   // Get the key file used for the distribution
@@ -105,11 +105,14 @@ import { deployedContracts } from '../deployed-contracts';
     name,
     antRecordContractTxId,
   );
-  const deployedContract = await warp.deployFromSourceTx({
-    wallet,
-    initState: JSON.stringify(initialState),
-    srcTxId: antRecordContractTxId,
-  }, true); // disable bundling for L1 transactions only
+  const deployedContract = await warp.deployFromSourceTx(
+    {
+      wallet,
+      initState: JSON.stringify(initialState),
+      srcTxId: antRecordContractTxId,
+    },
+    true,
+  ); // disable bundling for L1 transactions only
 
   // Buy the available record in ArNS Registry v0.1.5
   console.log(
@@ -117,14 +120,17 @@ import { deployedContracts } from '../deployed-contracts';
     nameToBuy,
     deployedContract.contractTxId,
   );
-  await pst.writeInteraction({
-    function: 'buyRecord',
-    name: nameToBuy,
-    tier,
-    contractTxId: deployedContract.contractTxId,
-    years,
-  }, {
-    disableBundling: true
-  });
+  await pst.writeInteraction(
+    {
+      function: 'buyRecord',
+      name: nameToBuy,
+      tier,
+      contractTxId: deployedContract.contractTxId,
+      years,
+    },
+    {
+      disableBundling: true,
+    },
+  );
   console.log('Finished purchasing the record');
 })();

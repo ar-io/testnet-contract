@@ -1,5 +1,6 @@
-import { SECONDS_IN_A_YEAR } from "@/constants";
-import { PstAction, IOState, ContractResult } from "../../types/types";
+import { SECONDS_IN_A_YEAR } from '@/constants';
+
+import { ContractResult, IOState, PstAction } from '../../types/types';
 
 declare const ContractError;
 declare const SmartWeave: any;
@@ -7,12 +8,12 @@ declare const SmartWeave: any;
 // Temporary method to fix a broken contract state
 export const fixState = async (
   state: IOState,
-  { caller, input: {} }: PstAction
+  { caller, input: {} }: PstAction,
 ): Promise<ContractResult> => {
   const owner = state.owner;
 
   if (caller !== owner) {
-    throw new ContractError("Caller cannot evolve the contract");
+    throw new ContractError('Caller cannot evolve the contract');
   }
 
   if (state.tiers === undefined) {
@@ -40,7 +41,7 @@ export const fixState = async (
     state = {
       ...state,
       ...{
-        version: "0.0.1",
+        version: '0.0.1',
       },
     };
   }
@@ -55,9 +56,9 @@ export const fixState = async (
           actionPeriod: 720,
           minSignatures: 2,
           addresses: [
-            "QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ",
-            "31LPFYoow2G7j-eSSsrIh8OlNaARZ84-80J-8ba68d8",
-            "NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g",
+            'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ',
+            '31LPFYoow2G7j-eSSsrIh8OlNaARZ84-80J-8ba68d8',
+            'NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g',
           ],
           actions: [],
         },

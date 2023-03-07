@@ -1,5 +1,6 @@
-import { isArweaveAddress } from "@/contracts/utilities";
-import { PstAction, IOState, ContractResult } from "../../types/types";
+import { isArweaveAddress } from '@/contracts/utilities';
+
+import { ContractResult, IOState, PstAction } from '../../types/types';
 
 declare const ContractError;
 declare const SmartWeave: any;
@@ -7,7 +8,7 @@ declare const SmartWeave: any;
 // transfers tokens directly to a locked vault owned by the recipient
 export const transferTokensLocked = async (
   state: IOState,
-  { caller, input: { target, qty, lockLength } }: PstAction
+  { caller, input: { target, qty, lockLength } }: PstAction,
 ): Promise<ContractResult> => {
   target = isArweaveAddress(target);
   const balances = state.balances;
@@ -19,11 +20,11 @@ export const transferTokensLocked = async (
   }
 
   if (!target) {
-    throw new ContractError("No target specified");
+    throw new ContractError('No target specified');
   }
 
   if (qty <= 0 || caller === target) {
-    throw new ContractError("Invalid token transfer");
+    throw new ContractError('Invalid token transfer');
   }
 
   if (
@@ -37,17 +38,17 @@ export const transferTokensLocked = async (
 
   if (balances[caller] < qty) {
     throw new ContractError(
-      `Caller balance not high enough to send ${qty} locked token(s)!`
+      `Caller balance not high enough to send ${qty} locked token(s)!`,
     );
   }
 
   if (
     !Number.isInteger(lockLength) ||
-    lockLength < settings["lockMinLength"] ||
-    lockLength > settings["lockMaxLength"]
+    lockLength < settings['lockMinLength'] ||
+    lockLength > settings['lockMaxLength']
   ) {
     throw new ContractError(
-      `lockLength is out of range. lockLength must be between ${settings["lockMinLength"]} - ${settings["lockMaxLength"]}.`
+      `lockLength is out of range. lockLength must be between ${settings['lockMinLength']} - ${settings['lockMaxLength']}.`,
     );
   }
 

@@ -1,11 +1,16 @@
-import Arweave from "arweave";
-import { LoggerFactory, WarpFactory, defaultCacheOptions } from "warp-contracts";
-import * as fs from "fs";
-import path from "path";
-import { addFunds } from "../../utils/_helpers";
-import { IOState } from "../contracts/types/types";
-import { testKeyfile } from "../constants";
-import { JWKInterface } from "arweave/node/lib/wallet";
+import Arweave from 'arweave';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import * as fs from 'fs';
+import path from 'path';
+import {
+  LoggerFactory,
+  WarpFactory,
+  defaultCacheOptions,
+} from 'warp-contracts';
+
+import { addFunds } from '../../utils/_helpers';
+import { testKeyfile } from '../constants';
+import { IOState } from '../contracts/types/types';
 
 let wallet2: JWKInterface;
 let wallet3: JWKInterface;
@@ -83,13 +88,15 @@ let slashedWallet: JWKInterface;
     ),
   );
 
-  
   // ~~ Deploy contract ~~
-  const contractTxId = await warp.deploy({
-    wallet,
-    initState: JSON.stringify(initialState),
-    src: contractSrc,
-  }, true); // disable bundling
+  const contractTxId = await warp.deploy(
+    {
+      wallet,
+      initState: JSON.stringify(initialState),
+      src: contractSrc,
+    },
+    true,
+  ); // disable bundling
 
   // ~~ Log contract id to the console ~~
   console.log(contractTxId);

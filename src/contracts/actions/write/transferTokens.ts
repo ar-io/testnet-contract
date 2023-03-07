@@ -1,10 +1,10 @@
-import { PstAction, IOState, ContractResult } from "../../types/types";
+import { ContractResult, IOState, PstAction } from '../../types/types';
 
 declare const ContractError;
 
 export const transferTokens = async (
   state: IOState,
-  { caller, input: { target, qty } }: PstAction
+  { caller, input: { target, qty } }: PstAction,
 ): Promise<ContractResult> => {
   const balances = state.balances;
   if (!Number.isInteger(qty)) {

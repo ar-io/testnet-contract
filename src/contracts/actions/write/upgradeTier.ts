@@ -2,15 +2,16 @@ import {
   FOUNDATION_PERCENTAGE,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
-} from "@/constants";
-import { PstAction, IOState, ContractResult } from "../../types/types";
+} from '@/constants';
+
+import { ContractResult, IOState, PstAction } from '../../types/types';
 
 declare const ContractError;
 declare const SmartWeave: any;
 
 export const upgradeTier = async (
   state: IOState,
-  { caller, input: { name, tier } }: PstAction
+  { caller, input: { name, tier } }: PstAction,
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
@@ -50,7 +51,7 @@ export const upgradeTier = async (
   // check if this is an active lease, if not it cannot be upgraded
   if (records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD < currentBlockTime) {
     throw new ContractError(
-      `This name's lease has expired.  It must be purchased first before being extended.`
+      `This name's lease has expired.  It must be purchased first before being extended.`,
     );
   }
 
@@ -61,13 +62,13 @@ export const upgradeTier = async (
 
   // The price is determined by multiplying the base fee times the number of levels upgraded times the amount of years left
   let qty = Math.ceil(
-    fees[name.length.toString()] * levelsUpgraded * amountOfYearsLeft
+    fees[name.length.toString()] * levelsUpgraded * amountOfYearsLeft,
   );
 
   // Check if the caller has enough tokens to upgrade this tier
   if (balances[caller] < qty) {
     throw new ContractError(
-      `Caller balance not high enough to extend this name lease for ${qty} token(s)!`
+      `Caller balance not high enough to extend this name lease for ${qty} token(s)!`,
     );
   }
 

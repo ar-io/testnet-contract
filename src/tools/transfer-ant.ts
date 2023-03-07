@@ -1,12 +1,13 @@
-import Arweave from "arweave";
+import Arweave from 'arweave';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import * as fs from 'fs';
 import {
-  defaultCacheOptions,
   LoggerFactory,
   WarpFactory,
-} from "warp-contracts";
-import * as fs from "fs";
-import { JWKInterface } from "arweave/node/lib/wallet";
-import { keyfile } from "../constants";
+  defaultCacheOptions,
+} from 'warp-contracts';
+
+import { keyfile } from '../constants';
 
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -51,12 +52,15 @@ import { keyfile } from "../constants";
   );
   const pst = warp.pst(antRecordContractTxId);
   pst.connect(wallet);
-  await pst.transfer({
-    target,
-    qty: 1,
-  }, {
-    disableBundling: true
-  });
+  await pst.transfer(
+    {
+      target,
+      qty: 1,
+    },
+    {
+      disableBundling: true,
+    },
+  );
 
   console.log('Finished transferring tokens');
 })();

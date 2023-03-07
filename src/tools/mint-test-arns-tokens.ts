@@ -1,24 +1,25 @@
-import Arweave from "arweave";
-import { LoggerFactory, WarpFactory } from "warp-contracts";
-import * as fs from "fs";
-import { JWKInterface } from "arweave/node/lib/wallet";
-import { testKeyfile } from "../constants";
+import Arweave from 'arweave';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import * as fs from 'fs';
+import { LoggerFactory, WarpFactory } from 'warp-contracts';
+
+import { testKeyfile } from '../constants';
 
 (async () => {
   const qty = 10_000_000;
   // This is the testnet ArNS Registry Smartweave Contract TX ID
   const arnsRegistryContractTxId =
-    "J121VPOHa9pT2QKOs2ub0bZh9LqHesubdnfwW2v126w";
+    'J121VPOHa9pT2QKOs2ub0bZh9LqHesubdnfwW2v126w';
 
   // Initialize `LoggerFactory`
-  LoggerFactory.INST.logLevel("error");
+  LoggerFactory.INST.logLevel('error');
 
   // Initialize SmartWeave
   const warp = WarpFactory.forTestnet();
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(testKeyfile).toString()
+    await fs.readFileSync(testKeyfile).toString(),
   );
 
   // Read the ANT Registry Contract
@@ -26,8 +27,8 @@ import { testKeyfile } from "../constants";
   pst.connect(wallet);
 
   const mintTxId = await pst.writeInteraction({
-    function: "mint",
+    function: 'mint',
     qty,
   });
-  console.log("Finished minting %s tokens. ID: %s", qty, mintTxId);
+  console.log('Finished minting %s tokens. ID: %s', qty, mintTxId);
 })();

@@ -1,3 +1,4 @@
+import { IOState } from '@/contracts/types/types.js';
 import Arweave from 'arweave';
 import * as fs from 'fs';
 import path from 'path';
@@ -8,7 +9,6 @@ import {
 } from 'warp-contracts';
 
 import { keyfile } from '../constants';
-import { IOState } from '@/contracts/types/types.js';
 
 (async () => {
   // ~~ Initialize Arweave ~~
@@ -45,11 +45,14 @@ import { IOState } from '@/contracts/types/types.js';
   );
 
   // ~~ Deploy contract ~~
-  const contractTxId = await warp.deploy({
-    wallet,
-    initState: JSON.stringify(stateFromFile),
-    src: contractSrc,
-  }, true); // disable bundling
+  const contractTxId = await warp.deploy(
+    {
+      wallet,
+      initState: JSON.stringify(stateFromFile),
+      src: contractSrc,
+    },
+    true,
+  ); // disable bundling
 
   // ~~ Log contract id to the console ~~
   console.log(contractTxId);

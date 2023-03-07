@@ -1,19 +1,20 @@
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import * as fs from 'fs';
 import {
-  defaultCacheOptions,
   LoggerFactory,
   WarpFactory,
-} from "warp-contracts";
-import * as fs from "fs";
-import { JWKInterface } from "arweave/node/lib/wallet";
-import { keyfile } from "../constants";
+  defaultCacheOptions,
+} from 'warp-contracts';
+
+import { keyfile } from '../constants';
 
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID
   const arnsRegistryContractTxId =
-    "R-DRqVv97e8cCya95qsH_Tpvmb9vidURYWlBL5LpSzo";
+    'R-DRqVv97e8cCya95qsH_Tpvmb9vidURYWlBL5LpSzo';
 
   // ~~ Initialize `LoggerFactory` ~~
-  LoggerFactory.INST.logLevel("error");
+  LoggerFactory.INST.logLevel('error');
 
   // ~~ Initialize SmartWeave ~~
   const warp = WarpFactory.forMainnet(
@@ -21,12 +22,12 @@ import { keyfile } from "../constants";
       ...defaultCacheOptions,
       inMemory: true,
     },
-    true
+    true,
   );
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(keyfile).toString()
+    await fs.readFileSync(keyfile).toString(),
   );
 
   // Read the ANT Registry Contract
@@ -34,8 +35,8 @@ import { keyfile } from "../constants";
   pst.connect(wallet);
 
   const txId = await pst.writeInteraction({
-    function: "fixState",
+    function: 'fixState',
   });
 
-  console.log("Finished fixing the contract: %s", txId);
+  console.log('Finished fixing the contract: %s', txId);
 })();

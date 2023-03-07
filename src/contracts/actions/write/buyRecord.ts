@@ -1,20 +1,21 @@
 import {
+  DEFAULT_TIERS,
   MAX_NAME_LENGTH,
   MAX_YEARS,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
   TX_ID_LENGTH,
-  DEFAULT_TIERS
-} from "@/constants";
-import { PstAction, IOState, ContractResult } from "../../types/types";
+} from '@/constants';
+
+import { ContractResult, IOState, PstAction } from '../../types/types';
 
 declare const ContractError;
 declare const SmartWeave: any;
 
 export const buyRecord = async (
   state: IOState,
-  { caller, input: { name, contractTxId, years, tier } }: PstAction
+  { caller, input: { name, contractTxId, years, tier } }: PstAction,
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
@@ -37,7 +38,7 @@ export const buyRecord = async (
   // Check if it includes a valid number of years
   if (!Number.isInteger(years) || years > MAX_YEARS || years <= 0) {
     throw new ContractError(
-      'Invalid value for "years". Must be an integer greater than zero and less than the max years'
+      'Invalid value for "years". Must be an integer greater than zero and less than the max years',
     );
   }
 
@@ -48,7 +49,9 @@ export const buyRecord = async (
 
   // Check if this is a valid tier, if tier does not exist
   if (!tiers[tier]) {
-    throw new ContractError(`Tier is not defined! Allowed tiers: ${Object.keys(tiers).join(', ')}`);
+    throw new ContractError(
+      `Tier is not defined! Allowed tiers: ${Object.keys(tiers).join(', ')}`,
+    );
   }
 
   // Set the maximum amount of subdomains and minimum TTLSeconds for this name based on the selected tier
@@ -84,17 +87,17 @@ export const buyRecord = async (
     );
   }
 
-  if (typeof contractTxId !== "string") {
-    throw new ContractError("ANT Smartweave Contract Address must be a string");
+  if (typeof contractTxId !== 'string') {
+    throw new ContractError('ANT Smartweave Contract Address must be a string');
   } else if (contractTxId.toLowerCase() === RESERVED_ATOMIC_TX_ID) {
     // if this is an atomic name registration, then the transaction ID for this interaction is used for the ANT smartweave contract address
     contractTxId = SmartWeave.transaction.id;
   } else {
     // check if it is a valid arweave transaction id for the smartweave contract
-    const txIdPattern = new RegExp("^[a-zA-Z0-9_-]{43}$");
+    const txIdPattern = new RegExp('^[a-zA-Z0-9_-]{43}$');
     const txIdres = txIdPattern.test(contractTxId);
     if (contractTxId.length !== TX_ID_LENGTH || !txIdres) {
-      throw new ContractError("Invalid ANT Smartweave Contract Address");
+      throw new ContractError('Invalid ANT Smartweave Contract Address');
     }
   }
 
@@ -113,7 +116,7 @@ export const buyRecord = async (
       maxSubdomains,
       minTtlSeconds,
     };
-  // assumes lease expiration
+    // assumes lease expiration
   } else if (
     records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD <
     currentBlockTime
@@ -128,7 +131,7 @@ export const buyRecord = async (
       minTtlSeconds,
     };
   } else {
-    throw new ContractError("This name already exists in an active lease");
+    throw new ContractError('This name already exists in an active lease');
   }
 
   return { state };

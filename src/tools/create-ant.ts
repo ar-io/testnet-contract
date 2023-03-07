@@ -22,7 +22,6 @@ import { keyfile } from '../constants';
   // The arweave data transaction that is to be proxied using the registered name
   const dataPointer = 'zHpMN6UyTSSIo6WqER2527LvEvMKLlAcr3UR6ljd32Q';
 
-
   // This is the ANT Smartweave Contract Source (v0.1.6) TX ID that will be used to create the new ANT
   const antRecordContractTxId = 'PEI1efYrsX08HUwvc6y-h6TSpsNlo2r6_fWL2_GdwhY';
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -72,11 +71,14 @@ import { keyfile } from '../constants';
 
   // ~~ Deploy contract ~~
   console.log('Creating ANT for %s', name);
-  const contractTxId = await warp.deployFromSourceTx({
-    wallet,
-    initState: JSON.stringify(initialState),
-    srcTxId: antRecordContractTxId,
-  }, true); // disable bundling
+  const contractTxId = await warp.deployFromSourceTx(
+    {
+      wallet,
+      initState: JSON.stringify(initialState),
+      srcTxId: antRecordContractTxId,
+    },
+    true,
+  ); // disable bundling
 
   // ~~ Log contract id to the console ~~
   console.log('Mainnet Contract id %s', contractTxId);

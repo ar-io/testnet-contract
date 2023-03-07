@@ -1,20 +1,21 @@
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import * as fs from 'fs';
 import {
-  defaultCacheOptions,
   LoggerFactory,
   WarpFactory,
-} from "warp-contracts";
-import * as fs from "fs";
-import { JWKInterface } from "arweave/node/lib/wallet";
-import { keyfile } from "../constants";
-import { getCurrentBlockHeight } from "../contracts/utilities";
+  defaultCacheOptions,
+} from 'warp-contracts';
+
+import { keyfile } from '../constants';
+import { getCurrentBlockHeight } from '../contracts/utilities';
 
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID
   const arnsRegistryContractTxId =
-    "bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U";
+    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // ~~ Initialize `LoggerFactory` ~~
-  LoggerFactory.INST.logLevel("error");
+  LoggerFactory.INST.logLevel('error');
 
   // ~~ Initialize SmartWeave ~~
   const warp = WarpFactory.forMainnet(
@@ -22,12 +23,12 @@ import { getCurrentBlockHeight } from "../contracts/utilities";
       ...defaultCacheOptions,
       inMemory: true,
     },
-    true
+    true,
   );
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(keyfile).toString()
+    await fs.readFileSync(keyfile).toString(),
   );
 
   // Read the ArNS Registry Contract
@@ -39,10 +40,10 @@ import { getCurrentBlockHeight } from "../contracts/utilities";
   console.log(currentStateJSON);
 
   const block = await getCurrentBlockHeight();
-  const fileName = "ArNS_State_" + block.toString() + ".json";
+  const fileName = 'ArNS_State_' + block.toString() + '.json';
   fs.writeFileSync(fileName, currentStateString);
   console.log(
-    "Finished getting the ArNS state for the registry: %s",
-    arnsRegistryContractTxId
+    'Finished getting the ArNS state for the registry: %s',
+    arnsRegistryContractTxId,
   );
 })();

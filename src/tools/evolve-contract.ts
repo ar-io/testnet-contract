@@ -1,21 +1,22 @@
+import { deployedContracts } from '@/deployed-contracts.js';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import * as fs from 'fs';
+import path from 'path';
 import {
-  defaultCacheOptions,
   LoggerFactory,
   WarpFactory,
-} from "warp-contracts";
-import * as fs from "fs";
-import path from "path";
-import { JWKInterface } from "arweave/node/lib/wallet";
+  defaultCacheOptions,
+} from 'warp-contracts';
+
 // import { deployedContracts } from "../deployed-contracts";
-import { keyfile } from "../constants";
-import { deployedContracts } from "@/deployed-contracts.js";
+import { keyfile } from '../constants';
 
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID version 1.7
   const arnsRegistryContractTxId = deployedContracts.contractTxId;
 
   // ~~ Initialize `LoggerFactory` ~~
-  LoggerFactory.INST.logLevel("error");
+  LoggerFactory.INST.logLevel('error');
 
   // ~~ Initialize SmartWeave ~~
   const warp = WarpFactory.forMainnet(

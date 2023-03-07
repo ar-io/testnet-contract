@@ -1,17 +1,18 @@
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import * as fs from 'fs';
 import {
-  defaultCacheOptions,
   LoggerFactory,
   WarpFactory,
-} from "warp-contracts";
-import * as fs from "fs";
-import { JWKInterface } from "arweave/node/lib/wallet";
-import { deployedContracts } from "../deployed-contracts";
-import { keyfile } from "../constants";
+  defaultCacheOptions,
+} from 'warp-contracts';
+
+import { keyfile } from '../constants';
+import { deployedContracts } from '../deployed-contracts';
 
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // This is the name that will be removed from the Arweave Name System Registry
-  const nameToRemove = "ardrive";
+  const nameToRemove = 'ardrive';
 
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -41,11 +42,14 @@ import { keyfile } from "../constants";
 
   // Remove the record in ArNS Registry
   console.log('Removing the record, %s', nameToRemove);
-  const recordTxId = await pst.writeInteraction({
-    function: 'removeRecord',
-    name: nameToRemove,
-  }, {
-    disableBundling: true
-  });
+  const recordTxId = await pst.writeInteraction(
+    {
+      function: 'removeRecord',
+      name: nameToRemove,
+    },
+    {
+      disableBundling: true,
+    },
+  );
   console.log('Finished removing the record: %s', recordTxId);
 })();

@@ -1,14 +1,18 @@
-import { LoggerFactory, WarpFactory, defaultCacheOptions } from "warp-contracts";
-import * as fs from "fs";
-import path from "path";
-import { JWKInterface } from "arweave/node/lib/wallet";
-import { testKeyfile } from "../constants";
-import { deployedTestContracts } from "@/deployed-contracts.js";
+import { deployedTestContracts } from '@/deployed-contracts.js';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import * as fs from 'fs';
+import path from 'path';
+import {
+  LoggerFactory,
+  WarpFactory,
+  defaultCacheOptions,
+} from 'warp-contracts';
+
+import { testKeyfile } from '../constants';
 
 (async () => {
   // This is the testnet ArNS Registry Smartweave Contract TX ID
-  const arnsRegistryContractTxId =
-   deployedTestContracts.contractTxId
+  const arnsRegistryContractTxId = deployedTestContracts.contractTxId;
 
   LoggerFactory.INST.logLevel('error');
 

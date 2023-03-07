@@ -1,16 +1,17 @@
-import { PstAction, IOState, ContractResult } from "../../types/types";
+import { ContractResult, IOState, PstAction } from '../../types/types';
+
 declare const ContractError;
 
 // Modifies an existing tier or creates a new one.
 export const setTier = async (
   state: IOState,
-  { caller, input: { tier, maxSubdomains, minTtlSeconds } }: PstAction
+  { caller, input: { tier, maxSubdomains, minTtlSeconds } }: PstAction,
 ): Promise<ContractResult> => {
   const owner = state.owner;
 
   // Only the owner of the contract can perform this method
   if (caller !== owner) {
-    throw new ContractError("Caller cannot change tiers");
+    throw new ContractError('Caller cannot change tiers');
   }
 
   if (
@@ -18,7 +19,7 @@ export const setTier = async (
     !Number.isInteger(tier) ||
     !Number.isInteger(minTtlSeconds)
   ) {
-    throw new ContractError("Invalid tier configuration");
+    throw new ContractError('Invalid tier configuration');
   }
 
   state.tiers[tier] = { maxSubdomains, minTtlSeconds };

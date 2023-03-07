@@ -56,12 +56,15 @@ import { deployedContracts } from '../deployed-contracts';
   );
   const pst = warp.pst(arnsRegistryContractTxId);
   pst.connect(wallet);
-  await pst.transfer({
-    target,
-    qty,
-  }, {
-    disableBundling: true
-  });
+  await pst.transfer(
+    {
+      target,
+      qty,
+    },
+    {
+      disableBundling: true,
+    },
+  );
 
   console.log('Finished transferring tokens');
 })();

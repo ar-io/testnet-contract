@@ -12,7 +12,7 @@ import { deployedContracts } from '../deployed-contracts';
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // This is the name that will be purchased in the Arweave Name System Registry
-  const nameToBuy = "feelsgood";
+  const nameToBuy = 'feelsgood';
 
   // This is the ANT Smartweave Contract TX ID that will be added to the registry. It must follow the ArNS ANT Specification
   const contractTxId = 'THX7vy1LIjN6Zna1Rs1ZzQqm_xH2V0UGUA2Lckyl8gA';
@@ -22,7 +22,7 @@ import { deployedContracts } from '../deployed-contracts';
 
   // the Tier of the name purchased.  Tier 1 = 100 subdoins, Tier 2 = 1000 subdomains, Tier 3 = 10000 subdomains
   const tier = 1;
-  
+
   // This is the production ArNS Registry Smartweave Contract TX ID
   const arnsRegistryContractTxId = deployedContracts.contractTxId;
 
@@ -65,14 +65,17 @@ import { deployedContracts } from '../deployed-contracts';
     nameToBuy,
     contractTxId,
   );
-  const recordTxId = await pst.writeInteraction({
-    function: 'buyRecord',
-    name: nameToBuy,
-    tier,
-    contractTxId,
-    years,
-  }, {
-    disableBundling: true
-  });
+  const recordTxId = await pst.writeInteraction(
+    {
+      function: 'buyRecord',
+      name: nameToBuy,
+      tier,
+      contractTxId,
+      years,
+    },
+    {
+      disableBundling: true,
+    },
+  );
   console.log('Finished purchasing the record: %s', recordTxId);
 })();

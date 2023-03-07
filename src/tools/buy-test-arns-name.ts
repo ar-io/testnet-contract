@@ -66,14 +66,17 @@ import { deployedTestContracts } from '../deployed-contracts';
     nameToBuy,
     contractTxId,
   );
-  const recordTxId = await pst.writeInteraction({
-    function: 'buyRecord',
-    name: nameToBuy,
-    tier,
-    contractTxId,
-    years,
-  }, {
-    disableBundling: true
-  });
+  const recordTxId = await pst.writeInteraction(
+    {
+      function: 'buyRecord',
+      name: nameToBuy,
+      tier,
+      contractTxId,
+      years,
+    },
+    {
+      disableBundling: true,
+    },
+  );
   console.log('Finished purchasing the record. ID: %s', recordTxId);
 })();

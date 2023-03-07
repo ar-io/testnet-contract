@@ -1,11 +1,13 @@
-import { PstAction, IOState, ContractResult } from "../../types/types";
-import { MAX_NAME_LENGTH } from "@/constants";
+import { MAX_NAME_LENGTH } from '@/constants';
+
+import { ContractResult, IOState, PstAction } from '../../types/types';
+
 declare const ContractError;
 
 // Modifies the fees for purchasing ArNS names
 export const setFees = async (
   state: IOState,
-  { caller, input: { fees } }: PstAction
+  { caller, input: { fees } }: PstAction,
 ): Promise<ContractResult> => {
   const owner = state.owner;
 

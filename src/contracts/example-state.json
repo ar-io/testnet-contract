@@ -43,23 +43,23 @@
     "31": 5,
     "32": 5
   },
-  "foundation":{
+  "foundation": {
     "actionPeriod": 720,
-    "actions":[],
-    "addresses":[
-    "QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ",
-    "31LPFYoow2G7j-eSSsrIh8OlNaARZ84-80J-8ba68d8",
-    "NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g"
+    "actions": [],
+    "addresses": [
+      "QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ",
+      "31LPFYoow2G7j-eSSsrIh8OlNaARZ84-80J-8ba68d8",
+      "NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g"
     ],
-    "balance":0,
-    "minSignatures":2
+    "balance": 0,
+    "minSignatures": 2
   },
   "gateways": {
     "QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ": {
       "operatorStake": 5000,
       "vaults": [
         {
-          "balance": 5000, 
+          "balance": 5000,
           "end": 0,
           "start": 1000000
         }
@@ -679,5 +679,5 @@
     }
   },
   "vaults": {},
-  "version":"0.0.18"
+  "version": "0.0.18"
 }
