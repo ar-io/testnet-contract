@@ -1,23 +1,12 @@
-export interface IOState {
-  ticker: string; // A short token symbol, shown in block explorers and marketplaces
+import { PstState } from "warp-contracts";
+
+export interface IOState extends PstState {
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
-  owner: string; // The owner of this contract who can execute specific methods
-  rewards: number; // the balance of rewards used by the ar.io protocol to incentivize network participants
   foundation: Foundation;
-  settings: ContractSettings;
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
   records: {
     // A list of all names and their corresponding attributes
     [name: string]: ArNSName;
-  };
-  balances: {
-    // A list of all outstanding, positive, token balances
-    [address: string]: number;
-  };
-  vaults: {
-    // a list of all vaults that have locked balances
-    [address: string]: [TokenVault];
-    // a wallet can have multiple vaults
   };
   fees: {
     // A list of all fees for purchasing ArNS names
@@ -28,12 +17,7 @@ export interface IOState {
     // Different service tiers provide different premium capabilities for a higher cost
     [tier: number]: ServiceTier;
   };
-  gateways: {
-    // a list of all registered gateways
-    [address: string]: Gateway; // every gateway needs a wallet to act as the identity
-  };
   version: string; // the semversion of this smartweave contract in MAJOR.MINOR.PATCH format eg. 0.5.1
-  votes: VoteInterface[]; // on-chain governance proposals and votes
 }
 
 export interface ContractSettings {
@@ -222,23 +206,7 @@ export type PstFunction =
   | "removeANTSourceCodeTx"
   | "balance"
   | "record"
-  | "initiateFoundationAction"
-  | "approveFoundationAction"
-  | "lock"
-  | "unlock"
-  | "increaseVaultLength"
   | "fixState"
-  | "getRegisteredGateway"
-  | "getGatewayAddressRegistry"
-  | "delegateStake"
-  | "increaseOperatorStake"
-  | "decreaseOperatorStake"
-  | "joinNetwork"
-  | "leaveNetwork"
-  | "updateGatewaySettings"
-  | "undelegateStake"
-  | "proposeGatewaySlash"
-  | "setSettings"
   | "setName";
 
 export type ContractResult =

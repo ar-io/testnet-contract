@@ -25,25 +25,9 @@ export function isipV4Address(ipV4Address: string) {
 
 export function getTotalSupply(state: any) {
   let totalSupply = 0;
-  totalSupply += state.rewards;
-  totalSupply += state.foundation.balance;
-  for (const key of Object.keys(state.gateways)) {
-    // iterate through each gateway and add all operator and delegated stakes
-    totalSupply += state.gateways[key].operatorStake;
-    totalSupply += state.gateways[key].delegatedStake;
-  }
-
-  for (const key of Object.keys(state.vaults)) {
-    // iterate through each vault and add all community stakes
-    for (let i = 0; i < state.vaults[key].length; i++) {
-      totalSupply += state.vaults[key][i].balance;
-    }
-  }
-
   for (const key of Object.keys(state.balances)) {
     totalSupply += state.balances[key];
   }
-
   return totalSupply;
 }
 
@@ -71,6 +55,8 @@ export async function getCurrentBlockHeight() {
     const response = await retryFetch(`https://arweave.net/height`);
     height = await response.data;
     return height;
-  } catch (err) {}
+  } catch (err) {
+    console.error(err)
+  }
   return height;
 }

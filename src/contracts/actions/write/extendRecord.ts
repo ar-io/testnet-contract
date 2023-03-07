@@ -1,5 +1,4 @@
 import {
-  FOUNDATION_PERCENTAGE,
   MAX_YEARS,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
@@ -50,7 +49,7 @@ export const extendRecord = async (
   }
 
   // Determine price of extending this name, must take into consideration
-  let qty = fees[name.length.toString()] * records[name].tier * years;
+  const qty = fees[name.length.toString()] * records[name].tier * years;
 
   if (balances[caller] < qty) {
     throw new ContractError(
@@ -60,8 +59,6 @@ export const extendRecord = async (
 
   // reduce balance set the end lease period for this record based on number of years
   balances[caller] -= qty; // reduce callers balance
-  state.foundation.balance += Math.floor(qty * (FOUNDATION_PERCENTAGE / 100)); // increase foundation balance using the foundation percentage
-  state.rewards += Math.floor(qty * ((100 - FOUNDATION_PERCENTAGE) / 100)); // increase protocol rewards without the foundation percentage
   records[name].endTimestamp += SECONDS_IN_A_YEAR * years; // set the new extended timestamp
 
   return { state };

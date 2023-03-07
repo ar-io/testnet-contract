@@ -16,7 +16,6 @@ export const upgradeTier = async (
   const records = state.records;
   const fees = state.fees;
   const tiers = state.tiers;
-  const foundation = state.foundation;
   const currentBlockTime = +SmartWeave.block.timestamp;
 
   // Check if the user has enough tokens to upgrade the tier

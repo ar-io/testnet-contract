@@ -10,7 +10,7 @@ export const mintTokens = async (
   const owner = state.owner;
 
   if (qty <= 0) {
-    throw new ContractError("Invalid token mint");
+    throw new ContractError('Invalid token mint');
   }
 
   if (!Number.isInteger(qty)) {
@@ -18,7 +18,7 @@ export const mintTokens = async (
   }
 
   if (caller !== owner) {
-    throw new ContractError("Caller cannot mint tokes");
+    throw new ContractError('Caller cannot mint tokes');
   }
 
   balances[caller] ? (balances[caller] += qty) : (balances[caller] = qty);

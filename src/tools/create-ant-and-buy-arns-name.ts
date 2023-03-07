@@ -1,54 +1,55 @@
-import Arweave from "arweave";
+import Arweave from 'arweave';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import * as fs from 'fs';
 import {
-  defaultCacheOptions,
   LoggerFactory,
   WarpFactory,
-} from "warp-contracts";
-import * as fs from "fs";
-import { JWKInterface } from "arweave/node/lib/wallet";
-import { deployedContracts } from "../deployed-contracts";
-import { keyfile } from "../constants";
+  defaultCacheOptions,
+} from 'warp-contracts';
+
+import { keyfile } from '../constants';
+import { deployedContracts } from '../deployed-contracts';
 
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  // A short token symbol, typically with ANT- in front
-  const ticker = "ANT-ARDRIVE";
-
-  // A friendly name for the name of this ANT
-  const name = "ArDrive.io";
-
-  // The Time To Live for this ANT to reside cached, the default and minimum is 900 seconds
-  const ttlSeconds = 3600;
-
-  // This is the name that will be purchased in the Arweave Name System Registry
-  const nameToBuy = "ardrive";
 
   // The lease time for purchasing the name
   const years = 1;
 
-  // the Tier of the name purchased.  Tier 1 = 100 subdoins, Tier 2 = 1000 subdomains, Tier 3 = 10000 subdomains
+  // the Tier of the name purchased.  Tier 1 = 100 subdomains, Tier 2 = 1000 subdomains, Tier 3 = 10000 subdomains
   const tier = 1;
 
-  // The arweave data transaction added to the ANT that is to be proxied using the registered name
-  const dataPointer = "nOXJjj_vk0Dc1yCgdWD8kti_1iHruGzLQLNNBHVpN0Y";
+  // A short token symbol, typically with ANT- in front
+  const ticker = 'ANT-PARKINGLOT';
 
-  // This is the ANT Smartweave Contract Source TX ID that will be used to create the new ANT
-  const antRecordContractTxId = "PEI1efYrsX08HUwvc6y-h6TSpsNlo2r6_fWL2_GdwhY";
+  // A friendly name for the name of this ANT
+  const name = 'Parking Lot';
+
+  // This is the name that will be purchased in the Arweave Name System Registry
+  const nameToBuy = 'parking-lot';
+
+  // The Time To Live for this ANT to reside cached, the default and minimum is 3600 seconds
+  const ttlSeconds = 3600;
+
+  // The arweave data transaction added to the ANT that is to be proxied using the registered name
+  const dataPointer = 'W5dFQhNFtrY7IGC9sPz87HGNut6OhIuLwx3NAch72DM';
+
+  // This is the ANT Smartweave Contract Source (v0.1.6) TX ID that will be used to create the new ANT
+  const antRecordContractTxId = 'PEI1efYrsX08HUwvc6y-h6TSpsNlo2r6_fWL2_GdwhY';
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   // This is the production ArNS Registry Smartweave Contract
-  const arnsRegistryContractTxId =
-    "bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U";
+  const arnsRegistryContractTxId = deployedContracts.contractTxId;
 
   // Initialize Arweave
   const arweave = Arweave.init({
-    host: "arweave.net",
+    host: 'arweave.net',
     port: 443,
-    protocol: "https",
+    protocol: 'https',
   });
 
   // Initialize `LoggerFactory`
-  LoggerFactory.INST.logLevel("error");
+  LoggerFactory.INST.logLevel('error');
 
   // ~~ Initialize SmartWeave ~~
   const warp = WarpFactory.forMainnet(
@@ -61,7 +62,7 @@ import { keyfile } from "../constants";
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(keyfile).toString()
+    await fs.readFileSync(keyfile).toString(),
   );
   const walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
@@ -75,12 +76,12 @@ import { keyfile } from "../constants";
   const currentStateJSON = JSON.parse(currentStateString);
   if (currentStateJSON.records[nameToBuy] !== undefined) {
     console.log(
-      "This name %s is already taken and is not available for purchase.  Exiting.",
-      nameToBuy
+      'This name %s is already taken and is not available for purchase.  Exiting.',
+      nameToBuy,
     );
     return;
   }
-  // Create the initial state
+  // Create the initial state for ANT v0.1.6
   const initialState = {
     ticker: ticker,
     name,
@@ -88,7 +89,7 @@ import { keyfile } from "../constants";
     controller: walletAddress,
     evolve: null,
     records: {
-      "@": {
+      '@': {
         transactionId: dataPointer,
         ttlSeconds: ttlSeconds,
       },
@@ -100,28 +101,30 @@ import { keyfile } from "../constants";
 
   // Deploy ANT Contract in order to link to the new record
   console.log(
-    "Creating ANT for %s using sourceTx",
+    'Creating ANT for %s using sourceTx',
     name,
-    antRecordContractTxId
+    antRecordContractTxId,
   );
-  const deployedContract = await warp.createContract.deployFromSourceTx({
+  const deployedContract = await warp.deployFromSourceTx({
     wallet,
     initState: JSON.stringify(initialState),
     srcTxId: antRecordContractTxId,
-  });
+  }, true); // disable bundling for L1 transactions only
 
-  // Buy the available record in ArNS Registry
+  // Buy the available record in ArNS Registry v0.1.5
   console.log(
-    "Buying the record, %s using the ANT %s",
+    'Buying the record, %s using the ANT %s',
     nameToBuy,
-    deployedContract.contractTxId
+    deployedContract.contractTxId,
   );
   await pst.writeInteraction({
-    function: "buyRecord",
+    function: 'buyRecord',
     name: nameToBuy,
     tier,
     contractTxId: deployedContract.contractTxId,
     years,
+  }, {
+    disableBundling: true
   });
-  console.log("Finished purchasing the record");
+  console.log('Finished purchasing the record');
 })();

@@ -14,7 +14,7 @@ export const record = async (
 
   // Check if the requested name already exists, if not reduce balance and add it
   if (!(name in records)) {
-    throw new ContractError("This name does not exist");
+    throw new ContractError('This name does not exist');
   }
 
   return {

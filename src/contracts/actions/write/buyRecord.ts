@@ -1,11 +1,11 @@
 import {
-  FOUNDATION_PERCENTAGE,
   MAX_NAME_LENGTH,
   MAX_YEARS,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
   TX_ID_LENGTH,
+  DEFAULT_TIERS
 } from "@/constants";
 import { PstAction, IOState, ContractResult } from "../../types/types";
 
@@ -19,8 +19,9 @@ export const buyRecord = async (
   const balances = state.balances;
   const records = state.records;
   const fees = state.fees;
-  const tiers = state.tiers;
-  const foundation = state.foundation;
+  const tiers = state.tiers ?? DEFAULT_TIERS;
+  // TODO: necessary for protocol p
+  // const foundation = state.foundation;
   const currentBlockTime = +SmartWeave.block.timestamp;
 
   // Check if the user has enough tokens to purchase the name
@@ -45,9 +46,9 @@ export const buyRecord = async (
     throw new ContractError('Invalid value for "tier". Must be an integer');
   }
 
-  // Check if this is a valid tier
+  // Check if this is a valid tier, if tier does not exist
   if (!tiers[tier]) {
-    throw new ContractError(`Tier is not defined!`);
+    throw new ContractError(`Tier is not defined! Allowed tiers: ${Object.keys(tiers).join(', ')}`);
   }
 
   // Set the maximum amount of subdomains and minimum TTLSeconds for this name based on the selected tier
@@ -61,25 +62,25 @@ export const buyRecord = async (
   name = name.toLowerCase();
 
   // check if it is a valid subdomain name for the smartweave contract
-  const namePattern = new RegExp("^[a-zA-Z0-9-]+$");
+  const namePattern = new RegExp('^[a-zA-Z0-9-]+$');
   const nameRes = namePattern.test(name);
   if (
-    name.charAt(0) === "-" || // the name has a leading dash
-    typeof name !== "string" ||
+    name.charAt(0) === '-' || // the name has a leading dash
+    typeof name !== 'string' ||
     name.length > MAX_NAME_LENGTH || // the name is too long
     !nameRes || // the name does not match our regular expression
-    name === "www" || // reserved
-    name === "" // reserved
+    name === 'www' || // reserved
+    name === '' // reserved
   ) {
-    throw new ContractError("Invalid ArNS Record Name");
+    throw new ContractError('Invalid ArNS Record Name');
   }
 
   // Determine price of name
-  let qty = fees[name.length.toString()] * tier * years;
+  const qty = fees[name.length.toString()] * tier * years;
 
   if (balances[caller] < qty) {
     throw new ContractError(
-      `Caller balance not high enough to purchase this name for ${qty} token(s)!`
+      `Caller balance not high enough to purchase this name for ${qty} token(s)!`,
     );
   }
 
@@ -98,11 +99,13 @@ export const buyRecord = async (
   }
 
   // Check if the requested name already exists, if not reduce balance and add it
+  // TODO: foundation rewards logic
   if (!records[name]) {
     // No name created, so make a new one
     balances[caller] -= qty; // reduce callers balance
-    foundation.balance += Math.floor(qty * (FOUNDATION_PERCENTAGE / 100)); // increase foundation balance using the foundation percentage
-    state.rewards += Math.floor(qty * ((100 - FOUNDATION_PERCENTAGE) / 100)); // increase protocol rewards without the foundation percentage
+    // TODO: logic for protocol balance
+    // foundation.balance += Math.floor(qty * (FOUNDATION_PERCENTAGE / 100)); // increase foundation balance using the foundation percentage
+    // state.rewards += Math.floor(qty * ((100 - FOUNDATION_PERCENTAGE) / 100)); // increase protocol rewards without the foundation percentage
     records[name] = {
       tier,
       contractTxId,
@@ -110,14 +113,13 @@ export const buyRecord = async (
       maxSubdomains,
       minTtlSeconds,
     };
+  // assumes lease expiration
   } else if (
     records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD <
     currentBlockTime
   ) {
     // This name's lease has expired and can be repurchased
     balances[caller] -= qty; // reduce callers balance
-    state.foundation.balance += Math.floor(qty * (FOUNDATION_PERCENTAGE / 100)); // increase foundation balance using the foundation percentage
-    state.rewards += Math.floor(qty * ((100 - FOUNDATION_PERCENTAGE) / 100)); // increase protocol rewards without the foundation percentage
     records[name] = {
       tier,
       contractTxId,

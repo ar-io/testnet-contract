@@ -3,7 +3,13 @@ node_modules
 /dist
 /lib
 .secrets
+logs
 
+# keys
+*.json
+
+# warp
+cache/*
 
 # local env files
 .env.local

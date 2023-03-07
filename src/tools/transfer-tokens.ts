@@ -1,14 +1,19 @@
-import Arweave from "arweave";
-import { LoggerFactory, WarpNodeFactory } from "warp-contracts";
-import * as fs from "fs";
-import { JWKInterface } from "arweave/node/lib/wallet";
-import { deployedContracts } from "../deployed-contracts";
-import { keyfile } from "../constants";
+import Arweave from 'arweave';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import * as fs from 'fs';
+import {
+  LoggerFactory,
+  WarpFactory,
+  defaultCacheOptions,
+} from 'warp-contracts';
+
+import { keyfile } from '../constants';
+import { deployedContracts } from '../deployed-contracts';
 
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // The recipient target of the token transfer
-  const target = "Hh6uQILbcMIFyHaEuqfO47f8VQcx_7eFzlmnRyCrGXI";
+  const target = 'vh-NTHVvlKZqRxc8LyyTNok65yQ55a_PJ1zWLb9G2JI';
 
   // The amount of tokens to be transferred
   const qty = 500_000_000;
@@ -19,36 +24,44 @@ import { keyfile } from "../constants";
 
   // Initialize Arweave
   const arweave = Arweave.init({
-    host: "arweave.net",
+    host: 'arweave.net',
     port: 443,
-    protocol: "https",
+    protocol: 'https',
   });
 
   // Initialize `LoggerFactory`
-  LoggerFactory.INST.logLevel("error");
+  LoggerFactory.INST.logLevel('error');
 
-  // Initialize SmartWeave
-  const smartweave = WarpNodeFactory.memCached(arweave);
+  // ~~ Initialize SmartWeave ~~
+  const warp = WarpFactory.forMainnet(
+    {
+      ...defaultCacheOptions,
+      inMemory: true,
+    },
+    true,
+  );
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(keyfile).toString()
+    await fs.readFileSync(keyfile).toString(),
   );
   const walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
   // Read the ANT Registry Contract
   console.log(
-    "Transfering %s tokens from %s to %s",
+    'Transforming %s tokens from %s to %s',
     qty,
     walletAddress,
-    target
+    target,
   );
-  const pst = smartweave.pst(arnsRegistryContractTxId);
+  const pst = warp.pst(arnsRegistryContractTxId);
   pst.connect(wallet);
   await pst.transfer({
     target,
     qty,
+  }, {
+    disableBundling: true
   });
 
-  console.log("Finished transferring tokens");
+  console.log('Finished transferring tokens');
 })();

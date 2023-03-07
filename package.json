@@ -6,16 +6,23 @@
     "build": "yarn run clean && yarn run build-ts && npm run cp",
     "build-ts": "node build.js",
     "clean": "rimraf ./dist",
+    "format:check": "prettier . --check",
+    "format:fix": "prettier . --write",
+    "lint:check": "eslint .",
+    "lint:fix": "eslint . --fix",
     "cp": "copyfiles -u 1 ./src/**/*.json dist",
     "test": "jest tests"
   },
   "dependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.0.0",
     "arlocal": "^1.1.53",
     "arweave": "1.11.4",
     "axios": "^0.26.0",
     "axios-retry": "^3.2.4",
     "babel-jest": "^27.5.0",
     "core-js": "^3.6.5",
+    "eslint-plugin-jest-formatting": "^3.1.0",
+    "eslint-plugin-vue": "^9.9.0",
     "sass-loader": "^10",
     "typescript": "4.3.5",
     "warp-contracts": "^1.2.35"

@@ -14,18 +14,15 @@ import {
 } from "warp-contracts";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import { IOState } from "../src/contracts/types/types";
-import { getTotalSupply } from "../src/contracts/utilities";
 
-let warp: Warp;
-warp = WarpFactory.forLocal(1820);
+const WALLET_STARTING_TOKENS = 1_000_000_000_0;
+const TRANSFER_AMOUNT = 5_000_000;
+const INTERACTION_COST = 20000;
+const EXPECTED_BALANCE_AFTER_INVALID_TX = 9515750000;
+const DEFAULT_ANT_CONTRACT_ID = "MSFTfeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU"
+const SECONDS_IN_A_YEAR = 31_536_000;
 
-let WALLET_STARTING_TOKENS = 1_000_000_000_0;
-let GATEWAY_STARTING_TOKENS = 1_000_000;
-let DELEGATE_STARTING_TOKENS = 1_000;
-let DELEGATE2_STARTING_TOKENS = 50_000;
-let EXPECTED_BALANCE_AFTER_INVALID_TX = 9515750000;
-
-describe("Testing the ArNS Registry Contract", () => {
+describe('Testing the ArNS Registry Contract', () => {
   let contractSrc: string;
   let wallet: JWKInterface;
   let walletAddress: string;
@@ -33,29 +30,23 @@ describe("Testing the ArNS Registry Contract", () => {
   let walletAddress2: string;
   let wallet3: JWKInterface;
   let walletAddress3: string;
-  let wallet4: JWKInterface;
-  let walletAddress4: string;
-  let wallet5: JWKInterface;
-  let walletAddress5: string;
-  let gatewayWallet: JWKInterface;
-  let gatewayWalletAddress: string;
-  let gatewayWallet2: JWKInterface;
-  let gatewayWalletAddress2: string;
-  let delegateWallet: JWKInterface;
-  let delegateWalletAddress: string;
-  let delegateWallet2: JWKInterface;
-  let delegateWalletAddress2: string;
-  let slashedWallet: JWKInterface;
-  let slashedWalletAddress: string;
   let initialState: IOState;
-  let Warp: Warp;
   let arweave: Arweave;
   let pst: PstContract;
-  const arlocal = new ArLocal(1820, false);
+  let arlocal: ArLocal;
+  let warp: Warp;
+
+
   jest.setTimeout(20000);
+
   beforeAll(async () => {
     // ~~ Set up ArLocal and instantiate Arweave ~~
+    arlocal = new ArLocal(1820, false);
+
     await arlocal.start();
+
+    // ~~ Initialize 'LoggerFactory' ~~
+    LoggerFactory.INST.logLevel("fatal");
 
     arweave = Arweave.init({
       host: "localhost",
@@ -63,13 +54,7 @@ describe("Testing the ArNS Registry Contract", () => {
       protocol: "http",
     });
 
-    // ~~ Initialize 'LoggerFactory' ~~
-    LoggerFactory.INST.logLevel("fatal");
-
-    // ~~ Set up Warp ~~
-    //Warp = warp.WarpNodeFactory.forTesting(arweave);
-    //warp = WarpFactory.forLocal(arweave)
-    //warp = WarpFactory.forLocal()
+    warp =  WarpFactory.forLocal(1820);
 
     // ~~ Generate wallet and add funds ~~
     wallet = await arweave.wallets.generate();
@@ -84,50 +69,20 @@ describe("Testing the ArNS Registry Contract", () => {
     walletAddress3 = await arweave.wallets.jwkToAddress(wallet3);
     await addFunds(arweave, wallet3);
 
-    wallet4 = await arweave.wallets.generate();
-    walletAddress4 = await arweave.wallets.jwkToAddress(wallet4);
-    await addFunds(arweave, wallet4);
-
-    wallet5 = await arweave.wallets.generate();
-    walletAddress5 = await arweave.wallets.jwkToAddress(wallet5);
-    await addFunds(arweave, wallet5);
-
-    gatewayWallet = await arweave.wallets.generate();
-    gatewayWalletAddress = await arweave.wallets.jwkToAddress(gatewayWallet);
-    await addFunds(arweave, gatewayWallet);
-
-    gatewayWallet2 = await arweave.wallets.generate();
-    gatewayWalletAddress2 = await arweave.wallets.jwkToAddress(gatewayWallet2);
-    await addFunds(arweave, gatewayWallet2);
-
-    delegateWallet = await arweave.wallets.generate();
-    delegateWalletAddress = await arweave.wallets.jwkToAddress(delegateWallet);
-    await addFunds(arweave, delegateWallet);
-
-    delegateWallet2 = await arweave.wallets.generate();
-    delegateWalletAddress2 = await arweave.wallets.jwkToAddress(
-      delegateWallet2
-    );
-    await addFunds(arweave, delegateWallet2);
-
-    slashedWallet = await arweave.wallets.generate();
-    slashedWalletAddress = await arweave.wallets.jwkToAddress(slashedWallet);
-    await addFunds(arweave, slashedWallet);
-
     // ~~ Read contract source and initial state files ~~
     contractSrc = fs.readFileSync(
-      path.join(__dirname, "../dist/contract.js"),
-      "utf8"
+      path.join(__dirname, '../dist/contract.js'),
+      'utf8',
     );
     const stateFromFile: IOState = JSON.parse(
       fs.readFileSync(
-        path.join(__dirname, "../dist/contracts/initial-state.json"),
-        "utf8"
-      )
+        path.join(__dirname, '../dist/contracts/initial-state.json'),
+        'utf8',
+      ),
     );
 
     // expired name date
-    let expiredDate = new Date();
+    const expiredDate = new Date();
     expiredDate.setFullYear(expiredDate.getFullYear() - 1);
 
     // ~~ Update initial state ~~
@@ -162,154 +117,22 @@ describe("Testing the ArNS Registry Contract", () => {
           endTimestamp: Math.round(expiredDate.getTime() / 1000),
         },
       },
-      foundation: {
-        balance: 0,
-        actionPeriod: 17,
-        minSignatures: 2,
-        addresses: [walletAddress, walletAddress2, walletAddress3],
-        actions: [],
-      },
       balances: {
         [walletAddress]: 0, // create tokens during mint
         [walletAddress2]: 1_000_000_000,
         [walletAddress3]: 1_000_000_000,
-        [gatewayWalletAddress]: GATEWAY_STARTING_TOKENS,
-        [gatewayWalletAddress2]: GATEWAY_STARTING_TOKENS * 2,
-        [delegateWalletAddress]: DELEGATE_STARTING_TOKENS,
-        [delegateWalletAddress2]: DELEGATE2_STARTING_TOKENS,
       },
-      vaults: {
-        [walletAddress]: [
-          {
-            balance: 500_000, // Positive integer
-            end: 1_000, // At what block the lock ends.
-            start: 0, // At what block the lock starts.
-          },
-        ],
-        [walletAddress3]: [
-          {
-            balance: 1_000_000, // Positive integer
-            end: 1_000, // At what block the lock ends.
-            start: 0, // At what block the lock starts.
-          },
-        ],
-        [delegateWalletAddress2]: [
-          {
-            balance: 300_000, // Positive integer
-            end: 5_000, // At what block the lock ends.
-            start: 0, // At what block the lock starts.
-          },
-        ],
-      },
-      gateways: {
-        [gatewayWalletAddress2]: {
-          operatorStake: 80_000,
-          delegatedStake: 300_000,
-          vaults: [
-            {
-              balance: 40_000, // Positive integer
-              end: 0, // At what block the lock ends.
-              start: 1, // At what block the lock starts.
-            },
-          ],
-          delegates: {
-            [delegateWalletAddress2]: [
-              {
-                balance: 300_000, // Positive integer
-                end: 5_000, // At what block the lock ends.
-                start: 0, // At what block the lock starts.
-              },
-            ],
-          },
-          settings: {
-            label: "Arweave Community Gateway", // The friendly name used to label this gateway
-            sslFingerprint: "BLAH BLAH BLAH SSL FINGERPRINT", // the SHA-256 Fingerprint used by SSL certificate used by this gateway eg. 5C 5D 05 16 C3 3C A3 34 51 78 1E 67 49 14 D4 66 31 A9 19 3C 63 8E F9 9E 54 84 1A F0 4C C2 1A 36
-            ipV4Address: "10.230.70.22", // the IP address this gateway can be reached at eg. 10.124.72.100
-            url: "arweave.net", // the fully qualified domain name this gateway can be reached at. eg arweave.net
-            port: 443, // The port used by this gateway eg. 443
-            openDelegation: false,
-            delegateAllowList: [delegateWalletAddress, walletAddress],
-            protocol: "https", // The protocol used by this gateway, either http or https
-          },
-        },
-        [slashedWalletAddress]: {
-          operatorStake: 6_000, // this includes the additional vault we add below
-          delegatedStake: 866, // this includes the additional delegate we add below
-          vaults: [
-            {
-              balance: 5_000, // Positive integer
-              end: 0, // At what block the lock ends.
-              start: 1, // At what block the lock starts.
-            },
-          ],
-          delegates: {
-            [delegateWalletAddress]: [
-              {
-                balance: 100, // Positive integer
-                end: 0, // At what block the lock ends.
-                start: 1, // At what block the lock starts.
-              },
-            ],
-          },
-          settings: {
-            label: "Slashme", // The friendly name used to label this gateway
-            sslFingerprint:
-              "B7 BC 55 10 CC 1C 63 7B 5E 5F B7 85 81 6A 77 3D BB 39 4B 68 33 7B 1B 11 7C A5 AB 43 CC F7 78 CF", // the SHA-256 Fingerprint used by SSL certificate used by this gateway eg. 5C 5D 05 16 C3 3C A3 34 51 78 1E 67 49 14 D4 66 31 A9 19 3C 63 8E F9 9E 54 84 1A F0 4C C2 1A 36
-            ipV4Address: "75.10.113.66", // the IP address this gateway can be reached at eg. 10.124.72.100
-            url: "slash-this-gateway.io", // the fully qualified domain name this gateway can be reached at. eg arweave.net
-            port: 443, // The port used by this gateway eg. 443
-            openDelegation: true,
-            delegateAllowList: [],
-            protocol: "https", // The protocol used by this gateway, either http or https
-          },
-        },
-      },
-    };
-
-    initialState.gateways[slashedWalletAddress].delegates[
-      delegateWalletAddress
-    ].push({
-      balance: 100, // Positive integer
-      end: 0, // At what block the lock ends.
-      start: 1, // At what block the lock starts.
-    });
-
-    initialState.gateways[slashedWalletAddress].delegates[
-      delegateWalletAddress2
-    ] = [
-      {
-        balance: 666, // Positive integer
-        end: 0, // At what block the lock ends.
-        start: 1, // At what block the lock starts.
-      },
-    ];
-
-    initialState.gateways[slashedWalletAddress].vaults.push({
-      balance: 1_000, // Positive integer
-      end: 0, // At what block the lock ends.
-      start: 1, // At what block the lock starts.
-    });
-
-    initialState.settings = {
-      lockMinLength: 5,
-      lockMaxLength: 10000,
-      minGatewayStakeAmount: 5000,
-      minDelegatedStakeAmount: 100,
-      gatewayJoinLength: 2,
-      gatewayLeaveLength: 2,
-      delegatedStakeWithdrawLength: 2,
-      operatorStakeWithdrawLength: 2,
     };
 
     // ~~ Deploy contract ~~
-    const deploy = await warp.createContract.deploy({
+    const deployedContract = await warp.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc,
-    });
+    }, true);
 
     // ~~ Connect to the pst contract ~~
-    pst = warp.pst(deploy.contractTxId);
+    pst = warp.pst(deployedContract.contractTxId);
     pst.connect(wallet);
 
     // ~~ Mine block ~~
@@ -317,282 +140,128 @@ describe("Testing the ArNS Registry Contract", () => {
   });
 
   afterAll(async () => {
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState, null, 5);
-    const currentStateJSON = JSON.parse(currentStateString);
-    console.log(JSON.stringify(currentStateJSON, null, 10));
-    const totalSupply = getTotalSupply(currentStateJSON);
-    console.log(`The total supply is ${totalSupply}`);
     // ~~ Stop ArLocal ~~
     await arlocal.stop();
   });
 
-  // PST TESTS
-  it("should read pst state and balance data", async () => {
+  it('should read pst state and balance data', async () => {
     expect(await pst.currentState()).toEqual(initialState);
     expect((await pst.currentState()).owner).toEqual(walletAddress);
   });
 
-  it("should properly mint tokens", async () => {
+  it('should properly mint tokens', async () => {
     await pst.writeInteraction({
       function: "mint",
       qty: WALLET_STARTING_TOKENS,
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      0 + WALLET_STARTING_TOKENS
+      WALLET_STARTING_TOKENS
     );
   });
 
   it("should properly transfer and perform dry write with overwritten caller", async () => {
     const newWallet = await arweave.wallets.generate();
     const overwrittenCaller = await arweave.wallets.jwkToAddress(newWallet);
+
     await pst.transfer({
       target: overwrittenCaller.toString(),
-      qty: 500000,
+      qty: TRANSFER_AMOUNT,
     });
 
     await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.balances[walletAddress]).toEqual(
-      WALLET_STARTING_TOKENS - 500000
+    const currentState = await pst.currentState() as IOState;
+    expect(currentState.balances[walletAddress]).toEqual(
+      WALLET_STARTING_TOKENS - TRANSFER_AMOUNT
+    )
+    expect((await pst.currentState()).balances[overwrittenCaller]).toEqual(
+      TRANSFER_AMOUNT,
     );
-    expect(currentStateJSON.balances[overwrittenCaller]).toEqual(0 + 500000);
+    expect(currentState.balances[overwrittenCaller]).toEqual(TRANSFER_AMOUNT);
     const result: InteractionResult<PstState, unknown> = await pst.dryWrite(
       {
-        function: "transfer",
-        target: "NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g",
-        qty: 25000,
+        function: 'transfer',
+        target: 'NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g',
+        qty: INTERACTION_COST,
       },
-      overwrittenCaller
+      overwrittenCaller,
     );
 
     expect(result.state.balances[overwrittenCaller]).toEqual(
-      0 + 500000 - 25000
+      TRANSFER_AMOUNT - INTERACTION_COST,
     );
     expect(
-      result.state.balances["NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g"]
-    ).toEqual(0 + 25000);
+      result.state.balances['NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g'],
+    ).toEqual(INTERACTION_COST);
   });
 
-  it("should not transfer tokens with incorrect ownership", async () => {
+  it('should not transfer tokens with incorrect ownership', async () => {
     const newWallet = await arweave.wallets.generate();
     const overwrittenCaller = await arweave.wallets.jwkToAddress(newWallet);
+    const PREVIOUS_BALANCE = (await pst.currentBalance(walletAddress)).balance;
     pst.connect(newWallet);
     await pst.transfer({
       target: walletAddress.toString(),
-      qty: 1000000000,
+      qty: TRANSFER_AMOUNT,
     });
     await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.balances[walletAddress]).toEqual(
-      WALLET_STARTING_TOKENS - 500000
+    const currentState = await pst.currentState() as IOState;
+    expect(currentState.balances[walletAddress]).toEqual(
+      PREVIOUS_BALANCE
     );
-    expect(currentStateJSON.balances[overwrittenCaller]).toEqual(undefined);
+    expect(currentState.balances[overwrittenCaller]).toEqual(undefined);
   });
 
   // ARNS TESTS
-  it("should properly buy records", async () => {
+  it.each(
+    ['microsoft', 'vile', 'permaweb'])("should properly buy name: %s", async (name) => {
     pst.connect(wallet2);
-    const tier2Name = "microsoft"; // should cost 1000000 tokens
-    await pst.writeInteraction({
-      function: "buyRecord",
-      name: tier2Name,
-      contractTxId: "MSFTfeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU",
-      years: 6,
-      tier: 2,
-    });
-    pst.connect(wallet);
-    const nameToBuy = "permaWEB"; // this should be set to lower case, this name already exists but is expired
-    const contractTxId = "lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU";
-    const years = 3;
-    const tier = 1;
-    await pst.writeInteraction({
-      function: "buyRecord",
-      name: nameToBuy, // should cost 5000000 tokens
-      contractTxId,
-      years,
-      tier,
-    });
-    const anotherNameToBuy = "vile";
-    let interactionTxId = await pst.writeInteraction({
-      function: "buyRecord",
-      name: anotherNameToBuy, // should cost 156250000 tokens
-      contractTxId: "atomic", // should perform an atomic name registration, where the name is registered using the underlying interactions TX id
-      years,
-      tier,
-    });
-    await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.records[tier2Name].maxSubdomains).toEqual(1000);
-    expect(
-      currentStateJSON.records[nameToBuy.toLowerCase()].contractTxId
-    ).toEqual("lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU");
-    expect(currentStateJSON.records[anotherNameToBuy].contractTxId).toEqual(
-      interactionTxId?.originalTxId
-    );
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      EXPECTED_BALANCE_AFTER_INVALID_TX
-    );
-  });
-
-  it("should properly split record purchases between protocol rewards and foundation balance", async () => {
-    const name = "split";
-    pst.connect(wallet3);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    let rewards = +currentStateJSON.rewards;
-    let foundationBalance = currentStateJSON.foundation.balance;
-    let fee = +currentStateJSON.fees[name.length.toString()];
-    await pst.writeInteraction({
-      function: "buyRecord",
+    const TIER_2_NAME = {
       name: name,
-      contractTxId: "MSFTfeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU",
-      years: 1,
-      tier: 1,
+      contractTxId: DEFAULT_ANT_CONTRACT_ID,
+      years: 2,
+      tier: 2
+    }
+    const COST_OF_NAME = initialState.fees[TIER_2_NAME.name.length] * TIER_2_NAME.tier * TIER_2_NAME.years;
+    const PREVIOUS_BALANCE = (await pst.currentBalance(walletAddress2)).balance;
+    await pst.writeInteraction({
+      function: "buyRecord",
+      ...TIER_2_NAME
     });
+
     await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.rewards).toEqual(rewards + fee * 0.9);
-    expect(currentStateJSON.foundation.balance).toEqual(
-      foundationBalance + fee * 0.1
+    const currentState = await pst.currentState() as IOState;
+    expect(currentState.records[TIER_2_NAME.name].maxSubdomains).toEqual(1000);
+    expect(
+      currentState.records[TIER_2_NAME.name].contractTxId
+    ).toEqual(TIER_2_NAME.contractTxId);
+    expect((await pst.currentBalance(walletAddress2)).balance).toEqual(
+      PREVIOUS_BALANCE - COST_OF_NAME
     );
   });
 
-  it("should not buy malformed, too long, existing, or too expensive records", async () => {
-    pst.connect(wallet2);
-    const emptyNameToBuy = "";
-    const contractTxId = "lheofeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU";
-    let years = 1;
-    let tier = 1;
-    await pst.writeInteraction({
-      function: "buyRecord",
-      name: emptyNameToBuy, // should cost 156250000 tokens
-      contractTxId,
-      years,
-      tier,
-    });
-    const malformedNameToBuy = "*&*##$%#";
-    await pst.writeInteraction({
-      function: "buyRecord",
-      name: malformedNameToBuy, // should cost 156250000 tokens
-      contractTxId,
-      years,
-      tier,
-    });
-    await mineBlock(arweave);
-    const leadingDashNameToBuy = "-lead";
-    await pst.writeInteraction({
-      function: "buyRecord",
-      name: leadingDashNameToBuy, // should not be purchased since it has a leading - which is invalid
-      contractTxId,
-      years,
-      tier,
-    });
-    await mineBlock(arweave);
-    const spaceNameToBuy = "name with spaces";
-    await pst.writeInteraction({
-      function: "buyRecord",
-      name: spaceNameToBuy, // should not be purchased since it has spaces
-      contractTxId,
-      years,
-      tier,
-    });
-    await mineBlock(arweave);
-    const objectToBuy = { thisName: "testname" };
-    await pst.writeInteraction({
-      function: "buyRecord",
-      name: objectToBuy, // should not be purchased since this is an object and not a string.
-      contractTxId,
-      years,
-      tier,
-    });
-    await mineBlock(arweave);
-    const veryLongNameToBuy =
-      "this-is-a-looong-name-a-verrrryyyyy-loooooong-name-that-is-too-long";
-    await pst.writeInteraction({
-      function: "buyRecord",
-      name: veryLongNameToBuy, // should cost 156250000 tokens
-      contractTxId,
-      years,
-      tier,
-    });
-    await mineBlock(arweave);
-    const existingNameToBuy = "permaweb"; // this name should already exist and in its lease
-    await pst.writeInteraction({
-      function: "buyRecord",
-      name: existingNameToBuy, // should cost 156250000 tokens
-      contractTxId,
-      years,
-      tier,
-    });
-    await mineBlock(arweave);
-    const gracePeriodNameToBuy = "grace"; // this name should already exist and in its grace period
-    await pst.writeInteraction({
-      function: "buyRecord",
-      name: gracePeriodNameToBuy, // should cost 156250000 tokens
-      contractTxId,
-      years,
-      tier,
-    });
-    await mineBlock(arweave);
-    const expensiveNameToBuy = "v";
-    await pst.writeInteraction({
-      function: "buyRecord",
-      name: expensiveNameToBuy, // should cost 5000000 tokens
-      contractTxId,
-      years,
-      tier,
-    });
-    await mineBlock(arweave);
-    const disallowedNameToBuy = "test.subdomain.name";
-    await pst.writeInteraction({
-      function: "buyRecord",
-      name: disallowedNameToBuy, // should cost 125000 tokens
-      contractTxId,
-      years,
-      tier,
-    });
-    await mineBlock(arweave);
-    const disallowedNameToBuy2 = "test_subdomain";
-    await pst.writeInteraction({
-      function: "buyRecord",
-      name: disallowedNameToBuy2,
-      contractTxId,
-      years,
-      tier,
-    });
-    await mineBlock(arweave);
-    const invalidYearsName = "years";
-    await pst.writeInteraction({
-      function: "buyRecord",
-      name: invalidYearsName,
-      contractTxId,
-      years: 0, // too many years
-      tier,
-    });
-    await mineBlock(arweave);
-    const invalidTierName = "tier";
-    await pst.writeInteraction({
-      function: "buyRecord",
-      name: invalidTierName,
-      contractTxId,
-      years,
-      tier: "Yep",
-    });
-    await mineBlock(arweave);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      EXPECTED_BALANCE_AFTER_INVALID_TX
-    );
+  it.each(
+    ['', "*&*##$%#", "-leading", "this-is-a-looong-name-a-verrrryyyyy-loooooong-name-that-is-too-long", "grace", "test.subdomain.name", "a"])("should not buy invalid name: %s", async (badName) => {
+    pst.connect(wallet3);
+    
+      const BAD_NAME = {
+        name: badName,
+        contractTxId: DEFAULT_ANT_CONTRACT_ID,
+        years: 1 ,
+        tier: 1
+      }
+
+      const PREVIOUS_BALANCE = (await pst.currentBalance(walletAddress3)).balance;
+      
+      await pst.writeInteraction({
+        function: "buyRecord",
+        ...BAD_NAME
+      });
+
+      await mineBlock(arweave);
+      expect((await pst.currentBalance(walletAddress3)).balance).toEqual(
+        PREVIOUS_BALANCE
+      );
   });
 
   it("should properly add new tiers and update existing tiers", async () => {
@@ -607,11 +276,9 @@ describe("Testing the ArNS Registry Contract", () => {
       minTtlSeconds,
     });
     await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.tiers[tier].maxSubdomains).toEqual(maxSubdomains);
-    expect(currentStateJSON.tiers[tier].minTtlSeconds).toEqual(minTtlSeconds);
+    let currentState = await pst.currentState() as IOState;
+    expect(currentState.tiers[tier].maxSubdomains).toEqual(maxSubdomains);
+    expect(currentState.tiers[tier].minTtlSeconds).toEqual(minTtlSeconds);
 
     tier = 1;
     maxSubdomains = 100;
@@ -623,10 +290,8 @@ describe("Testing the ArNS Registry Contract", () => {
       minTtlSeconds,
     });
     await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.tiers[tier].minTtlSeconds).toEqual(minTtlSeconds);
+    currentState = await pst.currentState() as IOState;
+    expect(currentState.tiers[tier].minTtlSeconds).toEqual(minTtlSeconds);
   });
 
   it("should not set tiers with incorrect ownership", async () => {
@@ -641,55 +306,36 @@ describe("Testing the ArNS Registry Contract", () => {
       maxSubdomains,
     });
     await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.tiers[tier].maxSubdomains).toEqual(50000);
+    const currentState = await pst.currentState() as IOState;
+    expect(currentState.tiers[tier].maxSubdomains).toEqual(50000);
   });
 
   it("should extend record with enough balance", async () => {
     pst.connect(wallet2);
+    const name = "microsoft";
+    const extendYears = 5;
+    const CURRENT_TIER = 2;
+    const PREVIOUS_BALANCE = (await pst.currentBalance(walletAddress2)).balance;
+    const PREVIOUS_END_TIMESTAMP = (await pst.currentState() as IOState).records[name].endTimestamp;
+    const COST_TO_UPGRADE = initialState.fees[name.length] * extendYears * CURRENT_TIER;
     await pst.writeInteraction({
       function: "extendRecord",
-      name: "microsoft", // should cost 1000000 tokens
-      years: 10, // should bring to a total of 16 years
+      name:name, // should cost 1000000 tokens
+      years: extendYears, // initially is 2 years
     });
     await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
-    const currentStateJSON = JSON.parse(currentStateString);
+    const currentState = await pst.currentState() as IOState;
+    const NEW_END_TIMESTAMP = PREVIOUS_END_TIMESTAMP + (SECONDS_IN_A_YEAR * (extendYears - 2));
     expect(
-      currentStateJSON.records["microsoft"].endTimestamp
-    ).toBeGreaterThanOrEqual(2162247010);
-    expect(currentStateJSON.balances[walletAddress2]).toEqual(968000000);
-  });
-
-  it("should extend record and split extensions between protocol rewards and foundation balance", async () => {
-    pst.connect(wallet3);
-    const name = "split";
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    let rewards = +currentStateJSON.rewards;
-    let foundationBalance = currentStateJSON.foundation.balance;
-    let fee = +currentStateJSON.fees[name.length.toString()];
-    await pst.writeInteraction({
-      function: "extendRecord",
-      name,
-      years: 1, // should bring to a total of 2 years
-    });
-    await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.rewards).toEqual(rewards + fee * 0.9);
-    expect(currentStateJSON.foundation.balance).toEqual(
-      foundationBalance + fee * 0.1
-    );
+      currentState.records[name].endTimestamp
+    ).toBeGreaterThan(NEW_END_TIMESTAMP);
+    expect(currentState.balances[walletAddress2]).toEqual(PREVIOUS_BALANCE - COST_TO_UPGRADE);
   });
 
   it("should not extend record with not enough balance or invalid parameters", async () => {
     pst.connect(wallet2);
+    const PREVIOUS_BALANCE = (await pst.currentBalance(walletAddress2)).balance;
+    const PREVIOUS_END_TIMESTAMP = (await pst.currentState() as IOState).records["vile"].endTimestamp;
     await pst.writeInteraction({
       function: "extendRecord",
       name: "doesnt-exist", // This name doesnt exist so it shouldnt be created
@@ -715,13 +361,9 @@ describe("Testing the ArNS Registry Contract", () => {
       years: 50,
     });
     await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.balances[walletAddress2]).toEqual(968000000);
-    expect(currentStateJSON.records["vile"].endTimestamp).toBeLessThan(
-      1770000000
-    ); // this should show that the record was not extended
+    const currentState = await pst.currentState() as IOState
+    expect(currentState.balances[walletAddress2]).toEqual(PREVIOUS_BALANCE);
+    expect(currentState.records["vile"].endTimestamp).toEqual(PREVIOUS_END_TIMESTAMP);
   });
 
   it("should change fees and settings with correct ownership", async () => {
@@ -760,30 +402,13 @@ describe("Testing the ArNS Registry Contract", () => {
       "31": 5,
       "32": 5,
     };
-    const settingsToChange = {
-      delegatedStakeWithdrawLength: 2,
-      operatorStakeWithdrawLength: 2,
-      gatewayJoinLength: 3,
-      gatewayLeaveLength: 2,
-      lockMaxLength: 10000,
-      lockMinLength: 5,
-      minDelegatedStakeAmount: 100,
-      minGatewayStakeAmount: 5000,
-    };
     await pst.writeInteraction({
       function: "setFees",
       fees: feesToChange,
     });
-    await pst.writeInteraction({
-      function: "setSettings",
-      settings: settingsToChange,
-    });
     await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState);
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.fees).toEqual(feesToChange);
-    expect(currentStateJSON.settings).toEqual(settingsToChange);
+    const currentState = await pst.currentState() as IOState;
+    expect(currentState.fees).toEqual(feesToChange);
   });
 
   it("should not change malformed fees with correct ownership", async () => {
@@ -823,7 +448,7 @@ describe("Testing the ArNS Registry Contract", () => {
       "32": 5,
     };
 
-    let feesToChange = {
+    const feesToChange = {
       // should not write if any fee is equal to 0
       "1": 0,
       "2": 0,
@@ -863,12 +488,10 @@ describe("Testing the ArNS Registry Contract", () => {
       fees: feesToChange,
     });
     await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.fees).toEqual(originalFees);
+    let currentState = await pst.currentState() as IOState;
+    expect(currentState.fees).toEqual(originalFees);
 
-    let feesToChange2 = {
+    const feesToChange2 = {
       // should not write if strings are the fees
       "1": "5000000000",
       "2": 1406250000,
@@ -896,12 +519,11 @@ describe("Testing the ArNS Registry Contract", () => {
       fees: feesToChange2,
     });
     await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.fees).toEqual(originalFees);
+    currentState = await pst.currentState() as IOState;
 
-    let feesToChange3 = {
+    expect(currentState.fees).toEqual(originalFees);
+
+    const feesToChange3 = {
       // should not write with a string as the index
       whatever: 5000000000,
       "2": 1406250000,
@@ -929,12 +551,11 @@ describe("Testing the ArNS Registry Contract", () => {
       fees: feesToChange3,
     });
     await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.fees).toEqual(originalFees);
+    currentState = await pst.currentState() as IOState;
 
-    let feesToChange4 = {
+    expect(currentState.fees).toEqual(originalFees);
+
+    const feesToChange4 = {
       // should not write if incomplete fees are added
       "1": 1,
       "2": 2,
@@ -947,12 +568,11 @@ describe("Testing the ArNS Registry Contract", () => {
       fees: feesToChange4,
     });
     await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.fees).toEqual(originalFees);
+    currentState = await pst.currentState() as IOState;
 
-    let feesToChange5 = {
+    expect(currentState.fees).toEqual(originalFees);
+
+    const feesToChange5 = {
       // should not write if additional fees are added
       "1": 5000000000,
       "2": 1406250000,
@@ -981,12 +601,11 @@ describe("Testing the ArNS Registry Contract", () => {
       fees: feesToChange5,
     });
     await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.fees).toEqual(originalFees);
+    currentState = await pst.currentState() as IOState;
 
-    let feesToChange6 = {
+    expect(currentState.fees).toEqual(originalFees);
+
+    const feesToChange6 = {
       // should not write if decimals are used
       "1": 5000000000.666,
       "2": 1406250000,
@@ -1014,13 +633,12 @@ describe("Testing the ArNS Registry Contract", () => {
       fees: feesToChange6,
     });
     await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.fees).toEqual(originalFees);
+    currentState = await pst.currentState() as IOState;
+
+    expect(currentState.fees).toEqual(originalFees);
   });
 
-  it("should not change fees with incorrect ownership", async () => {
+  it('should not change fees with incorrect ownership', async () => {
     const originalFees = {
       "1": 5000000000,
       "2": 1406250000,
@@ -1097,10 +715,8 @@ describe("Testing the ArNS Registry Contract", () => {
       fees: feesToChange,
     });
     await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState);
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.fees).toEqual(originalFees);
+    const currentState = await pst.currentState() as IOState;
+    expect(currentState.fees).toEqual(originalFees);
   });
 
   it("should add valid whitelisted ANT Smartweave Contract Source TX IDs with correct ownership", async () => {
@@ -1117,14 +733,12 @@ describe("Testing the ArNS Registry Contract", () => {
       contractTxId: anotherSourceTxIdToAdd,
     });
     await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState);
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.approvedANTSourceCodeTxs).toContain(
+    const currentState = await pst.currentState() as IOState;
+    expect(currentState.approvedANTSourceCodeTxs).toContain(
       sourceTxIdToAdd
     );
     if (
-      currentStateJSON.approvedANTSourceCodeTxs.indexOf(
+      currentState.approvedANTSourceCodeTxs.indexOf(
         anotherSourceTxIdToAdd
       ) > -1
     ) {
@@ -1135,18 +749,16 @@ describe("Testing the ArNS Registry Contract", () => {
   });
 
   it("should not add whitelisted ANT Smartweave Contract Source TX IDs with incorrect ownership", async () => {
-    pst.connect(wallet4);
+    pst.connect(wallet2);
     const sourceTxIdToAdd = "BLAHhDwLZaLBA3lzpE7xl36Rms2NwUNZ7SKOTEWkbI";
     await pst.writeInteraction({
       function: "addANTSourceCodeTx",
       contractTxId: sourceTxIdToAdd,
     });
     await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState);
-    const currentStateJSON = JSON.parse(currentStateString);
+    const currentState = await pst.currentState() as IOState;
     if (
-      currentStateJSON.approvedANTSourceCodeTxs.indexOf(sourceTxIdToAdd) > -1
+      currentState.approvedANTSourceCodeTxs.indexOf(sourceTxIdToAdd) > -1
     ) {
       expect(false);
     } else {
@@ -1156,7 +768,7 @@ describe("Testing the ArNS Registry Contract", () => {
 
   it("should remove whitelisted ANT Smartweave Contract Source TX IDs with correct ownership", async () => {
     pst.connect(wallet);
-    const sourceTxIdToRemove = "da51nhDwLZaLBA3lzpE7xl36Rms2NwUNZ7SKOTEWkbI";
+    const sourceTxIdToRemove = 'da51nhDwLZaLBA3lzpE7xl36Rms2NwUNZ7SKOTEWkbI';
     await pst.writeInteraction({
       function: "removeANTSourceCodeTx",
       contractTxId: sourceTxIdToRemove,
@@ -1175,11 +787,9 @@ describe("Testing the ArNS Registry Contract", () => {
   });
 
   it("should not remove whitelisted ANT Smartweave Contract Source TX IDs with incorrect ownership", async () => {
-    pst.connect(wallet5);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState);
-    const currentStateJSON = JSON.parse(currentStateString);
-    const sourceTxIdToRemove = currentStateJSON.approvedANTSourceCodeTxs[0];
+    pst.connect(wallet2);
+    const currentState = await pst.currentState() as IOState;
+    const sourceTxIdToRemove = currentState.approvedANTSourceCodeTxs[0];
     await pst.writeInteraction({
       function: "removeANTSourceCodeTx",
       contractTxId: sourceTxIdToRemove,
@@ -1189,7 +799,7 @@ describe("Testing the ArNS Registry Contract", () => {
     const newStateString = JSON.stringify(newState);
     const newStateJSON = JSON.parse(newStateString);
     expect(newStateJSON.approvedANTSourceCodeTxs).toEqual(
-      currentStateJSON.approvedANTSourceCodeTxs
+      currentState.approvedANTSourceCodeTxs
     );
   });
 
@@ -1202,10 +812,8 @@ describe("Testing the ArNS Registry Contract", () => {
       tier: 2,
     });
     await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState);
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.records[name].tier).toEqual(2);
+    const currentState = await pst.currentState() as IOState;
+    expect(currentState.records[name].tier).toEqual(2);
   });
 
   it("should not upgrade tier on expired name or without correct balance", async () => {
@@ -1225,11 +833,9 @@ describe("Testing the ArNS Registry Contract", () => {
       tier: 2,
     });
     await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState);
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.records[name].tier).toEqual(2); // the tier should remain unchanged
-    expect(currentStateJSON.records[expiredName].tier).toEqual(1); // the tier should remain unchanged
+    const currentState = await pst.currentState() as IOState;
+    expect(currentState.records[name].tier).toEqual(2); // the tier should remain unchanged
+    expect(currentState.records[expiredName].tier).toEqual(1); // the tier should remain unchanged
   });
 
   it("should not downgrade tier with correct balance, regardless of ownership", async () => {
@@ -1241,23 +847,20 @@ describe("Testing the ArNS Registry Contract", () => {
       tier: 1,
     });
     await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState);
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.records[name].tier).toEqual(2);
+    const currentState = await pst.currentState() as IOState;
+    expect(currentState.records[name].tier).toEqual(2);
   });
 
   it("should not remove names with incorrect ownership", async () => {
+    pst.connect(wallet3)
     const nameToRemove = "vile";
     await pst.writeInteraction({
       function: "removeRecord",
       name: nameToRemove,
     });
     await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState);
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.records[nameToRemove]).toBeTruthy();
+    const currentState = await pst.currentState() as IOState;
+    expect(currentState.records[nameToRemove]).toBeTruthy();
   });
 
   it("should remove names with correct ownership", async () => {
@@ -1268,68 +871,39 @@ describe("Testing the ArNS Registry Contract", () => {
       name: nameToRemove,
     });
     await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState);
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.records[nameToRemove]).toEqual(undefined);
+    const currentState = await pst.currentState() as IOState;
+    expect(currentState.records[nameToRemove]).toEqual(undefined);
   });
 
   // EVOLUTION
   it("should properly evolve contract's source code", async () => {
     pst.connect(wallet);
-    expect((await pst.currentBalance(walletAddress)).balance).toEqual(
-      EXPECTED_BALANCE_AFTER_INVALID_TX
-    );
-
     const newSource = fs.readFileSync(
       path.join(__dirname, "../src/tools/contract_evolve.js"),
       "utf8"
     );
     const evolveSrcTx = await warp.createSourceTx({ src: newSource }, wallet);
-    const evolveSrcTxId = await warp.saveSourceTx(evolveSrcTx);
+    const evolveSrcTxId = await warp.saveSourceTx(evolveSrcTx, true);
     if (evolveSrcTxId === null) {
       return 0;
     }
     await mineBlock(arweave);
 
-    // await pst.evolve(evolveSrcTxId, {});
-    await pst.writeInteraction({
-      function: "evolve",
-      value: evolveSrcTxId,
-      version: "0.1.0",
-    });
+    await pst.evolve(evolveSrcTxId);
+
     await mineBlock(arweave);
 
-    // note: the evolved balance always returns -1
-    expect((await pst.currentBalance(walletAddress)).balance).toEqual(-1);
-
-    const newSrcTx = await warp.createSourceTx({ src: contractSrc }, wallet);
-    const newSrcTxId = await warp.saveSourceTx(newSrcTx);
-    if (newSrcTxId === null) {
-      return 0;
-    }
-    await mineBlock(arweave);
-    // await pst.evolve(newSrcTxId);
-    await pst.writeInteraction({
-      function: "evolve",
-      value: newSrcTxId,
-      version: "1.0.0",
-    });
-    await mineBlock(arweave);
-
-    // note: the balance should return correctly now
-    expect((await pst.currentBalance(walletAddress)).balance).toEqual(
-      EXPECTED_BALANCE_AFTER_INVALID_TX
-    );
+    const currentState = await pst.currentState() as IOState;
+    expect(currentState.evolve).toEqual(evolveSrcTxId)
   });
 
   it("should not evolve contract's source code without correct ownership", async () => {
     const newWallet = await arweave.wallets.generate();
     await addFunds(arweave, newWallet);
     pst.connect(newWallet);
-    expect((await pst.currentBalance(walletAddress)).balance).toEqual(
-      EXPECTED_BALANCE_AFTER_INVALID_TX
-    );
+
+    let currentState = await pst.currentState() as IOState;
+    const PREVIOUS_EVOLVE = currentState.evolve;
 
     const newSource = fs.readFileSync(
       path.join(__dirname, "../src/tools/contract_evolve.js"),
@@ -1345,998 +919,7 @@ describe("Testing the ArNS Registry Contract", () => {
     await pst.evolve(evolveSrcTxId);
     await mineBlock(arweave);
 
-    // note: the evolved balance should not change since no evolution should have happened
-    expect((await pst.currentBalance(walletAddress)).balance).toEqual(
-      EXPECTED_BALANCE_AFTER_INVALID_TX
-    );
-  });
-
-  // FOUNDATION
-  it("should not initiate foundation actions with incorrect ownership", async () => {
-    const newWallet = await arweave.wallets.generate();
-    const overwrittenCaller = await arweave.wallets.jwkToAddress(newWallet);
-    pst.connect(newWallet);
-    await pst.writeInteraction({
-      function: "initiateFoundationAction",
-      type: "transfer",
-      note: "Hacked",
-      recipient: overwrittenCaller, // send the tokens to the hacker
-      qty: 10000, // no lock length
-    });
-    await pst.writeInteraction({
-      function: "initiateFoundationAction",
-      type: "transfer",
-      note: "Hacked",
-      recipient: overwrittenCaller, // send the tokens to the hacker
-      lockLength: 100,
-      qty: 10000,
-    });
-    await pst.writeInteraction({
-      function: "initiateFoundationAction",
-      type: "setMinSignatures",
-      note: "Hacked",
-      value: 1,
-    });
-    await pst.writeInteraction({
-      function: "initiateFoundationAction",
-      type: "setActionPeriod",
-      note: "Hacked",
-      value: 1,
-    });
-    await pst.writeInteraction({
-      function: "initiateFoundationAction",
-      type: "addAddress",
-      note: "Hacked",
-      target: overwrittenCaller, // try to add the caller
-    });
-    await pst.writeInteraction({
-      function: "initiateFoundationAction",
-      type: "removeAddress",
-      note: "Hacked",
-      target: walletAddress, // try to remove an existing wallet
-    });
-    await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.foundation.actions).toEqual([]); // no actions should have been initiated
-  });
-
-  it("should initiate foundation token transfer (locked and unlocked) with correct ownership", async () => {
-    const newWallet = await arweave.wallets.generate();
-    const recipient = await arweave.wallets.jwkToAddress(newWallet);
-    const lockLength = 50;
-    pst.connect(wallet);
-    await pst.writeInteraction({
-      function: "initiateFoundationAction",
-      type: "transfer",
-      note: `Transferring unlocked to ${recipient}`,
-      recipient,
-      qty: 10000, // no lock length
-    });
-    await mineBlock(arweave);
-    await pst.writeInteraction({
-      function: "initiateFoundationAction",
-      type: "transfer",
-      note: `Transferring locked to ${recipient}`,
-      recipient,
-      qty: 50000,
-      lockLength,
-    });
-    await mineBlock(arweave);
-    await pst.writeInteraction({
-      function: "initiateFoundationAction",
-      type: "transfer",
-      note: `Elapsed test of transferring unlocked to ${recipient}`,
-      recipient,
-      qty: 666,
-    });
-    await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState);
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.foundation.actions.length).toEqual(3); // three transfers should have been initialized
-  });
-
-  it("should not approve foundation token transfer with incorrect foundation wallet", async () => {
-    const newWallet = await arweave.wallets.generate();
-    const id = 0;
-    pst.connect(newWallet);
-    await pst.writeInteraction({
-      function: "approveFoundationAction",
-      id,
-    });
-    await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.foundation.actions[id].signed).toEqual([]); // there should not be any signatures on this vote
-  });
-
-  it("should approve foundation token transfers with correct foundation wallets", async () => {
-    pst.connect(wallet);
-    await pst.writeInteraction({
-      function: "approveFoundationAction",
-      id: 0,
-    });
-    await pst.writeInteraction({
-      function: "approveFoundationAction",
-      id: 1, // this is the locked transfer
-    });
-    await pst.writeInteraction({
-      function: "approveFoundationAction",
-      id: 2, // this transfer will elapse on purpose with a single vote
-    });
-    pst.connect(wallet2);
-    await pst.writeInteraction({
-      function: "approveFoundationAction",
-      id: 0,
-    });
-    await pst.writeInteraction({
-      function: "approveFoundationAction",
-      id: 1, // this is the locked transfer
-    });
-    await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.foundation.actions[0].signed).toContain(
-      walletAddress
-    );
-    expect(currentStateJSON.foundation.actions[0].signed).toContain(
-      walletAddress2
-    );
-    expect(currentStateJSON.foundation.actions[1].signed).toContain(
-      walletAddress
-    );
-    expect(currentStateJSON.foundation.actions[1].signed).toContain(
-      walletAddress2
-    );
-    expect(
-      currentStateJSON.balances[
-        currentStateJSON.foundation.actions[0].recipient
-      ]
-    ).toEqual(currentStateJSON.foundation.actions[0].qty);
-  });
-
-  it("should not complete when foundation token transfer has elapsed", async () => {
-    pst.connect(wallet2);
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    await pst.writeInteraction({
-      function: "approveFoundationAction",
-      id: 2,
-    });
-    await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.foundation.actions[2].status).toEqual("failed");
-  });
-
-  it("should initiate other foundation actions (add/remove address, setactionPeriod, setMinSignatures) with correct ownership", async () => {
-    pst.connect(wallet);
-    await pst.writeInteraction({
-      function: "initiateFoundationAction",
-      type: "addAddress",
-      note: `Adding new foundation address ${walletAddress4}`,
-      target: walletAddress4,
-    });
-    await mineBlock(arweave);
-    await pst.writeInteraction({
-      function: "initiateFoundationAction",
-      type: "removeAddress",
-      note: `Removing foundation address ${walletAddress2}`,
-      target: walletAddress2,
-    });
-    await mineBlock(arweave);
-    await pst.writeInteraction({
-      function: "initiateFoundationAction",
-      type: "setActionPeriod",
-      note: `Changing transfer period to 20`,
-      value: 20,
-    });
-    await mineBlock(arweave);
-    await pst.writeInteraction({
-      function: "initiateFoundationAction",
-      type: "setMinSignatures",
-      note: `Lowering min signatures to 1`,
-      value: 1,
-    });
-    await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState);
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.foundation.actions.length).toEqual(7); // 8 actions should be present
-  });
-
-  it("should approve foundation actions (add/remove address, setactionPeriod, setMinSignatures) with correct foundation wallets", async () => {
-    pst.connect(wallet);
-    await pst.writeInteraction({
-      function: "approveFoundationAction",
-      id: 3,
-    });
-    await pst.writeInteraction({
-      function: "approveFoundationAction",
-      id: 4, // this is the locked transfer
-    });
-    await pst.writeInteraction({
-      function: "approveFoundationAction",
-      id: 5, // this transfer will elapse on purpose with a single vote
-    });
-    await pst.writeInteraction({
-      function: "approveFoundationAction",
-      id: 6, // this will set minimum signatures
-    });
-    pst.connect(wallet3);
-    await pst.writeInteraction({
-      function: "approveFoundationAction",
-      id: 3,
-    });
-    await pst.writeInteraction({
-      function: "approveFoundationAction",
-      id: 4, // this is the locked transfer
-    });
-    await pst.writeInteraction({
-      function: "approveFoundationAction",
-      id: 5, // this transfer will elapse on purpose with a single vote
-    });
-    await pst.writeInteraction({
-      function: "approveFoundationAction",
-      id: 6, // this transfer will elapse on purpose with a single vote
-    });
-    await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState); // Had to do this because I cannot use my custom token interface
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.foundation.actions[3].signed).toContain(
-      walletAddress
-    );
-    expect(currentStateJSON.foundation.actions[3].signed).toContain(
-      walletAddress3
-    );
-    expect(currentStateJSON.foundation.actions[4].signed).toContain(
-      walletAddress
-    );
-    expect(currentStateJSON.foundation.actions[4].signed).toContain(
-      walletAddress3
-    );
-    expect(currentStateJSON.foundation.actions[5].signed).toContain(
-      walletAddress
-    );
-    expect(currentStateJSON.foundation.actions[5].signed).toContain(
-      walletAddress3
-    );
-    expect(currentStateJSON.foundation.actions[6].signed).toContain(
-      walletAddress
-    );
-    expect(currentStateJSON.foundation.actions[6].signed).toContain(
-      walletAddress3
-    );
-    expect(currentStateJSON.foundation.minSignatures).toEqual(1);
-  });
-
-  // COMMUNITY LOCKING AND STAKING
-  it("should lock tokens correct ownership, amounts and locktimes", async () => {
-    pst.connect(wallet); // connect the original owning wallet
-    await pst.writeInteraction({
-      function: "lock",
-      qty: 666,
-      lockLength: 20,
-    });
-    await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState, null, 2);
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.vaults[walletAddress][1].balance).toEqual(666);
-
-    await pst.writeInteraction({
-      function: "lock",
-      qty: 666,
-      lockLength: 100000000, // invalid lock length
-    });
-    await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.vaults[walletAddress].length).toEqual(2); // we should only have 2 vaults still
-
-    await pst.writeInteraction({
-      function: "lock",
-      qty: 66600000000000000, // invalid token amount
-      lockLength: 100,
-    });
-    await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState, null, 2);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.vaults[walletAddress].length).toEqual(2); // we should only have 2 vaults still
-  });
-
-  it("should not lock tokens with correct ownership but incorrect amounts and locktimes", async () => {
-    pst.connect(wallet); // connect the original owning wallet
-    await pst.writeInteraction({
-      function: "lock",
-      qty: 666,
-      lockLength: 100000000, // invalid lock length
-    });
-    await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.vaults[walletAddress].length).toEqual(2); // we should only have 2 vaults still
-
-    await pst.writeInteraction({
-      function: "lock",
-      qty: 66600000000000000, // invalid token amount
-      lockLength: 100,
-    });
-    await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState, null, 2);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.vaults[walletAddress].length).toEqual(2); // we should only have 2 vaults still
-
-    await pst.writeInteraction({
-      function: "lock",
-      qty: 666, // invalid token amount
-      lockLength: 1,
-    });
-    await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState, null, 2);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.vaults[walletAddress].length).toEqual(2); // we should only have 2 vaults still
-  });
-
-  it("should not lock tokens with incorrect ownership", async () => {
-    const newWallet = await arweave.wallets.generate();
-    const newWalletAddress = await arweave.wallets.jwkToAddress(newWallet);
-    pst.connect(newWallet); // connect the original owning wallet
-    const qty = 666;
-    const lockLength = 100;
-    await pst.writeInteraction({
-      function: "lock",
-      qty,
-      lockLength,
-    });
-    await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState);
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.vaults[newWalletAddress]).toEqual(undefined);
-  });
-
-  it("should not unlock tokens correct ownership if they are not unlockable", async () => {
-    pst.connect(wallet); // connect the original owning wallet
-    await pst.writeInteraction({
-      function: "unlock",
-    });
-    await mineBlock(arweave);
-    const currentState = await pst.currentState();
-    const currentStateString = JSON.stringify(currentState);
-    const currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.vaults[walletAddress].length).toEqual(2); // we should still have 2 vaults now
-  });
-
-  it("should unlock tokens correct ownership, amounts and locktimes", async () => {
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    await mineBlock(arweave); // Mine 5 blocks to ensure latest vault can be unlocked
-    pst.connect(wallet); // connect the original owning wallet
-    await pst.writeInteraction({
-      function: "unlock",
-      id: 1,
-    });
-    await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.vaults[walletAddress].length).toEqual(1); // we should only have 1 vault now
-  });
-
-  it("should increase vault lock time length with correct ownership", async () => {
-    pst.connect(wallet);
-    await pst.writeInteraction({
-      function: "lock",
-      qty: 10000,
-      lockLength: 100,
-    });
-    await mineBlock(arweave);
-    await pst.writeInteraction({
-      function: "increaseVaultLength",
-      id: 1,
-      lockLength: 555,
-    });
-    await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.vaults[walletAddress].length).toEqual(2); // we should only have 2 vaults now
-    expect(currentStateJSON.vaults[walletAddress][1].end).toEqual(721); // the second vault should end at 590 blocks
-  });
-
-  it("should not increase vault lock time length with invalid length", async () => {
-    const vaultEnds = 721;
-    await pst.writeInteraction({
-      function: "increaseVaultLength",
-      id: 1,
-      lockLength: 1, // too low
-    });
-    await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.vaults[walletAddress].length).toEqual(2); // we should still have 2 vaults now
-    expect(currentStateJSON.vaults[walletAddress][1].end).toEqual(vaultEnds); // the second vault should end at 590 blocks
-
-    await pst.writeInteraction({
-      function: "increaseVaultLength",
-      id: 1,
-      lockLength: 100000000000, // too high
-    });
-    await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.vaults[walletAddress].length).toEqual(2); // we should still have 2 vaults now
-    expect(currentStateJSON.vaults[walletAddress][1].end).toEqual(vaultEnds); // the second vault should end at 590 blocks
-
-    await pst.writeInteraction({
-      function: "increaseVaultLength",
-      id: 1,
-      lockLength: "100", // strings are invalid
-    });
-    await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.vaults[walletAddress].length).toEqual(2); // we should still have 2 vaults now
-    expect(currentStateJSON.vaults[walletAddress][1].end).toEqual(vaultEnds); // the second vault should end at 590 blocks
-
-    await pst.writeInteraction({
-      function: "increaseVaultLength",
-      id: "1", // strings are invalid
-      lockLength: 100,
-    });
-    await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.vaults[walletAddress].length).toEqual(2); // we should still have 2 vaults now
-    expect(currentStateJSON.vaults[walletAddress][1].end).toEqual(vaultEnds); // the second vault should end at 590 blocks
-  });
-
-  it("should transfer tokens to a locked vault", async () => {
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    let currentBalance = currentStateJSON.balances[walletAddress2];
-    let target = walletAddress4;
-    let qty = 500;
-    let lockLength = 150;
-    pst.connect(wallet2);
-    await pst.writeInteraction({
-      function: "transferLocked",
-      target,
-      qty,
-      lockLength,
-    });
-    await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.balances[walletAddress2]).toEqual(
-      currentBalance - qty
-    );
-    expect(currentStateJSON.vaults[target]).toEqual([
-      { balance: qty, end: 326, start: 176 },
-    ]);
-  });
-
-  it("should not transfer tokens to a locked vault with incorrect balance or ownership", async () => {
-    let target = walletAddress5; // empty wallet
-    let qty = 100;
-    let lockLength = 150;
-    pst.connect(wallet4); // only owns a vaulted balance
-    await pst.writeInteraction({
-      function: "transferLocked",
-      target,
-      qty,
-      lockLength,
-    });
-    await pst.writeInteraction({
-      function: "transfer", // confirm locked tokens can not be transferred either
-      target,
-      qty,
-    });
-    await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.vaults[walletAddress4]).toEqual([
-      { balance: 500, end: 326, start: 176 },
-    ]); // this vault should not be changed from its original balance of 500
-    expect(currentStateJSON.balances[walletAddress4]).toEqual(undefined); //  this wallet should still have an empty unlocked balance
-    expect(currentStateJSON.vaults[walletAddress5]).toEqual(undefined); // no tokens should have been transfer locked
-
-    target = walletAddress4;
-    qty = 111;
-    lockLength = 150;
-    pst.connect(wallet5); // does not own any tokens
-    await pst.writeInteraction({
-      function: "transferLocked",
-      target,
-      qty,
-      lockLength,
-    });
-    await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.vaults[walletAddress4]).toEqual([
-      { balance: 500, end: 326, start: 176 },
-    ]);
-    expect(currentStateJSON.balances[walletAddress5]).toEqual(undefined);
-
-    qty = 1000000000000000; // Very large amount of tokens that the wallet does not own
-    pst.connect(wallet2); // does not own any tokens
-    await pst.writeInteraction({
-      function: "transferLocked",
-      target,
-      qty,
-      lockLength,
-    });
-    await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.vaults[walletAddress4]).toEqual([
-      { balance: 500, end: 326, start: 176 },
-    ]);
-  });
-
-  // Network Join and Delegated Stake
-  it("should join the network with correct parameters", async () => {
-    let qty = 5000; // must meet the minimum
-    let label = "Test Gateway"; // friendly label
-    let sslFingerprint = "";
-    let ipV4Address = "192.168.1.40";
-    let url = "test.ar.io";
-    let port = 3000;
-    let protocol = "http";
-    let note =
-      "Our gateway is the best test gateway. Contact bob@ar.io for more.";
-
-    pst.connect(gatewayWallet); // only owns a vaulted balance
-
-    await pst.writeInteraction({
-      function: "joinNetwork",
-      qty,
-      label,
-      sslFingerprint,
-      ipV4Address,
-      url,
-      port,
-      protocol,
-      note,
-    });
-
-    await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].vaults[0].balance
-    ).toEqual(5000);
-    expect(currentStateJSON.balances[gatewayWalletAddress]).toEqual(
-      GATEWAY_STARTING_TOKENS - 5000
-    );
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].operatorStake
-    ).toEqual(qty);
-  });
-
-  it("should update gateway settings with correct parameters", async () => {
-    let label = "Test Gateway SSL"; // friendly label
-    let port = 443;
-    let protocol = "https";
-    let sslFingerprint = "282D6F79C9533C534EBD28826CB3D706139761AB";
-    let note = "MAINTENANCE MODE";
-    let openDelegation = false;
-    let delegateAllowList = [
-      walletAddress,
-      walletAddress2,
-      walletAddress3,
-      walletAddress4,
-    ];
-
-    pst.connect(gatewayWallet); // only owns a vaulted balance
-
-    await pst.writeInteraction({
-      function: "updateGatewaySettings",
-      label,
-      port,
-      sslFingerprint,
-      protocol,
-      openDelegation,
-      delegateAllowList,
-      note,
-    });
-
-    await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].settings.label
-    ).toEqual(label);
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].settings.port
-    ).toEqual(port);
-  });
-
-  it("should not up gateway settings with incorrect parameters", async () => {
-    let label = "Test Gateway SSL"; // friendly label
-
-    pst.connect(gatewayWallet); // only owns a vaulted balance
-    await pst.writeInteraction({
-      function: "updateGatewaySettings",
-      label: "",
-    });
-
-    await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].settings.label
-    ).toEqual(label);
-  });
-
-  it("should increase gateway stake with correct balance", async () => {
-    let qty = 1000;
-    pst.connect(gatewayWallet); // only owns a vaulted balance
-    await pst.writeInteraction({
-      function: "increaseOperatorStake",
-      qty,
-    });
-    qty = 9999;
-    await pst.writeInteraction({
-      function: "increaseOperatorStake",
-      qty,
-    });
-    await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.balances[gatewayWalletAddress]).toEqual(
-      GATEWAY_STARTING_TOKENS - 5000 - 1000 - 9999
-    );
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].operatorStake
-    ).toEqual(5000 + 1000 + 9999);
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].vaults[1].balance
-    ).toEqual(1000);
-  });
-
-  it("should decrease gateway stake with correct ownership", async () => {
-    let id = 2;
-    pst.connect(gatewayWallet); // owns 2 vaulted balances
-    await pst.writeInteraction({
-      function: "decreaseOperatorStake",
-      id,
-    });
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].vaults[2].end
-    ).toBeGreaterThan(0);
-    await pst.writeInteraction({
-      function: "decreaseOperatorStake",
-      id,
-    });
-    await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].operatorStake
-    ).toEqual(5000 + 1000);
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].vaults[2].balance
-    ).toEqual(0);
-  });
-
-  it("should delegate stake with correct balance", async () => {
-    let qty = 100; // must meet the minimum
-    let target = gatewayWalletAddress;
-    pst.connect(delegateWallet); // only owns a vaulted balance
-    await pst.writeInteraction({
-      function: "delegateStake",
-      qty,
-      target,
-    });
-    await pst.writeInteraction({
-      function: "delegateStake",
-      qty,
-      target,
-    });
-    pst.connect(delegateWallet2); // only owns a vaulted balance
-    qty = 1000;
-    await pst.writeInteraction({
-      function: "delegateStake",
-      qty,
-      target,
-    });
-    await mineBlock(arweave);
-    qty = 5000;
-    await pst.writeInteraction({
-      function: "delegateStake",
-      qty,
-      target,
-    });
-    await mineBlock(arweave);
-    qty = 25000;
-    await pst.writeInteraction({
-      function: "delegateStake",
-      qty,
-      target,
-    });
-    await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].delegates[
-        delegateWalletAddress
-      ][0].balance
-    ).toEqual(100);
-    expect(currentStateJSON.balances[delegateWalletAddress]).toEqual(
-      DELEGATE_STARTING_TOKENS - 100 * 2
-    );
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].delegates[
-        delegateWalletAddress2
-      ].length
-    ).toEqual(3);
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].delegatedStake
-    ).toEqual(100 + 100 + 1000 + 5000 + 25000);
-  });
-
-  it("should delegate stake to a closed gateway if in the allow list", async () => {
-    let qty = 1000; // must meet the minimum
-    let target = gatewayWalletAddress2; // this gateway only allows delegatedWallet
-    pst.connect(wallet);
-    await pst.writeInteraction({
-      function: "delegateStake",
-      qty,
-      target,
-    });
-    await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(
-      currentStateJSON.gateways[target].delegates[walletAddress][0].balance
-    ).toEqual(qty);
-  });
-
-  it("should not delegate stake to a closed gateway", async () => {
-    let qty = 1000; // must meet the minimum
-    let target = gatewayWalletAddress2; // this gateway only allows delegatedWallet
-    pst.connect(wallet3);
-    await pst.writeInteraction({
-      function: "delegateStake",
-      qty,
-      target,
-    });
-    await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.gateways[target].delegates[walletAddress3]).toEqual(
-      undefined
-    );
-  });
-
-  it("should undelegate stake with correct ownership", async () => {
-    let target = gatewayWalletAddress;
-    let id = 1;
-    pst.connect(delegateWallet);
-    // remove a single stake
-    await pst.writeInteraction({
-      function: "undelegateStake",
-      id,
-      target,
-    });
-    pst.connect(delegateWallet2);
-    // remove all stakes
-    await pst.writeInteraction({
-      function: "undelegateStake",
-      target,
-    });
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].delegates[
-        delegateWalletAddress
-      ][1].end
-    ).toBeGreaterThan(0);
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].delegates[
-        delegateWalletAddress2
-      ][0].end
-    ).toBeGreaterThan(0);
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].delegates[
-        delegateWalletAddress2
-      ][1].end
-    ).toBeGreaterThan(0);
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].delegates[
-        delegateWalletAddress2
-      ][2].end
-    ).toBeGreaterThan(0);
-    pst.connect(delegateWallet);
-    // finish removing a single stake
-    await pst.writeInteraction({
-      function: "undelegateStake",
-      id,
-      target,
-    });
-    pst.connect(delegateWallet2);
-    // finish removing all stakes
-    await pst.writeInteraction({
-      function: "undelegateStake",
-      target,
-    });
-    await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].delegates[
-        delegateWalletAddress
-      ][1].balance
-    ).toEqual(0);
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].delegates[
-        delegateWalletAddress2
-      ][0].balance
-    ).toEqual(0);
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].delegates[
-        delegateWalletAddress2
-      ][1].balance
-    ).toEqual(0);
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].delegates[
-        delegateWalletAddress2
-      ][2].balance
-    ).toEqual(0);
-    expect(currentStateJSON.balances[delegateWalletAddress]).toEqual(
-      DELEGATE_STARTING_TOKENS - 100
-    );
-    expect(currentStateJSON.balances[delegateWalletAddress2]).toEqual(
-      DELEGATE2_STARTING_TOKENS
-    );
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].delegatedStake
-    ).toEqual(100);
-  });
-
-  it("should slash gateway and its delegates", async () => {
-    let target = slashedWalletAddress;
-    let penalty = 10;
-    pst.connect(wallet); // only owns a vaulted balance
-    await pst.writeInteraction({
-      function: "proposeGatewaySlash",
-      target,
-      penalty,
-    });
-    await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(
-      currentStateJSON.gateways[slashedWalletAddress].delegatedStake
-    ).toEqual(780);
-    expect(
-      currentStateJSON.gateways[slashedWalletAddress].operatorStake
-    ).toEqual(5400);
-    expect(
-      currentStateJSON.gateways[slashedWalletAddress].vaults[0].balance
-    ).toEqual(4500);
-    expect(
-      currentStateJSON.gateways[slashedWalletAddress].vaults[1].balance
-    ).toEqual(900);
-    expect(
-      currentStateJSON.gateways[slashedWalletAddress].delegates[
-        delegateWalletAddress
-      ][0].balance
-    ).toEqual(90);
-    expect(
-      currentStateJSON.gateways[slashedWalletAddress].delegates[
-        delegateWalletAddress
-      ][1].balance
-    ).toEqual(90);
-    expect(
-      currentStateJSON.gateways[slashedWalletAddress].delegates[
-        delegateWalletAddress2
-      ][0].balance
-    ).toEqual(600);
-  });
-
-  it("should slash gateway and its delegates and remove when stake is too low", async () => {
-    let target = slashedWalletAddress;
-    let penalty = 50;
-    pst.connect(wallet); // contract owner
-    await pst.writeInteraction({
-      function: "proposeGatewaySlash",
-      target,
-      penalty,
-    });
-    await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.balances[slashedWalletAddress]).toEqual(2700);
-    expect(currentStateJSON.balances[delegateWalletAddress]).toEqual(990);
-    expect(currentStateJSON.balances[delegateWalletAddress2]).toEqual(50300);
-  });
-
-  it("should leave the network with correct ownership", async () => {
-    pst.connect(gatewayWallet); // only owns a vaulted balance
-    await pst.writeInteraction({
-      function: "leaveNetwork",
-    });
-    await mineBlock(arweave);
-    let currentState = await pst.currentState();
-    let currentStateString = JSON.stringify(currentState);
-    let currentStateJSON = JSON.parse(currentStateString);
-    expect(
-      currentStateJSON.gateways[gatewayWalletAddress].vaults[0].end
-    ).toBeGreaterThan(0);
-    // mine more blocks to force the gatewayLeaveLength
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    await mineBlock(arweave);
-    await pst.writeInteraction({
-      function: "leaveNetwork",
-    });
-    await mineBlock(arweave);
-    currentState = await pst.currentState();
-    currentStateString = JSON.stringify(currentState);
-    currentStateJSON = JSON.parse(currentStateString);
-    expect(currentStateJSON.balances[gatewayWalletAddress]).toEqual(
-      GATEWAY_STARTING_TOKENS
-    );
-    expect(currentStateJSON.balances[delegateWalletAddress]).toEqual(
-      DELEGATE_STARTING_TOKENS + 90
-    );
+    currentState = await pst.currentState() as IOState;
+    expect(currentState.evolve).toEqual(PREVIOUS_EVOLVE);
   });
 });
