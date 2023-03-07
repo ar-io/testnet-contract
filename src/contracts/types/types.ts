@@ -17,7 +17,6 @@ export interface IOState extends PstState {
     // Different service tiers provide different premium capabilities for a higher cost
     [tier: number]: ServiceTier;
   };
-  version: string; // the semversion of this smartweave contract in MAJOR.MINOR.PATCH format eg. 0.5.1
 }
 
 export interface ContractSettings {
