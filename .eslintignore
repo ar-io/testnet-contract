@@ -4,4 +4,4 @@ public
 dist
 cache
 .husky
-**.js
+contract_evolve.js
