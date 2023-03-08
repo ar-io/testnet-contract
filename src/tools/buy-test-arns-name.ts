@@ -1,13 +1,18 @@
-import Arweave from "arweave";
-import { LoggerFactory, WarpFactory } from "warp-contracts";
-import * as fs from "fs";
-import { JWKInterface } from "arweave/node/lib/wallet";
-import { testKeyfile } from "../constants";
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import * as fs from 'fs';
+import {
+  LoggerFactory,
+  WarpFactory,
+  defaultCacheOptions,
+} from 'warp-contracts';
+
+import { testKeyfile } from '../constants';
+import { deployedTestContracts } from '../deployed-contracts';
 
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // This is the name that will be purchased in the Arweave Name System Registry testnet
-  const nameToBuy = "another-one";
+  const nameToBuy = 'another-one';
 
   // The lease time for purchasing the name
   const years = 1;
@@ -16,22 +21,27 @@ import { testKeyfile } from "../constants";
   const tier = 1;
 
   // This is the ANT Smartweave Contract TX ID that will be added to the testnet registry
-  const contractTxId = "6-H14K04w-_5t4u_TFJyVCzkt2szBmyoWSMRbniOQzw";
+  const contractTxId = '6-H14K04w-_5t4u_TFJyVCzkt2szBmyoWSMRbniOQzw';
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   // This is the testnet ArNS Registry Smartweave Contract TX ID
-  const arnsRegistryContractTxId =
-    "J121VPOHa9pT2QKOs2ub0bZh9LqHesubdnfwW2v126w";
+  const arnsRegistryContractTxId = deployedTestContracts.contractTxId;
 
   // Initialize `LoggerFactory`
-  LoggerFactory.INST.logLevel("error");
+  LoggerFactory.INST.logLevel('error');
 
-  // Initialize SmartWeave
-  const warp = WarpFactory.forTestnet();
+  // ~~ Initialize SmartWeave ~~
+  const warp = WarpFactory.forTestnet(
+    {
+      ...defaultCacheOptions,
+      inMemory: true,
+    },
+    true,
+  );
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(testKeyfile).toString()
+    await fs.readFileSync(testKeyfile).toString(),
   );
 
   // Read the ANT Registry Contract
@@ -44,24 +54,29 @@ import { testKeyfile } from "../constants";
   const currentStateJSON = JSON.parse(currentStateString);
   if (currentStateJSON.records[nameToBuy] !== undefined) {
     console.log(
-      "This name %s is already taken and is not available for purchase.  Exiting.",
-      nameToBuy
+      'This name %s is already taken and is not available for purchase.  Exiting.',
+      nameToBuy,
     );
     return;
   }
 
   // Buy the available record in ArNS Registry
   console.log(
-    "Buying the test record, %s using the ANT %s",
+    'Buying the test record, %s using the ANT %s',
     nameToBuy,
-    contractTxId
-  );
-  const recordTxId = await pst.writeInteraction({
-    function: "buyRecord",
-    name: nameToBuy,
-    tier,
     contractTxId,
-    years,
-  });
-  console.log("Finished purchasing the record. ID: %s", recordTxId);
+  );
+  const recordTxId = await pst.writeInteraction(
+    {
+      function: 'buyRecord',
+      name: nameToBuy,
+      tier,
+      contractTxId,
+      years,
+    },
+    {
+      disableBundling: true,
+    },
+  );
+  console.log('Finished purchasing the record. ID: %s', recordTxId);
 })();

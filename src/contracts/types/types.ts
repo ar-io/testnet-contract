@@ -1,23 +1,12 @@
-export interface IOState {
-  ticker: string; // A short token symbol, shown in block explorers and marketplaces
+import { PstState } from 'warp-contracts';
+
+export interface IOState extends PstState {
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
-  owner: string; // The owner of this contract who can execute specific methods
-  rewards: number; // the balance of rewards used by the ar.io protocol to incentivize network participants
   foundation: Foundation;
-  settings: ContractSettings;
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
   records: {
     // A list of all names and their corresponding attributes
     [name: string]: ArNSName;
-  };
-  balances: {
-    // A list of all outstanding, positive, token balances
-    [address: string]: number;
-  };
-  vaults: {
-    // a list of all vaults that have locked balances
-    [address: string]: [TokenVault];
-    // a wallet can have multiple vaults
   };
   fees: {
     // A list of all fees for purchasing ArNS names
@@ -28,12 +17,6 @@ export interface IOState {
     // Different service tiers provide different premium capabilities for a higher cost
     [tier: number]: ServiceTier;
   };
-  gateways: {
-    // a list of all registered gateways
-    [address: string]: Gateway; // every gateway needs a wallet to act as the identity
-  };
-  version: string; // the semversion of this smartweave contract in MAJOR.MINOR.PATCH format eg. 0.5.1
-  votes: VoteInterface[]; // on-chain governance proposals and votes
 }
 
 export interface ContractSettings {
@@ -71,7 +54,7 @@ export interface GatewaySettings {
   note?: string; // An additional note (256 character max) the gateway operator can set to indicate things like maintenance or other operational updates.
 }
 
-export type AllowedProtocols = "http" | "https";
+export type AllowedProtocols = 'http' | 'https';
 
 export interface ArNSName {
   tier: number; // The tier of service that has been purchased
@@ -110,13 +93,13 @@ export interface FoundationAction {
   lockLength?: number; // determines the amount of blocks a foundation balance distribution is locked for
 }
 
-export type FoundationActionStatus = "active" | "passed" | "failed";
+export type FoundationActionStatus = 'active' | 'passed' | 'failed';
 export type FoundationActionType =
-  | "transfer"
-  | "setMinSignatures"
-  | "setActionPeriod"
-  | "addAddress"
-  | "removeAddress";
+  | 'transfer'
+  | 'setMinSignatures'
+  | 'setActionPeriod'
+  | 'addAddress'
+  | 'removeAddress';
 
 export interface TokenVault {
   balance: number; // Positive integer, the amount locked
@@ -148,13 +131,13 @@ export interface VoteInterface {
   lockLength?: number;
 }
 
-export type VoteStatus = "active" | "quorumFailed" | "passed" | "failed";
+export type VoteStatus = 'active' | 'quorumFailed' | 'passed' | 'failed';
 export type VoteType =
-  | "mint"
-  | "mintLocked"
-  | "burnVault"
-  | "indicative"
-  | "set";
+  | 'mint'
+  | 'mintLocked'
+  | 'burnVault'
+  | 'indicative'
+  | 'set';
 
 export interface PstAction {
   input: PstInput;
@@ -208,38 +191,22 @@ export interface ArNSNameResult {
 }
 
 export type PstFunction =
-  | "transfer"
-  | "transferLocked"
-  | "mint"
-  | "setFees"
-  | "evolve"
-  | "buyRecord"
-  | "extendRecord"
-  | "setTier"
-  | "upgradeTier"
-  | "removeRecord"
-  | "addANTSourceCodeTx"
-  | "removeANTSourceCodeTx"
-  | "balance"
-  | "record"
-  | "initiateFoundationAction"
-  | "approveFoundationAction"
-  | "lock"
-  | "unlock"
-  | "increaseVaultLength"
-  | "fixState"
-  | "getRegisteredGateway"
-  | "getGatewayAddressRegistry"
-  | "delegateStake"
-  | "increaseOperatorStake"
-  | "decreaseOperatorStake"
-  | "joinNetwork"
-  | "leaveNetwork"
-  | "updateGatewaySettings"
-  | "undelegateStake"
-  | "proposeGatewaySlash"
-  | "setSettings"
-  | "setName";
+  | 'transfer'
+  | 'transferLocked'
+  | 'mint'
+  | 'setFees'
+  | 'evolve'
+  | 'buyRecord'
+  | 'extendRecord'
+  | 'setTier'
+  | 'upgradeTier'
+  | 'removeRecord'
+  | 'addANTSourceCodeTx'
+  | 'removeANTSourceCodeTx'
+  | 'balance'
+  | 'record'
+  | 'fixState'
+  | 'setName';
 
 export type ContractResult =
   | { state: IOState }

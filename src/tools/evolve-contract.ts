@@ -1,21 +1,22 @@
+import { deployedContracts } from '@/deployed-contracts.js';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import * as fs from 'fs';
+import path from 'path';
 import {
-  defaultCacheOptions,
   LoggerFactory,
   WarpFactory,
-} from "warp-contracts";
-import * as fs from "fs";
-import path from "path";
-import { JWKInterface } from "arweave/node/lib/wallet";
+  defaultCacheOptions,
+} from 'warp-contracts';
+
 // import { deployedContracts } from "../deployed-contracts";
-import { keyfile } from "../constants";
+import { keyfile } from '../constants';
 
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID version 1.7
-  const arnsRegistryContractTxId =
-    "R-DRqVv97e8cCya95qsH_Tpvmb9vidURYWlBL5LpSzo";
+  const arnsRegistryContractTxId = deployedContracts.contractTxId;
 
   // ~~ Initialize `LoggerFactory` ~~
-  LoggerFactory.INST.logLevel("error");
+  LoggerFactory.INST.logLevel('error');
 
   // ~~ Initialize SmartWeave ~~
   const warp = WarpFactory.forMainnet(
@@ -23,38 +24,40 @@ import { keyfile } from "../constants";
       ...defaultCacheOptions,
       inMemory: true,
     },
-    true
+    true,
   );
 
   // Get the key file used
   const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(keyfile).toString()
+    await fs.readFileSync(keyfile).toString(),
   );
 
   // Read the ArNS Registry Contract
-  const pst = warp.pst(arnsRegistryContractTxId);
-  pst.connect(wallet);
+  const contract = warp.pst(arnsRegistryContractTxId);
+  contract.connect(wallet);
 
   // ~~ Read contract source and initial state files ~~
   const newSource = fs.readFileSync(
-    path.join(__dirname, "../../dist/contract.js"),
-    "utf8"
+    path.join(__dirname, '../../dist/contract.js'),
+    'utf8',
   );
 
+  // Create the evolved source code tx
   const evolveSrcTx = await warp.createSourceTx({ src: newSource }, wallet);
-  const evolveSrcTxId = await warp.saveSourceTx(evolveSrcTx);
+  const evolveSrcTxId = await warp.saveSourceTx(evolveSrcTx, true);
   if (evolveSrcTxId === null) {
     return 0;
   }
-  const evolveTx = await pst.writeInteraction({
-    function: "evolve",
-    value: evolveSrcTxId,
-    version: "0.1.0",
+
+  // stick to L1's for now
+  const evolveInteractionTXId = await contract.evolve(evolveSrcTxId, {
+    disableBundling: true,
   });
 
   console.log(
-    "Finished evolving the ArNS Smartweave Contract %s with TX %s.",
+    'Finished evolving the ArNS Smartweave Contract %s with TX %s. New contract id is: %s',
     arnsRegistryContractTxId,
-    evolveTx.originalTxId
+    evolveInteractionTXId.originalTxId,
+    evolveSrcTxId,
   );
 })();

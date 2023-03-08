@@ -1,25 +1,11 @@
 {
   "ticker": "ARNS-TEST",
   "name": "Arweave Name System Test",
-  "version":"0.0.17",
+  "version": "0.0.17",
   "owner": "",
-  "rewards": 0,
-  "settings": {
-    "lockMinLength": 5,
-    "lockMaxLength": 10000,
-    "minGatewayStakeAmount": 5000,
-    "minDelegatedStakeAmount": 100,
-    "gatewayJoinLength": 720,
-    "gatewayLeaveLength": 10080,
-    "delegatedStakeWithdrawLength": 10080,
-    "operatorStakeWithdrawLength": 10080
-  },
-  "foundation": {},
   "evolve": null,
   "records": {},
   "balances": {},
-  "vaults": {},
-  "gateways": {},
   "approvedANTSourceCodeTxs": [
     "7hL0La2KMapdJI6yIGnb4f4IjvhlGQyXnqpWc0i0d_w",
     "cNr6JPVu3rEOwIbdnu3lVipz9pwY5Pps9mxHSW7Jdtk",

@@ -12,7 +12,7 @@
     "sourceMap": true,
     "allowJs": true,
     "baseUrl": ".",
-    "types": ["webpack-env", "jest"],
+    "types": ["jest"],
     "paths": {
       "@/*": ["src/*"]
     },

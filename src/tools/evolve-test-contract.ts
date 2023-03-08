@@ -1,39 +1,60 @@
-import { LoggerFactory, WarpFactory } from "warp-contracts";
-import * as fs from "fs";
-import path from "path";
-import { JWKInterface } from "arweave/node/lib/wallet";
-import { testKeyfile } from "../constants";
+import { deployedTestContracts } from '@/deployed-contracts.js';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import * as fs from 'fs';
+import path from 'path';
+import {
+  LoggerFactory,
+  WarpFactory,
+  defaultCacheOptions,
+} from 'warp-contracts';
+
+import { testKeyfile } from '../constants';
 
 (async () => {
   // This is the testnet ArNS Registry Smartweave Contract TX ID
-  const arnsRegistryContractTxId =
-    "rNR8SmcQLefBHZ-d-oJ9jbqmQxHGB_9bjdNipmsio-s";
+  const arnsRegistryContractTxId = deployedTestContracts.contractTxId;
 
-  // ~~ Initialize warp ~~
-  LoggerFactory.INST.logLevel("error");
-  const warp = WarpFactory.forTestnet();
+  LoggerFactory.INST.logLevel('error');
 
-  // Get the key file used for the distribution
+  // ~~ Initialize SmartWeave ~~
+  const warp = WarpFactory.forTestnet(
+    {
+      ...defaultCacheOptions,
+    },
+    true,
+  );
+
+  // Get the key file used
   const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(testKeyfile).toString()
+    await fs.readFileSync(testKeyfile).toString(),
   );
 
   // Read the ArNS Registry Contract
-  const pst = warp.pst(arnsRegistryContractTxId);
-  pst.connect(wallet);
+  const contract = warp.pst(arnsRegistryContractTxId);
+  contract.connect(wallet);
 
-  // ~~ Read test contract source and initial state files ~~
+  // ~~ Read contract source and initial state files ~~
   const newSource = fs.readFileSync(
-    path.join(__dirname, "../../dist/contract.js"),
-    "utf8"
+    path.join(__dirname, '../../dist/contract.js'),
+    'utf8',
   );
-  const newSrcTxId = await pst.save({ src: newSource }, warp.environment);
-  if (newSrcTxId === null) {
+
+  // Create the evolved source code tx
+  const evolveSrcTx = await warp.createSourceTx({ src: newSource }, wallet);
+  const evolveSrcTxId = await warp.saveSourceTx(evolveSrcTx, true);
+  if (evolveSrcTxId === null) {
     return 0;
   }
-  console.log(newSrcTxId);
-  const evolvedTxId = await pst.evolve(newSrcTxId);
 
-  console.log("Finished evolving the ArNS Smartweave Contract %s.", newSrcTxId);
-  console.log(`New Contract Tx Id ${evolvedTxId.originalTxId}`);
+  // stick to L1's for now
+  const evolveInteractionTXId = await contract.evolve(evolveSrcTxId, {
+    disableBundling: true,
+  });
+
+  console.log(
+    'Finished evolving the ArNS Smartweave Contract %s with TX %s. New contract id is: %s',
+    arnsRegistryContractTxId,
+    evolveInteractionTXId.originalTxId,
+    evolveSrcTxId,
+  );
 })();

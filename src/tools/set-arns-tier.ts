@@ -1,17 +1,18 @@
-import Arweave from "arweave";
+import Arweave from 'arweave';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import * as fs from 'fs';
 import {
-  defaultCacheOptions,
   LoggerFactory,
   WarpFactory,
-} from "warp-contracts";
-import * as fs from "fs";
-import { JWKInterface } from "arweave/node/lib/wallet";
-import { keyfile } from "../constants";
+  defaultCacheOptions,
+} from 'warp-contracts';
+
+import { keyfile } from '../constants';
 
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID
   const arnsRegistryContractTxId =
-    "R-DRqVv97e8cCya95qsH_Tpvmb9vidURYWlBL5LpSzo";
+    'R-DRqVv97e8cCya95qsH_Tpvmb9vidURYWlBL5LpSzo';
 
   const tier = 3;
   const maxSubdomains = 10000;
@@ -33,13 +34,13 @@ import { keyfile } from "../constants";
 
   // Initialize Arweave
   const arweave = Arweave.init({
-    host: "arweave.net",
+    host: 'arweave.net',
     port: 443,
-    protocol: "https",
+    protocol: 'https',
   });
 
   // Initialize `LoggerFactory`
-  LoggerFactory.INST.logLevel("error");
+  LoggerFactory.INST.logLevel('error');
 
   // ~~ Initialize SmartWeave ~~
   const warp = WarpFactory.forMainnet(
@@ -47,12 +48,12 @@ import { keyfile } from "../constants";
       ...defaultCacheOptions,
       inMemory: true,
     },
-    true
+    true,
   );
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(keyfile).toString()
+    await fs.readFileSync(keyfile).toString(),
   );
 
   // Read the ANT Registry Contract
@@ -60,11 +61,11 @@ import { keyfile } from "../constants";
   pst.connect(wallet);
 
   const txId = await pst.writeInteraction({
-    function: "setTier",
+    function: 'setTier',
     tier,
     maxSubdomains,
     minTtlSeconds,
   });
 
-  console.log("Finished set the ArNS tier: %s", txId);
+  console.log('Finished set the ArNS tier: %s', txId);
 })();
