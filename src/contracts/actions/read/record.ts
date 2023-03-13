@@ -1,12 +1,18 @@
-import { ContractResult, IOState, PstAction } from '../../types/types';
+import {
+  ArNSName,
+  ContractResult,
+  IOState,
+  PstAction,
+} from '../../types/types';
 
 declare const ContractError;
 
-export const record = async (
+export const getRecord = async (
   state: IOState,
   { input: { name } }: PstAction,
 ): Promise<ContractResult> => {
   const records = state.records;
+  const allTiers = state.tiers.history;
 
   if (typeof name !== 'string') {
     throw new ContractError('Must specify the ArNS Name');
@@ -17,14 +23,20 @@ export const record = async (
     throw new ContractError('This name does not exist');
   }
 
+  const arnsName: ArNSName = records[name];
+  const associatedTier = allTiers.find((t) => t.id === arnsName.tier);
+
+  if (!associatedTier) {
+    throw new ContractError('The name is associated with an invalid tier.');
+  }
+
   return {
     result: {
       name,
-      tier: records[name].tier,
-      contractTxId: records[name].contractTxId,
-      maxSubdomains: records[name].maxSubdomains,
-      minTtlSeconds: records[name].minTtlSeconds,
-      endTimestamp: records[name].endTimestamp,
+      ...arnsName,
+      tier: {
+        ...associatedTier,
+      },
     },
   };
 };

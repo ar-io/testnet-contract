@@ -4,28 +4,47 @@
   "version": "0.0.17",
   "owner": "",
   "evolve": null,
-  "records": {},
-  "balances": {},
-  "approvedANTSourceCodeTxs": [
-    "7hL0La2KMapdJI6yIGnb4f4IjvhlGQyXnqpWc0i0d_w",
-    "cNr6JPVu3rEOwIbdnu3lVipz9pwY5Pps9mxHSW7Jdtk",
-    "JIIB01pRbNK2-UyNxwQK-6eknrjENMTpTvQmB8ZDzQg",
-    "KAMFBCw2fw3JbZW8NUetF_kVR36HMm7HpPzLvXZXFFI",
-    "PEI1efYrsX08HUwvc6y-h6TSpsNlo2r6_fWL2_GdwhY"
-  ],
-  "tiers": {
-    "1": {
-      "maxSubdomains": 100,
-      "minTtlSeconds": 3600
-    },
-    "2": {
-      "maxSubdomains": 1000,
-      "minTtlSeconds": 1800
-    },
-    "3": {
-      "maxSubdomains": 10000,
-      "minTtlSeconds": 900
+  "records": {
+    "ardrive": {
+      "tierId": "8326f7a7-9bb2-476d-89fb-308870423c55",
+      "contractTxId": "gh673M0Koh941OIITVXl9hKabRaYWABQUedZxW-swIA",
+      "endTimestamp": 1678292751131
     }
+  },
+  "balances": {},
+  "approvedANTSourceCodeTxs": ["7hL0La2KMapdJI6yIGnb4f4IjvhlGQyXnqpWc0i0d_w"],
+  "tiers": {
+    "current": {
+      "1": "8326f7a7-9bb2-476d-89fb-308870423c55",
+      "2": "9fd083c3-a42f-41f3-ac6b-38aa4713470c",
+      "3": "282cc9ef-dcad-4e42-a773-0bef38700e52"
+    },
+    "history": [
+      {
+        "id": "8326f7a7-9bb2-476d-89fb-308870423c55",
+        "fee": 100,
+        "settings": {
+          "maxUndernames": 100,
+          "minTTLSeconds": 3600
+        }
+      },
+      {
+        "id": "9fd083c3-a42f-41f3-ac6b-38aa4713470c",
+        "fee": 1000,
+        "settings": {
+          "maxUndernames": 1000,
+          "minTTLSeconds": 1800
+        }
+      },
+      {
+        "id": "282cc9ef-dcad-4e42-a773-0bef38700e52",
+        "fee": 10000,
+        "settings": {
+          "maxUndernames": 10000,
+          "minTTLSeconds": 900
+        }
+      }
+    ]
   },
   "fees": {
     "1": 4218750000,

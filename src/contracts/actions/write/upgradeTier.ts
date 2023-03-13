@@ -1,8 +1,4 @@
-import {
-  FOUNDATION_PERCENTAGE,
-  SECONDS_IN_A_YEAR,
-  SECONDS_IN_GRACE_PERIOD,
-} from '@/constants';
+import { SECONDS_IN_A_YEAR, SECONDS_IN_GRACE_PERIOD } from '@/constants';
 
 import { ContractResult, IOState, PstAction } from '../../types/types';
 
@@ -11,12 +7,12 @@ declare const SmartWeave: any;
 
 export const upgradeTier = async (
   state: IOState,
-  { caller, input: { name, tier } }: PstAction,
+  { caller, input: { name, tierNumber } }: PstAction,
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
-  const fees = state.fees;
-  const tiers = state.tiers;
+  const currentTiers = state.tiers.current;
+  const allTiers = state.tiers.history;
   const currentBlockTime = +SmartWeave.block.timestamp;
 
   // Check if the user has enough tokens to upgrade the tier
@@ -35,17 +31,30 @@ export const upgradeTier = async (
   }
 
   // Check if it includes a valid tier number
-  if (!Number.isInteger(tier)) {
-    throw new ContractError('Invalid value for "tier". Must be an integers');
+  const allowedTierNumbers = Object.keys(currentTiers).map((t) => +t);
+  if (
+    !Number.isInteger(tierNumber) ||
+    !allowedTierNumbers.includes(tierNumber)
+  ) {
+    throw new ContractError(
+      `Invalid value for "tier". Allowed tier numbers: ${allowedTierNumbers}`,
+    );
   }
 
-  // Check if this is a valid tier
-  if (!tiers[tier]) {
-    throw new ContractError(`Tier is not defined!`);
+  // get the tier to upgrade too
+  const currentNameTier = allTiers.find((t) => t.id === records[name].tier);
+  const selectedUpgradeTier = allTiers.find(
+    (t) => t.id === currentTiers[tierNumber],
+  );
+
+  if (!selectedUpgradeTier) {
+    throw new ContractError(
+      'The tier associated with the provided tier number does not exist. Try again.',
+    );
   }
 
-  if (tier <= records[name].tier) {
-    throw new ContractError(`Tiers can only be upgraded, not lowered!`);
+  if (currentNameTier.id === selectedUpgradeTier.id) {
+    throw new ContractError('Cannot upgrade to the same tier.');
   }
 
   // check if this is an active lease, if not it cannot be upgraded
@@ -56,32 +65,27 @@ export const upgradeTier = async (
   }
 
   // Determine price of upgrading this tier, prorating based on current time and amount of tiers left
-  let amountOfSecondsLeft = records[name].endTimestamp - currentBlockTime;
-  let amountOfYearsLeft = amountOfSecondsLeft / SECONDS_IN_A_YEAR;
-  let levelsUpgraded = tier - records[name].tier;
+  const previousTierFee = currentNameTier.fee;
+  const newTierFee = selectedUpgradeTier.fee;
+  const tierFeeDifference = newTierFee - previousTierFee;
+
+  const amountOfSecondsLeft = records[name].endTimestamp - currentBlockTime;
+  const amountOfYearsLeft = amountOfSecondsLeft / SECONDS_IN_A_YEAR;
 
   // The price is determined by multiplying the base fee times the number of levels upgraded times the amount of years left
-  let qty = Math.ceil(
-    fees[name.length.toString()] * levelsUpgraded * amountOfYearsLeft,
-  );
+  // TODO: add a foundation fee for upgrading tiers (e.g 5%)
+  const totalTierFeeUpgrade = tierFeeDifference * amountOfYearsLeft;
 
   // Check if the caller has enough tokens to upgrade this tier
-  if (balances[caller] < qty) {
+  if (balances[caller] < totalTierFeeUpgrade) {
     throw new ContractError(
-      `Caller balance not high enough to extend this name lease for ${qty} token(s)!`,
+      `Caller balance not high enough to extend this name lease for ${totalTierFeeUpgrade} token(s)!`,
     );
   }
 
   // reduce balance set the end lease period for this record based on number of years
-  balances[caller] -= qty; // reduce callers balance
-  // TODO: logic for protocol balance
-  // state.foundation.balance += Math.floor(qty * (FOUNDATION_PERCENTAGE / 100)); // increase foundation balance using the foundation percentage
-  // state.rewards += Math.floor(qty * ((100 - FOUNDATION_PERCENTAGE) / 100)); // increase protocol rewards without the foundation percentage
-
-  // Set the maximum amount of subdomains for this name based on the selected tier
-  records[name].tier = tier;
-  records[name].maxSubdomains = tiers[tier].maxSubdomains;
-  records[name].minTtlSeconds = tiers[tier].minTtlSeconds;
+  balances[caller] -= totalTierFeeUpgrade;
+  records[name].tier = selectedUpgradeTier.id;
 
   return { state };
 };

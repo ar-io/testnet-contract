@@ -1,11 +1,13 @@
+import { ALLOWED_ACTIVE_TIERS } from '@/constants.js';
+
 import { ContractResult, IOState, PstAction } from '../../types/types';
 
 declare const ContractError;
 
 // Modifies an existing tier or creates a new one.
-export const setTier = async (
+export const setActiveTier = async (
   state: IOState,
-  { caller, input: { tier, maxSubdomains, minTtlSeconds } }: PstAction,
+  { caller, input: { tierNumber, tierId } }: PstAction,
 ): Promise<ContractResult> => {
   const owner = state.owner;
 
@@ -15,14 +17,15 @@ export const setTier = async (
   }
 
   if (
-    !Number.isInteger(maxSubdomains) ||
-    !Number.isInteger(tier) ||
-    !Number.isInteger(minTtlSeconds)
+    !Number.isInteger(tierNumber) ||
+    !ALLOWED_ACTIVE_TIERS.includes(tierNumber)
   ) {
-    throw new ContractError('Invalid tier configuration');
+    throw new ContractError(
+      `Invalid tier number provided. Allowed tier numbers: ${ALLOWED_ACTIVE_TIERS}`,
+    );
   }
 
-  state.tiers[tier] = { maxSubdomains, minTtlSeconds };
+  state.tiers[tier] = { maxUndernames, minTtlSeconds };
 
   return { state };
 };

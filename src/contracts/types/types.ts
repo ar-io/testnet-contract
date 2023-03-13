@@ -2,7 +2,6 @@ import { PstState } from 'warp-contracts';
 
 export interface IOState extends PstState {
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
-  foundation: Foundation;
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
   records: {
     // A list of all names and their corresponding attributes
@@ -12,11 +11,13 @@ export interface IOState extends PstState {
     // A list of all fees for purchasing ArNS names
     [nameLength: string]: number;
   };
-  approvedANTSourceCodeTxs: string[]; // An array of Smartweave Source Code transactions for whitelisted ANTs
   tiers: {
-    // Different service tiers provide different premium capabilities for a higher cost
-    [tier: number]: ServiceTier;
+    current: {
+      [x: number]: string;
+    };
+    history: ServiceTier[];
   };
+  approvedANTSourceCodeTxs: string[]; // An array of Smartweave Source Code transactions for whitelisted ANTs
 }
 
 export interface ContractSettings {
@@ -57,41 +58,34 @@ export interface GatewaySettings {
 export type AllowedProtocols = 'http' | 'https';
 
 export interface ArNSName {
-  tier: number; // The tier of service that has been purchased
   contractTxId: string; // The ANT Contract used to manage this name
   endTimestamp: number; // At what unix time (seconds since epoch) the lease ends
-  maxSubdomains: number; // The maximum number of subdomains allowed for this name, based on the tier purchased
-  minTtlSeconds: number; // The minimum number of seconds allowed for the TTL, based on tier purchased
+  tier: string; // The id of the tier selected at time of purchased
 }
 
-export interface ServiceTier {
-  maxSubdomains: number; // The maximum number of subdomains (undernames) allowed for this tier
-  minTtlSeconds: number; // The minimum number of seconds allowed for the TTL for this tier
-}
+// export interface Foundation {
+//   // The settings and wallets used by the AR.IO Foundation.  This is for testing purposes only
+//   balance: number; // the amount of funds held by the foundation, collection from AR.IO services like ArNS
+//   actionPeriod: number; // the amount of blocks that must pass for all signers to approve a transfer
+//   minSignatures: number; // the minimum amount of signatures/approvals needed to move funds, must be less than the amount of total addresses
+//   addresses: string[]; // All of the foundation managed wallet addresses
+//   actions: FoundationAction[]; // A list of all on-chain actions performed by the foundation
+// }
 
-export interface Foundation {
-  // The settings and wallets used by the AR.IO Foundation.  This is for testing purposes only
-  balance: number; // the amount of funds held by the foundation, collection from AR.IO services like ArNS
-  actionPeriod: number; // the amount of blocks that must pass for all signers to approve a transfer
-  minSignatures: number; // the minimum amount of signatures/approvals needed to move funds, must be less than the amount of total addresses
-  addresses: string[]; // All of the foundation managed wallet addresses
-  actions: FoundationAction[]; // A list of all on-chain actions performed by the foundation
-}
-
-export interface FoundationAction {
-  id?: number; // the id number for this action
-  type: FoundationActionType; // the specific kind of action being performed
-  status?: FoundationActionStatus; // the latest status of this action
-  start?: number; // the block height that this action started at
-  totalSignatures?: number; // the amount of signatures collected for this action
-  target?: string; // the target wallet added to the foundation addresses list
-  value?: string | number; // the value for setting a specific configuration
-  recipient?: string; // the target recipient of a foundation balance distribution
-  qty?: number; // the amount of tokens distributed from the foundation balance
-  note?: string; // a description of this foundation action
-  signed?: string[]; // a list of the foundation wallets that have signed this action
-  lockLength?: number; // determines the amount of blocks a foundation balance distribution is locked for
-}
+// export interface FoundationAction {
+//   id?: number; // the id number for this action
+//   type: FoundationActionType; // the specific kind of action being performed
+//   status?: FoundationActionStatus; // the latest status of this action
+//   start?: number; // the block height that this action started at
+//   totalSignatures?: number; // the amount of signatures collected for this action
+//   target?: string; // the target wallet added to the foundation addresses list
+//   value?: string | number; // the value for setting a specific configuration
+//   recipient?: string; // the target recipient of a foundation balance distribution
+//   qty?: number; // the amount of tokens distributed from the foundation balance
+//   note?: string; // a description of this foundation action
+//   signed?: string[]; // a list of the foundation wallets that have signed this action
+//   lockLength?: number; // determines the amount of blocks a foundation balance distribution is locked for
+// }
 
 export type FoundationActionStatus = 'active' | 'passed' | 'failed';
 export type FoundationActionType =
@@ -151,11 +145,15 @@ export interface PstInput {
   value: string | number;
   name: string;
   contractTxId: string;
+  newTier: {
+    fee: number;
+    settings: ServiceTierSettings;
+  };
+  fee: number;
   years: number;
   qty: number;
-  tier: number;
-  maxSubdomains: number;
-  minTtlSeconds: number;
+  tierNumber: number;
+  tierId: string;
   note: string;
   recipient: string;
   lockLength: number;
@@ -182,14 +180,25 @@ export interface PstResult {
 }
 
 export interface ArNSNameResult {
-  name: string; // The
-  tier: number; // The tier of service that has been purchased
+  name: string;
   contractTxId: string; // The ANT Contract used to manage this name
   endTimestamp: number; // At what unix time (seconds since epoch) the lease ends
-  maxSubdomains: number; // The maximum number of subdomains allowed for this name, based on the tier purchased
-  minTtlSeconds: number; // The minimum number of seconds allowed for the TTL for this tier
+  tier: ServiceTier; // Maps to the service tier
 }
 
+export interface ServiceTier {
+  id: string;
+  fee: number;
+  settings: ServiceTierSettings;
+}
+
+// any tier settings offered
+export interface ServiceTierSettings {
+  maxUndernames: number;
+  minTTLSeconds: number;
+}
+
+// TODO: handle purchasing additional undernames
 export type PstFunction =
   | 'transfer'
   | 'transferLocked'
@@ -197,16 +206,19 @@ export type PstFunction =
   | 'setFees'
   | 'evolve'
   | 'buyRecord'
-  | 'extendRecord'
-  | 'setTier'
-  | 'upgradeTier'
   | 'removeRecord'
+  | 'extendRecord'
   | 'addANTSourceCodeTx'
   | 'removeANTSourceCodeTx'
-  | 'balance'
-  | 'record'
+  | 'getBalance'
+  | 'getRecord'
   | 'fixState'
-  | 'setName';
+  | 'setName'
+  | 'setActiveTier'
+  | 'createNewTier'
+  | 'getTier'
+  | 'getActiveTiers'
+  | 'upgradeTier';
 
 export type ContractResult =
   | { state: IOState }

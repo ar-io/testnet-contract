@@ -666,15 +666,15 @@
   "ticker": "ARNS-TEST",
   "tiers": {
     "1": {
-      "maxSubdomains": 100,
+      "maxUndernames": 100,
       "minTtlSeconds": 3600
     },
     "2": {
-      "maxSubdomains": 1000,
+      "maxUndernames": 1000,
       "minTtlSeconds": 1800
     },
     "3": {
-      "maxSubdomains": 10000,
+      "maxUndernames": 10000,
       "minTtlSeconds": 900
     }
   },

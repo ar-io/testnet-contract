@@ -1,5 +1,6 @@
 import {
-  DEFAULT_TIERS,
+  ALLOWED_ACTIVE_TIERS,
+  DEFAULT_ANNUAL_PERCENTAGE_FEE,
   MAX_NAME_LENGTH,
   MAX_YEARS,
   RESERVED_ATOMIC_TX_ID,
@@ -8,21 +9,28 @@ import {
   TX_ID_LENGTH,
 } from '@/constants';
 
-import { ContractResult, IOState, PstAction } from '../../types/types';
+import {
+  ContractResult,
+  IOState,
+  PstAction,
+  ServiceTier,
+} from '../../types/types';
 
 declare const ContractError;
 declare const SmartWeave: any;
 
 export const buyRecord = async (
   state: IOState,
-  { caller, input: { name, contractTxId, years, tier } }: PstAction,
+  {
+    caller,
+    input: { name, contractTxId, years, tierNumber = ALLOWED_ACTIVE_TIERS[0] },
+  }: PstAction,
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
   const fees = state.fees;
-  const tiers = state.tiers ?? DEFAULT_TIERS;
-  // TODO: necessary for protocol p
-  // const foundation = state.foundation;
+  const currentTiers = state.tiers.current;
+  const allTiers = state.tiers.history;
   const currentBlockTime = +SmartWeave.block.timestamp;
 
   // Check if the user has enough tokens to purchase the name
@@ -42,21 +50,28 @@ export const buyRecord = async (
     );
   }
 
-  // Check if it includes a valid tier
-  if (!Number.isInteger(tier)) {
-    throw new ContractError('Invalid value for "tier". Must be an integer');
-  }
-
-  // Check if this is a valid tier, if tier does not exist
-  if (!tiers[tier]) {
+  // list of all active tier ID's
+  const activeTierNumbers = Object.keys(currentTiers).map((k) => +k);
+  if (
+    !Number.isInteger(tierNumber) ||
+    !activeTierNumbers.includes(tierNumber)
+  ) {
     throw new ContractError(
-      `Tier is not defined! Allowed tiers: ${Object.keys(tiers).join(', ')}`,
+      `Invalid value for "tier". Must be ${Object.values(currentTiers).join(
+        ',',
+      )}`,
     );
   }
 
-  // Set the maximum amount of subdomains and minimum TTLSeconds for this name based on the selected tier
-  const maxSubdomains = tiers[tier].maxSubdomains;
-  const minTtlSeconds = tiers[tier].minTtlSeconds;
+  // the tier purchased
+  const selectedTierID = currentTiers[tierNumber];
+  const purchasedTier: ServiceTier = allTiers.find(
+    (t) => t.id === selectedTierID,
+  );
+
+  if (!purchasedTier) {
+    throw new ContractError('The tier purchased is not in the states history.');
+  }
 
   // set the end lease period for this based on number of years
   const endTimestamp = currentBlockTime + SECONDS_IN_A_YEAR * years;
@@ -78,12 +93,25 @@ export const buyRecord = async (
     throw new ContractError('Invalid ArNS Record Name');
   }
 
-  // Determine price of name
-  const qty = fees[name.length.toString()] * tier * years;
+  // Determine price of name, each undername costs 1 additional IO token per year
+  const initialNamePurchaseFee = fees[name.length.toString()];
 
-  if (balances[caller] < qty) {
+  // Registration fee is 10% of cost
+  const nameAnnualRegistrationFee =
+    initialNamePurchaseFee * DEFAULT_ANNUAL_PERCENTAGE_FEE;
+
+  // Undername fee
+  const tierAnnualFee = purchasedTier.fee;
+
+  // Total annual costs (registration + undernames)
+  const totalAnnualFee = (nameAnnualRegistrationFee + tierAnnualFee) * years;
+
+  // total cost to purchase name and undernames for set number of years (basically a non-discounted cash flow)
+  const totalFee = initialNamePurchaseFee + totalAnnualFee;
+
+  if (balances[caller] < totalFee) {
     throw new ContractError(
-      `Caller balance not high enough to purchase this name for ${qty} token(s)!`,
+      `Caller balance not high enough to purchase this name for ${totalFee} token(s)!`,
     );
   }
 
@@ -105,16 +133,11 @@ export const buyRecord = async (
   // TODO: foundation rewards logic
   if (!records[name]) {
     // No name created, so make a new one
-    balances[caller] -= qty; // reduce callers balance
-    // TODO: logic for protocol balance
-    // foundation.balance += Math.floor(qty * (FOUNDATION_PERCENTAGE / 100)); // increase foundation balance using the foundation percentage
-    // state.rewards += Math.floor(qty * ((100 - FOUNDATION_PERCENTAGE) / 100)); // increase protocol rewards without the foundation percentage
+    balances[caller] -= totalFee; // reduce callers balance
     records[name] = {
-      tier,
       contractTxId,
       endTimestamp,
-      maxSubdomains,
-      minTtlSeconds,
+      tier: selectedTierID,
     };
     // assumes lease expiration
   } else if (
@@ -122,13 +145,11 @@ export const buyRecord = async (
     currentBlockTime
   ) {
     // This name's lease has expired and can be repurchased
-    balances[caller] -= qty; // reduce callers balance
+    balances[caller] -= totalFee; // reduce callers balance
     records[name] = {
-      tier,
       contractTxId,
       endTimestamp,
-      maxSubdomains,
-      minTtlSeconds,
+      tier: selectedTierID,
     };
   } else {
     throw new ContractError('This name already exists in an active lease');
