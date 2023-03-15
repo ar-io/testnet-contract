@@ -23,6 +23,9 @@ export const DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE =
   'Name does not exist in the ArNS!';
 export const DEFAULT_EXISTING_ANT_SOURCE_CODE_TX_MESSAGE =
   'This ANT Source Code Transaction ID is already allowed.';
+export const DEFAULT_INSUFFICIENT_FUNDS_MESSAGE =
+  'Insufficient funds for this transaction.';
+export const DEFAULT_INVALID_TARGET_MESSAGE = 'Invalid target specified';
 // The mainnet wallet that will be used in the creation of contracts, ants and record purchases.
 export const keyfile = '';
 

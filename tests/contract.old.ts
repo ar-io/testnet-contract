@@ -162,56 +162,6 @@ describe('Testing the ArNS Registry Contract', () => {
     );
   });
 
-  it('should properly transfer and perform dry write with overwritten caller', async () => {
-    const newWallet = await arweave.wallets.generate();
-    const overwrittenCaller = await arweave.wallets.jwkToAddress(newWallet);
-
-    await pst.transfer({
-      target: overwrittenCaller.toString(),
-      qty: TRANSFER_AMOUNT,
-    });
-
-    await mineBlock(arweave);
-    const currentState = (await pst.currentState()) as IOState;
-    expect(currentState.balances[walletAddress]).toEqual(
-      WALLET_STARTING_TOKENS - TRANSFER_AMOUNT,
-    );
-    expect((await pst.currentState()).balances[overwrittenCaller]).toEqual(
-      TRANSFER_AMOUNT,
-    );
-    expect(currentState.balances[overwrittenCaller]).toEqual(TRANSFER_AMOUNT);
-    const result: InteractionResult<PstState, unknown> = await pst.dryWrite(
-      {
-        function: 'transfer',
-        target: 'NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g',
-        qty: INTERACTION_COST,
-      },
-      overwrittenCaller,
-    );
-
-    expect(result.state.balances[overwrittenCaller]).toEqual(
-      TRANSFER_AMOUNT - INTERACTION_COST,
-    );
-    expect(
-      result.state.balances['NdZ3YRwMB2AMwwFYjKn1g88Y9nRybTo0qhS1ORq_E7g'],
-    ).toEqual(INTERACTION_COST);
-  });
-
-  it('should not transfer tokens with incorrect ownership', async () => {
-    const newWallet = await arweave.wallets.generate();
-    const overwrittenCaller = await arweave.wallets.jwkToAddress(newWallet);
-    const PREVIOUS_BALANCE = (await pst.currentBalance(walletAddress)).balance;
-    pst.connect(newWallet);
-    await pst.transfer({
-      target: walletAddress.toString(),
-      qty: TRANSFER_AMOUNT,
-    });
-    await mineBlock(arweave);
-    const currentState = (await pst.currentState()) as IOState;
-    expect(currentState.balances[walletAddress]).toEqual(PREVIOUS_BALANCE);
-    expect(currentState.balances[overwrittenCaller]).toEqual(undefined);
-  });
-
   it('should not extend record with not enough balance or invalid parameters', async () => {
     pst.connect(wallet2);
     const PREVIOUS_BALANCE = (await pst.currentBalance(walletAddress2)).balance;
