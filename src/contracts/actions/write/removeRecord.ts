@@ -25,5 +25,8 @@ export const removeRecord = async (
     throw new ContractError(`Name does not exist in the ArNS!`);
   }
 
+  // update the records
+  state.records = records;
+
   return { state };
 };

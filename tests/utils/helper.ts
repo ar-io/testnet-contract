@@ -116,7 +116,7 @@ export function getLocalWallet(index = 0): JWKInterface{
     return wallet;
 }
 
-export function getLocalArNSContractId(){
+export function getLocalArNSContractId(): string {
     const contract = JSON.parse(fs.readFileSync(
         path.join(__dirname, `../contract/arns_contract.json`),
         'utf8',

@@ -1,7 +1,5 @@
 import {
   DEFAULT_ANNUAL_PERCENTAGE_FEE,
-  DEFAULT_UNDERNAMES_COUNT,
-  DEFAULT_UNDERNAME_REGISTRATION_IO_FEE,
   MAX_YEARS,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
@@ -21,6 +19,7 @@ export const extendRecord = async (
   const records = state.records;
   const fees = state.fees;
   const currentBlockTime = +SmartWeave.block.timestamp;
+  const allTiers = state.tiers.history;
 
   // Check if the user has enough tokens to purchase the name
   if (
@@ -67,27 +66,28 @@ export const extendRecord = async (
     );
   }
 
-  // annual cost of name
-  const annualRegistrationFee =
-    fees[name.length.toString()] * DEFAULT_ANNUAL_PERCENTAGE_FEE;
+  const purchasedTier = allTiers.find(
+    (t) => t.id === records[name].tier,
+  );
 
-  // annual cost of undernames to extend
-  const annualUndernameFee =
-    (records[name].maxUndernames - DEFAULT_UNDERNAMES_COUNT) *
-    DEFAULT_UNDERNAME_REGISTRATION_IO_FEE;
+  // current cost to purchase the name
+  const initialNamePurchaseFee = fees[name.length.toString()];
+  // the annual cost to maintain the name
+  const nameAnnualRegistrationFee = initialNamePurchaseFee * DEFAULT_ANNUAL_PERCENTAGE_FEE;
+  // annual tier fee
+  const tierAnnualFee = purchasedTier.fee;
 
-  // the cost to extend the name, and undernames for the allowed number of years
-  const totalAnnualExtensionFee =
-    (annualRegistrationFee + annualUndernameFee) * years;
+  // total cost to extend a record for the given tier
+  const totalExtensionAnnualFee = (nameAnnualRegistrationFee + tierAnnualFee) * years;
 
-  if (balances[caller] < totalAnnualExtensionFee) {
+  if (balances[caller] < totalExtensionAnnualFee) {
     throw new ContractError(
-      `Caller balance not high enough to extend this name lease for ${totalAnnualExtensionFee} token(s) for ${years}!`,
+      `Caller balance not high enough to extend this name lease for ${totalExtensionAnnualFee} token(s) for ${years}!`,
     );
   }
 
   // reduce balance set the end lease period for this record based on number of years
-  balances[caller] -= totalAnnualExtensionFee; // reduce callers balance
+  balances[caller] -= totalExtensionAnnualFee; // reduce callers balance
   records[name].endTimestamp += SECONDS_IN_A_YEAR * years; // set the new extended timestamp
 
   return { state };
