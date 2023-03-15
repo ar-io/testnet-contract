@@ -122,100 +122,97 @@ describe('Records', () => {
 
         describe('write interactions', () => {
 
-            describe('buy record', () => {
-
-                it('should be able to purchase a name', async () => {
-                    const namePurchase: ArNSNamePurchase = {
-                        name: 'newName',
-                        contractTxId: DEFAULT_ANT_CONTRACT_ID,
-                        years: 1,
-                        tierNumber: 1
-                    }
-                    const writeInteraction = await contract.writeInteraction({
-                        function: 'buyRecord',
-                        ...namePurchase,
-                    }, {
-                        disableBundling: true
-                    })
-
-                    await mineBlock(arweave);
-
-                    expect(writeInteraction?.originalTxId).not.toBe(undefined);
-                    const { cachedValue } = await contract.readState();
-                    const state = cachedValue.state as IOState;
-                    expect(Object.keys(cachedValue.errorMessages)).not.toContain(writeInteraction!.originalTxId);
-                    expect(state.records[namePurchase.name.toLowerCase()]).toEqual(expect.objectContaining({
-                        contractTxId: DEFAULT_ANT_CONTRACT_ID,
-                        tier: state.tiers.current[1],
-                        endTimestamp: expect.any(Number)
-                    }));
-                });
-
-                it('should not be able to purchase a name that has not expired', async () => {
-                    const namePurchase: ArNSNamePurchase = {
-                        name: 'newName',
-                        contractTxId: DEFAULT_ANT_CONTRACT_ID,
-                        years: 1,
-                        tierNumber: 1
-                    }
-                    const writeInteraction = await contract.writeInteraction({
-                        function: 'buyRecord',
-                        ...namePurchase,
-                    }, {
-                        disableBundling: true
-                    })
-
-                    await mineBlock(arweave);
-
-                    expect(writeInteraction?.originalTxId).not.toBe(undefined);
-                    const { cachedValue } = await contract.readState();
-                    expect(Object.keys(cachedValue.errorMessages)).toContain(writeInteraction!.originalTxId);
-                    expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE)
-                });
-
-
-                it.each([
-                    // TODO: add other known invalid names
-                    '',
-                    '*&*##$%#',
-                    '-leading',
-                    'this-is-a-looong-name-a-verrrryyyyy-loooooong-name-that-is-too-long',
-                    'test.subdomain.name',
-                ])('be able to purchase an invalid name: %s', async (badName) => {
-                    const namePurchase: ArNSNamePurchase = {
-                        name: badName,
-                        contractTxId: DEFAULT_ANT_CONTRACT_ID,
-                        years: 1,
-                        tierNumber: 1
-                    }
-                    const writeInteraction = await contract.writeInteraction({
-                        function: 'buyRecord',
-                        ...namePurchase,
-                    }, {
-                        disableBundling: true
-                    })
-
-                    await mineBlock(arweave);
-
-                    expect(writeInteraction?.originalTxId).not.toBe(undefined);
-                    const { cachedValue } = await contract.readState();
-                    expect(Object.keys(cachedValue.errorMessages)).toContain(writeInteraction!.originalTxId);
-                    expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(DEFAULT_INVALID_ARNS_NAME_MESSAGE)
-                });
-
-                it('should not be able to remove record', async () => {
-                    const writeInteraction = await contract.writeInteraction({
-                        function: 'removeRecord',
-                        name: 'name1'
-                    }, {
-                        disableBundling: true
-                    });
-    
-                    expect(writeInteraction?.originalTxId).not.toBe(undefined);
-                    const { cachedValue } = await contract.readState();
-                    expect(Object.keys(cachedValue.errorMessages)).toContain(writeInteraction!.originalTxId);
-                    expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(DEFAULT_NON_CONTRACT_OWNER_MESSAGE)
+            it('should be able to purchase a name', async () => {
+                const namePurchase: ArNSNamePurchase = {
+                    name: 'newName',
+                    contractTxId: DEFAULT_ANT_CONTRACT_ID,
+                    years: 1,
+                    tierNumber: 1
+                }
+                const writeInteraction = await contract.writeInteraction({
+                    function: 'buyRecord',
+                    ...namePurchase,
+                }, {
+                    disableBundling: true
                 })
+
+                await mineBlock(arweave);
+
+                expect(writeInteraction?.originalTxId).not.toBe(undefined);
+                const { cachedValue } = await contract.readState();
+                const state = cachedValue.state as IOState;
+                expect(Object.keys(cachedValue.errorMessages)).not.toContain(writeInteraction!.originalTxId);
+                expect(state.records[namePurchase.name.toLowerCase()]).toEqual(expect.objectContaining({
+                    contractTxId: DEFAULT_ANT_CONTRACT_ID,
+                    tier: state.tiers.current[1],
+                    endTimestamp: expect.any(Number)
+                }));
+            });
+
+            it('should not be able to purchase a name that has not expired', async () => {
+                const namePurchase: ArNSNamePurchase = {
+                    name: 'newName',
+                    contractTxId: DEFAULT_ANT_CONTRACT_ID,
+                    years: 1,
+                    tierNumber: 1
+                }
+                const writeInteraction = await contract.writeInteraction({
+                    function: 'buyRecord',
+                    ...namePurchase,
+                }, {
+                    disableBundling: true
+                })
+
+                await mineBlock(arweave);
+
+                expect(writeInteraction?.originalTxId).not.toBe(undefined);
+                const { cachedValue } = await contract.readState();
+                expect(Object.keys(cachedValue.errorMessages)).toContain(writeInteraction!.originalTxId);
+                expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE)
+            });
+
+
+            it.each([
+                // TODO: add other known invalid names
+                '',
+                '*&*##$%#',
+                '-leading',
+                'this-is-a-looong-name-a-verrrryyyyy-loooooong-name-that-is-too-long',
+                'test.subdomain.name',
+            ])('should not be able to purchase an invalid name: %s', async (badName) => {
+                const namePurchase: ArNSNamePurchase = {
+                    name: badName,
+                    contractTxId: DEFAULT_ANT_CONTRACT_ID,
+                    years: 1,
+                    tierNumber: 1
+                }
+                const writeInteraction = await contract.writeInteraction({
+                    function: 'buyRecord',
+                    ...namePurchase,
+                }, {
+                    disableBundling: true
+                })
+
+                await mineBlock(arweave);
+
+                expect(writeInteraction?.originalTxId).not.toBe(undefined);
+                const { cachedValue } = await contract.readState();
+                expect(Object.keys(cachedValue.errorMessages)).toContain(writeInteraction!.originalTxId);
+                expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(DEFAULT_INVALID_ARNS_NAME_MESSAGE)
+            });
+
+            it('should not be able to remove record', async () => {
+                const writeInteraction = await contract.writeInteraction({
+                    function: 'removeRecord',
+                    name: 'name1'
+                }, {
+                    disableBundling: true
+                });
+
+                expect(writeInteraction?.originalTxId).not.toBe(undefined);
+                const { cachedValue } = await contract.readState();
+                expect(Object.keys(cachedValue.errorMessages)).toContain(writeInteraction!.originalTxId);
+                expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(DEFAULT_NON_CONTRACT_OWNER_MESSAGE)
             });
         });
     });

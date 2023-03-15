@@ -1,4 +1,4 @@
-import { TX_ID_LENGTH } from '@/constants';
+import { TX_ID_LENGTH, DEFAULT_NON_CONTRACT_OWNER_MESSAGE } from '@/constants';
 
 import { ContractResult, IOState, PstAction } from '../../types/types';
 
@@ -14,7 +14,7 @@ export const addANTSourceCodeTx = async (
 
   // Only the owner of the contract can perform this method
   if (caller !== owner) {
-    throw new ContractError('Caller cannot add ANT Source Code Transactions');
+    throw new ContractError(DEFAULT_NON_CONTRACT_OWNER_MESSAGE);
   }
 
   // check if it is a valid arweave transaction id for the smartweave contract
