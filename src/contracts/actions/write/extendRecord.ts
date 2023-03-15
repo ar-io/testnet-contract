@@ -66,19 +66,19 @@ export const extendRecord = async (
     );
   }
 
-  const purchasedTier = allTiers.find(
-    (t) => t.id === records[name].tier,
-  );
+  const purchasedTier = allTiers.find((t) => t.id === records[name].tier);
 
   // current cost to purchase the name
   const initialNamePurchaseFee = fees[name.length.toString()];
   // the annual cost to maintain the name
-  const nameAnnualRegistrationFee = initialNamePurchaseFee * DEFAULT_ANNUAL_PERCENTAGE_FEE;
+  const nameAnnualRegistrationFee =
+    initialNamePurchaseFee * DEFAULT_ANNUAL_PERCENTAGE_FEE;
   // annual tier fee
   const tierAnnualFee = purchasedTier.fee;
 
   // total cost to extend a record for the given tier
-  const totalExtensionAnnualFee = (nameAnnualRegistrationFee + tierAnnualFee) * years;
+  const totalExtensionAnnualFee =
+    (nameAnnualRegistrationFee + tierAnnualFee) * years;
 
   if (balances[caller] < totalExtensionAnnualFee) {
     throw new ContractError(

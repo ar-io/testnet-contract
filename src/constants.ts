@@ -15,11 +15,14 @@ export const DEFAULT_UNDERNAMES_COUNT = 10;
 export const ALLOWED_ACTIVE_TIERS = [1, 2, 3];
 export const DEFAULT_ANNUAL_PERCENTAGE_FEE = 0.1; // 10% of cost of name
 export const DEFAULT_UNDERNAME_REGISTRATION_IO_FEE = 1; // 1 IO token per undername
-export const DEFAULT_NON_CONTRACT_OWNER_MESSAGE=`Caller is not the owner of the ArNS!`;
-export const DEFAULT_INVALID_ARNS_NAME_MESSAGE='Invalid ArNS Record Name';
-export const DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE='This name already exists in an active lease';
-export const DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE='Name does not exist in the ArNS!';
-export const DEFAULT_EXISTING_ANT_SOURCE_CODE_TX_MESSAGE='This ANT Source Code Transaction ID is already allowed.'
+export const DEFAULT_NON_CONTRACT_OWNER_MESSAGE = `Caller is not the owner of the ArNS!`;
+export const DEFAULT_INVALID_ARNS_NAME_MESSAGE = 'Invalid ArNS Record Name';
+export const DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE =
+  'This name already exists in an active lease';
+export const DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE =
+  'Name does not exist in the ArNS!';
+export const DEFAULT_EXISTING_ANT_SOURCE_CODE_TX_MESSAGE =
+  'This ANT Source Code Transaction ID is already allowed.';
 // The mainnet wallet that will be used in the creation of contracts, ants and record purchases.
 export const keyfile = '';
 

@@ -39,14 +39,16 @@ import { keyfile } from '../constants';
   const pst = warp.pst(arnsRegistryContractTxId);
   pst.connect(wallet);
 
-  const txId = await pst.writeInteraction({
-    function: 'setActiveTier',
-    tierNumber,
-    tierID,
-  }, 
-  {
-    disableBundling: true
-  });
+  const txId = await pst.writeInteraction(
+    {
+      function: 'setActiveTier',
+      tierNumber,
+      tierID,
+    },
+    {
+      disableBundling: true,
+    },
+  );
 
   console.log('Finished updating the active ArNS tier: %s', txId);
 })();

@@ -1,4 +1,5 @@
 import { DEFAULT_NON_CONTRACT_OWNER_MESSAGE } from '@/constants.js';
+
 import { ContractResult, IOState, PstAction } from '../../types/types';
 
 declare const ContractError;

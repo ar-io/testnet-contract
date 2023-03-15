@@ -1,14 +1,14 @@
 import {
   ALLOWED_ACTIVE_TIERS,
   DEFAULT_ANNUAL_PERCENTAGE_FEE,
+  DEFAULT_INVALID_ARNS_NAME_MESSAGE,
+  DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
   MAX_NAME_LENGTH,
   MAX_YEARS,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
   TX_ID_LENGTH,
-  DEFAULT_INVALID_ARNS_NAME_MESSAGE,
-  DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE
 } from '@/constants';
 
 import {
@@ -160,5 +160,5 @@ export const buyRecord = async (
   // update the records object
   state.records = records;
 
-  return { state }
+  return { state };
 };

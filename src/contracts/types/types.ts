@@ -1,6 +1,6 @@
 import { PstState } from 'warp-contracts';
 
-export type IOState =  PstState & {
+export type IOState = PstState & {
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
   records: {
@@ -18,7 +18,7 @@ export type IOState =  PstState & {
     history: ServiceTier[];
   };
   approvedANTSourceCodeTxs: string[]; // An array of Smartweave Source Code transactions for whitelisted ANTs
-}
+};
 
 export type ContractSettings = {
   // these settings can be modified via on-chain governance
@@ -30,9 +30,9 @@ export type ContractSettings = {
   gatewayLeaveLength: number; // the amount of blocks that have to elapse before a gateway leaves the network
   delegatedStakeWithdrawLength: number; // the amount of blocks that have to elapse before a delegated stake is returned
   operatorStakeWithdrawLength: number; // the amount of blocks that have to elapse before a delegated stake is returned
-}
+};
 
-export type Gateway= {
+export type Gateway = {
   operatorStake: number; // the total stake of this gateway's operator.
   delegatedStake: number; // the total stake of this gateway's delegates.
   settings: GatewaySettings;
@@ -41,8 +41,8 @@ export type Gateway= {
     // The delegates that have staked tokens with this gateway
     [address: string]: [TokenVault];
   };
-}
-export type GatewaySettings= {
+};
+export type GatewaySettings = {
   // All of the settings related to this gateway
   label: string; // The friendly name used to label this gateway
   sslFingerprint: string; // the SHA-256 Fingerprint used by SSL certificate used by this gateway eg. 5C 5D 05 16 C3 3C A3 34 51 78 1E 67 49 14 D4 66 31 A9 19 3C 63 8E F9 9E 54 84 1A F0 4C C2 1A 36
@@ -53,15 +53,15 @@ export type GatewaySettings= {
   openDelegation?: boolean; // If true, community token holders can delegate stake to this gateway
   delegateAllowList?: string[]; // A list of allowed arweave wallets that can act as delegates, if empty then anyone can delegate their tokens to this gateway
   note?: string; // An additional note (256 character max) the gateway operator can set to indicate things like maintenance or other operational updates.
-}
+};
 
 export type AllowedProtocols = 'http' | 'https';
 
-export type ArNSName= {
+export type ArNSName = {
   contractTxId: string; // The ANT Contract used to manage this name
   endTimestamp: number; // At what unix time (seconds since epoch) the lease ends
   tier: string; // The id of the tier selected at time of purchased
-}
+};
 
 // export type Foundation= {
 //   // The settings and wallets used by the AR.IO Foundation.  This is for testing purposes only
@@ -95,19 +95,19 @@ export type FoundationActionType =
   | 'addAddress'
   | 'removeAddress';
 
-export type TokenVault= {
+export type TokenVault = {
   balance: number; // Positive integer, the amount locked
   start: number; // At what block the lock starts.
   end: number; // At what block the lock ends.  0 means no end date.
-}
+};
 
-export type VaultParamstype= {
+export type VaultParamstype = {
   balance: number;
   start: number;
   end: number;
-}
+};
 
-export type Votetype= {
+export type Votetype = {
   status?: VoteStatus;
   type: VoteType;
   id?: number;
@@ -123,7 +123,7 @@ export type Votetype= {
   voted?: string[];
   start?: number;
   lockLength?: number;
-}
+};
 
 export type VoteStatus = 'active' | 'quorumFailed' | 'passed' | 'failed';
 export type VoteType =
@@ -133,19 +133,19 @@ export type VoteType =
   | 'indicative'
   | 'set';
 
-export type PstAction= {
+export type PstAction = {
   input: PstInput;
   caller: string;
-}
+};
 
 export type ArNSNamePurchase = {
   name: string;
   years: number;
   tierNumber: number;
   contractTxId: string;
-}
+};
 
-export type PstInput= {
+export type PstInput = {
   type: FoundationActionType;
   function: PstFunction;
   target: string;
@@ -179,31 +179,31 @@ export type PstInput= {
   openDelegation: boolean;
   delegateAllowList: string[];
   version: string;
-}
+};
 
-export type PstResult= {
+export type PstResult = {
   target: string;
   balance: number;
-}
+};
 
-export type ArNSNameResult= {
+export type ArNSNameResult = {
   name: string;
   contractTxId: string; // The ANT Contract used to manage this name
   endTimestamp: number; // At what unix time (seconds since epoch) the lease ends
   tier: ServiceTier; // Maps to the service tier
-}
+};
 
-export type ServiceTier= {
+export type ServiceTier = {
   id?: string;
   fee: number;
   settings: ServiceTierSettings;
-}
+};
 
 // any tier settings offered
-export type ServiceTierSettings= {
+export type ServiceTierSettings = {
   maxUndernames: number;
   minTTLSeconds: number;
-}
+};
 
 // TODO: handle purchasing additional undernames
 export type PstFunction =

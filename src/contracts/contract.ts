@@ -62,7 +62,7 @@ export async function handle(
       return await getActiveTiers(state);
     case 'upgradeTier':
       return await upgradeTier(state, action);
-    case 'createNewTier': 
+    case 'createNewTier':
       return await createNewTier(state, action);
     default:
       throw new ContractError(

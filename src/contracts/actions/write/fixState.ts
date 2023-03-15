@@ -24,7 +24,7 @@ export const fixState = async (
       state.records[key] = {
         contractTxId: state.records[key].toString(),
         endTimestamp,
-        tier: state.tiers.current[1]
+        tier: state.tiers.current[1],
       };
     }
   }

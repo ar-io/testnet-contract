@@ -212,7 +212,6 @@ describe('Testing the ArNS Registry Contract', () => {
     expect(currentState.balances[overwrittenCaller]).toEqual(undefined);
   });
 
-
   it('should not extend record with not enough balance or invalid parameters', async () => {
     pst.connect(wallet2);
     const PREVIOUS_BALANCE = (await pst.currentBalance(walletAddress2)).balance;
@@ -603,31 +602,6 @@ describe('Testing the ArNS Registry Contract', () => {
     expect(currentState.fees).toEqual(originalFees);
   });
 
-  it('should add valid whitelisted ANT Smartweave Contract Source TX IDs with correct ownership', async () => {
-    pst.connect(wallet); // connect the original owning wallet
-    const sourceTxIdToAdd = 'da51nhDwLZaLBA3lzpE7xl36Rms2NwUNZ7SKOTEWkbI';
-    await pst.writeInteraction({
-      function: 'addANTSourceCodeTx',
-      contractTxId: sourceTxIdToAdd,
-    });
-
-    const anotherSourceTxIdToAdd = 'test'; // this should not get added because it is not a valid arweave transaction
-    await pst.writeInteraction({
-      function: 'addANTSourceCodeTx',
-      contractTxId: anotherSourceTxIdToAdd,
-    });
-    await mineBlock(arweave);
-    const currentState = (await pst.currentState()) as IOState;
-    expect(currentState.approvedANTSourceCodeTxs).toContain(sourceTxIdToAdd);
-    if (
-      currentState.approvedANTSourceCodeTxs.indexOf(anotherSourceTxIdToAdd) > -1
-    ) {
-      expect(false);
-    } else {
-      expect(true);
-    }
-  });
-
   it('should not add whitelisted ANT Smartweave Contract Source TX IDs with incorrect ownership', async () => {
     pst.connect(wallet2);
     const sourceTxIdToAdd = 'BLAHhDwLZaLBA3lzpE7xl36Rms2NwUNZ7SKOTEWkbI';
@@ -643,7 +617,6 @@ describe('Testing the ArNS Registry Contract', () => {
       expect(true);
     }
   });
-
 
   it('should upgrade tier with correct balance, regardless of ownership', async () => {
     pst.connect(wallet2);
