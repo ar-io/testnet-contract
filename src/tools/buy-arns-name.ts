@@ -20,9 +20,6 @@ import { deployedContracts } from '../deployed-contracts';
   // The lease time for purchasing the name
   const years = 1;
 
-  // the Tier of the name purchased.  Tier 1 = 100 subdoins, Tier 2 = 1000 subdomains, Tier 3 = 10000 subdomains
-  const tier = 1;
-
   // This is the production ArNS Registry Smartweave Contract TX ID
   const arnsRegistryContractTxId = deployedContracts.contractTxId;
 
@@ -69,7 +66,7 @@ import { deployedContracts } from '../deployed-contracts';
     {
       function: 'buyRecord',
       name: nameToBuy,
-      tier,
+      maxUndernames: 100,
       contractTxId,
       years,
     },

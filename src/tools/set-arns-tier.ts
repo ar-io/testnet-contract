@@ -43,6 +43,9 @@ import { keyfile } from '../constants';
     function: 'setActiveTier',
     tierNumber,
     tierID,
+  }, 
+  {
+    disableBundling: true
   });
 
   console.log('Finished updating the active ArNS tier: %s', txId);

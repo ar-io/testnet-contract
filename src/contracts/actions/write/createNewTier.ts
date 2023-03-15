@@ -1,7 +1,6 @@
-import { uuidV4 } from 'uuid';
-
 import { ContractResult, IOState, PstAction } from '../../types/types';
 
+declare const SmartWeave: any;
 declare const ContractError;
 
 export const createNewTier = async (
@@ -26,7 +25,7 @@ export const createNewTier = async (
 
   // TODO: additional validation on tier settings
   const newTier = {
-    id: uuidV4(),
+    id: SmartWeave.transaction.id,
     fee,
     settings,
   };
