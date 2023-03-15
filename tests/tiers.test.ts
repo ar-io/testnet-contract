@@ -172,34 +172,38 @@ describe('Tiers', () => {
     });
   });
 
-  it('should be able to get a tier via viewState', async () => {
-    const { result: tier } = await contract.viewState({
-      function: 'getTier',
-      tierNumber: 1,
+  describe('no wallet', () => {
+    it('should be able to get a tier via viewState', async () => {
+      const { result: tier } = await contract.viewState({
+        function: 'getTier',
+        tierNumber: 1,
+      });
+      expect(tier).not.toBe(undefined);
+      expect(tier).toEqual(
+        expect.objectContaining({
+          fee: expect.any(Number),
+          id: expect.any(String),
+          settings: expect.any(Object),
+        }),
+      );
     });
-    expect(tier).not.toBe(undefined);
-    expect(tier).toEqual(
-      expect.objectContaining({
+
+    it('should be able to get active tiers via viewState', async () => {
+      const { result: activeTiers } = await contract.viewState({
+        function: 'getActiveTiers',
+      });
+      const expectedTierObj = expect.objectContaining({
+        tier: expect.any(String),
         fee: expect.any(Number),
         id: expect.any(String),
         settings: expect.any(Object),
-      }),
-    );
-  });
-
-  it('should be able to get active tiers via viewState', async () => {
-    const { result: activeTiers } = await contract.viewState({
-      function: 'getActiveTiers',
+      });
+      expect(activeTiers).not.toBe(undefined);
+      expect(activeTiers).toEqual(
+        expect.arrayContaining(
+          ALLOWED_ACTIVE_TIERS.map((_) => expectedTierObj),
+        ),
+      );
     });
-    const expectedTierObj = expect.objectContaining({
-      tier: expect.any(String),
-      fee: expect.any(Number),
-      id: expect.any(String),
-      settings: expect.any(Object),
-    });
-    expect(activeTiers).not.toBe(undefined);
-    expect(activeTiers).toEqual(
-      expect.arrayContaining(ALLOWED_ACTIVE_TIERS.map((_) => expectedTierObj)),
-    );
   });
 });
