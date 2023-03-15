@@ -644,42 +644,6 @@ describe('Testing the ArNS Registry Contract', () => {
     }
   });
 
-  it('should remove whitelisted ANT Smartweave Contract Source TX IDs with correct ownership', async () => {
-    pst.connect(wallet);
-    const sourceTxIdToRemove = 'da51nhDwLZaLBA3lzpE7xl36Rms2NwUNZ7SKOTEWkbI';
-    await pst.writeInteraction({
-      function: 'removeANTSourceCodeTx',
-      contractTxId: sourceTxIdToRemove,
-    });
-    await mineBlock(arweave);
-    const newState = await pst.currentState();
-    const newStateString = JSON.stringify(newState);
-    const newStateJSON = JSON.parse(newStateString);
-    if (
-      newStateJSON.approvedANTSourceCodeTxs.indexOf(sourceTxIdToRemove) > -1
-    ) {
-      expect(false);
-    } else {
-      expect(true);
-    }
-  });
-
-  it('should not remove whitelisted ANT Smartweave Contract Source TX IDs with incorrect ownership', async () => {
-    pst.connect(wallet2);
-    const currentState = (await pst.currentState()) as IOState;
-    const sourceTxIdToRemove = currentState.approvedANTSourceCodeTxs[0];
-    await pst.writeInteraction({
-      function: 'removeANTSourceCodeTx',
-      contractTxId: sourceTxIdToRemove,
-    });
-    await mineBlock(arweave);
-    const newState = await pst.currentState();
-    const newStateString = JSON.stringify(newState);
-    const newStateJSON = JSON.parse(newStateString);
-    expect(newStateJSON.approvedANTSourceCodeTxs).toEqual(
-      currentState.approvedANTSourceCodeTxs,
-    );
-  });
 
   it('should upgrade tier with correct balance, regardless of ownership', async () => {
     pst.connect(wallet2);
