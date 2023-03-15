@@ -1,4 +1,7 @@
-import { DEFAULT_NON_CONTRACT_OWNER_MESSAGE } from '@/constants.js';
+import {
+  DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
+  DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
+} from '@/constants.js';
 
 import { ContractResult, IOState, PstAction } from '../../types/types';
 
@@ -23,7 +26,7 @@ export const removeRecord = async (
   if (name in records) {
     delete records[name];
   } else {
-    throw new ContractError(`Name does not exist in the ArNS!`);
+    throw new ContractError(DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
   }
 
   // update the records

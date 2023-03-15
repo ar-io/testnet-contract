@@ -1,4 +1,5 @@
 import {
+  DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
   DEFAULT_INVALID_TIER_MESSAGE,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
@@ -31,7 +32,7 @@ export const upgradeTier = async (
 
   // check if record exists
   if (!records[name]) {
-    throw new ContractError(`No record exists with this name ${name}`);
+    throw new ContractError(DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
   }
 
   // get the current tier
