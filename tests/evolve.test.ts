@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import path from 'path';
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import { IOState } from '../src/contracts/types/types';
@@ -11,8 +13,6 @@ import {
   getLocalWallet,
   mineBlock,
 } from './utils/helper';
-import * as fs from 'fs';
-import path from 'path';
 
 describe('Evolve', () => {
   let contract: Contract<PstState>;
