@@ -61,7 +61,7 @@ function createFees(count = 32, start = DEFAULT_WALLET_FUND_AMOUNT) {
   const fees = {};
   for (let i = 1; i <= count; i++) {
     // TODO: write a better algo
-    fees[i] = Math.round(start * ((count - i) / 100));
+    fees[i] = Math.round(start * ((count - i) / 100000));
   }
   return fees;
 }
@@ -134,3 +134,5 @@ export function getLocalArNSContractId(): string {
   ) as unknown as IOState & { id: string };
   return contract.id;
 }
+
+export * from '../../src/utilities';

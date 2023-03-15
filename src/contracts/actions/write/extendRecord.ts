@@ -1,11 +1,11 @@
 import {
-  DEFAULT_ANNUAL_PERCENTAGE_FEE,
   DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
   DEFAULT_INVALID_YEARS_MESSAGE,
   MAX_YEARS,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
 } from '@/constants';
+import { calculateAnnualRenewalFee } from '@/utilities';
 
 import { ContractResult, IOState, PstAction } from '../../types/types';
 
@@ -68,17 +68,13 @@ export const extendRecord = async (
 
   const purchasedTier = allTiers.find((t) => t.id === records[name].tier);
 
-  // current cost to purchase the name
-  const initialNamePurchaseFee = fees[name.length.toString()];
-  // the annual cost to maintain the name
-  const nameAnnualRegistrationFee =
-    initialNamePurchaseFee * DEFAULT_ANNUAL_PERCENTAGE_FEE;
-  // annual tier fee
-  const tierAnnualFee = purchasedTier.fee;
-
   // total cost to extend a record for the given tier
-  const totalExtensionAnnualFee =
-    (nameAnnualRegistrationFee + tierAnnualFee) * years;
+  const totalExtensionAnnualFee = calculateAnnualRenewalFee(
+    name,
+    state,
+    purchasedTier,
+    years,
+  );
 
   if (balances[caller] < totalExtensionAnnualFee) {
     throw new ContractError(

@@ -10,6 +10,7 @@ import {
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
 } from './utils/constants';
 import {
+  calculateTotalRegistrationFee,
   getLocalArNSContractId,
   getLocalWallet,
   mineBlock,
@@ -25,14 +26,19 @@ describe('Records', () => {
 
   describe('contract owner', () => {
     let owner: JWKInterface;
+    let ownerAddress: string;
 
-    beforeAll(() => {
+    beforeAll(async () => {
       owner = getLocalWallet(0);
       contract = warp.pst(srcContractId).connect(owner);
+      ownerAddress = await arweave.wallets.getAddress(owner);
     });
 
     describe('write interactions', () => {
       it('should be able to buy a record', async () => {
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const prevState = prevCachedValue.state as IOState;
+        const prevBalance = prevState.balances[ownerAddress];
         const namePurchase: ArNSNamePurchase = {
           name: 'ownersNewRecord',
           contractTxId: DEFAULT_ANT_CONTRACT_ID,
@@ -51,6 +57,18 @@ describe('Records', () => {
 
         await mineBlock(arweave);
 
+        const purchasedTierId =
+          prevState.tiers.current[namePurchase.tierNumber];
+        const purchasedTier = prevState.tiers.history.find(
+          (t) => t.id === purchasedTierId,
+        )!;
+        const expectedPurchasePrice = calculateTotalRegistrationFee(
+          namePurchase.name,
+          prevState,
+          purchasedTier,
+          namePurchase.years,
+        );
+
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue } = await contract.readState();
         const state = cachedValue.state as IOState;
@@ -63,6 +81,9 @@ describe('Records', () => {
             tier: state.tiers.current[1],
             endTimestamp: expect.any(Number),
           }),
+        );
+        expect(state.balances[ownerAddress]).toEqual(
+          prevBalance - expectedPurchasePrice,
         );
       });
 
@@ -112,10 +133,14 @@ describe('Records', () => {
 
   describe('non-contract owner', () => {
     let nonContractOwner: JWKInterface;
+    let nonContractOwnerAddress: string;
 
-    beforeAll(() => {
+    beforeAll(async () => {
       nonContractOwner = getLocalWallet(1);
       contract = warp.pst(srcContractId).connect(nonContractOwner);
+      nonContractOwnerAddress = await arweave.wallets.getAddress(
+        nonContractOwner,
+      );
     });
 
     describe('read interactions', () => {
@@ -151,6 +176,9 @@ describe('Records', () => {
 
     describe('write interactions', () => {
       it('should be able to purchase a name', async () => {
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const prevState = prevCachedValue.state as IOState;
+        const prevBalance = prevState.balances[nonContractOwnerAddress];
         const namePurchase: ArNSNamePurchase = {
           name: 'newName',
           contractTxId: DEFAULT_ANT_CONTRACT_ID,
@@ -169,6 +197,18 @@ describe('Records', () => {
 
         await mineBlock(arweave);
 
+        const purchasedTierId =
+          prevState.tiers.current[namePurchase.tierNumber];
+        const purchasedTier = prevState.tiers.history.find(
+          (t) => t.id === purchasedTierId,
+        )!;
+        const expectedPurchasePrice = calculateTotalRegistrationFee(
+          namePurchase.name,
+          prevState,
+          purchasedTier,
+          namePurchase.years,
+        );
+
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue } = await contract.readState();
         const state = cachedValue.state as IOState;
@@ -181,6 +221,9 @@ describe('Records', () => {
             tier: state.tiers.current[1],
             endTimestamp: expect.any(Number),
           }),
+        );
+        expect(state.balances[nonContractOwnerAddress]).toEqual(
+          prevBalance - expectedPurchasePrice,
         );
       });
 

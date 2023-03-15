@@ -10,6 +10,7 @@ import {
   SECONDS_IN_GRACE_PERIOD,
   TX_ID_LENGTH,
 } from '@/constants';
+import { calculateTotalRegistrationFee } from '@/utilities';
 
 import {
   ContractResult,
@@ -95,21 +96,13 @@ export const buyRecord = async (
     throw new ContractError(DEFAULT_INVALID_ARNS_NAME_MESSAGE);
   }
 
-  // Determine price of name, each undername costs 1 additional IO token per year
-  const initialNamePurchaseFee = fees[name.length.toString()];
-
-  // Registration fee is 10% of cost
-  const nameAnnualRegistrationFee =
-    initialNamePurchaseFee * DEFAULT_ANNUAL_PERCENTAGE_FEE;
-
-  // Undername fee
-  const tierAnnualFee = purchasedTier.fee;
-
-  // Total annual costs (registration + undernames)
-  const totalAnnualFee = (nameAnnualRegistrationFee + tierAnnualFee) * years;
-
-  // total cost to purchase name and undernames for set number of years (basically a non-discounted cash flow)
-  const totalFee = initialNamePurchaseFee + totalAnnualFee;
+  // calculate the total fee (initial registration + annual)
+  const totalFee = calculateTotalRegistrationFee(
+    name,
+    state,
+    purchasedTier,
+    years,
+  );
 
   if (balances[caller] < totalFee) {
     throw new ContractError(
