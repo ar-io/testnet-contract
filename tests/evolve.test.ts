@@ -4,10 +4,7 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import { IOState } from '../src/contracts/types/types';
 import { arweave, warp } from './setup.jest';
-import {
-  DEFAULT_INITIAL_STATE,
-  DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
-} from './utils/constants';
+import { DEFAULT_NON_CONTRACT_OWNER_MESSAGE } from './utils/constants';
 import {
   getLocalArNSContractId,
   getLocalWallet,

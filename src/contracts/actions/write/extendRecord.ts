@@ -1,5 +1,7 @@
 import {
   DEFAULT_ANNUAL_PERCENTAGE_FEE,
+  DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
+  DEFAULT_INVALID_YEARS_MESSAGE,
   MAX_YEARS,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
@@ -33,31 +35,29 @@ export const extendRecord = async (
 
   // check if record exists
   if (!records[name]) {
-    throw new ContractError(`No record exists with this name ${name}`);
+    throw new ContractError(DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
   }
 
   // Check if it includes a valid number of years
   if (!Number.isInteger(years) || years > MAX_YEARS) {
-    throw new ContractError(
-      `Invalid value for "years". Must be an integers and less than ${MAX_YEARS}`,
-    );
+    throw new ContractError(DEFAULT_INVALID_YEARS_MESSAGE);
   }
 
   /**
    * Scenarios:
-   * 1. Name is not yet in grace period (i.e expired)
+   * 1. Name is not yet in grace period (i.e. still active)
    * 2. Name is expired, but beyond grace period
-   * 3. Name is in grace period, can but extended
+   * 3. Name is in grace period and can be extended by anyone
    */
-  if (records[name].endTimestamp <= currentBlockTime) {
+  if (records[name].endTimestamp > currentBlockTime) {
     // name is not yet in a grace period
     throw new ContractError(
-      `This name's cannot be extended until the grace period begins.`,
+      `This name cannot be extended until the grace period begins.`,
     );
   }
 
   if (
-    records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD >=
+    records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD <=
     currentBlockTime
   ) {
     // This name's lease has expired and cannot be extended
