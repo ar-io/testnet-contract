@@ -1,4 +1,8 @@
-import { TX_ID_LENGTH, DEFAULT_NON_CONTRACT_OWNER_MESSAGE, DEFAULT_EXISTING_ANT_SOURCE_CODE_TX_MESSAGE } from '@/constants';
+import {
+  DEFAULT_EXISTING_ANT_SOURCE_CODE_TX_MESSAGE,
+  DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
+  TX_ID_LENGTH,
+} from '@/constants';
 
 import { ContractResult, IOState, PstAction } from '../../types/types';
 
@@ -29,9 +33,7 @@ export const addANTSourceCodeTx = async (
   }
 
   if (approvedANTSourceCodeTxs.indexOf(contractTxId) > -1) {
-    throw new ContractError(
-      DEFAULT_EXISTING_ANT_SOURCE_CODE_TX_MESSAGE,
-    );
+    throw new ContractError(DEFAULT_EXISTING_ANT_SOURCE_CODE_TX_MESSAGE);
   } else {
     state.approvedANTSourceCodeTxs.push(contractTxId);
   }

@@ -59,9 +59,9 @@ export function createTiers(count = 3): ServiceTier[] {
 
 function createFees(count = 32, start = DEFAULT_WALLET_FUND_AMOUNT) {
   const fees = {};
-  for (let i = 0; i < count; i++) {
+  for (let i = 1; i <= count; i++) {
     // TODO: write a better algo
-    fees[i] = start * ((count - i) / 100);
+    fees[i] = Math.round(start * ((count - i) / 100));
   }
   return fees;
 }
