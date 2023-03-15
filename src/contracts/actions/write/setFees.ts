@@ -1,4 +1,7 @@
-import { DEFAULT_NON_CONTRACT_OWNER_MESSAGE, MAX_NAME_LENGTH } from '@/constants';
+import {
+  DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
+  MAX_NAME_LENGTH,
+} from '@/constants';
 
 import { ContractResult, IOState, PstAction } from '../../types/types';
 
@@ -19,8 +22,7 @@ export const setFees = async (
   // Check there are the right amount of fees in the object
   if (Object.keys(fees).length !== MAX_NAME_LENGTH) {
     throw new ContractError(
-      'Invalid number of fees being set. There must be fees set for all %s characters that can be purchased',
-      MAX_NAME_LENGTH,
+      'Invalid number of fees being set. There must be fees set for all character lengths that can be purchased',
     );
   }
 

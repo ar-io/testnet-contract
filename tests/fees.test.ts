@@ -15,7 +15,7 @@ import {
 describe('Fees', () => {
   let contract: Contract<PstState>;
   let srcContractId: string;
-  let fees: { [x: string]: number}
+  let fees: { [x: string]: number };
 
   beforeAll(async () => {
     srcContractId = getLocalArNSContractId();
@@ -23,24 +23,23 @@ describe('Fees', () => {
 
   describe('contract owner', () => {
     let owner: JWKInterface;
-    
+
     beforeAll(async () => {
       owner = getLocalWallet(0);
       contract = warp.pst(srcContractId).connect(owner);
-      fees = (((await contract.readState()).cachedValue.state) as IOState).fees
+      fees = ((await contract.readState()).cachedValue.state as IOState).fees;
     });
 
     it('should be able to set new fees', async () => {
       const writeInteraction = await contract.writeInteraction({
         function: 'setFees',
         fees: {
-            ...fees,
-            '32': 5,
-        }
+          ...fees,
+          '32': 5,
+        },
       });
 
       await mineBlock(arweave);
-
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
@@ -55,57 +54,81 @@ describe('Fees', () => {
     });
 
     it.each([
-        // TODO: other invalid fees
-        'not a number',
-        35.8,
-        0,
+      // TODO: other invalid fees
+      'not a number',
+      35.8,
+      0,
     ])('should not be able to set invalid fee: %s', async (fee) => {
-      
-        const writeInteraction = await contract.writeInteraction({
-            function: 'setFees',
-            fees: {
-                ...fees,
-                '32': fee,
-            }
-          });
-    
-          await mineBlock(arweave);
-    
-          expect(writeInteraction?.originalTxId).not.toBe(undefined);
-          const { cachedValue } = await contract.readState();
-          expect(Object.keys(cachedValue.errorMessages)).toContain(
-            writeInteraction!.originalTxId,
-          );
-          expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(expect.stringContaining('Invalid value for fee'));
-    })
-});
+      const writeInteraction = await contract.writeInteraction({
+        function: 'setFees',
+        fees: {
+          ...fees,
+          '32': fee,
+        },
+      });
 
-describe('non-contract owner', () => {
+      await mineBlock(arweave);
+
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue } = await contract.readState();
+      expect(Object.keys(cachedValue.errorMessages)).toContain(
+        writeInteraction!.originalTxId,
+      );
+      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
+        expect.stringContaining('Invalid value for fee'),
+      );
+    });
+
+    it('should not be able to set an invalid number of fees', async () => {
+      const writeInteraction = await contract.writeInteraction({
+        function: 'setFees',
+        fees: {
+          ...fees,
+          '33': 5,
+        },
+      });
+
+      await mineBlock(arweave);
+
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue } = await contract.readState();
+      expect(Object.keys(cachedValue.errorMessages)).toContain(
+        writeInteraction!.originalTxId,
+      );
+      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
+        expect.stringContaining('Invalid number of fees being set'),
+      );
+    });
+  });
+
+  describe('non-contract owner', () => {
     let nonContractOwner: JWKInterface;
 
     beforeAll(async () => {
       nonContractOwner = getLocalWallet(1);
       contract = warp.pst(srcContractId).connect(nonContractOwner);
-      fees = (((await contract.readState()).cachedValue.state) as IOState).fees
+      fees = ((await contract.readState()).cachedValue.state as IOState).fees;
     });
 
     it('should not be able to set fees', async () => {
-        const writeInteraction = await contract.writeInteraction({
-            function: 'setFees',
-            fees: {
-                ...fees,
-                '32': 5,
-            }
-          });
-    
-          await mineBlock(arweave);
-    
-          expect(writeInteraction?.originalTxId).not.toBe(undefined);
-          const { cachedValue } = await contract.readState();
-          expect(Object.keys(cachedValue.errorMessages)).toContain(
-            writeInteraction!.originalTxId,
-          );
-          expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(DEFAULT_NON_CONTRACT_OWNER_MESSAGE);
-    })
-})
+      const writeInteraction = await contract.writeInteraction({
+        function: 'setFees',
+        fees: {
+          ...fees,
+          '32': 5,
+        },
+      });
+
+      await mineBlock(arweave);
+
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue } = await contract.readState();
+      expect(Object.keys(cachedValue.errorMessages)).toContain(
+        writeInteraction!.originalTxId,
+      );
+      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
+        DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
+      );
+    });
+  });
 });
