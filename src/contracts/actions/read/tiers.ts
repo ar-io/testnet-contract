@@ -58,8 +58,6 @@ export const getActiveTiers = async (
   });
 
   return {
-    result: {
-      ...activeTiers,
-    },
+    result: activeTiers
   };
 };

@@ -7,6 +7,8 @@ import {
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
   TX_ID_LENGTH,
+  DEFAULT_INVALID_ARNS_NAME_MESSAGE,
+  DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE
 } from '@/constants';
 
 import {
@@ -90,7 +92,7 @@ export const buyRecord = async (
     name === 'www' || // reserved
     name === '' // reserved
   ) {
-    throw new ContractError('Invalid ArNS Record Name');
+    throw new ContractError(DEFAULT_INVALID_ARNS_NAME_MESSAGE);
   }
 
   // Determine price of name, each undername costs 1 additional IO token per year
@@ -152,8 +154,11 @@ export const buyRecord = async (
       tier: selectedTierID,
     };
   } else {
-    throw new ContractError('This name already exists in an active lease');
+    throw new ContractError(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
   }
 
-  return { state };
+  // update the records object
+  state.records = records;
+
+  return { state }
 };

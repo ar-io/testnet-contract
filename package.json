@@ -11,12 +11,12 @@
     "lint:check": "eslint .",
     "lint:fix": "eslint . --fix",
     "cp": "copyfiles -u 1 ./src/**/*.json dist",
-    "test": "jest tests"
+    "test": "yarn run clean && node build.js && jest tests --runInBand"
   },
   "dependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.0.0",
-    "arlocal": "^1.1.53",
-    "arweave": "1.11.4",
+    "arlocal": "^1.1.60",
+    "arweave": "^1.13.1",
     "axios": "^0.26.0",
     "axios-retry": "^3.2.4",
     "babel-jest": "^27.5.0",
@@ -25,7 +25,8 @@
     "eslint-plugin-vue": "^9.9.0",
     "sass-loader": "^10",
     "typescript": "4.3.5",
-    "warp-contracts": "^1.2.35"
+    "warp-contracts": "^1.2.56",
+    "warp-contracts-plugin-deploy": "^1.0.0"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.16.7",
@@ -38,6 +39,7 @@
     "eslint-plugin-prettier": "^3.3.1",
     "jest": "^27.4.3",
     "node-sass": "^6.0.0",
+    "pet-names": "^1.0.1",
     "prettier": "^2.2.1",
     "replace-in-file": "^6.2.0",
     "ts-jest": "^27.1.3",

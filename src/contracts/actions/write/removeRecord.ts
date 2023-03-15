@@ -1,3 +1,4 @@
+import { DEFAULT_NON_CONTRACT_OWNER_MESSAGE } from '@/constants.js';
 import { ContractResult, IOState, PstAction } from '../../types/types';
 
 declare const ContractError;
@@ -11,7 +12,7 @@ export const removeRecord = async (
 
   // Check if the user has enough tokens to purchase the name
   if (caller !== owner) {
-    throw new ContractError(`Caller is not the owner of the ArNS!`);
+    throw new ContractError(DEFAULT_NON_CONTRACT_OWNER_MESSAGE);
   }
 
   // enforce lower case names

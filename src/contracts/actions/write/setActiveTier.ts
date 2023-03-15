@@ -1,4 +1,4 @@
-import { ALLOWED_ACTIVE_TIERS } from '@/constants.js';
+import { ALLOWED_ACTIVE_TIERS, DEFAULT_NON_CONTRACT_OWNER_MESSAGE } from '@/constants.js';
 
 import { ContractResult, IOState, PstAction } from '../../types/types';
 
@@ -13,7 +13,7 @@ export const setActiveTier = async (
 
   // Only the owner of the contract can perform this method
   if (caller !== owner) {
-    throw new ContractError('Caller cannot change tiers');
+    throw new ContractError(DEFAULT_NON_CONTRACT_OWNER_MESSAGE);
   }
 
   if (
@@ -25,7 +25,7 @@ export const setActiveTier = async (
     );
   }
 
-  state.tiers[tier] = { maxUndernames, minTtlSeconds };
+  state.tiers.current[tierNumber] = tierId;
 
   return { state };
 };

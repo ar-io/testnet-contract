@@ -1,4 +1,7 @@
 import {
+  DEFAULT_ANNUAL_PERCENTAGE_FEE,
+  DEFAULT_UNDERNAMES_COUNT,
+  DEFAULT_UNDERNAME_REGISTRATION_IO_FEE,
   MAX_YEARS,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
@@ -41,25 +44,50 @@ export const extendRecord = async (
     );
   }
 
-  // check if this is an active lease, if not it cannot be extended
-  if (records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD < currentBlockTime) {
-    // This name's lease has expired and cannot be extended
+  /**
+   * Scenarios:
+   * 1. Name is not yet in grace period (i.e expired)
+   * 2. Name is expired, but beyond grace period
+   * 3. Name is in grace period, can but extended
+   */
+  if (records[name].endTimestamp <= currentBlockTime) {
+    // name is not yet in a grace period
     throw new ContractError(
-      `This name's lease has expired.  It must be purchased first before being extended.`,
+      `This name's cannot be extended until the grace period begins.`,
     );
   }
 
-  // Determine price of extending this name, must take into consideration
-  const qty = fees[name.length.toString()] * records[name].tier * years;
-
-  if (balances[caller] < qty) {
+  if (
+    records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD >=
+    currentBlockTime
+  ) {
+    // This name's lease has expired and cannot be extended
     throw new ContractError(
-      `Caller balance not high enough to extend this name lease for ${qty} token(s) for ${years}!`,
+      `This name has expired and must repurchased before it can be extended.`,
+    );
+  }
+
+  // annual cost of name
+  const annualRegistrationFee =
+    fees[name.length.toString()] * DEFAULT_ANNUAL_PERCENTAGE_FEE;
+
+  // annual cost of undernames to extend
+  const annualUndernameFee =
+    (records[name].maxUndernames - DEFAULT_UNDERNAMES_COUNT) *
+    DEFAULT_UNDERNAME_REGISTRATION_IO_FEE;
+
+  // the cost to extend the name, and undernames for the allowed number of years
+  const totalAnnualExtensionFee =
+    (annualRegistrationFee + annualUndernameFee) * years;
+
+  if (balances[caller] < totalAnnualExtensionFee) {
+    throw new ContractError(
+      `Caller balance not high enough to extend this name lease for ${totalAnnualExtensionFee} token(s) for ${years}!`,
     );
   }
 
   // reduce balance set the end lease period for this record based on number of years
-  balances[caller] -= qty; // reduce callers balance
+  balances[caller] -= totalAnnualExtensionFee; // reduce callers balance
   records[name].endTimestamp += SECONDS_IN_A_YEAR * years; // set the new extended timestamp
 
   return { state };

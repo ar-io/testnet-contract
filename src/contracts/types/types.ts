@@ -1,6 +1,6 @@
 import { PstState } from 'warp-contracts';
 
-export interface IOState extends PstState {
+export type IOState =  PstState & {
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
   records: {
@@ -20,7 +20,7 @@ export interface IOState extends PstState {
   approvedANTSourceCodeTxs: string[]; // An array of Smartweave Source Code transactions for whitelisted ANTs
 }
 
-export interface ContractSettings {
+export type ContractSettings = {
   // these settings can be modified via on-chain governance
   lockMinLength: number; // the minimum amount of blocks tokens can be locked in a community vault
   lockMaxLength: number; // the maximum amount of blocks tokens can be locked in a community vault
@@ -32,7 +32,7 @@ export interface ContractSettings {
   operatorStakeWithdrawLength: number; // the amount of blocks that have to elapse before a delegated stake is returned
 }
 
-export interface Gateway {
+export type Gateway= {
   operatorStake: number; // the total stake of this gateway's operator.
   delegatedStake: number; // the total stake of this gateway's delegates.
   settings: GatewaySettings;
@@ -42,7 +42,7 @@ export interface Gateway {
     [address: string]: [TokenVault];
   };
 }
-export interface GatewaySettings {
+export type GatewaySettings= {
   // All of the settings related to this gateway
   label: string; // The friendly name used to label this gateway
   sslFingerprint: string; // the SHA-256 Fingerprint used by SSL certificate used by this gateway eg. 5C 5D 05 16 C3 3C A3 34 51 78 1E 67 49 14 D4 66 31 A9 19 3C 63 8E F9 9E 54 84 1A F0 4C C2 1A 36
@@ -57,13 +57,13 @@ export interface GatewaySettings {
 
 export type AllowedProtocols = 'http' | 'https';
 
-export interface ArNSName {
+export type ArNSName= {
   contractTxId: string; // The ANT Contract used to manage this name
   endTimestamp: number; // At what unix time (seconds since epoch) the lease ends
   tier: string; // The id of the tier selected at time of purchased
 }
 
-// export interface Foundation {
+// export type Foundation= {
 //   // The settings and wallets used by the AR.IO Foundation.  This is for testing purposes only
 //   balance: number; // the amount of funds held by the foundation, collection from AR.IO services like ArNS
 //   actionPeriod: number; // the amount of blocks that must pass for all signers to approve a transfer
@@ -72,7 +72,7 @@ export interface ArNSName {
 //   actions: FoundationAction[]; // A list of all on-chain actions performed by the foundation
 // }
 
-// export interface FoundationAction {
+// export type FoundationAction= {
 //   id?: number; // the id number for this action
 //   type: FoundationActionType; // the specific kind of action being performed
 //   status?: FoundationActionStatus; // the latest status of this action
@@ -95,19 +95,19 @@ export type FoundationActionType =
   | 'addAddress'
   | 'removeAddress';
 
-export interface TokenVault {
+export type TokenVault= {
   balance: number; // Positive integer, the amount locked
   start: number; // At what block the lock starts.
   end: number; // At what block the lock ends.  0 means no end date.
 }
 
-export interface VaultParamsInterface {
+export type VaultParamstype= {
   balance: number;
   start: number;
   end: number;
 }
 
-export interface VoteInterface {
+export type Votetype= {
   status?: VoteStatus;
   type: VoteType;
   id?: number;
@@ -133,12 +133,19 @@ export type VoteType =
   | 'indicative'
   | 'set';
 
-export interface PstAction {
+export type PstAction= {
   input: PstInput;
   caller: string;
 }
 
-export interface PstInput {
+export type ArNSNamePurchase = {
+  name: string;
+  years: number;
+  tierNumber: number;
+  contractTxId: string;
+}
+
+export type PstInput= {
   type: FoundationActionType;
   function: PstFunction;
   target: string;
@@ -174,26 +181,26 @@ export interface PstInput {
   version: string;
 }
 
-export interface PstResult {
+export type PstResult= {
   target: string;
   balance: number;
 }
 
-export interface ArNSNameResult {
+export type ArNSNameResult= {
   name: string;
   contractTxId: string; // The ANT Contract used to manage this name
   endTimestamp: number; // At what unix time (seconds since epoch) the lease ends
   tier: ServiceTier; // Maps to the service tier
 }
 
-export interface ServiceTier {
-  id: string;
+export type ServiceTier= {
+  id?: string;
   fee: number;
   settings: ServiceTierSettings;
 }
 
 // any tier settings offered
-export interface ServiceTierSettings {
+export type ServiceTierSettings= {
   maxUndernames: number;
   minTTLSeconds: number;
 }

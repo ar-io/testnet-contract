@@ -5,6 +5,7 @@ import { getRecord } from './actions/read/record';
 import { getActiveTiers, getTier } from './actions/read/tiers';
 import { addANTSourceCodeTx } from './actions/write/addANTSourceCodeTx';
 import { buyRecord } from './actions/write/buyRecord';
+import { createNewTier } from './actions/write/createNewTier.js';
 import { evolve } from './actions/write/evolve';
 import { extendRecord } from './actions/write/extendRecord.js';
 import { fixState } from './actions/write/fixState';
@@ -61,6 +62,8 @@ export async function handle(
       return await getActiveTiers(state);
     case 'upgradeTier':
       return await upgradeTier(state, action);
+    case 'createNewTier': 
+      return await createNewTier(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognized: "${input.function}"`,
