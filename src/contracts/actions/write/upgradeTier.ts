@@ -1,4 +1,8 @@
-import { SECONDS_IN_A_YEAR, SECONDS_IN_GRACE_PERIOD } from '@/constants';
+import {
+  DEFAULT_INVALID_TIER_MESSAGE,
+  SECONDS_IN_A_YEAR,
+  SECONDS_IN_GRACE_PERIOD,
+} from '@/constants';
 
 import { ContractResult, IOState, PstAction } from '../../types/types';
 
@@ -30,19 +34,23 @@ export const upgradeTier = async (
     throw new ContractError(`No record exists with this name ${name}`);
   }
 
+  // get the current tier
+  const currentNameTier = allTiers.find((t) => t.id === records[name].tier);
+
   // Check if it includes a valid tier number
   const allowedTierNumbers = Object.keys(currentTiers).map((t) => +t);
+  const currentTierNumber = +Object.keys(currentTiers).find(
+    (tier) => currentTiers[tier] === currentNameTier.id,
+  );
   if (
     !Number.isInteger(tierNumber) ||
-    !allowedTierNumbers.includes(tierNumber)
+    !allowedTierNumbers.includes(tierNumber) ||
+    tierNumber <= currentTierNumber
   ) {
-    throw new ContractError(
-      `Invalid value for "tier". Allowed tier numbers: ${allowedTierNumbers}`,
-    );
+    throw new ContractError(DEFAULT_INVALID_TIER_MESSAGE);
   }
 
   // get the tier to upgrade too
-  const currentNameTier = allTiers.find((t) => t.id === records[name].tier);
   const selectedUpgradeTier = allTiers.find(
     (t) => t.id === currentTiers[tierNumber],
   );

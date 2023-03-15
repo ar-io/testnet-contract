@@ -1,5 +1,6 @@
 import {
   ALLOWED_ACTIVE_TIERS,
+  DEFAULT_INVALID_TIER_MESSAGE,
   DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
 } from '@/constants.js';
 
@@ -23,9 +24,7 @@ export const setActiveTier = async (
     !Number.isInteger(tierNumber) ||
     !ALLOWED_ACTIVE_TIERS.includes(tierNumber)
   ) {
-    throw new ContractError(
-      `Invalid tier number provided. Allowed tier numbers: ${ALLOWED_ACTIVE_TIERS}`,
-    );
+    throw new ContractError(DEFAULT_INVALID_TIER_MESSAGE);
   }
 
   state.tiers.current[tierNumber] = tierId;

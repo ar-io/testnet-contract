@@ -2,6 +2,7 @@ import { Contract, JWKInterface, PstContract, PstState } from 'warp-contracts';
 
 import {
   ALLOWED_ACTIVE_TIERS,
+  DEFAULT_INVALID_TIER_MESSAGE,
   DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
 } from '../src/constants';
 import { IOState, ServiceTier } from '../src/contracts/types/types';
@@ -98,7 +99,7 @@ describe('Tiers', () => {
       const newState = newCachedValue.state as IOState;
       const errors = newCachedValue.errorMessages;
       expect(errors[writeInteraction!.originalTxId]).toEqual(
-        `Invalid tier number provided. Allowed tier numbers: ${ALLOWED_ACTIVE_TIERS}`,
+        DEFAULT_INVALID_TIER_MESSAGE,
       );
       expect(newState.tiers.current[2]).toEqual(originalTierId);
     });
@@ -169,6 +170,41 @@ describe('Tiers', () => {
         DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
       );
       expect(newState.tiers.current[2]).toEqual(originalTierId);
+    });
+
+    it('should be able to upgrade to a valid tier', async () => {
+      const writeInteraction = await contract.writeInteraction({
+        function: 'upgradeTier',
+        name: 'name1',
+        tierNumber: 3,
+      });
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue } = await contract.readState();
+      expect(Object.keys(cachedValue.errorMessages)).not.toContain(
+        writeInteraction!.originalTxId,
+      );
+      const state = cachedValue.state as IOState;
+      const record = state.records['name1'];
+      expect(record.tier).toEqual(state.tiers.current[3]);
+    });
+
+    it('should not be able to downgrade to a valid tier', async () => {
+      const writeInteraction = await contract.writeInteraction({
+        function: 'upgradeTier',
+        name: 'name1',
+        tierNumber: 2,
+      });
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue } = await contract.readState();
+      expect(Object.keys(cachedValue.errorMessages)).toContain(
+        writeInteraction!.originalTxId,
+      );
+      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
+        DEFAULT_INVALID_TIER_MESSAGE,
+      );
+      const state = cachedValue.state as IOState;
+      const record = state.records['name1'];
+      expect(record.tier).toEqual(state.tiers.current[3]);
     });
   });
 

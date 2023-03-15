@@ -4,20 +4,26 @@
 
 Clone this repository and install the dependencies.
 
-```
+```shell
 yarn install
 ```
 
 ### Compiles and minifies for production
 
-```
+```shell
 yarn build
 ```
 
 ### Tests contracts with arlocal
 
-```
+```shell
 yarn test
+```
+
+To test a specific suite
+
+```shell
+yarn test -t='Records'
 ```
 
 ### Tools

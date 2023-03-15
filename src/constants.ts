@@ -28,6 +28,7 @@ export const DEFAULT_INSUFFICIENT_FUNDS_MESSAGE =
 export const DEFAULT_INVALID_TARGET_MESSAGE = 'Invalid target specified';
 export const DEFAULT_INVALID_QTY_MESSAGE =
   'Invalid quantity. Must be an integer and greater than 0.';
+export const DEFAULT_INVALID_TIER_MESSAGE = 'Invalid tier.';
 // The mainnet wallet that will be used in the creation of contracts, ants and record purchases.
 export const keyfile = '';
 
