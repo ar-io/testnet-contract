@@ -202,7 +202,6 @@ export type ServiceTier = {
 // any tier settings offered
 export type ServiceTierSettings = {
   maxUndernames: number;
-  minTTLSeconds: number;
 };
 
 // TODO: handle purchasing additional undernames

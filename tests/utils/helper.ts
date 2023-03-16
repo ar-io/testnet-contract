@@ -49,7 +49,6 @@ export function createTiers(count = 3): ServiceTier[] {
       fee: i * 100,
       settings: {
         maxUndernames: i * 100,
-        minTTLSeconds: 3600 / i,
       },
     };
     tiers.push(newTier);
