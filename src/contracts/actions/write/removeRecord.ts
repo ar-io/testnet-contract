@@ -1,3 +1,8 @@
+import {
+  DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
+  DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
+} from '@/constants.js';
+
 import { ContractResult, IOState, PstAction } from '../../types/types';
 
 declare const ContractError;
@@ -11,7 +16,7 @@ export const removeRecord = async (
 
   // Check if the user has enough tokens to purchase the name
   if (caller !== owner) {
-    throw new ContractError(`Caller is not the owner of the ArNS!`);
+    throw new ContractError(DEFAULT_NON_CONTRACT_OWNER_MESSAGE);
   }
 
   // enforce lower case names
@@ -21,8 +26,11 @@ export const removeRecord = async (
   if (name in records) {
     delete records[name];
   } else {
-    throw new ContractError(`Name does not exist in the ArNS!`);
+    throw new ContractError(DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
   }
+
+  // update the records
+  state.records = records;
 
   return { state };
 };

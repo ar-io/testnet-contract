@@ -14,30 +14,9 @@ import { keyfile } from '../constants';
   const arnsRegistryContractTxId =
     'R-DRqVv97e8cCya95qsH_Tpvmb9vidURYWlBL5LpSzo';
 
-  const tier = 3;
-  const maxSubdomains = 10000;
-  const minTtlSeconds = 900;
-  /*
-      "1": {
-      "maxSubdomains": 100,
-      "minTtlSeconds": 3600
-    },
-    "2": {
-      "maxSubdomains": 1000,
-      "minTtlSeconds": 1800
-    },
-    "3": {
-      "maxSubdomains": 10000,
-      "minTtlSeconds": 900
-    }
-  */
-
-  // Initialize Arweave
-  const arweave = Arweave.init({
-    host: 'arweave.net',
-    port: 443,
-    protocol: 'https',
-  });
+  const tierNumber = 3;
+  // the id of the tier that is published to smartweave contract state
+  const tierID = '';
 
   // Initialize `LoggerFactory`
   LoggerFactory.INST.logLevel('error');
@@ -60,12 +39,16 @@ import { keyfile } from '../constants';
   const pst = warp.pst(arnsRegistryContractTxId);
   pst.connect(wallet);
 
-  const txId = await pst.writeInteraction({
-    function: 'setTier',
-    tier,
-    maxSubdomains,
-    minTtlSeconds,
-  });
+  const txId = await pst.writeInteraction(
+    {
+      function: 'setActiveTier',
+      tierNumber,
+      tierID,
+    },
+    {
+      disableBundling: true,
+    },
+  );
 
-  console.log('Finished set the ArNS tier: %s', txId);
+  console.log('Finished updating the active ArNS tier: %s', txId);
 })();

@@ -1,6 +1,9 @@
 import axios, { AxiosResponse } from 'axios';
 import axiosRetry, { exponentialDelay } from 'axios-retry';
 
+import { DEFAULT_ANNUAL_PERCENTAGE_FEE } from './constants';
+import { IOState, ServiceTier } from './contracts/types/types.js';
+
 declare const ContractError;
 
 export function isArweaveAddress(address: string) {
@@ -29,6 +32,41 @@ export function getTotalSupply(state: any) {
     totalSupply += state.balances[key];
   }
   return totalSupply;
+}
+
+export function calculateTotalRegistrationFee(
+  name: string,
+  state: IOState,
+  tier: ServiceTier,
+  years: number,
+) {
+  // Initial cost to register a name
+  const initialNamePurchaseFee = state.fees[name.length.toString()];
+
+  // total cost to purchase name and undernames for set number of years (basically a non-discounted cash flow)
+  return (
+    initialNamePurchaseFee + calculateAnnualRenewalFee(name, state, tier, years)
+  );
+}
+
+export function calculateAnnualRenewalFee(
+  name: string,
+  state: IOState,
+  tier: ServiceTier,
+  years: number,
+) {
+  // Determine price of name, each undername costs 1 additional IO token per year
+  const initialNamePurchaseFee = state.fees[name.length.toString()];
+
+  // Registration fee is 10% of cost
+  const nameAnnualRegistrationFee =
+    initialNamePurchaseFee * DEFAULT_ANNUAL_PERCENTAGE_FEE;
+
+  // Undername fee
+  const tierAnnualFee = tier.fee;
+
+  // Total annual costs (registration + undernames)
+  return (nameAnnualRegistrationFee + tierAnnualFee) * years;
 }
 
 export async function retryFetch(reqURL: string): Promise<AxiosResponse<any>> {

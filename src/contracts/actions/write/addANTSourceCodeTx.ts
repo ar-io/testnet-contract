@@ -1,4 +1,8 @@
-import { TX_ID_LENGTH } from '@/constants';
+import {
+  DEFAULT_EXISTING_ANT_SOURCE_CODE_TX_MESSAGE,
+  DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
+  TX_ID_LENGTH,
+} from '@/constants';
 
 import { ContractResult, IOState, PstAction } from '../../types/types';
 
@@ -14,7 +18,7 @@ export const addANTSourceCodeTx = async (
 
   // Only the owner of the contract can perform this method
   if (caller !== owner) {
-    throw new ContractError('Caller cannot add ANT Source Code Transactions');
+    throw new ContractError(DEFAULT_NON_CONTRACT_OWNER_MESSAGE);
   }
 
   // check if it is a valid arweave transaction id for the smartweave contract
@@ -29,9 +33,7 @@ export const addANTSourceCodeTx = async (
   }
 
   if (approvedANTSourceCodeTxs.indexOf(contractTxId) > -1) {
-    throw new ContractError(
-      'This ANT Source Code Transaction ID is already allowed.',
-    );
+    throw new ContractError(DEFAULT_EXISTING_ANT_SOURCE_CODE_TX_MESSAGE);
   } else {
     state.approvedANTSourceCodeTxs.push(contractTxId);
   }

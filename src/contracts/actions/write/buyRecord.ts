@@ -1,5 +1,8 @@
 import {
-  DEFAULT_TIERS,
+  ALLOWED_ACTIVE_TIERS,
+  DEFAULT_ANNUAL_PERCENTAGE_FEE,
+  DEFAULT_INVALID_ARNS_NAME_MESSAGE,
+  DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
   MAX_NAME_LENGTH,
   MAX_YEARS,
   RESERVED_ATOMIC_TX_ID,
@@ -7,22 +10,30 @@ import {
   SECONDS_IN_GRACE_PERIOD,
   TX_ID_LENGTH,
 } from '@/constants';
+import { calculateTotalRegistrationFee } from '@/utilities';
 
-import { ContractResult, IOState, PstAction } from '../../types/types';
+import {
+  ContractResult,
+  IOState,
+  PstAction,
+  ServiceTier,
+} from '../../types/types';
 
 declare const ContractError;
 declare const SmartWeave: any;
 
 export const buyRecord = async (
   state: IOState,
-  { caller, input: { name, contractTxId, years, tier } }: PstAction,
+  {
+    caller,
+    input: { name, contractTxId, years, tierNumber = ALLOWED_ACTIVE_TIERS[0] },
+  }: PstAction,
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
   const fees = state.fees;
-  const tiers = state.tiers ?? DEFAULT_TIERS;
-  // TODO: necessary for protocol p
-  // const foundation = state.foundation;
+  const currentTiers = state.tiers.current;
+  const allTiers = state.tiers.history;
   const currentBlockTime = +SmartWeave.block.timestamp;
 
   // Check if the user has enough tokens to purchase the name
@@ -42,21 +53,28 @@ export const buyRecord = async (
     );
   }
 
-  // Check if it includes a valid tier
-  if (!Number.isInteger(tier)) {
-    throw new ContractError('Invalid value for "tier". Must be an integer');
-  }
-
-  // Check if this is a valid tier, if tier does not exist
-  if (!tiers[tier]) {
+  // list of all active tier ID's
+  const activeTierNumbers = Object.keys(currentTiers).map((k) => +k);
+  if (
+    !Number.isInteger(tierNumber) ||
+    !activeTierNumbers.includes(tierNumber)
+  ) {
     throw new ContractError(
-      `Tier is not defined! Allowed tiers: ${Object.keys(tiers).join(', ')}`,
+      `Invalid value for "tier". Must be ${Object.values(currentTiers).join(
+        ',',
+      )}`,
     );
   }
 
-  // Set the maximum amount of subdomains and minimum TTLSeconds for this name based on the selected tier
-  const maxSubdomains = tiers[tier].maxSubdomains;
-  const minTtlSeconds = tiers[tier].minTtlSeconds;
+  // the tier purchased
+  const selectedTierID = currentTiers[tierNumber];
+  const purchasedTier: ServiceTier = allTiers.find(
+    (t) => t.id === selectedTierID,
+  );
+
+  if (!purchasedTier) {
+    throw new ContractError('The tier purchased is not in the states history.');
+  }
 
   // set the end lease period for this based on number of years
   const endTimestamp = currentBlockTime + SECONDS_IN_A_YEAR * years;
@@ -75,15 +93,20 @@ export const buyRecord = async (
     name === 'www' || // reserved
     name === '' // reserved
   ) {
-    throw new ContractError('Invalid ArNS Record Name');
+    throw new ContractError(DEFAULT_INVALID_ARNS_NAME_MESSAGE);
   }
 
-  // Determine price of name
-  const qty = fees[name.length.toString()] * tier * years;
+  // calculate the total fee (initial registration + annual)
+  const totalFee = calculateTotalRegistrationFee(
+    name,
+    state,
+    purchasedTier,
+    years,
+  );
 
-  if (balances[caller] < qty) {
+  if (balances[caller] < totalFee) {
     throw new ContractError(
-      `Caller balance not high enough to purchase this name for ${qty} token(s)!`,
+      `Caller balance not high enough to purchase this name for ${totalFee} token(s)!`,
     );
   }
 
@@ -105,16 +128,11 @@ export const buyRecord = async (
   // TODO: foundation rewards logic
   if (!records[name]) {
     // No name created, so make a new one
-    balances[caller] -= qty; // reduce callers balance
-    // TODO: logic for protocol balance
-    // foundation.balance += Math.floor(qty * (FOUNDATION_PERCENTAGE / 100)); // increase foundation balance using the foundation percentage
-    // state.rewards += Math.floor(qty * ((100 - FOUNDATION_PERCENTAGE) / 100)); // increase protocol rewards without the foundation percentage
+    balances[caller] -= totalFee; // reduce callers balance
     records[name] = {
-      tier,
       contractTxId,
       endTimestamp,
-      maxSubdomains,
-      minTtlSeconds,
+      tier: selectedTierID,
     };
     // assumes lease expiration
   } else if (
@@ -122,17 +140,18 @@ export const buyRecord = async (
     currentBlockTime
   ) {
     // This name's lease has expired and can be repurchased
-    balances[caller] -= qty; // reduce callers balance
+    balances[caller] -= totalFee; // reduce callers balance
     records[name] = {
-      tier,
       contractTxId,
       endTimestamp,
-      maxSubdomains,
-      minTtlSeconds,
+      tier: selectedTierID,
     };
   } else {
-    throw new ContractError('This name already exists in an active lease');
+    throw new ContractError(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
   }
+
+  // update the records object
+  state.records = records;
 
   return { state };
 };

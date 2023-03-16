@@ -4,6 +4,7 @@ node_modules
 /lib
 .secrets
 logs
+coverage
 
 # keys
 **key**.json

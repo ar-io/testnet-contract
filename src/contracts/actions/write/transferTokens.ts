@@ -1,3 +1,8 @@
+import {
+  DEFAULT_INSUFFICIENT_FUNDS_MESSAGE,
+  DEFAULT_INVALID_TARGET_MESSAGE,
+} from '@/constants.js';
+
 import { ContractResult, IOState, PstAction } from '../../types/types';
 
 declare const ContractError;
@@ -16,7 +21,7 @@ export const transferTokens = async (
   }
 
   if (qty <= 0 || caller === target) {
-    throw new ContractError('Invalid token transfer');
+    throw new ContractError(DEFAULT_INVALID_TARGET_MESSAGE);
   }
 
   if (
@@ -29,17 +34,20 @@ export const transferTokens = async (
   }
 
   if (balances[caller] < qty) {
-    throw new ContractError(
-      `Caller balance not high enough to send ${qty} token(s)!`,
-    );
+    throw new ContractError(DEFAULT_INSUFFICIENT_FUNDS_MESSAGE);
+  }
+
+  // deduct from caller, add to target
+  if (target in balances) {
+    balances[target] += qty;
+  } else {
+    balances[target] = qty;
   }
 
   balances[caller] -= qty;
-  if (target in balances) {
-    balances[`${target}`] += qty;
-  } else {
-    balances[`${target}`] = qty;
-  }
+
+  // set balances
+  state.balances = balances;
 
   return { state };
 };
