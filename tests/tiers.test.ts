@@ -35,7 +35,6 @@ describe('Tiers', () => {
         fee: 100,
         settings: {
           maxUndernames: 100,
-          minTTLSeconds: 1000,
         },
       };
       const writeInteraction = await contract.writeInteraction(
@@ -118,7 +117,6 @@ describe('Tiers', () => {
         fee: 100,
         settings: {
           maxUndernames: 100,
-          minTTLSeconds: 1000,
         },
       };
       const writeInteraction = await contract.writeInteraction(

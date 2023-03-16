@@ -43,7 +43,7 @@ export function calculateTotalRegistrationFee(
   // Initial cost to register a name
   const initialNamePurchaseFee = state.fees[name.length.toString()];
 
-  // total cost to purchase name and undernames for set number of years (basically a non-discounted cash flow)
+  // total cost to purchase name and tier
   return (
     initialNamePurchaseFee + calculateAnnualRenewalFee(name, state, tier, years)
   );
@@ -55,17 +55,17 @@ export function calculateAnnualRenewalFee(
   tier: ServiceTier,
   years: number,
 ) {
-  // Determine price of name, each undername costs 1 additional IO token per year
+  // Determine annual registration price of name
   const initialNamePurchaseFee = state.fees[name.length.toString()];
 
-  // Registration fee is 10% of cost
+  // Annual fee is specific % of initial purchase cost
   const nameAnnualRegistrationFee =
     initialNamePurchaseFee * DEFAULT_ANNUAL_PERCENTAGE_FEE;
 
-  // Undername fee
+  // Annual tier fee
   const tierAnnualFee = tier.fee;
 
-  // Total annual costs (registration + undernames)
+  // Total annual costs (registration fee + tier fee)
   return (nameAnnualRegistrationFee + tierAnnualFee) * years;
 }
 
