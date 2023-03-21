@@ -1,86 +1,86 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "type": "object",
-    "properties": {
-      "ticker": {"type": "string"},
-      "name": {"type": "string"},
-      "version": {"type": "string"},
-      "owner": {"type": "string"},
-      "evolve": {"type": ["null", "string"]},
-      "canEvolve": {"type": "boolean"},
-      "records": {
-        "type": "object",
-        "additionalProperties": {
-          "type": "object",
-          "properties": {
-            "tier": {"type": "string", "format": "uuid"},
-            "contractTxID": {"type": "string", "format": "uuid"},
-            "endTimestamp": {"type": "integer"}
-          },
-          "required": ["tier", "contractTxID", "endTimestamp"],
-          "additionalProperties": false
-        }
-      },
-      "balances": {
-        "type": "object",
-        "additionalProperties": {"type": "integer"}
-      },
-      "approvedANTSourceCodeTxs": {
-        "type": "array",
-        "items": {"type": "string"}
-      },
-      "tiers": {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "ticker": { "type": "string" },
+    "name": { "type": "string" },
+    "version": { "type": "string" },
+    "owner": { "type": "string" },
+    "evolve": { "type": ["null", "string"] },
+    "canEvolve": { "type": "boolean" },
+    "records": {
+      "type": "object",
+      "additionalProperties": {
         "type": "object",
         "properties": {
-          "current": {
-            "type": "object",
-            "properties": {
-              "1": {"type": "string", "format": "uuid"},
-              "2": {"type": "string", "format": "uuid"},
-              "3": {"type": "string", "format": "uuid"}
-            },
-            "required": ["1", "2", "3"],
-            "additionalProperties": false
-          },
-          "history": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {"type": "string", "format": "uuid"},
-                "fee": {"type": "integer"},
-                "settings": {
-                  "type": "object",
-                  "properties": {"maxUndernames": {"type": "integer"}},
-                  "required": ["maxUndernames"],
-                  "additionalProperties": false
-                }
-              },
-              "required": ["id", "fee", "settings"],
-              "additionalProperties": false
-            }
-          }
+          "tier": { "type": "string", "format": "uuid" },
+          "contractTxID": { "type": "string", "format": "uuid" },
+          "endTimestamp": { "type": "integer" }
         },
-        "required": ["current", "history"],
+        "required": ["tier", "contractTxID", "endTimestamp"],
         "additionalProperties": false
-      },
-      "fees": {
-        "type": "object",
-        "additionalProperties": {"type": "integer"}
       }
     },
-    "required": [
-      "ticker",
-      "name",
-      "version",
-      "owner",
-      "evolve",
-      "canEvolve",
-      "records",
-      "balances",
-      "approvedANTSourceCodeTxs",
-      "tiers",
-      "fees"
-    ],
-    "additionalProperties": false
-  }
+    "balances": {
+      "type": "object",
+      "additionalProperties": { "type": "integer" }
+    },
+    "approvedANTSourceCodeTxs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "tiers": {
+      "type": "object",
+      "properties": {
+        "current": {
+          "type": "object",
+          "properties": {
+            "1": { "type": "string", "format": "uuid" },
+            "2": { "type": "string", "format": "uuid" },
+            "3": { "type": "string", "format": "uuid" }
+          },
+          "required": ["1", "2", "3"],
+          "additionalProperties": false
+        },
+        "history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "format": "uuid" },
+              "fee": { "type": "integer" },
+              "settings": {
+                "type": "object",
+                "properties": { "maxUndernames": { "type": "integer" } },
+                "required": ["maxUndernames"],
+                "additionalProperties": false
+              }
+            },
+            "required": ["id", "fee", "settings"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["current", "history"],
+      "additionalProperties": false
+    },
+    "fees": {
+      "type": "object",
+      "additionalProperties": { "type": "integer" }
+    }
+  },
+  "required": [
+    "ticker",
+    "name",
+    "version",
+    "owner",
+    "evolve",
+    "canEvolve",
+    "records",
+    "balances",
+    "approvedANTSourceCodeTxs",
+    "tiers",
+    "fees"
+  ],
+  "additionalProperties": false
+}
