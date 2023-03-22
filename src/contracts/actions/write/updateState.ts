@@ -26,7 +26,7 @@ export const updateState = async (
       history: DEFAULT_TIERS,
       current: DEFAULT_TIERS.reduce((acc, tier, index) => ({
         ...acc,
-        [index]: tier.id
+        [index + 1]: tier.id
       }), {})
     }
   }

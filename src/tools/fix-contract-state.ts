@@ -7,10 +7,11 @@ import {
 } from 'warp-contracts';
 
 import { keyfile } from '../constants';
+import { deployedContracts } from '@/deployed-contracts';
 
 (async () => { 
   // This is the mainnet ArNS Registry Smartweave Contract TX ID
-  const arnsRegistryContractTxId = 'X_nDpgF8TwW1NJw4HXWmDroiiy36cRNYZqGDGgcFlzI';
+  const arnsRegistryContractTxId = deployedContracts.contractTxId;
 
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel('error');

@@ -12,16 +12,16 @@ import { deployedContracts } from '../deployed-contracts';
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // This is the name that will be purchased in the Arweave Name System Registry
-  const nameToBuy = 'feelsgood';
+  const nameToBuy = 'a-test-name';
 
   // This is the ANT Smartweave Contract TX ID that will be added to the registry. It must follow the ArNS ANT Specification
-  const contractTxId = 'THX7vy1LIjN6Zna1Rs1ZzQqm_xH2V0UGUA2Lckyl8gA';
+  const contractTxId = 'gh673M0Koh941OIITVXl9hKabRaYWABQUedZxW-swIA';
 
   // The lease time for purchasing the name
   const years = 1;
 
   // This is the production ArNS Registry Smartweave Contract TX ID
-  const arnsRegistryContractTxId = deployedContracts.contractTxId;
+  const arnsRegistryContractTxId = 'k0yfvCpbusgE7a6JrqFVmoTWWJSQV4Zte3EVoLgd8dw';
 
   // Initialize `LoggerFactory`
   LoggerFactory.INST.logLevel('error');
@@ -66,7 +66,6 @@ import { deployedContracts } from '../deployed-contracts';
     {
       function: 'buyRecord',
       name: nameToBuy,
-      maxUndernames: 100,
       contractTxId,
       years,
     },
