@@ -1,8 +1,8 @@
 import {
   ALLOWED_ACTIVE_TIERS,
+  DEFAULT_INVALID_ID_TIER_MESSAGE,
   DEFAULT_INVALID_TIER_MESSAGE,
   DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
-  DEFAULT_INVALID_ID_TIER_MESSAGE,
 } from '@/constants.js';
 
 import { ContractResult, IOState, PstAction } from '../../types/types';
