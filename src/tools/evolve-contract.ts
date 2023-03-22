@@ -1,4 +1,3 @@
-import { deployedContracts } from '@/deployed-contracts.js';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import path from 'path';
@@ -9,7 +8,6 @@ import {
 } from 'warp-contracts';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
-// import { deployedContracts } from "../deployed-contracts";
 import { keyfile } from '../constants';
 
 (async () => {

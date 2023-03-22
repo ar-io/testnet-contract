@@ -1,4 +1,3 @@
-import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import {
@@ -39,16 +38,16 @@ import { keyfile } from '../constants';
   const pst = warp.pst(arnsRegistryContractTxId);
   pst.connect(wallet);
 
-  const txId = await pst.dryWrite(
+  const txId = await pst.writeInteraction(
     {
       function: 'setActiveTier',
       tierId,
       tierNumber,
     },
-    // {
-    //   disableBundling: true,
-    // },
+    {
+      disableBundling: true,
+    },
   );
 
-  console.log(JSON.stringify(txId.state));
+  console.log('Finished updating the active ArNS tier: %s', txId);
 })();

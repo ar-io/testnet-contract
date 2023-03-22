@@ -20,14 +20,17 @@ export const setActiveTier = async (
     throw new ContractError(DEFAULT_NON_CONTRACT_OWNER_MESSAGE);
   }
 
-  if (!Number.isInteger(tierNumber)) {
+  if (
+    !Number.isInteger(tierNumber) &&
+    ALLOWED_ACTIVE_TIERS.includes[tierNumber]
+  ) {
     throw new ContractError(DEFAULT_INVALID_TIER_MESSAGE);
   }
 
   // the tier must exist in the history before it can be set as a current tier
-  const existingTier = history.find(tier => tier.id === tierId);
+  const existingTier = history.find((tier) => tier.id === tierId);
 
-  if(!existingTier){
+  if (!existingTier) {
     throw new ContractError(DEFAULT_INVALID_TIER_MESSAGE);
   }
 

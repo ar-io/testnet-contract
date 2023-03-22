@@ -85,7 +85,7 @@ describe('Tiers', () => {
         {
           function: 'setActiveTier',
           tierId,
-          tierNumber: 5,
+          tierNumber: '5',
         },
         {
           disableBundling: true,
@@ -101,6 +101,30 @@ describe('Tiers', () => {
         DEFAULT_INVALID_TIER_MESSAGE,
       );
       expect(newState.tiers.current[2]).toEqual(originalTierId);
+    });
+
+    it('should not able to set active tier to an invalid tier id', async () => {
+      const tierId = 'a-bad-tier-id';
+      const writeInteraction = await contract.writeInteraction(
+        {
+          function: 'setActiveTier',
+          tierId,
+          tierNumber: 4,
+        },
+        {
+          disableBundling: true,
+        },
+      );
+      await mineBlock(arweave);
+
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      const errors = newCachedValue.errorMessages;
+      expect(errors[writeInteraction!.originalTxId]).toEqual(
+        DEFAULT_INVALID_TIER_MESSAGE,
+      );
+      expect(newState.tiers.current[4]).toBe(undefined);
     });
   });
 
