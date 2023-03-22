@@ -141,7 +141,7 @@ export type PstAction = {
 export type ArNSNamePurchase = {
   name: string;
   years: number;
-  tierNumber: number;
+  tierNumber?: number;
   contractTxId: string;
 };
 
@@ -218,7 +218,7 @@ export type PstFunction =
   | 'removeANTSourceCodeTx'
   | 'getBalance'
   | 'getRecord'
-  | 'fixState'
+  | 'updateState'
   | 'setName'
   | 'setActiveTier'
   | 'createNewTier'

@@ -3,6 +3,7 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts';
 import { ArNSNamePurchase, IOState } from '../src/contracts/types/types';
 import { arweave, warp } from './setup.jest';
 import {
+  ALLOWED_ACTIVE_TIERS,
   DEFAULT_ANT_CONTRACT_ID,
   DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
   DEFAULT_INVALID_ARNS_NAME_MESSAGE,
@@ -35,7 +36,7 @@ describe('Records', () => {
     });
 
     describe('write interactions', () => {
-      it('should be able to buy a record', async () => {
+      it('should be able to buy a record with tierNumber specified', async () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevState = prevCachedValue.state as IOState;
         const prevBalance = prevState.balances[ownerAddress];
@@ -57,8 +58,57 @@ describe('Records', () => {
 
         await mineBlock(arweave);
 
-        const purchasedTierId =
-          prevState.tiers.current[namePurchase.tierNumber];
+        const purchasedTierId = prevState.tiers.current[namePurchase.tierNumber!];
+        const purchasedTier = prevState.tiers.history.find(
+          (t) => t.id === purchasedTierId,
+        )!;
+        const expectedPurchasePrice = calculateTotalRegistrationFee(
+          namePurchase.name,
+          prevState,
+          purchasedTier,
+          namePurchase.years,
+        );
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue } = await contract.readState();
+        const state = cachedValue.state as IOState;
+        expect(Object.keys(cachedValue.errorMessages)).not.toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(state.records[namePurchase.name.toLowerCase()]).toEqual(
+          expect.objectContaining({
+            contractTxId: DEFAULT_ANT_CONTRACT_ID,
+            tier: state.tiers.current[1],
+            endTimestamp: expect.any(Number),
+          }),
+        );
+        expect(state.balances[ownerAddress]).toEqual(
+          prevBalance - expectedPurchasePrice,
+        );
+      });
+
+      it('should be able to buy a record without a tierNumber specified', async () => {
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const prevState = prevCachedValue.state as IOState;
+        const prevBalance = prevState.balances[ownerAddress];
+        const namePurchase: ArNSNamePurchase = {
+          name: 'ownersNewRecord2',
+          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          years: 1,
+        };
+        const writeInteraction = await contract.writeInteraction(
+          {
+            function: 'buyRecord',
+            ...namePurchase,
+          },
+          {
+            disableBundling: true,
+          },
+        );
+
+        await mineBlock(arweave);
+
+        const purchasedTierId = prevState.tiers.current[ALLOWED_ACTIVE_TIERS[0]];
         const purchasedTier = prevState.tiers.history.find(
           (t) => t.id === purchasedTierId,
         )!;
@@ -198,7 +248,7 @@ describe('Records', () => {
         await mineBlock(arweave);
 
         const purchasedTierId =
-          prevState.tiers.current[namePurchase.tierNumber];
+          prevState.tiers.current[namePurchase.tierNumber!];
         const purchasedTier = prevState.tiers.history.find(
           (t) => t.id === purchasedTierId,
         )!;

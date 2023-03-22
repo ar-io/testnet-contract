@@ -8,7 +8,7 @@ import { buyRecord } from './actions/write/buyRecord';
 import { createNewTier } from './actions/write/createNewTier.js';
 import { evolve } from './actions/write/evolve';
 import { extendRecord } from './actions/write/extendRecord.js';
-import { fixState } from './actions/write/fixState';
+import { updateState } from './actions/write/updateState';
 import { mintTokens } from './actions/write/mintTokens';
 import { removeANTSourceCodeTx } from './actions/write/removeANTSourceCodeTx';
 import { removeRecord } from './actions/write/removeRecord';
@@ -44,8 +44,8 @@ export async function handle(
       return await setActiveTier(state, action);
     case 'evolve':
       return await evolve(state, action);
-    case 'fixState':
-      return await fixState(state, action);
+    case 'updateState':
+      return await updateState(state, action);
     case 'setName':
       return await setName(state, action);
     case 'addANTSourceCodeTx':

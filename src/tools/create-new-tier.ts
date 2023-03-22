@@ -34,8 +34,14 @@ import { keyfile } from '../constants';
   pst.connect(wallet);
 
   const txId = await pst.dryWrite({
-    function: 'updateState',
+    function: 'createNewTier',
+    newTier: {
+        fee: 100,
+        settings:{
+            maxUndernames: 100
+        }   
+    }
   });
 
-  console.log('Finished fixing the contract: %s', txId);
+  console.log('New tier created: %s', txId);
 })();
