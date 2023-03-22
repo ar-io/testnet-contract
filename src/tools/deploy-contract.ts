@@ -8,7 +8,6 @@ import {
 } from 'warp-contracts';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
-
 import { keyfile } from '../constants';
 
 (async () => {
@@ -23,7 +22,7 @@ import { keyfile } from '../constants';
     },
     true,
   ).use(new DeployPlugin());
-  
+
   // Get the key file used for the distribution
   const wallet = JSON.parse(await fs.readFileSync(keyfile).toString());
 

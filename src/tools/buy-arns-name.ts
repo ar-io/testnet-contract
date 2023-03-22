@@ -21,7 +21,8 @@ import { deployedContracts } from '../deployed-contracts';
   const years = 1;
 
   // This is the production ArNS Registry Smartweave Contract TX ID
-  const arnsRegistryContractTxId = 'k0yfvCpbusgE7a6JrqFVmoTWWJSQV4Zte3EVoLgd8dw';
+  const arnsRegistryContractTxId =
+    'k0yfvCpbusgE7a6JrqFVmoTWWJSQV4Zte3EVoLgd8dw';
 
   // Initialize `LoggerFactory`
   LoggerFactory.INST.logLevel('error');

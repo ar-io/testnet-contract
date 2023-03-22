@@ -7,14 +7,15 @@ import {
   WarpFactory,
   defaultCacheOptions,
 } from 'warp-contracts';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 // import { deployedContracts } from "../deployed-contracts";
 import { keyfile } from '../constants';
-import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID version 1.7
-  const arnsRegistryContractTxId = 'k0yfvCpbusgE7a6JrqFVmoTWWJSQV4Zte3EVoLgd8dw';
+  const arnsRegistryContractTxId =
+    'k0yfvCpbusgE7a6JrqFVmoTWWJSQV4Zte3EVoLgd8dw';
 
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel('error');
@@ -30,7 +31,7 @@ import { DeployPlugin } from 'warp-contracts-plugin-deploy';
   // Get the key file used
   const wallet: JWKInterface = JSON.parse(
     await fs.readFileSync(keyfile).toString(),
-  )
+  );
 
   // Read the ArNS Registry Contract
   const contract = warp.pst(arnsRegistryContractTxId);

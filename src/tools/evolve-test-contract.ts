@@ -7,9 +7,9 @@ import {
   WarpFactory,
   defaultCacheOptions,
 } from 'warp-contracts';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 import { testKeyfile } from '../constants';
-import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 (async () => {
   // This is the testnet ArNS Registry Smartweave Contract TX ID

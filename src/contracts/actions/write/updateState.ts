@@ -1,4 +1,9 @@
-import { DEFAULT_NON_CONTRACT_OWNER_MESSAGE, SECONDS_IN_A_YEAR, DEFAULT_TIERS, DEFAULT_FEE_STRUCTURE } from '@/constants';
+import {
+  DEFAULT_FEE_STRUCTURE,
+  DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
+  DEFAULT_TIERS,
+  SECONDS_IN_A_YEAR,
+} from '@/constants';
 
 import { ContractResult, IOState, PstAction } from '../../types/types';
 
@@ -20,21 +25,24 @@ export const updateState = async (
   state = {
     ...state,
     fees: {
-      ...DEFAULT_FEE_STRUCTURE
+      ...DEFAULT_FEE_STRUCTURE,
     },
     tiers: {
       history: DEFAULT_TIERS,
-      current: DEFAULT_TIERS.reduce((acc, tier, index) => ({
-        ...acc,
-        [index + 1]: tier.id
-      }), {})
-    }
-  }
+      current: DEFAULT_TIERS.reduce(
+        (acc, tier, index) => ({
+          ...acc,
+          [index + 1]: tier.id,
+        }),
+        {},
+      ),
+    },
+  };
 
   // update state
   for (const key of Object.keys(state.records)) {
     if (state.records[key].contractTxId === undefined) {
-      const endTimestamp = +SmartWeave.block.timestamp + (SECONDS_IN_A_YEAR * 1);
+      const endTimestamp = +SmartWeave.block.timestamp + SECONDS_IN_A_YEAR * 1;
       state.records[key] = {
         contractTxId: state.records[key].toString(),
         endTimestamp,

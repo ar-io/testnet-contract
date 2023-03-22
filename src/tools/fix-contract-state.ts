@@ -1,3 +1,4 @@
+import { deployedContracts } from '@/deployed-contracts';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import {
@@ -7,9 +8,8 @@ import {
 } from 'warp-contracts';
 
 import { keyfile } from '../constants';
-import { deployedContracts } from '@/deployed-contracts';
 
-(async () => { 
+(async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID
   const arnsRegistryContractTxId = deployedContracts.contractTxId;
 
@@ -25,7 +25,7 @@ import { deployedContracts } from '@/deployed-contracts';
     true,
   );
 
-  // Get the key file used for the distribution 
+  // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
     await fs.readFileSync(keyfile).toString(),
   );
@@ -34,7 +34,7 @@ import { deployedContracts } from '@/deployed-contracts';
   const pst = warp.pst(arnsRegistryContractTxId);
   pst.connect(wallet);
 
-  const txId = await pst.dryWrite({
+  const txId = await pst.writeInteraction({
     function: 'updateState',
   });
 

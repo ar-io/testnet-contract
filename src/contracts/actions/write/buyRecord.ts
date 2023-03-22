@@ -23,10 +23,7 @@ declare const SmartWeave: any;
 
 export const buyRecord = async (
   state: IOState,
-  {
-    caller,
-    input: { name, contractTxId, years, tierNumber = 1 },
-  }: PstAction,
+  { caller, input: { name, contractTxId, years, tierNumber = 1 } }: PstAction,
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
@@ -66,9 +63,8 @@ export const buyRecord = async (
 
   // the tier purchased
   const selectedTierID = currentTiers[tierNumber];
-  const purchasedTier: ServiceTier = allTiers.find(
-    (t) => t.id === selectedTierID,
-  ) ?? DEFAULT_TIERS[0];
+  const purchasedTier: ServiceTier =
+    allTiers.find((t) => t.id === selectedTierID) ?? DEFAULT_TIERS[0];
 
   if (!purchasedTier) {
     throw new ContractError('The tier purchased is not in the states history.');
