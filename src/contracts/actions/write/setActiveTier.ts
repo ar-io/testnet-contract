@@ -2,6 +2,7 @@ import {
   ALLOWED_ACTIVE_TIERS,
   DEFAULT_INVALID_TIER_MESSAGE,
   DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
+  DEFAULT_INVALID_ID_TIER_MESSAGE,
 } from '@/constants.js';
 
 import { ContractResult, IOState, PstAction } from '../../types/types';
@@ -21,8 +22,8 @@ export const setActiveTier = async (
   }
 
   if (
-    !Number.isInteger(tierNumber) &&
-    ALLOWED_ACTIVE_TIERS.includes[tierNumber]
+    !Number.isInteger(tierNumber) ||
+    !ALLOWED_ACTIVE_TIERS.includes(tierNumber)
   ) {
     throw new ContractError(DEFAULT_INVALID_TIER_MESSAGE);
   }
@@ -31,7 +32,7 @@ export const setActiveTier = async (
   const existingTier = history.find((tier) => tier.id === tierId);
 
   if (!existingTier) {
-    throw new ContractError(DEFAULT_INVALID_TIER_MESSAGE);
+    throw new ContractError(DEFAULT_INVALID_ID_TIER_MESSAGE);
   }
 
   state.tiers.current[tierNumber] = tierId;

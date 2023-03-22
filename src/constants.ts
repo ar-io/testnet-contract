@@ -31,6 +31,7 @@ export const DEFAULT_INVALID_TARGET_MESSAGE = 'Invalid target specified';
 export const DEFAULT_INVALID_QTY_MESSAGE =
   'Invalid quantity. Must be an integer and greater than 0.';
 export const DEFAULT_INVALID_TIER_MESSAGE = 'Invalid tier.';
+export const DEFAULT_INVALID_ID_TIER_MESSAGE = 'Invalid tier ID. Must be present in state before it can be used as a current tier.'
 export const DEFAULT_INVALID_YEARS_MESSAGE = `Invalid number of years. Must be an integer and less than ${MAX_YEARS}`;
 export const DEFAULT_TIERS: ServiceTier[] = [
   {
