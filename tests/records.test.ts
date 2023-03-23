@@ -299,8 +299,7 @@ describe('Records', () => {
 
         await mineBlock(arweave);
 
-        const purchasedTierId =
-          prevState.tiers.current[1];
+        const purchasedTierId = prevState.tiers.current[1];
         const purchasedTier = prevState.tiers.history.find(
           (t) => t.id === purchasedTierId,
         )!;

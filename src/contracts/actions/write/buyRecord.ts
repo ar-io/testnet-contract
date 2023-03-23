@@ -23,7 +23,10 @@ declare const SmartWeave: any;
 
 export const buyRecord = async (
   state: IOState,
-  { caller, input: { name, contractTxId, years = 1, tierNumber = 1 } }: PstAction,
+  {
+    caller,
+    input: { name, contractTxId, years = 1, tierNumber = 1 },
+  }: PstAction,
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
