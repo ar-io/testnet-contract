@@ -12,6 +12,13 @@ import { deployedContracts } from '../deployed-contracts';
 
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  // The lease time for purchasing the name
+  const years = 1;
+
+  // the Tier of the name purchased.  Tier 1 = 100 subdomains, Tier 2 = 1000 subdomains, Tier 3 = 10000 subdomains
+  const tier = 1;
+
   // A short token symbol, typically with ANT- in front
   const ticker = 'ANT-PARKINGLOT';
 
@@ -44,7 +51,7 @@ import { deployedContracts } from '../deployed-contracts';
   // Initialize `LoggerFactory`
   LoggerFactory.INST.logLevel('error');
 
-  // Initialize SmartWeave
+  // ~~ Initialize SmartWeave ~~
   const warp = WarpFactory.forMainnet(
     {
       ...defaultCacheOptions,
@@ -52,6 +59,7 @@ import { deployedContracts } from '../deployed-contracts';
     },
     true,
   );
+
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
     await fs.readFileSync(keyfile).toString(),
@@ -97,11 +105,14 @@ import { deployedContracts } from '../deployed-contracts';
     name,
     antRecordContractTxId,
   );
-  const deployedContract = await warp.createContract.deployFromSourceTx({
-    wallet,
-    initState: JSON.stringify(initialState),
-    srcTxId: antRecordContractTxId,
-  });
+  const deployedContract = await warp.deployFromSourceTx(
+    {
+      wallet,
+      initState: JSON.stringify(initialState),
+      srcTxId: antRecordContractTxId,
+    },
+    true,
+  ); // disable bundling for L1 transactions only
 
   // Buy the available record in ArNS Registry v0.1.5
   console.log(
@@ -109,10 +120,17 @@ import { deployedContracts } from '../deployed-contracts';
     nameToBuy,
     deployedContract.contractTxId,
   );
-  await pst.writeInteraction({
-    function: 'buyRecord',
-    name: nameToBuy,
-    contractTransactionId: deployedContract.contractTxId,
-  });
+  await pst.writeInteraction(
+    {
+      function: 'buyRecord',
+      name: nameToBuy,
+      tier,
+      contractTxId: deployedContract.contractTxId,
+      years,
+    },
+    {
+      disableBundling: true,
+    },
+  );
   console.log('Finished purchasing the record');
 })();

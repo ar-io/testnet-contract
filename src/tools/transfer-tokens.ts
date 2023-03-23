@@ -16,7 +16,7 @@ import { deployedContracts } from '../deployed-contracts';
   const target = 'vh-NTHVvlKZqRxc8LyyTNok65yQ55a_PJ1zWLb9G2JI';
 
   // The amount of tokens to be transferred
-  const qty = 10000000000;
+  const qty = 500_000_000;
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   // This is the production ArNS Registry Smartweave Contract
@@ -49,17 +49,22 @@ import { deployedContracts } from '../deployed-contracts';
 
   // Read the ANT Registry Contract
   console.log(
-    'Transfering %s tokens from %s to %s',
+    'Transforming %s tokens from %s to %s',
     qty,
     walletAddress,
     target,
   );
   const pst = warp.pst(arnsRegistryContractTxId);
   pst.connect(wallet);
-  await pst.transfer({
-    target,
-    qty,
-  });
+  await pst.transfer(
+    {
+      target,
+      qty,
+    },
+    {
+      disableBundling: true,
+    },
+  );
 
   console.log('Finished transferring tokens');
 })();

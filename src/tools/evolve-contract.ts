@@ -6,14 +6,14 @@ import {
   WarpFactory,
   defaultCacheOptions,
 } from 'warp-contracts';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
-// import { deployedContracts } from "../deployed-contracts";
 import { keyfile } from '../constants';
 
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID version 1.7
   const arnsRegistryContractTxId =
-    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
+    'k0yfvCpbusgE7a6JrqFVmoTWWJSQV4Zte3EVoLgd8dw';
 
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel('error');
@@ -22,10 +22,9 @@ import { keyfile } from '../constants';
   const warp = WarpFactory.forMainnet(
     {
       ...defaultCacheOptions,
-      inMemory: true,
     },
     true,
-  );
+  ).use(new DeployPlugin());
 
   // Get the key file used
   const wallet: JWKInterface = JSON.parse(
@@ -37,27 +36,29 @@ import { keyfile } from '../constants';
   contract.connect(wallet);
 
   // ~~ Read contract source and initial state files ~~
-  const newSource = fs.readFileSync(
+  const newLocalSourceCodeJS = fs.readFileSync(
     path.join(__dirname, '../../dist/contract.js'),
     'utf8',
   );
 
   // Create the evolved source code tx
-  const evolveSrcTx = await warp.createSourceTx({ src: newSource }, wallet);
-  const evolveSrcTxId = await warp.saveSourceTx(evolveSrcTx, true);
+  const evolveSrcTx = await warp.createSource(
+    { src: newLocalSourceCodeJS },
+    wallet,
+    true,
+  );
+  const evolveSrcTxId = await warp.saveSource(evolveSrcTx, true);
   if (evolveSrcTxId === null) {
     return 0;
   }
-
-  // stick to L1's for now
   const evolveInteractionTXId = await contract.evolve(evolveSrcTxId, {
     disableBundling: true,
   });
 
   console.log(
-    'Finished evolving the ArNS Smartweave Contract %s with TX %s. New contract id is: %s',
+    'Finished evolving the ArNS Smartweave Contract %s with interaction %s. New source code is: %s',
     arnsRegistryContractTxId,
     evolveInteractionTXId.originalTxId,
-    evolveSrcTxId,
+    evolveSrcTx,
   );
 })();

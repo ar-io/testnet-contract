@@ -1,19 +1,23 @@
-import { ArNSState, ContractResult, PstAction } from '../../types/types';
+import { DEFAULT_NON_CONTRACT_OWNER_MESSAGE } from '@/constants.js';
+
+import { ContractResult, IOState, PstAction } from '../../types/types';
 
 declare const ContractError;
 
-// Sets an existing record and if one does not exist, it cre
+// Updates this contract to new source code
 export const evolve = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { value } }: PstAction,
 ): Promise<ContractResult> => {
   const owner = state.owner;
 
   if (caller !== owner) {
-    throw new ContractError('Caller cannot evolve the contract');
+    throw new ContractError(DEFAULT_NON_CONTRACT_OWNER_MESSAGE);
   }
 
-  state.evolve = value;
+  // TODO: regex on the string
+
+  state.evolve = value.toString();
 
   return { state };
 };

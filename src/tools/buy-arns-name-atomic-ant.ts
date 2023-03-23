@@ -77,7 +77,7 @@ import { RESERVED_ATOMIC_TX_ID, keyfile } from '../constants';
           value: JSON.stringify({
             function: 'buyRecord',
             name: domainName,
-            contractTransactionId: RESERVED_ATOMIC_TX_ID,
+            contractTxId: RESERVED_ATOMIC_TX_ID,
             years: 1,
             tier: 1,
           }),

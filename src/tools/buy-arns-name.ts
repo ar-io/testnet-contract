@@ -12,14 +12,17 @@ import { deployedContracts } from '../deployed-contracts';
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // This is the name that will be purchased in the Arweave Name System Registry
-  const nameToBuy = 'parking-lot';
+  const nameToBuy = 'a-test-name';
 
   // This is the ANT Smartweave Contract TX ID that will be added to the registry. It must follow the ArNS ANT Specification
-  const contractTxId = 'THX7vy1LIjN6Zna1Rs1ZzQqm_xH2V0UGUA2Lckyl8gA';
-  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  const contractTxId = 'gh673M0Koh941OIITVXl9hKabRaYWABQUedZxW-swIA';
+
+  // The lease time for purchasing the name
+  const years = 1;
 
   // This is the production ArNS Registry Smartweave Contract TX ID
-  const arnsRegistryContractTxId = deployedContracts.contractTxId;
+  const arnsRegistryContractTxId =
+    'k0yfvCpbusgE7a6JrqFVmoTWWJSQV4Zte3EVoLgd8dw';
 
   // Initialize `LoggerFactory`
   LoggerFactory.INST.logLevel('error');
@@ -30,7 +33,7 @@ import { deployedContracts } from '../deployed-contracts';
       ...defaultCacheOptions,
       inMemory: true,
     },
-    true,
+    true, // use arweave gateway for L1 transactions
   );
 
   // Get the key file used for the distribution
@@ -60,10 +63,16 @@ import { deployedContracts } from '../deployed-contracts';
     nameToBuy,
     contractTxId,
   );
-  const recordTxId = await pst.writeInteraction({
-    function: 'buyRecord',
-    name: nameToBuy,
-    contractTransactionId: contractTxId, // TODO: separate script to create and buy an arns name using 'atomic' transaction ID
-  });
+  const recordTxId = await pst.writeInteraction(
+    {
+      function: 'buyRecord',
+      name: nameToBuy,
+      contractTxId,
+      years,
+    },
+    {
+      disableBundling: true,
+    },
+  );
   console.log('Finished purchasing the record: %s', recordTxId);
 })();

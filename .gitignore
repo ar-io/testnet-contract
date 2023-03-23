@@ -4,9 +4,10 @@ node_modules
 /lib
 .secrets
 logs
+coverage
 
 # keys
-*.json
+**key**.json
 
 # warp
 cache/*

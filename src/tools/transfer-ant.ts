@@ -41,21 +41,26 @@ import { keyfile } from '../constants';
   const wallet: JWKInterface = JSON.parse(
     await fs.readFileSync(keyfile).toString(),
   );
-  const walletAddress = await arweave.wallets.jwkToAddress(wallet);
+  const walletAddress = await arweave.wallets.getAddress(wallet);
 
   // Read the ANT Registry Contract
   console.log(
-    'Transfering %s ANT from %s to %s',
+    'Transferring %s ANT from %s to %s',
     antRecordContractTxId,
     walletAddress,
     target,
   );
   const pst = warp.pst(antRecordContractTxId);
   pst.connect(wallet);
-  await pst.transfer({
-    target,
-    qty: 1,
-  });
+  await pst.transfer(
+    {
+      target,
+      qty: 1,
+    },
+    {
+      disableBundling: true,
+    },
+  );
 
   console.log('Finished transferring tokens');
 })();

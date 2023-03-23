@@ -1,24 +1,25 @@
-import { ArNSState, ContractResult, PstAction } from '../../types/types';
+import {
+  DEFAULT_INVALID_QTY_MESSAGE,
+  DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
+} from '@/constants.js';
+
+import { ContractResult, IOState, PstAction } from '../../types/types';
 
 declare const ContractError;
 
 export const mintTokens = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { qty } }: PstAction,
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const owner = state.owner;
 
-  if (qty <= 0) {
-    throw new ContractError('Invalid token mint');
-  }
-
-  if (!Number.isInteger(qty)) {
-    throw new ContractError('Invalid value for "qty". Must be an integer');
+  if (!Number.isInteger(qty) || qty <= 0) {
+    throw new ContractError(DEFAULT_INVALID_QTY_MESSAGE);
   }
 
   if (caller !== owner) {
-    throw new ContractError('Caller cannot mint tokes');
+    throw new ContractError(DEFAULT_NON_CONTRACT_OWNER_MESSAGE);
   }
 
   balances[caller] ? (balances[caller] += qty) : (balances[caller] = qty);

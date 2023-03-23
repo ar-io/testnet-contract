@@ -1,12 +1,11 @@
-import { ArNSState, ContractResult, PstAction } from '../../types/types';
+import { ContractResult, IOState, PstAction } from '../../types/types';
 
 declare const ContractError;
 
-export const balance = async (
-  state: ArNSState,
+export const getBalance = async (
+  state: IOState,
   { input: { target } }: PstAction,
 ): Promise<ContractResult> => {
-  const ticker = state.ticker;
   const balances = state.balances;
 
   if (typeof target !== 'string') {
@@ -20,7 +19,6 @@ export const balance = async (
   return {
     result: {
       target,
-      ticker,
       balance: balances[target],
     },
   };

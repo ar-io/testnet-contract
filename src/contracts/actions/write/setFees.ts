@@ -1,25 +1,28 @@
-import { MAX_NAME_LENGTH } from '../../../constants';
-import { ArNSState, ContractResult, PstAction } from '../../types/types';
+import {
+  DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
+  MAX_NAME_LENGTH,
+} from '@/constants';
+
+import { ContractResult, IOState, PstAction } from '../../types/types';
 
 declare const ContractError;
 
 // Modifies the fees for purchasing ArNS names
 export const setFees = async (
-  state: ArNSState,
+  state: IOState,
   { caller, input: { fees } }: PstAction,
 ): Promise<ContractResult> => {
   const owner = state.owner;
 
   // Only the owner of the contract can perform this method
   if (caller !== owner) {
-    throw new ContractError('Caller cannot change fees');
+    throw new ContractError(DEFAULT_NON_CONTRACT_OWNER_MESSAGE);
   }
 
   // Check there are the right amount of fees in the object
   if (Object.keys(fees).length !== MAX_NAME_LENGTH) {
     throw new ContractError(
-      'Invalid number of fees being set. There must be fees set for all %s characters that can be purchased',
-      MAX_NAME_LENGTH,
+      'Invalid number of fees being set. There must be fees set for all character lengths that can be purchased',
     );
   }
 
