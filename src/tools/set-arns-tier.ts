@@ -1,4 +1,3 @@
-import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import {
@@ -12,11 +11,11 @@ import { keyfile } from '../constants';
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID
   const arnsRegistryContractTxId =
-    'R-DRqVv97e8cCya95qsH_Tpvmb9vidURYWlBL5LpSzo';
+    'k0yfvCpbusgE7a6JrqFVmoTWWJSQV4Zte3EVoLgd8dw';
 
-  const tierNumber = 3;
+  const tierNumber = 1;
   // the id of the tier that is published to smartweave contract state
-  const tierID = '';
+  const tierId = 'TDkipK7o5bNmw8bJpbrAxxOp75LiyLkgqEvTQpwdAJc';
 
   // Initialize `LoggerFactory`
   LoggerFactory.INST.logLevel('error');
@@ -42,8 +41,8 @@ import { keyfile } from '../constants';
   const txId = await pst.writeInteraction(
     {
       function: 'setActiveTier',
+      tierId,
       tierNumber,
-      tierID,
     },
     {
       disableBundling: true,

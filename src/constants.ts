@@ -1,3 +1,5 @@
+import { ServiceTier } from './contracts/types/types.js';
+
 export const url = {
   redstoneGateway: '',
 };
@@ -29,9 +31,68 @@ export const DEFAULT_INVALID_TARGET_MESSAGE = 'Invalid target specified';
 export const DEFAULT_INVALID_QTY_MESSAGE =
   'Invalid quantity. Must be an integer and greater than 0.';
 export const DEFAULT_INVALID_TIER_MESSAGE = 'Invalid tier.';
+export const DEFAULT_INVALID_ID_TIER_MESSAGE =
+  'Invalid tier ID. Must be present in state before it can be used as a current tier.';
 export const DEFAULT_INVALID_YEARS_MESSAGE = `Invalid number of years. Must be an integer and less than ${MAX_YEARS}`;
+export const DEFAULT_TIERS: ServiceTier[] = [
+  {
+    id: 'a27dbfe4-6992-4276-91fb-5b97ae8c3ffa',
+    fee: 100,
+    settings: {
+      maxUndernames: 100,
+    },
+  },
+  {
+    id: '93685bbb-8246-4e7e-bef8-d2e7e6c5d44a',
+    fee: 1000,
+    settings: {
+      maxUndernames: 1000,
+    },
+  },
+  {
+    id: 'b6c8ee18-2481-4c1b-886c-dbe6b606486a',
+    fee: 10000,
+    settings: {
+      maxUndernames: 10000,
+    },
+  },
+];
+export const DEFAULT_FEE_STRUCTURE = {
+  '1': 4218750000,
+  '2': 1406250000,
+  '3': 468750000,
+  '4': 156250000,
+  '5': 62500000,
+  '6': 25000000,
+  '7': 10000000,
+  '8': 5000000,
+  '9': 1000000,
+  '10': 500000,
+  '11': 450000,
+  '12': 400000,
+  '13': 350000,
+  '14': 300000,
+  '15': 250000,
+  '16': 200000,
+  '17': 175000,
+  '18': 150000,
+  '19': 125000,
+  '20': 100000,
+  '21': 75000,
+  '22': 50000,
+  '23': 250000,
+  '24': 12500,
+  '25': 6750,
+  '26': 3375,
+  '27': 1000,
+  '28': 500,
+  '29': 250,
+  '30': 125,
+  '31': 100,
+  '32': 50,
+};
 // The mainnet wallet that will be used in the creation of contracts, ants and record purchases.
-export const keyfile = '';
+export const keyfile = 'key.json';
 
 // The Redstone Testnet wallet that will be used in the creation of contracts, ants and record purchases.
 export const testKeyfile = '';

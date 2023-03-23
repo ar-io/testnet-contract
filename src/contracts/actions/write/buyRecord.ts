@@ -1,8 +1,7 @@
 import {
-  ALLOWED_ACTIVE_TIERS,
-  DEFAULT_ANNUAL_PERCENTAGE_FEE,
   DEFAULT_INVALID_ARNS_NAME_MESSAGE,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
+  DEFAULT_TIERS,
   MAX_NAME_LENGTH,
   MAX_YEARS,
   RESERVED_ATOMIC_TX_ID,
@@ -24,14 +23,10 @@ declare const SmartWeave: any;
 
 export const buyRecord = async (
   state: IOState,
-  {
-    caller,
-    input: { name, contractTxId, years, tierNumber = ALLOWED_ACTIVE_TIERS[0] },
-  }: PstAction,
+  { caller, input: { name, contractTxId, years, tierNumber = 1 } }: PstAction,
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
-  const fees = state.fees;
   const currentTiers = state.tiers.current;
   const allTiers = state.tiers.history;
   const currentBlockTime = +SmartWeave.block.timestamp;
@@ -68,9 +63,8 @@ export const buyRecord = async (
 
   // the tier purchased
   const selectedTierID = currentTiers[tierNumber];
-  const purchasedTier: ServiceTier = allTiers.find(
-    (t) => t.id === selectedTierID,
-  );
+  const purchasedTier: ServiceTier =
+    allTiers.find((t) => t.id === selectedTierID) ?? DEFAULT_TIERS[0];
 
   if (!purchasedTier) {
     throw new ContractError('The tier purchased is not in the states history.');

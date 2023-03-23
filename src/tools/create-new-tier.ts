@@ -7,7 +7,6 @@ import {
 } from 'warp-contracts';
 
 import { keyfile } from '../constants';
-import { getCurrentBlockHeight } from '../utilities';
 
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID
@@ -31,19 +30,24 @@ import { getCurrentBlockHeight } from '../utilities';
     await fs.readFileSync(keyfile).toString(),
   );
 
-  // Read the ArNS Registry Contract
+  // Read the ANT Registry Contract
   const pst = warp.pst(arnsRegistryContractTxId);
   pst.connect(wallet);
-  const currentState = await pst.currentState();
-  const currentStateString = JSON.stringify(currentState, null, 5);
-  const currentStateJSON = JSON.parse(currentStateString);
-  console.log(currentStateJSON);
 
-  const block = await getCurrentBlockHeight();
-  const fileName = 'ArNS_State_' + block.toString() + '.json';
-  fs.writeFileSync(fileName, currentStateString);
-  console.log(
-    'Finished getting the ArNS state for the registry: %s',
-    arnsRegistryContractTxId,
+  const txId = await pst.writeInteraction(
+    {
+      function: 'createNewTier',
+      newTier: {
+        fee: 20_000,
+        settings: {
+          maxUndernames: 100,
+        },
+      },
+    },
+    {
+      disableBundling: true,
+    },
   );
+
+  console.log('New tier created: %s', txId);
 })();

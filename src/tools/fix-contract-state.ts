@@ -1,3 +1,4 @@
+import { deployedContracts } from '@/deployed-contracts';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import {
@@ -10,8 +11,7 @@ import { keyfile } from '../constants';
 
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID
-  const arnsRegistryContractTxId =
-    'R-DRqVv97e8cCya95qsH_Tpvmb9vidURYWlBL5LpSzo';
+  const arnsRegistryContractTxId = deployedContracts.contractTxId;
 
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel('error');
@@ -35,7 +35,7 @@ import { keyfile } from '../constants';
   pst.connect(wallet);
 
   const txId = await pst.writeInteraction({
-    function: 'fixState',
+    function: 'updateState',
   });
 
   console.log('Finished fixing the contract: %s', txId);

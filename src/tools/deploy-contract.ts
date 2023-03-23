@@ -1,5 +1,4 @@
 import { IOState } from '@/contracts/types/types.js';
-import Arweave from 'arweave';
 import * as fs from 'fs';
 import path from 'path';
 import {
@@ -7,17 +6,11 @@ import {
   WarpFactory,
   defaultCacheOptions,
 } from 'warp-contracts';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 import { keyfile } from '../constants';
 
 (async () => {
-  // ~~ Initialize Arweave ~~
-  const arweave = Arweave.init({
-    host: 'arweave.net',
-    port: 443,
-    protocol: 'https',
-  });
-
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel('error');
 
@@ -28,7 +21,8 @@ import { keyfile } from '../constants';
       inMemory: true,
     },
     true,
-  );
+  ).use(new DeployPlugin());
+
   // Get the key file used for the distribution
   const wallet = JSON.parse(await fs.readFileSync(keyfile).toString());
 
