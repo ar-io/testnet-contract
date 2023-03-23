@@ -1,4 +1,4 @@
-import { deployedContracts } from '@/deployed-contracts';
+import { deployedContracts } from '../deployed-contracts';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import {
