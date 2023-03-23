@@ -1,4 +1,3 @@
-import { deployedContracts } from '@/deployed-contracts';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import {
@@ -8,6 +7,7 @@ import {
 } from 'warp-contracts';
 
 import { keyfile } from '../constants';
+import { deployedContracts } from '../deployed-contracts';
 
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID

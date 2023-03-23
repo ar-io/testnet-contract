@@ -8815,10 +8815,10 @@ warp-contracts-plugin-deploy@^1.0.1:
     arlocal "^1.1.59"
     node-stdlib-browser "^1.2.0"
 
-warp-contracts@^1.3.0:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/warp-contracts/-/warp-contracts-1.3.0.tgz#c00bab24a0d62f5f93748db6057aec71689c806b"
-  integrity sha512-CG7pPv4YXenf95HL89a3CR3qj0cOntZw1fpoYWlspZg5xUKow8nETpXqYjrBCK7F1DaHWHgXxMWEhHEwWfOK0A==
+warp-contracts@^1.3.1:
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/warp-contracts/-/warp-contracts-1.3.1.tgz#a64665029a0336665ce511ce82146fc8517773a1"
+  integrity sha512-atT9LaJ4SOhoAtvuP5CBuSHH2K5gs2vpuNJnJGkQhtlIf/nZELy/5TJQLeUtp8u8c8JSi9BkCI/er0V8dq2M/g==
   dependencies:
     "@idena/vrf-js" "^1.0.1"
     archiver "^5.3.0"

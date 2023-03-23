@@ -279,6 +279,55 @@ describe('Records', () => {
         );
       });
 
+      it('should be able to purchase a name without specifying years or tier', async () => {
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const prevState = prevCachedValue.state as IOState;
+        const prevBalance = prevState.balances[nonContractOwnerAddress];
+        const namePurchase: Partial<ArNSNamePurchase> = {
+          name: 'newName2',
+          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+        };
+        const writeInteraction = await contract.writeInteraction(
+          {
+            function: 'buyRecord',
+            ...namePurchase,
+          },
+          {
+            disableBundling: true,
+          },
+        );
+
+        await mineBlock(arweave);
+
+        const purchasedTierId = prevState.tiers.current[1];
+        const purchasedTier = prevState.tiers.history.find(
+          (t) => t.id === purchasedTierId,
+        )!;
+        const expectedPurchasePrice = calculateTotalRegistrationFee(
+          namePurchase.name!,
+          prevState,
+          purchasedTier,
+          1,
+        );
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue } = await contract.readState();
+        const state = cachedValue.state as IOState;
+        expect(Object.keys(cachedValue.errorMessages)).not.toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(state.records[namePurchase.name!.toLowerCase()]).toEqual(
+          expect.objectContaining({
+            contractTxId: DEFAULT_ANT_CONTRACT_ID,
+            tier: state.tiers.current[1],
+            endTimestamp: expect.any(Number),
+          }),
+        );
+        expect(state.balances[nonContractOwnerAddress]).toEqual(
+          prevBalance - expectedPurchasePrice,
+        );
+      });
+
       it('should not be able to purchase a name that has not expired', async () => {
         const namePurchase: ArNSNamePurchase = {
           name: 'newName',
