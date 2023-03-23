@@ -27,8 +27,16 @@ export const buyRecord = async (
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
-  const currentTiers = state.tiers.current;
-  const allTiers = state.tiers.history;
+  const currentTiers =
+    state.tiers?.current ??
+    DEFAULT_TIERS.reduce(
+      (acc, tier, index) => ({
+        ...acc,
+        [index + 1]: tier.id,
+      }),
+      {},
+    );
+  const allTiers = state.tiers?.history ?? DEFAULT_TIERS;
   const currentBlockTime = +SmartWeave.block.timestamp;
 
   // Check if the user has enough tokens to purchase the name
