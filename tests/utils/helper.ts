@@ -83,7 +83,7 @@ export async function setupInitialContractState(
   owner: string,
   wallets: string[],
 ): Promise<IOState> {
-  const state: IOState = DEFAULT_INITIAL_STATE;
+  const state: IOState = DEFAULT_INITIAL_STATE as unknown as IOState;
   const tiers = createTiers();
   // set the tiers
   state.tiers = {

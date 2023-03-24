@@ -32,7 +32,7 @@ import { keyfile } from './constants';
     'utf8',
   );
   const stateFromFile: IOState = JSON.parse(
-    fs.readFileSync(path.join(__dirname, '../src/initial-state.json'), 'utf8'),
+    fs.readFileSync(path.join(__dirname, './initial-state.json'), 'utf8'),
   );
 
   // ~~ Deploy contract ~~
