@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import path from 'path';
 import { v4 as uuidV4 } from 'uuid';
 
-import { IOState, ServiceTier } from '../../src/contracts/types/types';
+import { IOState, ServiceTier } from '../../src/types';
 import {
   DEFAULT_ANT_CONTRACT_ID,
   DEFAULT_INITIAL_STATE,
@@ -83,7 +83,7 @@ export async function setupInitialContractState(
   owner: string,
   wallets: string[],
 ): Promise<IOState> {
-  const state: IOState = DEFAULT_INITIAL_STATE;
+  const state: IOState = DEFAULT_INITIAL_STATE as unknown as IOState;
   const tiers = createTiers();
   // set the tiers
   state.tiers = {
@@ -135,3 +135,4 @@ export function getLocalArNSContractId(): string {
 }
 
 export * from '../../src/utilities';
+export * from '../../tools/utilities';

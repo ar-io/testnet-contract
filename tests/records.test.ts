@@ -1,6 +1,6 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
-import { ArNSNamePurchase, IOState } from '../src/contracts/types/types';
+import { ArNSNamePurchase, IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import {
   ALLOWED_ACTIVE_TIERS,

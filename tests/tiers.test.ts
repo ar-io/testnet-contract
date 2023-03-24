@@ -5,7 +5,7 @@ import {
   DEFAULT_INVALID_TIER_MESSAGE,
   DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
 } from '../src/constants';
-import { IOState, ServiceTier } from '../src/contracts/types/types';
+import { IOState, ServiceTier } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import {
   getLocalArNSContractId,
