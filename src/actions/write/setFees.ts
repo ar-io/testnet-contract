@@ -2,7 +2,6 @@ import {
   DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
   MAX_NAME_LENGTH,
 } from '../../constants';
-
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;

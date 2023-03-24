@@ -9,14 +9,8 @@ import {
   SECONDS_IN_GRACE_PERIOD,
   TX_ID_LENGTH,
 } from '../../constants';
+import { ContractResult, IOState, PstAction, ServiceTier } from '../../types';
 import { calculateTotalRegistrationFee } from '../../utilities';
-
-import {
-  ContractResult,
-  IOState,
-  PstAction,
-  ServiceTier,
-} from '../../types';
 
 declare const ContractError;
 declare const SmartWeave: any;

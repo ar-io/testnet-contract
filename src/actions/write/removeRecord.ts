@@ -2,7 +2,6 @@ import {
   DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
   DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
 } from '../../constants';
-
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;

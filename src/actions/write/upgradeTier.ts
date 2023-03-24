@@ -4,7 +4,6 @@ import {
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
-
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;

@@ -1,4 +1,3 @@
-import { IOState } from '../src/contracts/types';
 import * as fs from 'fs';
 import path from 'path';
 import {
@@ -8,6 +7,7 @@ import {
 } from 'warp-contracts';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
+import { IOState } from '../src/types';
 import { keyfile } from './constants';
 
 (async () => {
@@ -32,10 +32,7 @@ import { keyfile } from './constants';
     'utf8',
   );
   const stateFromFile: IOState = JSON.parse(
-    fs.readFileSync(
-      path.join(__dirname, '../src/initial-state.json'),
-      'utf8',
-    ),
+    fs.readFileSync(path.join(__dirname, '../src/initial-state.json'), 'utf8'),
   );
 
   // ~~ Deploy contract ~~

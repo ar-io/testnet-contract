@@ -4,7 +4,6 @@ import {
   DEFAULT_TIERS,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
-
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;

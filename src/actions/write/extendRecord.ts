@@ -5,9 +5,8 @@ import {
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
-import { calculateAnnualRenewalFee } from '../../utilities';
-
 import { ContractResult, IOState, PstAction } from '../../types';
+import { calculateAnnualRenewalFee } from '../../utilities';
 
 declare const ContractError;
 declare const SmartWeave: any;

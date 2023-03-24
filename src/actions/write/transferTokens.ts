@@ -2,7 +2,6 @@ import {
   DEFAULT_INSUFFICIENT_FUNDS_MESSAGE,
   DEFAULT_INVALID_TARGET_MESSAGE,
 } from '../../constants';
-
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;

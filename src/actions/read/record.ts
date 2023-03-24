@@ -1,9 +1,4 @@
-import {
-  ArNSName,
-  ContractResult,
-  IOState,
-  PstAction,
-} from '../../types';
+import { ArNSName, ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;
 

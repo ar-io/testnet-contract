@@ -1,5 +1,7 @@
-import { DEFAULT_NON_CONTRACT_OWNER_MESSAGE, TX_ID_LENGTH } from '../../constants';
-
+import {
+  DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
+  TX_ID_LENGTH,
+} from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;

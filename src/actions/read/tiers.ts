@@ -1,9 +1,4 @@
-import {
-  ContractResult,
-  IOState,
-  PstAction,
-  ServiceTier,
-} from '../../types';
+import { ContractResult, IOState, PstAction, ServiceTier } from '../../types';
 
 declare const ContractError;
 

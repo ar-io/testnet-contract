@@ -6,7 +6,8 @@ import {
   defaultCacheOptions,
 } from 'warp-contracts';
 
-import { keyfile } from './constants';import { getCurrentBlockHeight } from './utilities';
+import { keyfile } from './constants';
+import { getCurrentBlockHeight } from './utilities';
 
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID

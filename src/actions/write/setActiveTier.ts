@@ -4,7 +4,6 @@ import {
   DEFAULT_INVALID_TIER_MESSAGE,
   DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
 } from '../../constants';
-
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;

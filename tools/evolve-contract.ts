@@ -9,6 +9,7 @@ import {
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 import { keyfile } from './constants';
+
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID version 1.7
   const arnsRegistryContractTxId =
