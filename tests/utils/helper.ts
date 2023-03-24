@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import path from 'path';
 import { v4 as uuidV4 } from 'uuid';
 
-import { IOState, ServiceTier } from '../../src/contracts/types/types';
+import { IOState, ServiceTier } from '../../src/types';
 import {
   DEFAULT_ANT_CONTRACT_ID,
   DEFAULT_INITIAL_STATE,
@@ -135,3 +135,4 @@ export function getLocalArNSContractId(): string {
 }
 
 export * from '../../src/utilities';
+export * from '../../tools/utilities';

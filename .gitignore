@@ -10,7 +10,7 @@ coverage
 **key**.json
 
 # warp
-cache/*
+cache
 
 # local env files
 .env.local

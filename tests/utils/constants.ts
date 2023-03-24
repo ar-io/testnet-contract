@@ -1,5 +1,5 @@
-import { IOState } from '../../src/contracts/types/types';
-import initialContractState from './initial-state.json';
+import { IOState } from '../../src/types';
+import initialContractState from '../../src/initial-state.json';
 
 export const TRANSFER_AMOUNT = 5_000_000;
 export const INTERACTION_COST = 20000;

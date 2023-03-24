@@ -3,14 +3,13 @@
   "version": "0.1.6",
   "private": true,
   "scripts": {
-    "build": "yarn run clean && yarn run build-ts && npm run cp",
+    "build": "yarn run clean && yarn run build-ts",
     "build-ts": "node build.js",
     "clean": "rimraf ./dist",
     "format:check": "prettier . --check",
     "format:fix": "prettier . --write",
     "lint:check": "eslint .",
     "lint:fix": "eslint . --fix",
-    "cp": "copyfiles -u 1 ./src/**/*.json dist",
     "test": "yarn run clean && node build.js && jest tests --runInBand"
   },
   "devDependencies": {

@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import path from 'path';
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
-import { IOState } from '../src/contracts/types/types';
+import { IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import {
   DEFAULT_INITIAL_STATE,

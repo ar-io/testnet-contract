@@ -1,7 +1,7 @@
 const { build } = require('esbuild');
 const replace = require('replace-in-file');
 
-const contracts = ['/contracts/contract.ts'];
+const contracts = ['/contract.ts'];
 
 build({
   entryPoints: contracts.map((source) => {
@@ -11,8 +11,7 @@ build({
   minify: false,
   bundle: true,
   format: 'iife',
-  platform: 'node',
-  packages: 'external',
+  packages: 'external'
 })
   .catch(() => process.exit(1))
   // note: SmartWeave SDK currently does not support files in IIFE bundle format, so we need to remove the "iife" part ;-)

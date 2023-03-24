@@ -1,9 +1,3 @@
-import { ServiceTier } from './contracts/types/types.js';
-
-export const url = {
-  redstoneGateway: '',
-};
-
 export const MAX_DELEGATES = 1000; // the maximum amount of delegates that can be added to a single gateway
 export const MAX_YEARS = 3; // the maximum amount of years an arns name could be leased for
 export const MAX_NAME_LENGTH = 32; // the maximum length of an arns name
@@ -34,7 +28,7 @@ export const DEFAULT_INVALID_TIER_MESSAGE = 'Invalid tier.';
 export const DEFAULT_INVALID_ID_TIER_MESSAGE =
   'Invalid tier ID. Must be present in state before it can be used as a current tier.';
 export const DEFAULT_INVALID_YEARS_MESSAGE = `Invalid number of years. Must be an integer and less than ${MAX_YEARS}`;
-export const DEFAULT_TIERS: ServiceTier[] = [
+export const DEFAULT_TIERS = [
   {
     id: 'a27dbfe4-6992-4276-91fb-5b97ae8c3ffa',
     fee: 100,
@@ -91,8 +85,3 @@ export const DEFAULT_FEE_STRUCTURE = {
   '31': 100,
   '32': 50,
 };
-// The mainnet wallet that will be used in the creation of contracts, ants and record purchases.
-export const keyfile = 'key.json';
-
-// The Redstone Testnet wallet that will be used in the creation of contracts, ants and record purchases.
-export const testKeyfile = '';

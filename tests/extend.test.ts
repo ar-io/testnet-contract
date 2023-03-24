@@ -5,7 +5,7 @@ import {
   DEFAULT_INVALID_YEARS_MESSAGE,
   SECONDS_IN_A_YEAR,
 } from '../src/constants';
-import { IOState } from '../src/contracts/types/types';
+import { IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import { MAX_YEARS } from './utils/constants';
 import {

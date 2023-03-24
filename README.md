@@ -42,10 +42,10 @@ Make sure to update the variables at the top of each tool's `.ts` file, as well 
 - `deploy-test-contract` deploys a new ArNS Contract to Redstone Testnet
 
 The above scripts must have their variables updated in the script, and can be run like the following example
-`yarn ts-node .\src\tools\buy-arns-name.ts`
+`yarn ts-node .\tools\buy-arns-name.ts`
 
 ## TODO
 
-- procotocal balances
+- protocol balances
 - auction handling
 - permabuy purchase logic
