@@ -1,10 +1,12 @@
 import {
+  DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_INVALID_ARNS_NAME_MESSAGE,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
   DEFAULT_TIERS,
   MAX_NAME_LENGTH,
   MAX_YEARS,
   RESERVED_ATOMIC_TX_ID,
+  RESERVED_CATEGORIES,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
   TX_ID_LENGTH,
@@ -24,6 +26,7 @@ export const buyRecord = async (
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
+  const reserved = state.reserved;
   const currentTiers =
     state.tiers?.current ??
     DEFAULT_TIERS.reduce(
@@ -89,10 +92,34 @@ export const buyRecord = async (
     typeof name !== 'string' ||
     name.length > MAX_NAME_LENGTH || // the name is too long
     !nameRes || // the name does not match our regular expression
-    name === 'www' || // reserved
     name === '' // reserved
   ) {
     throw new ContractError(DEFAULT_INVALID_ARNS_NAME_MESSAGE);
+  }
+
+  // If the name length is in the reserved list, then it cannot be purchased
+  if (name.length.toString() in reserved) {
+    if (reserved[name.length.toString()].target !== caller) {
+      if (reserved[name.length.toString()].endTimestamp === undefined) {
+        throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
+      } else if (
+        reserved[name.length.toString()].endTimestamp >
+        +SmartWeave.block.timestamp
+      ) {
+        throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
+      }
+    }
+  }
+
+  // If the name is in the reserved list, then it cannot be purchased
+  if (name in reserved) {
+    if (reserved[name].target !== caller) {
+      if (reserved[name].endTimestamp === undefined) {
+        throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
+      } else if (reserved[name].endTimestamp > +SmartWeave.block.timestamp) {
+        throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
+      }
+    }
   }
 
   // calculate the total fee (initial registration + annual)
