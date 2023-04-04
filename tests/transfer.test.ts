@@ -7,10 +7,7 @@ import {
   DEFAULT_INVALID_TARGET_MESSAGE,
   DEFAULT_TRANSFER_QTY,
 } from './utils/constants';
-import {
-  getLocalArNSContractId,
-  getLocalWallet,
-} from './utils/helper';
+import { getLocalArNSContractId, getLocalWallet } from './utils/helper';
 
 describe('Transfers', () => {
   let contract: Contract<PstState>;

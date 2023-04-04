@@ -7,10 +7,7 @@ import {
   DEFAULT_EXISTING_ANT_SOURCE_CODE_TX_MESSAGE,
   DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
 } from './utils/constants';
-import {
-  getLocalArNSContractId,
-  getLocalWallet,
-} from './utils/helper';
+import { getLocalArNSContractId, getLocalWallet } from './utils/helper';
 
 describe('ANT Source Code Transactions Ids', () => {
   let contract: Contract<PstState>;

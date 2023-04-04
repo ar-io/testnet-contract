@@ -7,10 +7,7 @@ import {
 } from '../src/constants';
 import { IOState, ServiceTier } from '../src/types';
 import { warp } from './setup.jest';
-import {
-  getLocalArNSContractId,
-  getLocalWallet,
-} from './utils/helper';
+import { getLocalArNSContractId, getLocalWallet } from './utils/helper';
 
 describe('Tiers', () => {
   let contract: Contract<PstState>;
