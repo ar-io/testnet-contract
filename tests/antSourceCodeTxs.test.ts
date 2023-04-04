@@ -1,7 +1,7 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import { IOState } from '../src/types';
-import { arweave, warp } from './setup.jest';
+import { warp } from './setup.jest';
 import {
   DEFAULT_ANT_CONTRACT_ID,
   DEFAULT_EXISTING_ANT_SOURCE_CODE_TX_MESSAGE,
@@ -10,7 +10,6 @@ import {
 import {
   getLocalArNSContractId,
   getLocalWallet,
-  mineBlock,
 } from './utils/helper';
 
 describe('ANT Source Code Transactions Ids', () => {
@@ -36,8 +35,6 @@ describe('ANT Source Code Transactions Ids', () => {
         contractTxId: RANDOM_ANT_CONTRACT_ID,
       });
 
-      await mineBlock(arweave);
-
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       const state = cachedValue.state as IOState;
@@ -53,8 +50,6 @@ describe('ANT Source Code Transactions Ids', () => {
         function: 'addANTSourceCodeTx',
         contractTxId: RANDOM_ANT_CONTRACT_ID,
       });
-
-      await mineBlock(arweave);
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
@@ -72,8 +67,6 @@ describe('ANT Source Code Transactions Ids', () => {
         function: 'removeANTSourceCodeTx',
         contractTxId: RANDOM_ANT_CONTRACT_ID,
       });
-
-      await mineBlock(arweave);
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
@@ -101,8 +94,6 @@ describe('ANT Source Code Transactions Ids', () => {
         contractTxId: DEFAULT_ANT_CONTRACT_ID,
       });
 
-      await mineBlock(arweave);
-
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       expect(Object.keys(cachedValue.errorMessages)).toContain(
@@ -118,8 +109,6 @@ describe('ANT Source Code Transactions Ids', () => {
         function: 'removeANTSourceCodeTx',
         contractTxId: DEFAULT_ANT_CONTRACT_ID,
       });
-
-      await mineBlock(arweave);
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();

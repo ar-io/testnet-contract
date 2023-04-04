@@ -10,7 +10,6 @@ import {
 import {
   getLocalArNSContractId,
   getLocalWallet,
-  mineBlock,
 } from './utils/helper';
 
 describe('Transfers', () => {
@@ -43,8 +42,6 @@ describe('Transfers', () => {
         qty: DEFAULT_TRANSFER_QTY,
       });
 
-      await mineBlock(arweave);
-
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
       const newState = newCachedValue.state as IOState;
@@ -73,8 +70,6 @@ describe('Transfers', () => {
         qty: Math.pow(DEFAULT_TRANSFER_QTY, 10),
       });
 
-      await mineBlock(arweave);
-
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
       const newState = newCachedValue.state as IOState;
@@ -98,8 +93,6 @@ describe('Transfers', () => {
         target: ownerAddress,
         qty: DEFAULT_TRANSFER_QTY,
       });
-
-      await mineBlock(arweave);
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
@@ -136,8 +129,6 @@ describe('Transfers', () => {
         qty: DEFAULT_TRANSFER_QTY,
       });
 
-      await mineBlock(arweave);
-
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
       const newState = newCachedValue.state as IOState;
@@ -162,8 +153,6 @@ describe('Transfers', () => {
         target: callerAddress,
         qty: DEFAULT_TRANSFER_QTY,
       });
-
-      await mineBlock(arweave);
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();

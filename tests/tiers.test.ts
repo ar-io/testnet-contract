@@ -1,4 +1,4 @@
-import { Contract, JWKInterface, PstContract, PstState } from 'warp-contracts';
+import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import {
   ALLOWED_ACTIVE_TIERS,
@@ -6,11 +6,10 @@ import {
   DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
 } from '../src/constants';
 import { IOState, ServiceTier } from '../src/types';
-import { arweave, warp } from './setup.jest';
+import { warp } from './setup.jest';
 import {
   getLocalArNSContractId,
   getLocalWallet,
-  mineBlock,
 } from './utils/helper';
 
 describe('Tiers', () => {
@@ -46,7 +45,6 @@ describe('Tiers', () => {
           disableBundling: true,
         },
       );
-      await mineBlock(arweave);
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
@@ -69,7 +67,6 @@ describe('Tiers', () => {
           disableBundling: true,
         },
       );
-      await mineBlock(arweave);
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
       const newState = newCachedValue.state as IOState;
@@ -91,7 +88,6 @@ describe('Tiers', () => {
           disableBundling: true,
         },
       );
-      await mineBlock(arweave);
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
@@ -115,7 +111,6 @@ describe('Tiers', () => {
           disableBundling: true,
         },
       );
-      await mineBlock(arweave);
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
@@ -152,7 +147,6 @@ describe('Tiers', () => {
           disableBundling: true,
         },
       );
-      await mineBlock(arweave);
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
@@ -182,7 +176,6 @@ describe('Tiers', () => {
           disableBundling: true,
         },
       );
-      await mineBlock(arweave);
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();

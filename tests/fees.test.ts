@@ -1,7 +1,7 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import { IOState } from '../src/types';
-import { arweave, warp } from './setup.jest';
+import { warp } from './setup.jest';
 import {
   DEFAULT_INITIAL_STATE,
   DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
@@ -9,7 +9,6 @@ import {
 import {
   getLocalArNSContractId,
   getLocalWallet,
-  mineBlock,
 } from './utils/helper';
 
 describe('Fees', () => {
@@ -39,8 +38,6 @@ describe('Fees', () => {
         },
       });
 
-      await mineBlock(arweave);
-
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       const state = cachedValue.state as IOState;
@@ -67,8 +64,6 @@ describe('Fees', () => {
         },
       });
 
-      await mineBlock(arweave);
-
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       expect(Object.keys(cachedValue.errorMessages)).toContain(
@@ -87,8 +82,6 @@ describe('Fees', () => {
           '33': 5,
         },
       });
-
-      await mineBlock(arweave);
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
@@ -118,8 +111,6 @@ describe('Fees', () => {
           '32': 5,
         },
       });
-
-      await mineBlock(arweave);
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
