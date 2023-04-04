@@ -513,13 +513,13 @@ describe('Records', () => {
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue } = await contract.readState();
         const state = cachedValue.state as IOState;
-        expect(state.records[namePurchase.name.toLowerCase()]).toBe(
-          undefined,
-        );
+        expect(state.records[namePurchase.name.toLowerCase()]).toBe(undefined);
         expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(
           DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
         );
-        expect(state.reserved[namePurchase.name.toLowerCase()]).not.toBe(undefined)
+        expect(state.reserved[namePurchase.name.toLowerCase()]).not.toBe(
+          undefined,
+        );
       });
 
       it('should be able to buy reserved name when the caller is the target of the reserved name', async () => {
