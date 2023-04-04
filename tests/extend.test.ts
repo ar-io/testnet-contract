@@ -7,10 +7,7 @@ import {
 import { IOState } from '../src/types';
 import { warp } from './setup.jest';
 import { MAX_YEARS } from './utils/constants';
-import {
-  getLocalArNSContractId,
-  getLocalWallet,
-} from './utils/helper';
+import { getLocalArNSContractId, getLocalWallet } from './utils/helper';
 
 describe('Extend', () => {
   let contract: Contract<PstState>;

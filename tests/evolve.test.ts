@@ -5,10 +5,7 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts';
 import { IOState } from '../src/types';
 import { warp } from './setup.jest';
 import { DEFAULT_NON_CONTRACT_OWNER_MESSAGE } from './utils/constants';
-import {
-  getLocalArNSContractId,
-  getLocalWallet,
- } from './utils/helper';
+import { getLocalArNSContractId, getLocalWallet } from './utils/helper';
 
 describe('Evolve', () => {
   let contract: Contract<PstState>;

@@ -7,10 +7,7 @@ import {
   DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
   DEFAULT_TRANSFER_QTY,
 } from './utils/constants';
-import {
-  getLocalArNSContractId,
-  getLocalWallet,
-} from './utils/helper';
+import { getLocalArNSContractId, getLocalWallet } from './utils/helper';
 
 describe('Mint', () => {
   let contract: Contract<PstState>;

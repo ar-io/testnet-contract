@@ -55,7 +55,6 @@ describe('Records', () => {
           },
         );
 
-  
         const purchasedTierId =
           prevState.tiers.current[namePurchase.tierNumber!];
         const purchasedTier = prevState.tiers.history.find(
@@ -105,7 +104,6 @@ describe('Records', () => {
           },
         );
 
-  
         const purchasedTierId =
           prevState.tiers.current[ALLOWED_ACTIVE_TIERS[0]];
         const purchasedTier = prevState.tiers.history.find(
@@ -244,7 +242,6 @@ describe('Records', () => {
           },
         );
 
-  
         const purchasedTierId =
           prevState.tiers.current[namePurchase.tierNumber!];
         const purchasedTier = prevState.tiers.history.find(
@@ -374,7 +371,6 @@ describe('Records', () => {
               disableBundling: true,
             },
           );
-
 
           expect(writeInteraction?.originalTxId).not.toBe(undefined);
           const { cachedValue } = await contract.readState();
