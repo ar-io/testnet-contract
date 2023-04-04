@@ -3,15 +3,13 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts';
 import {
   DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
   DEFAULT_INVALID_YEARS_MESSAGE,
-  SECONDS_IN_A_YEAR,
 } from '../src/constants';
 import { IOState } from '../src/types';
-import { arweave, warp } from './setup.jest';
+import { warp } from './setup.jest';
 import { MAX_YEARS } from './utils/constants';
 import {
   getLocalArNSContractId,
   getLocalWallet,
-  mineBlock,
 } from './utils/helper';
 
 describe('Extend', () => {
@@ -43,8 +41,6 @@ describe('Extend', () => {
         years: extendYears,
       });
 
-      await mineBlock(arweave);
-
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       const state = cachedValue.state as IOState;
@@ -70,8 +66,6 @@ describe('Extend', () => {
         years: extendYears,
       });
 
-      await mineBlock(arweave);
-
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       const state = cachedValue.state as IOState;
@@ -94,8 +88,6 @@ describe('Extend', () => {
         name: name,
         years: extendYears,
       });
-
-      await mineBlock(arweave);
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();

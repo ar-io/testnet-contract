@@ -1,11 +1,8 @@
-import * as fs from 'fs';
-import path from 'path';
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import { IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import {
-  DEFAULT_INITIAL_STATE,
   DEFAULT_INVALID_QTY_MESSAGE,
   DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
   DEFAULT_TRANSFER_QTY,
@@ -13,7 +10,6 @@ import {
 import {
   getLocalArNSContractId,
   getLocalWallet,
-  mineBlock,
 } from './utils/helper';
 
 describe('Mint', () => {
@@ -41,8 +37,6 @@ describe('Mint', () => {
         function: 'mint',
         qty: DEFAULT_TRANSFER_QTY,
       });
-      await mineBlock(arweave);
-
       expect(mintInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       const state = cachedValue.state as IOState;
@@ -63,8 +57,6 @@ describe('Mint', () => {
         function: 'mint',
         qty: 0,
       });
-      await mineBlock(arweave);
-
       expect(mintInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       const state = cachedValue.state as IOState;
@@ -97,8 +89,6 @@ describe('Mint', () => {
         function: 'mint',
         qty: DEFAULT_TRANSFER_QTY,
       });
-      await mineBlock(arweave);
-
       expect(mintInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       const state = cachedValue.state as IOState;

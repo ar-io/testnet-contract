@@ -14,7 +14,6 @@ import {
   calculateTotalRegistrationFee,
   getLocalArNSContractId,
   getLocalWallet,
-  mineBlock,
 } from './utils/helper';
 
 describe('Records', () => {
@@ -56,8 +55,7 @@ describe('Records', () => {
           },
         );
 
-        await mineBlock(arweave);
-
+  
         const purchasedTierId =
           prevState.tiers.current[namePurchase.tierNumber!];
         const purchasedTier = prevState.tiers.history.find(
@@ -107,8 +105,7 @@ describe('Records', () => {
           },
         );
 
-        await mineBlock(arweave);
-
+  
         const purchasedTierId =
           prevState.tiers.current[ALLOWED_ACTIVE_TIERS[0]];
         const purchasedTier = prevState.tiers.history.find(
@@ -247,8 +244,7 @@ describe('Records', () => {
           },
         );
 
-        await mineBlock(arweave);
-
+  
         const purchasedTierId =
           prevState.tiers.current[namePurchase.tierNumber!];
         const purchasedTier = prevState.tiers.history.find(
@@ -297,8 +293,6 @@ describe('Records', () => {
           },
         );
 
-        await mineBlock(arweave);
-
         const purchasedTierId = prevState.tiers.current[1];
         const purchasedTier = prevState.tiers.history.find(
           (t) => t.id === purchasedTierId,
@@ -345,8 +339,6 @@ describe('Records', () => {
           },
         );
 
-        await mineBlock(arweave);
-
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue } = await contract.readState();
         expect(Object.keys(cachedValue.errorMessages)).toContain(
@@ -383,7 +375,6 @@ describe('Records', () => {
             },
           );
 
-          await mineBlock(arweave);
 
           expect(writeInteraction?.originalTxId).not.toBe(undefined);
           const { cachedValue } = await contract.readState();
