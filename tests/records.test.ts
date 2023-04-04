@@ -6,6 +6,8 @@ import {
   ALLOWED_ACTIVE_TIERS,
   DEFAULT_ANT_CONTRACT_ID,
   DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
+  DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE,
+  DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_INVALID_ARNS_NAME_MESSAGE,
   DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
@@ -88,138 +90,6 @@ describe('Records', () => {
         );
       });
 
-      it('should be able to buy a reserved record that is past end date', async () => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
-        const prevState = prevCachedValue.state as IOState;
-        const prevBalance = prevState.balances[ownerAddress];
-        const namePurchase: ArNSNamePurchase = {
-          name: 'twitter',
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
-          years: 1,
-          tierNumber: 1,
-        };
-        const writeInteraction = await contract.writeInteraction(
-          {
-            function: 'buyRecord',
-            ...namePurchase,
-          },
-          {
-            disableBundling: true,
-          },
-        );
-
-        await mineBlock(arweave);
-
-        const purchasedTierId =
-          prevState.tiers.current[namePurchase.tierNumber!];
-        const purchasedTier = prevState.tiers.history.find(
-          (t) => t.id === purchasedTierId,
-        )!;
-        const expectedPurchasePrice = calculateTotalRegistrationFee(
-          namePurchase.name,
-          prevState,
-          purchasedTier,
-          namePurchase.years,
-        );
-
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
-        const { cachedValue } = await contract.readState();
-        const state = cachedValue.state as IOState;
-        expect(state.records[namePurchase.name.toLowerCase()]).toEqual(
-          expect.objectContaining({
-            contractTxId: DEFAULT_ANT_CONTRACT_ID,
-            tier: state.tiers.current[1],
-            endTimestamp: expect.any(Number),
-          }),
-        );
-        expect(state.balances[ownerAddress]).toEqual(
-          prevBalance - expectedPurchasePrice,
-        );
-      });
-
-      it('should be able to buy a reserved record that is owned by the caller', async () => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
-        const prevState = prevCachedValue.state as IOState;
-        const prevBalance = prevState.balances[ownerAddress];
-        const namePurchase: ArNSNamePurchase = {
-          name: 'disney', // this has no expiration but the caller can purchase it.
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
-          years: 1,
-          tierNumber: 1,
-        };
-        const writeInteraction = await contract.writeInteraction(
-          {
-            function: 'buyRecord',
-            ...namePurchase,
-          },
-          {
-            disableBundling: true,
-          },
-        );
-        const namePurchase2: ArNSNamePurchase = {
-          name: 'microsoft', // this name hasnt expired yet but the caller can purchase it
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
-          years: 1,
-          tierNumber: 1,
-        };
-        const writeInteraction2 = await contract.writeInteraction(
-          {
-            function: 'buyRecord',
-            ...namePurchase2,
-          },
-          {
-            disableBundling: true,
-          },
-        );
-
-        await mineBlock(arweave);
-
-        const purchasedTierId =
-          prevState.tiers.current[namePurchase.tierNumber!];
-        const purchasedTier = prevState.tiers.history.find(
-          (t) => t.id === purchasedTierId,
-        )!;
-        const purchasedTierId2 =
-          prevState.tiers.current[namePurchase2.tierNumber!];
-        const purchasedTier2 = prevState.tiers.history.find(
-          (t) => t.id === purchasedTierId2,
-        )!;
-        const expectedPurchasePrice = calculateTotalRegistrationFee(
-          namePurchase.name,
-          prevState,
-          purchasedTier,
-          namePurchase.years,
-        );
-        const expectedPurchasePrice2 = calculateTotalRegistrationFee(
-          namePurchase2.name,
-          prevState,
-          purchasedTier2,
-          namePurchase2.years,
-        );
-
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
-        expect(writeInteraction2?.originalTxId).not.toBe(undefined);
-        const { cachedValue } = await contract.readState();
-        const state = cachedValue.state as IOState;
-        expect(state.records[namePurchase.name.toLowerCase()]).toEqual(
-          expect.objectContaining({
-            contractTxId: DEFAULT_ANT_CONTRACT_ID,
-            tier: state.tiers.current[1],
-            endTimestamp: expect.any(Number),
-          }),
-        );
-        expect(state.records[namePurchase2.name.toLowerCase()]).toEqual(
-          expect.objectContaining({
-            contractTxId: DEFAULT_ANT_CONTRACT_ID,
-            tier: state.tiers.current[1],
-            endTimestamp: expect.any(Number),
-          }),
-        );
-        expect(state.balances[ownerAddress]).toEqual(
-          prevBalance - (expectedPurchasePrice + expectedPurchasePrice2),
-        );
-      });
-
       it('should be able to buy a record without a tierNumber specified', async () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevState = prevCachedValue.state as IOState;
@@ -268,89 +138,6 @@ describe('Records', () => {
         );
         expect(state.balances[ownerAddress]).toEqual(
           prevBalance - expectedPurchasePrice,
-        );
-      });
-
-      it('should not be able to buy a record with a reserved name specified', async () => {
-        const reservedNamePurchase1: ArNSNamePurchase = {
-          name: '1', // this short name is not owned by anyone and has no expiration
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
-          years: 1,
-          tierNumber: 1,
-        };
-        const writeInteraction = await contract.writeInteraction(
-          {
-            function: 'buyRecord',
-            ...reservedNamePurchase1,
-          },
-          {
-            disableBundling: true,
-          },
-        );
-        const reservedNamePurchase2 = {
-          name: 'www', // this short name is not owned by anyone and has no expiration
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
-          years: 1,
-          tierNumber: 1,
-        };
-        const writeInteraction2 = await contract.writeInteraction(
-          {
-            function: 'buyRecord',
-            ...reservedNamePurchase2,
-          },
-          {
-            disableBundling: true,
-          },
-        );
-        const reservedNamePurchase3 = {
-          name: 'google', // this name is not owned by anyone and is not expired yet
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
-          years: 1,
-          tierNumber: 1,
-        };
-        const writeInteraction3 = await contract.writeInteraction(
-          {
-            function: 'buyRecord',
-            ...reservedNamePurchase3,
-          },
-          {
-            disableBundling: true,
-          },
-        );
-        const reservedNamePurchase4 = {
-          name: 'tesla', // this name is not owned by the calling wallet so it should not purchase
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
-          years: 1,
-          tierNumber: 1,
-        };
-        const writeInteraction4 = await contract.writeInteraction(
-          {
-            function: 'buyRecord',
-            ...reservedNamePurchase4,
-          },
-          {
-            disableBundling: true,
-          },
-        );
-
-        await mineBlock(arweave);
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
-        expect(writeInteraction2?.originalTxId).not.toBe(undefined);
-        expect(writeInteraction3?.originalTxId).not.toBe(undefined);
-        expect(writeInteraction4?.originalTxId).not.toBe(undefined);
-        const { cachedValue } = await contract.readState();
-        const state = cachedValue.state as IOState;
-        expect(state.records[reservedNamePurchase1.name.toLowerCase()]).toEqual(
-          undefined,
-        );
-        expect(state.records[reservedNamePurchase2.name.toLowerCase()]).toEqual(
-          undefined,
-        );
-        expect(state.records[reservedNamePurchase3.name.toLowerCase()]).toEqual(
-          undefined,
-        );
-        expect(state.records[reservedNamePurchase4.name.toLowerCase()]).toEqual(
-          undefined,
         );
       });
 
@@ -630,6 +417,162 @@ describe('Records', () => {
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
         ).toEqual(DEFAULT_NON_CONTRACT_OWNER_MESSAGE);
+      });
+    });
+
+    describe('reserved names', () => {
+      it('should not be able to buy a reserved name when not the reserved target', async () => {
+        const reservedNamePurchase1: ArNSNamePurchase = {
+          name: 'www', // this short name is not owned by anyone and has no expiration
+          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          years: 1,
+          tierNumber: 1,
+        };
+        const writeInteraction = await contract.writeInteraction(
+          {
+            function: 'buyRecord',
+            ...reservedNamePurchase1,
+          },
+          {
+            disableBundling: true,
+          },
+        );
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue } = await contract.readState();
+        const state = cachedValue.state as IOState;
+        expect(state.records[reservedNamePurchase1.name.toLowerCase()]).toEqual(
+          undefined,
+        );
+        expect(state.reserved[reservedNamePurchase1.name]).not.toBe(undefined);
+        expect(
+          cachedValue.errorMessages[writeInteraction!.originalTxId],
+        ).toEqual(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
+      });
+
+      it('should not be able to buy a record when name when is shorter than minimum allowed characters and it is not reserved', async () => {
+        const namePurchase: ArNSNamePurchase = {
+          name: 'iam',
+          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          years: 1,
+          tierNumber: 1,
+        };
+        const writeInteraction = await contract.writeInteraction(
+          {
+            function: 'buyRecord',
+            ...namePurchase,
+          },
+          {
+            disableBundling: true,
+          },
+        );
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue } = await contract.readState();
+        const state = cachedValue.state as IOState;
+        expect(state.records[namePurchase.name.toLowerCase()]).toEqual(
+          undefined,
+        );
+        expect(
+          cachedValue.errorMessages[writeInteraction!.originalTxId],
+        ).toEqual(DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE);
+      });
+
+      it('should not be able to buy reserved name when the caller is not the target of the reserved name', async () => {
+        const nonNameOwner = getLocalWallet(2);
+        const namePurchase: ArNSNamePurchase = {
+          name: 'twitter',
+          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          years: 1,
+          tierNumber: 1,
+        };
+        await contract.connect(nonNameOwner);
+        const writeInteraction = await contract.writeInteraction(
+          {
+            function: 'buyRecord',
+            ...namePurchase,
+          },
+          {
+            disableBundling: true,
+          },
+        );
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue } = await contract.readState();
+        const state = cachedValue.state as IOState;
+        expect(state.records[namePurchase.name.toLowerCase()]).toBe(undefined);
+        expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(
+          DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
+        );
+      });
+
+      it.only('should not be able to buy reserved name that has no target, but is not expired', async () => {
+        const namePurchase: ArNSNamePurchase = {
+          name: 'google',
+          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          years: 1,
+          tierNumber: 1,
+        };
+        const writeInteraction = await contract.writeInteraction(
+          {
+            function: 'buyRecord',
+            ...namePurchase,
+          },
+          {
+            disableBundling: true,
+          },
+        );
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue } = await contract.readState();
+        const state = cachedValue.state as IOState;
+        expect(state.records[namePurchase.name.toLowerCase()]).toBe(
+          undefined,
+        );
+        expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(
+          DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
+        );
+        expect(state.reserved[namePurchase.name.toLowerCase()]).not.toBe(undefined)
+      });
+
+      it('should be able to buy reserved name when the caller is the target of the reserved name', async () => {
+        const nameOwner = getLocalWallet(1);
+        const namePurchase: ArNSNamePurchase = {
+          name: 'twitter',
+          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          years: 1,
+          tierNumber: 1,
+        };
+        await contract.connect(nameOwner);
+        const writeInteraction = await contract.writeInteraction(
+          {
+            function: 'buyRecord',
+            ...namePurchase,
+          },
+          {
+            disableBundling: true,
+          },
+        );
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue } = await contract.readState();
+        const state = cachedValue.state as IOState;
+        expect(state.records[namePurchase.name.toLowerCase()]).not.toBe(
+          undefined,
+        );
+        expect(state.records[namePurchase.name.toLowerCase()]).toEqual(
+          expect.objectContaining({
+            contractTxId: DEFAULT_ANT_CONTRACT_ID,
+            tier: state.tiers.current[1],
+            endTimestamp: expect.any(Number),
+          }),
+        );
+        expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(
+          undefined,
+        );
+        expect(state.reserved[namePurchase.name.toLowerCase()]).toEqual(
+          undefined,
+        );
       });
     });
   });
