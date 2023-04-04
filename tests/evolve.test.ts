@@ -3,13 +3,9 @@ import path from 'path';
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import { IOState } from '../src/types';
-import { arweave, warp } from './setup.jest';
+import { warp } from './setup.jest';
 import { DEFAULT_NON_CONTRACT_OWNER_MESSAGE } from './utils/constants';
-import {
-  getLocalArNSContractId,
-  getLocalWallet,
-  mineBlock,
-} from './utils/helper';
+import { getLocalArNSContractId, getLocalWallet } from './utils/helper';
 
 describe('Evolve', () => {
   let contract: Contract<PstState>;
@@ -38,9 +34,6 @@ describe('Evolve', () => {
         owner,
       );
       const evolveSrcTxId = await warp.saveSource(evolveSrcTx);
-
-      await mineBlock(arweave);
-
       const evolveInteraction = await contract.evolve(evolveSrcTxId, {
         disableBundling: true,
       });
@@ -71,8 +64,6 @@ describe('Evolve', () => {
       const evolveSrcTxId = await warp.saveSource(evolveSrcTx);
       const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
-
-      await mineBlock(arweave);
 
       const evolveInteraction = await contract.evolve(evolveSrcTxId, {
         disableBundling: true,
