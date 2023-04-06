@@ -1,10 +1,12 @@
 import {
+  DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE,
   DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_INVALID_ARNS_NAME_MESSAGE,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
   DEFAULT_TIERS,
   MAX_NAME_LENGTH,
   MAX_YEARS,
+  MINIMUM_ALLOWED_NAME_LENGTH,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
@@ -96,29 +98,30 @@ export const buyRecord = async (
     throw new ContractError(DEFAULT_INVALID_ARNS_NAME_MESSAGE);
   }
 
-  // If the name length is in the reserved list, then it cannot be purchased
-  if (name.length.toString() in reserved) {
-    if (reserved[name.length.toString()].target !== caller) {
-      if (reserved[name.length.toString()].endTimestamp === undefined) {
-        throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
-      } else if (
-        reserved[name.length.toString()].endTimestamp >
-        +SmartWeave.block.timestamp
-      ) {
-        throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
-      }
+  const reservedName = reserved[name];
+  /**
+   * Two scenarios:
+   *
+   * 1. name is reserved, regardless of length can be purchased only by target, unless expired
+   * 2. name is not reserved, and less than allowed length.
+   */
+  if (reservedName) {
+    const { target, endTimestamp: reservedEndTimestamp } = reservedName;
+    if (!target || (target && target !== caller)) {
+      throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
     }
-  }
 
-  // If the name is in the reserved list, then it cannot be purchased
-  if (name in reserved) {
-    if (reserved[name].target !== caller) {
-      if (reserved[name].endTimestamp === undefined) {
-        throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
-      } else if (reserved[name].endTimestamp > +SmartWeave.block.timestamp) {
-        throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
-      }
+    if (
+      reservedEndTimestamp &&
+      +SmartWeave.block.timestamp < reservedEndTimestamp
+    ) {
+      throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
     }
+
+    // delete the name
+    delete reserved[name];
+  } else if (name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
+    throw new ContractError(DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE);
   }
 
   // calculate the total fee (initial registration + annual)
@@ -177,6 +180,7 @@ export const buyRecord = async (
 
   // update the records object
   state.records = records;
+  state.reserved = reserved;
 
   return { state };
 };
