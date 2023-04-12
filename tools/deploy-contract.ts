@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import path from 'path';
 import {
   LoggerFactory,
+  SourceType,
   WarpFactory,
   defaultCacheOptions,
 } from 'warp-contracts';
@@ -41,6 +42,13 @@ import { keyfile } from './constants';
       wallet,
       initState: JSON.stringify(stateFromFile),
       src: contractSrc,
+      evaluationManifest: {
+        evaluationOptions: {
+          internalWrites: true,
+          throwOnInternalWriteError: true,
+          sourceType: SourceType.ARWEAVE,
+        }
+      }
     },
     true,
   ); // disable bundling

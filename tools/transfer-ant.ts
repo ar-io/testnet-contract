@@ -7,7 +7,7 @@ import {
   defaultCacheOptions,
 } from 'warp-contracts';
 
-import { keyfile } from '../constants';
+import { keyfile } from './constants';
 
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

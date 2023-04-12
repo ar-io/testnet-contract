@@ -22,7 +22,7 @@ import {
   IOState,
   PstAction,
   PstFunction,
-} from './contracts/types';
+} from './types';
 
 declare const ContractError;
 
