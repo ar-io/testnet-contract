@@ -17,12 +17,7 @@ import { setName } from './actions/write/setName';
 import { transferTokens } from './actions/write/transferTokens';
 import { updateState } from './actions/write/updateState';
 import { upgradeTier } from './actions/write/upgradeTier';
-import {
-  ContractResult,
-  IOState,
-  PstAction,
-  PstFunction,
-} from './types';
+import { ContractResult, IOState, PstAction, PstFunction } from './types';
 
 declare const ContractError;
 

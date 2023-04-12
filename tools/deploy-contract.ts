@@ -47,8 +47,8 @@ import { keyfile } from './constants';
           internalWrites: true,
           throwOnInternalWriteError: true,
           sourceType: SourceType.ARWEAVE,
-        }
-      }
+        },
+      },
     },
     true,
   ); // disable bundling
