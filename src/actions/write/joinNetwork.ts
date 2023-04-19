@@ -115,6 +115,7 @@ export const joinNetwork = async (
           end: 0,
         },
       ],
+      delegates: {},
       settings: {
         label,
         fqdn,
@@ -123,7 +124,7 @@ export const joinNetwork = async (
         delegateAllowList,
         protocol,
       },
-      delegates: {},
+      status: 'networkJoined',
     };
   }
   return { state };
