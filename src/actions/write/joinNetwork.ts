@@ -1,10 +1,10 @@
 import {
   DEFAULT_INSUFFICIENT_FUNDS_MESSAGE,
+  MAX_GATEWAY_LABEL_LENGTH,
   MAX_NOTE_LENGTH,
-} from '@/constants';
-import { isValidArweaveBase64URL, isValidFQDN } from '@/utilities';
-
+} from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
+import { isValidArweaveBase64URL, isValidFQDN } from '../../utilities';
 
 declare const ContractError;
 declare const SmartWeave: any;
@@ -53,7 +53,7 @@ export const joinNetwork = async (
     );
   }
 
-  if (typeof label !== 'string') {
+  if (typeof label !== 'string' || label.length > MAX_GATEWAY_LABEL_LENGTH) {
     throw new ContractError('Label format not recognized.');
   }
 
