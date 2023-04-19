@@ -46,6 +46,7 @@ export type Gateway = {
     [address: string]: [TokenVault];
   };
   settings: GatewaySettings;
+  status: GatewayStatus;
 };
 
 export type GatewaySettings = {
@@ -60,6 +61,10 @@ export type GatewaySettings = {
 };
 
 export type AllowedProtocols = 'http' | 'https';
+export type GatewayStatus =
+  | 'networkJoined'
+  | 'leavingNetwork'
+  | 'maintenanceMode';
 
 export type ArNSName = {
   contractTxId: string; // The ANT Contract used to manage this name
@@ -227,7 +232,9 @@ export type PstFunction =
   | 'getTier'
   | 'getActiveTiers'
   | 'upgradeTier'
-  | 'joinNetwork';
+  | 'joinNetwork'
+  | 'initiateLeave'
+  | 'finalizeLeave';
 
 export type ContractResult =
   | { state: IOState }

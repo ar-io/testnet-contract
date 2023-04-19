@@ -8,6 +8,7 @@ import { buyRecord } from './actions/write/buyRecord';
 import { createNewTier } from './actions/write/createNewTier.js';
 import { evolve } from './actions/write/evolve';
 import { extendRecord } from './actions/write/extendRecord.js';
+import { initiateLeave } from './actions/write/initiateLeave';
 import { joinNetwork } from './actions/write/joinNetwork';
 import { mintTokens } from './actions/write/mintTokens';
 import { removeANTSourceCodeTx } from './actions/write/removeANTSourceCodeTx';
@@ -67,9 +68,19 @@ export async function handle(
       return await createNewTier(state, action);
     case 'joinNetwork':
       return await joinNetwork(state, action);
+    case 'initiateLeave':
+      return await initiateLeave(state, action);
+    case 'finalizeLeave':
+      return await finalizeLeave(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognized: "${input.function}"`,
       );
   }
+}
+function finalizeLeave(
+  state: IOState,
+  action: PstAction,
+): ContractResult | PromiseLike<ContractResult> {
+  throw new Error('Function not implemented.');
 }
