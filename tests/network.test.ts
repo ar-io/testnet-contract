@@ -271,6 +271,7 @@ describe('Network', () => {
       const label = 'SUUUUUUUUUUUUUUUUUUUUUUUUUUPER LONG LABEL!!!!!!!!!'; // friendly label
       const port = 'string';
       const protocol = 'ipfs';
+      const fqdn = 'fake_url.com';
       const note = 12345;
       const status = 'leavingNetwork';
       const openDelegation = 'whatever';
@@ -280,6 +281,7 @@ describe('Network', () => {
         label,
         port,
         protocol,
+        fqdn,
         openDelegation,
         delegateAllowList,
         note,
