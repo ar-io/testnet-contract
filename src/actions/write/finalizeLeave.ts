@@ -1,11 +1,11 @@
-import { LEAVING_NETWORK } from '../../constants';
+import { LEAVING_NETWORK_STATUS } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;
 declare const SmartWeave: any;
 
 // Removes gateway from the gateway address registry after the removal period completes
-export const initiateLeave = async (
+export const finalizeLeave = async (
   state: IOState,
   { caller, input: { target = caller } }: PstAction,
 ): Promise<ContractResult> => {
@@ -17,7 +17,7 @@ export const initiateLeave = async (
 
   // If end date has passed, finish leave process and return all funds for the gateway operator and their delegates
   if (
-    state.gateways[target].status === LEAVING_NETWORK &&
+    state.gateways[target].status === LEAVING_NETWORK_STATUS &&
     state.gateways[target].vaults[0].end <= +SmartWeave.block.height
   ) {
     // First, iterate through each gateway vault and remove tokens

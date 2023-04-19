@@ -1,4 +1,4 @@
-import { LEAVING_NETWORK } from '../../constants';
+import { LEAVING_NETWORK_STATUS } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;
@@ -15,6 +15,12 @@ export const increaseOperatorStake = async (
 
   if (!(caller in gateways)) {
     throw new ContractError("This Gateway's wallet is not registered");
+  }
+
+  if (gateways[caller].status === LEAVING_NETWORK_STATUS) {
+    throw new ContractError(
+      'This Gateway is in the process of leaving the network and cannot have its stake adjusted',
+    );
   }
 
   if (!Number.isInteger(qty) || qty <= 0) {
@@ -42,18 +48,12 @@ export const increaseOperatorStake = async (
     );
   }
 
-  if (gateways[caller].status !== LEAVING_NETWORK) {
-    state.balances[caller] -= qty;
-    state.gateways[caller].operatorStake += qty;
-    state.gateways[caller].vaults.push({
-      balance: qty,
-      start: +SmartWeave.block.height,
-      end: 0,
-    });
-  } else {
-    throw new ContractError(
-      'This Gateway is in the process of leaving the network and cannot have its stake adjusted',
-    );
-  }
+  state.balances[caller] -= qty;
+  state.gateways[caller].operatorStake += qty;
+  state.gateways[caller].vaults.push({
+    balance: qty,
+    start: +SmartWeave.block.height,
+    end: 0,
+  });
   return { state };
 };

@@ -1,3 +1,4 @@
+import { LEAVING_NETWORK_STATUS } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;
@@ -15,10 +16,13 @@ export const initiateOperatorStakeDecrease = async (
     throw new ContractError("This Gateway's wallet is not registered");
   }
 
-  if (
-    typeof id !== 'number' ||
-    (id >= gateways[caller].vaults.length && id < 0)
-  ) {
+  if (gateways[caller].status === LEAVING_NETWORK_STATUS) {
+    throw new ContractError(
+      'This Gateway is in the process of leaving the network and cannot have its stake adjusted',
+    );
+  }
+
+  if (typeof id !== 'number' || id > gateways[caller].vaults.length || id < 0) {
     throw new ContractError('Invalid vault index provided');
   }
 

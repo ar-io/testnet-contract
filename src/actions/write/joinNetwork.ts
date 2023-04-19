@@ -65,7 +65,7 @@ export const joinNetwork = async (
     throw new ContractError('Invalid protocol, must be http or https.');
   }
 
-  // check if it is a valid subdomain name for the smartweave contract
+  // check if it is a valid fully qualified domain name
   const isFQDN = isValidFQDN(fqdn);
   if (fqdn === undefined || typeof fqdn !== 'string' || !isFQDN) {
     throw new ContractError(

@@ -40,7 +40,7 @@ export type ContractSettings = {
 export type Gateway = {
   operatorStake: number; // the total stake of this gateway's operator.
   delegatedStake: number; // the total stake of this gateway's delegates.
-  status: GatewayStatus;
+  status: string;
   vaults: TokenVault[]; // the locked tokens staked by this gateway operator
   delegates: {
     // The delegates that have staked tokens with this gateway
@@ -61,10 +61,6 @@ export type GatewaySettings = {
 };
 
 export type AllowedProtocols = 'http' | 'https';
-export type GatewayStatus =
-  | 'networkJoined'
-  | 'leavingNetwork'
-  | 'maintenanceMode';
 
 export type ArNSName = {
   contractTxId: string; // The ANT Contract used to manage this name
@@ -186,6 +182,7 @@ export type PstInput = {
   openDelegation: boolean;
   delegateAllowList: string[];
   version: string;
+  status: string;
 };
 
 export type PstResult = {
@@ -237,7 +234,8 @@ export type PstFunction =
   | 'finalizeLeave'
   | 'increaseOperatorStake'
   | 'initiateOperatorStakeDecrease'
-  | 'finalizeOperatorStakeDecrease';
+  | 'finalizeOperatorStakeDecrease'
+  | 'updateGatewaySettings';
 
 export type ContractResult =
   | { state: IOState }

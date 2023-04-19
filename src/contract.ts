@@ -8,6 +8,7 @@ import { buyRecord } from './actions/write/buyRecord';
 import { createNewTier } from './actions/write/createNewTier.js';
 import { evolve } from './actions/write/evolve';
 import { extendRecord } from './actions/write/extendRecord.js';
+import { finalizeLeave } from './actions/write/finalizeLeave';
 import { finalizeOperatorStakeDecrease } from './actions/write/finalizeOperatorStakeDecrease';
 import { increaseOperatorStake } from './actions/write/increaseOperatorStake';
 import { initiateLeave } from './actions/write/initiateLeave';
@@ -20,6 +21,7 @@ import { setActiveTier } from './actions/write/setActiveTier';
 import { setFees } from './actions/write/setFees';
 import { setName } from './actions/write/setName';
 import { transferTokens } from './actions/write/transferTokens';
+import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
 import { updateState } from './actions/write/updateState';
 import { upgradeTier } from './actions/write/upgradeTier';
 import { ContractResult, IOState, PstAction, PstFunction } from './types';
@@ -81,15 +83,11 @@ export async function handle(
       return await initiateOperatorStakeDecrease(state, action);
     case 'finalizeOperatorStakeDecrease':
       return await finalizeOperatorStakeDecrease(state, action);
+    case 'updateGatewaySettings':
+      return await updateGatewaySettings(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognized: "${input.function}"`,
       );
   }
-}
-function finalizeLeave(
-  state: IOState,
-  action: PstAction,
-): ContractResult | PromiseLike<ContractResult> {
-  throw new Error('Function not implemented.');
 }

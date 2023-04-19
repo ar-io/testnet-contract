@@ -210,10 +210,10 @@ export async function setupInitialContractState(
   state.settings = {
     minNetworkJoinStakeAmount: 5_000,
     minDelegatedStakeAmount: 100,
-    minGatewayJoinLength: 2,
-    gatewayLeaveLength: 2,
-    delegatedStakeWithdrawLength: 2,
-    operatorStakeWithdrawLength: 2,
+    minGatewayJoinLength: 5,
+    gatewayLeaveLength: 5,
+    delegatedStakeWithdrawLength: 5,
+    operatorStakeWithdrawLength: 5,
   };
 
   // configure some basic gateways

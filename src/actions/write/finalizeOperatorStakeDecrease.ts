@@ -27,7 +27,7 @@ export const finalizeOperatorStakeDecrease = async (
       }
       state.gateways[target].operatorStake -=
         state.gateways[target].vaults[i].balance; // deduct from operator stake
-      delete state.gateways[target].vaults[i]; // clean up this vault
+      state.gateways[target].vaults.splice(i, 1);
     }
   }
   return { state };
