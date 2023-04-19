@@ -79,6 +79,98 @@ function createRecords(tiers, count = 3) {
   return records;
 }
 
+function createGateways(wallets: string[]) {
+  // TODO write a better algo
+  const gateways = {};
+  gateways[wallets[0]] = {
+    operatorStake: 50_000,
+    delegatedStake: 301_000,
+    status: 'networkJoined',
+    vaults: [
+      {
+        balance: 40_000, // Positive integer
+        end: 0, // At what block the lock ends.
+        start: 1, // At what block the lock starts.
+      },
+      {
+        balance: 10_000, // Positive integer
+        end: 0, // At what block the lock ends.
+        start: 1, // At what block the lock starts.
+      },
+    ],
+    delegates: {
+      [wallets[4]]: [
+        {
+          balance: 300_000, // Positive integer
+          end: 5_000, // At what block the lock ends.
+          start: 0, // At what block the lock starts.
+        },
+      ],
+      [wallets[5]]: [
+        {
+          balance: 1_000, // Positive integer
+          end: 2_500, // At what block the lock ends.
+          start: 0, // At what block the lock starts.
+        },
+      ],
+    },
+    settings: {
+      label: 'Arweave Community Gateway', // The friendly name used to label this gateway
+      fqdn: 'arweave.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
+      port: 443, // The port used by this gateway eg. 443
+      protocol: 'https', // The protocol used by this gateway, either http or https
+      openDelegation: false,
+      delegateAllowList: [wallets[4], wallets[5]],
+      note: 'The friendliest gateway to the whole permaweb',
+    },
+  };
+
+  gateways[wallets[1]] = {
+    operatorStake: 5_000, // this includes the additional vault we add below
+    delegatedStake: 3_100, // this includes the additional delegate we add below
+    status: 'networkJoined',
+    vaults: [
+      {
+        balance: 5_000, // Positive integer
+        end: 0, // At what block the lock ends.
+        start: 1, // At what block the lock starts.
+      },
+    ],
+    delegates: {
+      [wallets[5]]: [
+        {
+          balance: 1_000, // Positive integer
+          end: 0, // At what block the lock ends.
+          start: 1, // At what block the lock starts.
+        },
+        {
+          balance: 100, // Positive integer
+          end: 0, // At what block the lock ends.
+          start: 1, // At what block the lock starts.
+        },
+      ],
+      [wallets[6]]: [
+        {
+          balance: 2_000, // Positive integer
+          end: 0, // At what block the lock ends.
+          start: 1, // At what block the lock starts.
+        },
+      ],
+    },
+    settings: {
+      label: 'Slashme', // The friendly name used to label this gateway
+      fqdn: 'slash-this-gateway.io', // the fully qualified domain name this gateway can be reached at. eg arweave.net
+      port: 443, // The port used by this gateway eg. 443
+      protocol: 'https', // The protocol used by this gateway, either http or https
+      openDelegation: true,
+      delegateAllowList: [],
+      note: 'i do bad things',
+    },
+  };
+
+  return gateways;
+}
+
 export async function setupInitialContractState(
   owner: string,
   wallets: string[],
@@ -113,6 +205,19 @@ export async function setupInitialContractState(
 
   // set the owner to the first wallet
   state.owner = owner;
+
+  // configure the necessary contract settings
+  state.settings = {
+    minNetworkJoinStakeAmount: 5_000,
+    minDelegatedStakeAmount: 100,
+    minGatewayJoinLength: 2,
+    gatewayLeaveLength: 2,
+    delegatedStakeWithdrawLength: 2,
+    operatorStakeWithdrawLength: 2,
+  };
+
+  // configure some basic gateways
+  state.gateways = createGateways(wallets);
 
   return state;
 }

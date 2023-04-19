@@ -40,13 +40,13 @@ export type ContractSettings = {
 export type Gateway = {
   operatorStake: number; // the total stake of this gateway's operator.
   delegatedStake: number; // the total stake of this gateway's delegates.
-  vaults: [TokenVault]; // the locked tokens staked by this gateway operator
+  status: GatewayStatus;
+  vaults: TokenVault[]; // the locked tokens staked by this gateway operator
   delegates: {
     // The delegates that have staked tokens with this gateway
     [address: string]: [TokenVault];
   };
   settings: GatewaySettings;
-  status: GatewayStatus;
 };
 
 export type GatewaySettings = {
@@ -234,7 +234,10 @@ export type PstFunction =
   | 'upgradeTier'
   | 'joinNetwork'
   | 'initiateLeave'
-  | 'finalizeLeave';
+  | 'finalizeLeave'
+  | 'increaseOperatorStake'
+  | 'initiateOperatorStakeDecrease'
+  | 'finalizeOperatorStakeDecrease';
 
 export type ContractResult =
   | { state: IOState }

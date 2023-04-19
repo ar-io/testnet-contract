@@ -8,7 +8,10 @@ import { buyRecord } from './actions/write/buyRecord';
 import { createNewTier } from './actions/write/createNewTier.js';
 import { evolve } from './actions/write/evolve';
 import { extendRecord } from './actions/write/extendRecord.js';
+import { finalizeOperatorStakeDecrease } from './actions/write/finalizeOperatorStakeDecrease';
+import { increaseOperatorStake } from './actions/write/increaseOperatorStake';
 import { initiateLeave } from './actions/write/initiateLeave';
+import { initiateOperatorStakeDecrease } from './actions/write/initiateOperatorStakeDecrease';
 import { joinNetwork } from './actions/write/joinNetwork';
 import { mintTokens } from './actions/write/mintTokens';
 import { removeANTSourceCodeTx } from './actions/write/removeANTSourceCodeTx';
@@ -72,6 +75,12 @@ export async function handle(
       return await initiateLeave(state, action);
     case 'finalizeLeave':
       return await finalizeLeave(state, action);
+    case 'increaseOperatorStake':
+      return await increaseOperatorStake(state, action);
+    case 'initiateOperatorStakeDecrease':
+      return await initiateOperatorStakeDecrease(state, action);
+    case 'finalizeOperatorStakeDecrease':
+      return await finalizeOperatorStakeDecrease(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognized: "${input.function}"`,

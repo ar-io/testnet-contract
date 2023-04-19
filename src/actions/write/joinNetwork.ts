@@ -120,9 +120,10 @@ export const joinNetwork = async (
         label,
         fqdn,
         port,
+        protocol,
         openDelegation,
         delegateAllowList,
-        protocol,
+        note,
       },
       status: 'networkJoined',
     };
