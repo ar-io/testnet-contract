@@ -226,7 +226,8 @@ export type PstFunction =
   | 'createNewTier'
   | 'getTier'
   | 'getActiveTiers'
-  | 'upgradeTier';
+  | 'upgradeTier'
+  | 'joinNetwork';
 
 export type ContractResult =
   | { state: IOState }

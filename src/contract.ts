@@ -8,6 +8,7 @@ import { buyRecord } from './actions/write/buyRecord';
 import { createNewTier } from './actions/write/createNewTier.js';
 import { evolve } from './actions/write/evolve';
 import { extendRecord } from './actions/write/extendRecord.js';
+import { joinNetwork } from './actions/write/joinNetwork';
 import { mintTokens } from './actions/write/mintTokens';
 import { removeANTSourceCodeTx } from './actions/write/removeANTSourceCodeTx';
 import { removeRecord } from './actions/write/removeRecord';
@@ -17,12 +18,7 @@ import { setName } from './actions/write/setName';
 import { transferTokens } from './actions/write/transferTokens';
 import { updateState } from './actions/write/updateState';
 import { upgradeTier } from './actions/write/upgradeTier';
-import {
-  ContractResult,
-  IOState,
-  PstAction,
-  PstFunction,
-} from './contracts/types';
+import { ContractResult, IOState, PstAction, PstFunction } from './types';
 
 declare const ContractError;
 
@@ -69,6 +65,8 @@ export async function handle(
       return await upgradeTier(state, action);
     case 'createNewTier':
       return await createNewTier(state, action);
+    case 'joinNetwork':
+      return await joinNetwork(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognized: "${input.function}"`,
