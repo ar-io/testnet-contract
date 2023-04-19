@@ -173,9 +173,7 @@ export type PstInput = {
     [nameLength: string]: number;
   };
   label: string;
-  sslFingerprint: string;
-  ipV4Address?: string;
-  url: string;
+  fqdn: string;
   port: number;
   protocol: AllowedProtocols;
   penalty: number;
