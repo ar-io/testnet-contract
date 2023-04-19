@@ -1,3 +1,4 @@
+import { LEAVING_NETWORK } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;
@@ -22,9 +23,9 @@ export const initiateLeave = async (
     throw new ContractError('This Gateway has not been joined long enough');
   }
 
-  if (state.gateways[caller].status !== 'leavingNetwork') {
+  if (state.gateways[caller].status !== LEAVING_NETWORK) {
     // Begin leave process by setting end dates to all vaults and the gateway status to leaving network
-    state.gateways[caller].status = 'leavingNetwork';
+    state.gateways[caller].status = LEAVING_NETWORK;
     for (let i = 0; i < state.gateways[caller].vaults.length; i++) {
       // iterate through each gateway vault and set the end date
       state.gateways[caller].vaults[i].end =

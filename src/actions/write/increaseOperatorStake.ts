@@ -1,3 +1,4 @@
+import { LEAVING_NETWORK } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;
@@ -41,7 +42,7 @@ export const increaseOperatorStake = async (
     );
   }
 
-  if (gateways[caller].status !== 'leavingNetwork') {
+  if (gateways[caller].status !== LEAVING_NETWORK) {
     state.balances[caller] -= qty;
     state.gateways[caller].operatorStake += qty;
     state.gateways[caller].vaults.push({

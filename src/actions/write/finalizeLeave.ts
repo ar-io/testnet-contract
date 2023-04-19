@@ -1,3 +1,4 @@
+import { LEAVING_NETWORK } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;
@@ -16,7 +17,7 @@ export const initiateLeave = async (
 
   // If end date has passed, finish leave process and return all funds for the gateway operator and their delegates
   if (
-    state.gateways[target].status === 'leavingNetwork' &&
+    state.gateways[target].status === LEAVING_NETWORK &&
     state.gateways[target].vaults[0].end <= +SmartWeave.block.height
   ) {
     // First, iterate through each gateway vault and remove tokens
