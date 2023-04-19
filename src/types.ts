@@ -7,6 +7,10 @@ export type IOState = PstState & {
     // A list of all names and their corresponding attributes
     [name: string]: ArNSName;
   };
+  gateways: {
+    // a list of all registered gateways
+    [address: string]: Gateway; // each gateway uses its public arweave wallet address to identify it in the gateway registry
+  };
   fees: {
     // A list of all fees for purchasing ArNS names
     [nameLength: string]: number;
@@ -18,39 +22,39 @@ export type IOState = PstState & {
     history: ServiceTier[];
   };
   approvedANTSourceCodeTxs: string[]; // An array of Smartweave Source Code transactions for whitelisted ANTs
+  settings: ContractSettings; // protocol settings and parameters
 };
 
 export type ContractSettings = {
   // these settings can be modified via on-chain governance
-  lockMinLength: number; // the minimum amount of blocks tokens can be locked in a community vault
-  lockMaxLength: number; // the maximum amount of blocks tokens can be locked in a community vault
-  minGatewayStakeAmount: number; // the minimum amount of tokens needed to stake to join the ar.io network as a gateway
+  // lockMinLength: number; // the minimum amount of blocks tokens can be locked in a community vault
+  // lockMaxLength: number; // the maximum amount of blocks tokens can be locked in a community vault
+  minNetworkJoinStakeAmount: number; // the minimum amount of tokens needed to stake to join the ar.io network as a gateway
   minDelegatedStakeAmount: number; // the minimum amount of tokens needed to delegate stake to an ar.io network gateway
-  gatewayJoinLength: number; // the minimum amount of blocks a gateway can be joined to the ar.io network
+  minGatewayJoinLength: number; // the minimum amount of blocks a gateway can be joined to the ar.io network
   gatewayLeaveLength: number; // the amount of blocks that have to elapse before a gateway leaves the network
   delegatedStakeWithdrawLength: number; // the amount of blocks that have to elapse before a delegated stake is returned
-  operatorStakeWithdrawLength: number; // the amount of blocks that have to elapse before a delegated stake is returned
+  operatorStakeWithdrawLength: number; // the amount of blocks that have to elapse before a gateway operator's stake is returned
 };
 
 export type Gateway = {
   operatorStake: number; // the total stake of this gateway's operator.
   delegatedStake: number; // the total stake of this gateway's delegates.
-  settings: GatewaySettings;
   vaults: [TokenVault]; // the locked tokens staked by this gateway operator
   delegates: {
     // The delegates that have staked tokens with this gateway
     [address: string]: [TokenVault];
   };
+  settings: GatewaySettings;
 };
+
 export type GatewaySettings = {
   // All of the settings related to this gateway
   label: string; // The friendly name used to label this gateway
-  sslFingerprint: string; // the SHA-256 Fingerprint used by SSL certificate used by this gateway eg. 5C 5D 05 16 C3 3C A3 34 51 78 1E 67 49 14 D4 66 31 A9 19 3C 63 8E F9 9E 54 84 1A F0 4C C2 1A 36
-  ipV4Address?: string; // the IP address this gateway can be reached at eg. 10.124.72.100
-  url: string; // the fully qualified domain name this gateway can be reached at. eg arweave.net
+  fqdn: string; // the fully qualified domain name this gateway can be reached at. eg arweave.net
   port: number; // The port used by this gateway eg. 443
   protocol: AllowedProtocols; // The protocol used by this gateway, either http or https
-  openDelegation?: boolean; // If true, community token holders can delegate stake to this gateway
+  openDelegation: boolean; // If true, community token holders can delegate stake to this gateway
   delegateAllowList?: string[]; // A list of allowed arweave wallets that can act as delegates, if empty then anyone can delegate their tokens to this gateway
   note?: string; // An additional note (256 character max) the gateway operator can set to indicate things like maintenance or other operational updates.
 };
