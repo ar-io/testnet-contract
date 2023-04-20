@@ -1,6 +1,12 @@
 // ~~ Put all the interactions from '../actions/` together to write the final handle function which will be exported
 // from the contract source. ~~
 import { getBalance } from './actions/read/balance';
+import {
+  getGateway,
+  getGatewayRegistry,
+  getGatewayTotalStake,
+  getRankedGatewayRegistry,
+} from './actions/read/gateways';
 import { getRecord } from './actions/read/record';
 import { getActiveTiers, getTier } from './actions/read/tiers';
 import { addANTSourceCodeTx } from './actions/write/addANTSourceCodeTx';
@@ -67,6 +73,14 @@ export async function handle(
       return await getTier(state, action);
     case 'getActiveTiers':
       return await getActiveTiers(state);
+    case 'getGateway':
+      return await getGateway(state, action);
+    case 'getGatewayTotalStake':
+      return await getGatewayTotalStake(state, action);
+    case 'getGatewayRegistry':
+      return await getGatewayRegistry(state);
+    case 'getRankedGatewayRegistry':
+      return await getRankedGatewayRegistry(state);
     case 'upgradeTier':
       return await upgradeTier(state, action);
     case 'createNewTier':
