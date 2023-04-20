@@ -11,5 +11,14 @@ export const DEFAULT_TRANSFER_QTY = 100_000;
 export const DEFAULT_NETWORK_JOIN_STATUS = 'networkJoin';
 export const DEFAULT_MAINTENANCE_MODE_STATUS = 'maintenanceMode';
 export const DEFAULT_LEAVING_NETWORK_STATUS = 'leavingNetwork';
+export const DEFAULT_CONTRACT_SETTINGS = {
+  minLockLength: 5,
+  minNetworkJoinStakeAmount: 5_000,
+  minDelegatedStakeAmount: 100,
+  minGatewayJoinLength: 5,
+  gatewayLeaveLength: 5,
+  delegatedStakeWithdrawLength: 5,
+  operatorStakeWithdrawLength: 5,
+};
 // Also export all our other constants
 export * from '../../src/constants';

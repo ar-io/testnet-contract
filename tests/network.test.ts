@@ -132,7 +132,7 @@ describe('Network', () => {
       });
     });
 
-    it('should initiate operator stake decrease with correct parameters', async () => {
+    it('should not initiate operator stake decrease if the vault has not been locked long enough', async () => {
       const newGatewayOperatorAddress = await arweave.wallets.getAddress(
         newGatewayOperator,
       );
@@ -151,7 +151,34 @@ describe('Network', () => {
       ]);
       expect(
         newState.gateways[newGatewayOperatorAddress].vaults[1].end,
-      ).toEqual(9); // TO DO, make this more dynamic.  Need to fetch current block height
+      ).toEqual(0); // TO DO, make this more dynamic.  Need to fetch current block height
+    });
+
+    it('should initiate operator stake decrease with correct parameters', async () => {
+      await mineBlock(arweave);
+      await mineBlock(arweave);
+      await mineBlock(arweave);
+      await mineBlock(arweave);
+      await mineBlock(arweave);
+      const newGatewayOperatorAddress = await arweave.wallets.getAddress(
+        newGatewayOperator,
+      );
+      const { cachedValue: prevCachedValue } = await contract.readState();
+      const prevState = prevCachedValue.state as IOState;
+      const id = 1; // the vault that is being unlocked
+      const writeInteraction = await contract.writeInteraction({
+        function: 'initiateOperatorStakeDecrease',
+        id,
+      });
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(Object.keys(newCachedValue.errorMessages)).not.toContain([
+        writeInteraction!.originalTxId,
+      ]);
+      expect(
+        newState.gateways[newGatewayOperatorAddress].vaults[1].end,
+      ).toEqual(15); // TO DO, make this more dynamic.  Need to fetch current block height
     });
 
     it('should not initiate operator stake decrease if it brings the gateway below the minimum', async () => {

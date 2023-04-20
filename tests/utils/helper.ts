@@ -7,6 +7,7 @@ import { v4 as uuidV4 } from 'uuid';
 import { IOState, ServiceTier } from '../../src/types';
 import {
   DEFAULT_ANT_CONTRACT_ID,
+  DEFAULT_CONTRACT_SETTINGS,
   DEFAULT_INITIAL_STATE,
   DEFAULT_LEAVING_NETWORK_STATUS,
   DEFAULT_MAINTENANCE_MODE_STATUS,
@@ -304,14 +305,7 @@ export async function setupInitialContractState(
   state.owner = owner;
 
   // configure the necessary contract settings
-  state.settings = {
-    minNetworkJoinStakeAmount: 5_000,
-    minDelegatedStakeAmount: 100,
-    minGatewayJoinLength: 5,
-    gatewayLeaveLength: 5,
-    delegatedStakeWithdrawLength: 5,
-    operatorStakeWithdrawLength: 5,
-  };
+  state.settings = DEFAULT_CONTRACT_SETTINGS;
 
   // configure some basic gateways
   state.gateways = createGateways(wallets);
