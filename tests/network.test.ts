@@ -444,8 +444,7 @@ describe('Network', () => {
         const { result: rankedGateways } = await contract.viewState({
           function: 'getRankedGatewayRegistry',
         });
-        expect(rankedGateways).not.toBe(undefined);
-        console.log(rankedGateways);
+        expect(rankedGateways).not.toBe(undefined); // TODO, make this more specific
       });
     });
 

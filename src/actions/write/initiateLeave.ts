@@ -30,11 +30,13 @@ export const initiateLeave = async (
   }
 
   // Begin leave process by setting end dates to all vaults and the gateway status to leaving network
-  state.gateways[caller].status = LEAVING_NETWORK_STATUS;
   for (let i = 0; i < state.gateways[caller].vaults.length; i++) {
-    // iterate through each gateway vault and set the end date
-    state.gateways[caller].vaults[i].end =
-      +SmartWeave.block.height + settings.gatewayLeaveLength;
+    // iterate through each gateway vault and set the end date if it is not already in the process of being withdrawn
+    if (state.gateways[caller].vaults[i].end === 0) {
+      state.gateways[caller].vaults[i].end =
+        +SmartWeave.block.height + settings.gatewayLeaveLength;
+    }
   }
+  state.gateways[caller].status = LEAVING_NETWORK_STATUS;
   return { state };
 };
