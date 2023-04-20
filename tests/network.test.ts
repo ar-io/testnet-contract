@@ -6,6 +6,7 @@ import {
   DEFAULT_LEAVING_NETWORK_STATUS,
   DEFAULT_MAINTENANCE_MODE_STATUS,
   DEFAULT_NETWORK_JOIN_STATUS,
+  DEFAULT_WALLET_FUND_AMOUNT,
 } from './utils/constants';
 import {
   getLocalArNSContractId,
@@ -15,6 +16,8 @@ import {
 
 describe('Network', () => {
   let contract: Contract<PstState>;
+  let owner: JWKInterface;
+  let ownerAddress: string;
   let srcContractId: string;
 
   beforeAll(async () => {
@@ -22,16 +25,15 @@ describe('Network', () => {
   });
 
   describe('valid gateway operator', () => {
-    let owner: JWKInterface;
     let approvedDelegate1: JWKInterface;
     let approvedDelegate2: JWKInterface;
     let newGatewayOperator: JWKInterface;
 
     beforeAll(async () => {
       owner = getLocalWallet(0);
-      newGatewayOperator = getLocalWallet(2);
-      approvedDelegate1 = getLocalWallet(3);
-      approvedDelegate2 = getLocalWallet(4);
+      newGatewayOperator = getLocalWallet(5);
+      approvedDelegate1 = getLocalWallet(6);
+      approvedDelegate2 = getLocalWallet(7);
       contract = warp.pst(srcContractId).connect(owner);
     });
 
@@ -367,6 +369,120 @@ describe('Network', () => {
         writeInteraction!.originalTxId,
       ]);
       expect(newState.gateways[newGatewayOperatorAddress]).toEqual(undefined);
+    });
+  });
+
+  describe('non-valid gateway operator', () => {
+    let nonGatewayOperator: JWKInterface;
+    let nonGatewayOperatorAddress: string;
+
+    beforeAll(async () => {
+      owner = getLocalWallet(0);
+      ownerAddress = await arweave.wallets.getAddress(owner);
+      nonGatewayOperator = getLocalWallet(6);
+      contract = warp.pst(srcContractId).connect(nonGatewayOperator);
+      nonGatewayOperatorAddress = await arweave.wallets.getAddress(
+        nonGatewayOperator,
+      );
+    });
+
+    describe('read interactions', () => {
+      it('should be able to fetch gateway details via view state', async () => {
+        const { result: gateway } = await contract.viewState({
+          function: 'getGateway',
+          target: ownerAddress,
+        });
+        const expectedGatewayObj = expect.objectContaining({
+          operatorStake: expect.any(Number),
+          delegatedStake: expect.any(Number),
+          status: expect.any(String),
+          vaults: expect.any(Array),
+          delegates: expect.any(Object),
+          settings: expect.any(Object),
+        });
+        expect(gateway).not.toBe(undefined);
+        expect(gateway).toEqual(expectedGatewayObj);
+      });
+
+      it('should be return an error when fetching a non-existent gateway via viewState', async () => {
+        const response = await contract.viewState({
+          function: 'getGateway',
+          target: 'non-existent-gateway',
+        });
+        expect(response).not.toBe(undefined);
+        expect(response?.errorMessage).toEqual(
+          'This target does not have a registered gateway.',
+        );
+      });
+
+      it('should be able to fetch gateways total stake', async () => {
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const prevState = prevCachedValue.state as IOState;
+        const { result: gatewayTotalStake } = await contract.viewState({
+          function: 'getGatewayTotalStake',
+          target: ownerAddress,
+        });
+        expect(gatewayTotalStake).toEqual(
+          prevState.gateways[ownerAddress].operatorStake +
+            prevState.gateways[ownerAddress].delegatedStake,
+        );
+      });
+
+      it('should be able to fetch gateway address registry via view state', async () => {
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const prevState = prevCachedValue.state as IOState;
+        const { result: gateways } = await contract.viewState({
+          function: 'getGatewayRegistry',
+        });
+        expect(gateways).not.toBe(undefined);
+        expect(gateways).toEqual(prevState.gateways);
+      });
+
+      it('should be able to fetch stake ranked, active gateway address registry via view state', async () => {
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const prevState = prevCachedValue.state as IOState;
+        const { result: rankedGateways } = await contract.viewState({
+          function: 'getRankedGatewayRegistry',
+        });
+        expect(rankedGateways).not.toBe(undefined);
+        console.log(rankedGateways);
+      });
+    });
+
+    describe('write interactions', () => {
+      it('should not join the network without correct parameters', async () => {
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const prevBalance =
+          prevCachedValue.state.balances[nonGatewayOperatorAddress];
+        const qty = DEFAULT_WALLET_FUND_AMOUNT * 2; // This user should not have this much
+        const label = 'Invalid Gateway'; // friendly label
+        const fqdn = 'invalid.io';
+        const port = 3000;
+        const protocol = 'http';
+        const openDelegation = true;
+        const note = 'Invalid gateway';
+        contract.connect(nonGatewayOperator);
+        const writeInteraction = await contract.writeInteraction({
+          function: 'joinNetwork',
+          qty,
+          label,
+          fqdn,
+          port,
+          protocol,
+          openDelegation,
+          note,
+        });
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue: newCachedValue } = await contract.readState();
+        const newState = newCachedValue.state as IOState;
+        expect(Object.keys(newCachedValue.errorMessages)).not.toContain([
+          writeInteraction!.originalTxId,
+        ]);
+        expect(newState.balances[nonGatewayOperatorAddress]).toEqual(
+          prevBalance,
+        );
+        expect(newState.gateways[nonGatewayOperatorAddress]).toEqual(undefined);
+      });
     });
   });
 });

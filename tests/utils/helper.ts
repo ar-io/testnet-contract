@@ -8,6 +8,9 @@ import { IOState, ServiceTier } from '../../src/types';
 import {
   DEFAULT_ANT_CONTRACT_ID,
   DEFAULT_INITIAL_STATE,
+  DEFAULT_LEAVING_NETWORK_STATUS,
+  DEFAULT_MAINTENANCE_MODE_STATUS,
+  DEFAULT_NETWORK_JOIN_STATUS,
   DEFAULT_WALLET_FUND_AMOUNT,
 } from './constants';
 
@@ -85,7 +88,7 @@ function createGateways(wallets: string[]) {
   gateways[wallets[0]] = {
     operatorStake: 50_000,
     delegatedStake: 301_000,
-    status: 'networkJoined',
+    status: DEFAULT_NETWORK_JOIN_STATUS,
     vaults: [
       {
         balance: 40_000, // Positive integer
@@ -128,7 +131,7 @@ function createGateways(wallets: string[]) {
   gateways[wallets[1]] = {
     operatorStake: 5_000, // this includes the additional vault we add below
     delegatedStake: 3_100, // this includes the additional delegate we add below
-    status: 'networkJoined',
+    status: DEFAULT_NETWORK_JOIN_STATUS,
     vaults: [
       {
         balance: 5_000, // Positive integer
@@ -165,6 +168,90 @@ function createGateways(wallets: string[]) {
       openDelegation: true,
       delegateAllowList: [],
       note: 'i do bad things',
+    },
+  };
+
+  gateways[wallets[2]] = {
+    operatorStake: 500_000, // this includes the additional vault we add below
+    delegatedStake: 0, // this includes the additional delegate we add below
+    status: DEFAULT_NETWORK_JOIN_STATUS,
+    vaults: [
+      {
+        balance: 250_000, // Positive integer
+        end: 0, // At what block the lock ends.
+        start: 1, // At what block the lock starts.
+      },
+      {
+        balance: 50_000, // Positive integer
+        end: 0, // At what block the lock ends.
+        start: 1, // At what block the lock starts.
+      },
+      {
+        balance: 100_000, // Positive integer
+        end: 0, // At what block the lock ends.
+        start: 1, // At what block the lock starts.
+      },
+      {
+        balance: 100_000, // Positive integer
+        end: 0, // At what block the lock ends.
+        start: 1, // At what block the lock starts.
+      },
+    ],
+    delegates: {},
+    settings: {
+      label: 'Delegateme', // The friendly name used to label this gateway
+      fqdn: 'delegate.org', // the fully qualified domain name this gateway can be reached at. eg arweave.net
+      port: 80, // The port used by this gateway eg. 443
+      protocol: 'http', // The protocol used by this gateway, either http or https
+      openDelegation: true,
+      delegateAllowList: [],
+      note: '',
+    },
+  };
+
+  gateways[wallets[3]] = {
+    operatorStake: 5_000, // this includes the additional vault we add below
+    delegatedStake: 0, // this includes the additional delegate we add below
+    status: DEFAULT_MAINTENANCE_MODE_STATUS,
+    vaults: [
+      {
+        balance: 5_000, // Positive integer
+        end: 0, // At what block the lock ends.
+        start: 1, // At what block the lock starts.
+      },
+    ],
+    delegates: {},
+    settings: {
+      label: 'Wack-gateway', // The friendly name used to label this gateway
+      fqdn: 'brokeninfra.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
+      port: 12345, // The port used by this gateway eg. 443
+      protocol: 'https', // The protocol used by this gateway, either http or https
+      openDelegation: false,
+      delegateAllowList: [],
+      note: '',
+    },
+  };
+
+  gateways[wallets[4]] = {
+    operatorStake: 10_000, // this includes the additional vault we add below
+    delegatedStake: 0, // this includes the additional delegate we add below
+    status: DEFAULT_LEAVING_NETWORK_STATUS,
+    vaults: [
+      {
+        balance: 10_000, // Positive integer
+        end: 4, // At what block the lock ends.
+        start: 1, // At what block the lock starts.
+      },
+    ],
+    delegates: {},
+    settings: {
+      label: 'See Ya Later', // The friendly name used to label this gateway
+      fqdn: 'goodbye.com', // the fully qualified domain name this gateway can be reached at. eg arweave.net
+      port: 443, // The port used by this gateway eg. 443
+      protocol: 'https', // The protocol used by this gateway, either http or https
+      openDelegation: true,
+      delegateAllowList: [wallets[0]],
+      note: 'Leaving the network',
     },
   };
 
