@@ -77,6 +77,8 @@ describe('Network', () => {
         operatorStake: qty,
         delegatedStake: 0,
         status: DEFAULT_NETWORK_JOIN_STATUS,
+        start: 2,
+        end: 0,
         vaults: [
           {
             balance: qty, // Positive integer, the amount locked
@@ -322,7 +324,7 @@ describe('Network', () => {
         i += 1
       ) {
         expect(
-          newState.gateways[newGatewayOperatorAddress].vaults[i].end,
+          newState.gateways[newGatewayOperatorAddress].end,
         ).toBeGreaterThan(0); // TODO, update this to be more dynamic and look for the exact end date
       }
       expect(newState.gateways[newGatewayOperatorAddress].status).toEqual(

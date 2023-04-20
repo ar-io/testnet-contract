@@ -88,32 +88,34 @@ function createGateways(wallets: string[]) {
   gateways[wallets[0]] = {
     operatorStake: 50_000,
     delegatedStake: 301_000,
+    start: 1,
+    end: 0,
     status: DEFAULT_NETWORK_JOIN_STATUS,
     vaults: [
       {
-        balance: 40_000, // Positive integer
-        end: 0, // At what block the lock ends.
-        start: 1, // At what block the lock starts.
+        balance: 40_000,
+        start: 1,
+        end: 0,
       },
       {
-        balance: 10_000, // Positive integer
-        end: 0, // At what block the lock ends.
-        start: 1, // At what block the lock starts.
+        balance: 10_000,
+        start: 1,
+        end: 0,
       },
     ],
     delegates: {
       [wallets[4]]: [
         {
-          balance: 300_000, // Positive integer
-          end: 5_000, // At what block the lock ends.
-          start: 0, // At what block the lock starts.
+          balance: 300_000,
+          end: 5_000,
+          start: 0,
         },
       ],
       [wallets[5]]: [
         {
-          balance: 1_000, // Positive integer
-          end: 2_500, // At what block the lock ends.
-          start: 0, // At what block the lock starts.
+          balance: 1_000,
+          end: 2_500,
+          start: 0,
         },
       ],
     },
@@ -132,31 +134,33 @@ function createGateways(wallets: string[]) {
     operatorStake: 5_000, // this includes the additional vault we add below
     delegatedStake: 3_100, // this includes the additional delegate we add below
     status: DEFAULT_NETWORK_JOIN_STATUS,
+    start: 1,
+    end: 0,
     vaults: [
       {
-        balance: 5_000, // Positive integer
-        end: 0, // At what block the lock ends.
-        start: 1, // At what block the lock starts.
+        balance: 5_000,
+        start: 1,
+        end: 0,
       },
     ],
     delegates: {
       [wallets[5]]: [
         {
-          balance: 1_000, // Positive integer
-          end: 0, // At what block the lock ends.
-          start: 1, // At what block the lock starts.
+          balance: 1_000,
+          start: 1,
+          end: 0,
         },
         {
-          balance: 100, // Positive integer
-          end: 0, // At what block the lock ends.
-          start: 1, // At what block the lock starts.
+          balance: 100,
+          start: 1,
+          end: 0,
         },
       ],
       [wallets[6]]: [
         {
-          balance: 2_000, // Positive integer
-          end: 0, // At what block the lock ends.
-          start: 1, // At what block the lock starts.
+          balance: 2_000,
+          start: 1,
+          end: 0,
         },
       ],
     },
@@ -175,26 +179,28 @@ function createGateways(wallets: string[]) {
     operatorStake: 500_000, // this includes the additional vault we add below
     delegatedStake: 0, // this includes the additional delegate we add below
     status: DEFAULT_NETWORK_JOIN_STATUS,
+    start: 1,
+    end: 0,
     vaults: [
       {
-        balance: 250_000, // Positive integer
-        end: 0, // At what block the lock ends.
-        start: 1, // At what block the lock starts.
+        balance: 250_000,
+        start: 1,
+        end: 0,
       },
       {
-        balance: 50_000, // Positive integer
-        end: 0, // At what block the lock ends.
-        start: 1, // At what block the lock starts.
+        balance: 50_000,
+        start: 1,
+        end: 0,
       },
       {
-        balance: 100_000, // Positive integer
-        end: 0, // At what block the lock ends.
-        start: 1, // At what block the lock starts.
+        balance: 100_000,
+        start: 1,
+        end: 0,
       },
       {
-        balance: 100_000, // Positive integer
-        end: 0, // At what block the lock ends.
-        start: 1, // At what block the lock starts.
+        balance: 100_000,
+        start: 1,
+        end: 0,
       },
     ],
     delegates: {},
@@ -213,11 +219,13 @@ function createGateways(wallets: string[]) {
     operatorStake: 5_000, // this includes the additional vault we add below
     delegatedStake: 0, // this includes the additional delegate we add below
     status: DEFAULT_MAINTENANCE_MODE_STATUS,
+    start: 1,
+    end: 0,
     vaults: [
       {
-        balance: 5_000, // Positive integer
-        end: 0, // At what block the lock ends.
-        start: 1, // At what block the lock starts.
+        balance: 5_000,
+        start: 1,
+        end: 0,
       },
     ],
     delegates: {},
@@ -236,11 +244,13 @@ function createGateways(wallets: string[]) {
     operatorStake: 10_000, // this includes the additional vault we add below
     delegatedStake: 0, // this includes the additional delegate we add below
     status: DEFAULT_LEAVING_NETWORK_STATUS,
+    start: 1,
+    end: 4,
     vaults: [
       {
-        balance: 10_000, // Positive integer
-        end: 4, // At what block the lock ends.
-        start: 1, // At what block the lock starts.
+        balance: 10_000,
+        start: 1,
+        end: 0,
       },
     ],
     delegates: {},
