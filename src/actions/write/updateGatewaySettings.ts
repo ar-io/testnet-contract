@@ -10,7 +10,7 @@ import { isValidArweaveBase64URL, isValidFQDN } from '../../utilities';
 declare const ContractError;
 declare const SmartWeave: any;
 
-// Removes gateway from the gateway address registry after the removal period completes
+// Updates any of the settings of an existing gateway
 export const updateGatewaySettings = async (
   state: IOState,
   {

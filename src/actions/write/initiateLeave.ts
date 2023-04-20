@@ -4,7 +4,7 @@ import { ContractResult, IOState, PstAction } from '../../types';
 declare const ContractError;
 declare const SmartWeave: any;
 
-// Removes gateway from the gateway address registry after the removal period completes
+// Begins the network leave process for a gateway operator
 export const initiateLeave = async (
   state: IOState,
   { caller }: PstAction,

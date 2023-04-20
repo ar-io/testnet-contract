@@ -4,7 +4,7 @@ import { ContractResult, IOState, PstAction } from '../../types';
 declare const ContractError;
 declare const SmartWeave: any;
 
-// Unlocks the vault of a gateway operator
+// Begins the process to unlocks the vault of a gateway operator
 export const initiateOperatorStakeDecrease = async (
   state: IOState,
   { caller, input: { id } }: PstAction,
