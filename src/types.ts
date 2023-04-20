@@ -40,6 +40,8 @@ export type ContractSettings = {
 export type Gateway = {
   operatorStake: number; // the total stake of this gateway's operator.
   delegatedStake: number; // the total stake of this gateway's delegates.
+  start: number; // At what block the gateway joined the network.
+  end: number; // At what block the gateway can leave the network.  0 means no end date.
   status: string;
   vaults: TokenVault[]; // the locked tokens staked by this gateway operator
   delegates: {

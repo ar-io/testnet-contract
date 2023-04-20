@@ -18,7 +18,7 @@ export const finalizeLeave = async (
   // If end date has passed, finish leave process and return all funds for the gateway operator and their delegates
   if (
     state.gateways[target].status === LEAVING_NETWORK_STATUS &&
-    state.gateways[target].vaults[0].end <= +SmartWeave.block.height
+    state.gateways[target].end <= +SmartWeave.block.height
   ) {
     // First, iterate through each gateway vault and remove tokens
     for (let i = 0; i < state.gateways[target].vaults.length; i++) {

@@ -127,6 +127,8 @@ export const joinNetwork = async (
         note,
       },
       status: NETWORK_JOIN_STATUS,
+      start: +SmartWeave.block.height,
+      end: 0,
     };
   }
   return { state };
