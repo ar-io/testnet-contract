@@ -35,8 +35,15 @@ export const initiateOperatorStakeDecrease = async (
     );
   }
 
-  // Unstake a single gateway that is active
+  if (
+    gateways[caller].vaults[id].start + settings.minLockLength >
+    +SmartWeave.block.height
+  ) {
+    throw new ContractError('This vault has not been locked long enough');
+  }
+
   if (gateways[caller].vaults[id].end === 0) {
+    // Unstake a single gateway vault that is active
     // Begin unstake process
     state.gateways[caller].vaults[id].end =
       +SmartWeave.block.height + settings.operatorStakeWithdrawLength;

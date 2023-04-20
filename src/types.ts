@@ -27,7 +27,7 @@ export type IOState = PstState & {
 
 export type ContractSettings = {
   // these settings can be modified via on-chain governance
-  // lockMinLength: number; // the minimum amount of blocks tokens can be locked in a community vault
+  minLockLength: number; // the minimum amount of blocks tokens can be locked in a community vault
   // lockMaxLength: number; // the maximum amount of blocks tokens can be locked in a community vault
   minNetworkJoinStakeAmount: number; // the minimum amount of tokens needed to stake to join the ar.io network as a gateway
   minDelegatedStakeAmount: number; // the minimum amount of tokens needed to delegate stake to an ar.io network gateway
