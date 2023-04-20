@@ -10,6 +10,7 @@ export const finalizeLeave = async (
   { caller, input: { target = caller } }: PstAction,
 ): Promise<ContractResult> => {
   const gateways = state.gateways;
+  const balances = state.balances;
 
   if (!(target in gateways)) {
     throw new ContractError('This target is not a registered gateway.');
@@ -17,44 +18,24 @@ export const finalizeLeave = async (
 
   // If end date has passed, finish leave process and return all funds for the gateway operator and their delegates
   if (
-    state.gateways[target].status === LEAVING_NETWORK_STATUS &&
-    state.gateways[target].end <= +SmartWeave.block.height
-  ) {
-    // First, iterate through each gateway vault and remove tokens
-    for (let i = 0; i < state.gateways[target].vaults.length; i++) {
-      if (target in state.balances) {
-        state.balances[target] += state.gateways[target].vaults[i].balance;
-      } else {
-        // If this gateway never had a balance, then create one
-        state.balances[target] = state.gateways[target].vaults[i].balance;
-      }
-      // deduct from the operator stake and zero out each vault balance
-      // this technically isnt needed since state.gateways[target] gets deleted
-      state.gateways[target].operatorStake -=
-        state.gateways[target].vaults[i].balance;
-      state.gateways[target].vaults[i].balance = 0;
-    }
-    // Second, iterate through each delegate and their vaults and return funds
-    for (const key of Object.keys(state.gateways[target].delegates)) {
-      for (let i = 0; i < state.gateways[target].delegates[key].length; i++) {
-        if (key in state.balances) {
-          state.balances[key] +=
-            state.gateways[target].delegates[key][i].balance;
-        } else {
-          // If this delegate never had a balance, then create one
-          state.balances[key] =
-            state.gateways[target].delegates[key][i].balance;
-        }
-        // deduct from total gateway delegated stake and zero out each delegate vault balance
-        // this technically isnt needed since state.gateways[target] gets deleted
-        state.gateways[target].delegatedStake -=
-          state.gateways[target].delegates[key][i].balance;
-        state.gateways[target].delegates[key][i].balance = 0;
-      }
-    }
-    delete state.gateways[target]; // clean up the state
-  } else {
+    gateways[target].status !== LEAVING_NETWORK_STATUS || 
+    gateways[target].end <= +SmartWeave.block.height) {
     throw new ContractError('This Gateway can not leave the network yet');
   }
+
+  // iterate through the targets vaults and add back their vaulted balance to their current balance
+  balances[target] = gateways[target].vaults.reduce((totalVaulted, vault) => totalVaulted + vault.balance, balances[target]);
+
+  // iterate through each delegate and return their delegated tokens to their balance
+  for (const delegate of Object.keys(gateways[target].delegates)) {
+    const totalQtyDelegated = gateways[target].delegates[delegate].reduce((totalQtyDelegated, d) => totalQtyDelegated += d.balance, 0);
+    balances[delegate] = balances[delegate] ?? 0 + totalQtyDelegated;
+  }
+
+  // delete the gateway, and update state
+  delete gateways[target];
+  state.balances = balances;
+  state.gateways = gateways;
+
   return { state };
 };
