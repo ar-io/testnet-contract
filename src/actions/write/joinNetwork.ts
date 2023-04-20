@@ -2,6 +2,7 @@ import {
   DEFAULT_INSUFFICIENT_FUNDS_MESSAGE,
   MAX_GATEWAY_LABEL_LENGTH,
   MAX_NOTE_LENGTH,
+  NETWORK_JOIN_STATUS,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 import { isValidArweaveBase64URL, isValidFQDN } from '../../utilities';
@@ -125,7 +126,7 @@ export const joinNetwork = async (
         delegateAllowList,
         note,
       },
-      status: 'networkJoined',
+      status: NETWORK_JOIN_STATUS,
     };
   }
   return { state };
