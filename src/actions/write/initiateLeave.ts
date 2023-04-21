@@ -1,4 +1,4 @@
-import { LEAVING_NETWORK_STATUS } from '../../constants';
+import { NETWORK_LEAVING_STATUS } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;
@@ -16,7 +16,7 @@ export const initiateLeave = async (
     throw new ContractError('This target is not a registered gateway.');
   }
 
-  if (gateways[caller].status === LEAVING_NETWORK_STATUS) {
+  if (gateways[caller].status === NETWORK_LEAVING_STATUS) {
     throw new ContractError(
       'This Gateway is in the process of leaving the network',
     );
@@ -31,7 +31,7 @@ export const initiateLeave = async (
 
   // Begin leave process by setting end dates to all vaults and the gateway status to leaving network
   gateways[caller].end = +SmartWeave.block.height + settings.gatewayLeaveLength;
-  gateways[caller].status = LEAVING_NETWORK_STATUS;
+  gateways[caller].status = NETWORK_LEAVING_STATUS;
 
   // set state
   state.gateways = gateways;

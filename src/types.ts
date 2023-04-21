@@ -1,4 +1,5 @@
 import { PstState } from 'warp-contracts';
+import { NETWORK_HIDDEN_STATUS, NETWORK_LEAVING_STATUS, NETWORK_JOIN_STATUS } from './constants.js';
 
 export type IOState = PstState & {
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
@@ -37,16 +38,19 @@ export type ContractSettings = {
   operatorStakeWithdrawLength: number; // the amount of blocks that have to elapse before a gateway operator's stake is returned
 };
 
+const gatewayStatus = [NETWORK_JOIN_STATUS, NETWORK_HIDDEN_STATUS, NETWORK_LEAVING_STATUS] as const;
+export type GatewayStatus = (typeof gatewayStatus)[number];
+
 export type Gateway = {
   operatorStake: number; // the total stake of this gateway's operator.
   delegatedStake: number; // the total stake of this gateway's delegates.
   start: number; // At what block the gateway joined the network.
   end: number; // At what block the gateway can leave the network.  0 means no end date.
-  status: string;
+  status: GatewayStatus; // hidden represents not leaving, but not participating
   vaults: TokenVault[]; // the locked tokens staked by this gateway operator
   delegates: {
     // The delegates that have staked tokens with this gateway
-    [address: string]: [TokenVault];
+    [address: string]: TokenVault[];
   };
   settings: GatewaySettings;
 };
@@ -58,7 +62,7 @@ export type GatewaySettings = {
   port: number; // The port used by this gateway eg. 443
   protocol: AllowedProtocols; // The protocol used by this gateway, either http or https
   openDelegation: boolean; // If true, community token holders can delegate stake to this gateway
-  delegateAllowList?: string[]; // A list of allowed arweave wallets that can act as delegates, if empty then anyone can delegate their tokens to this gateway
+  delegateAllowList: string[]; // A list of allowed arweave wallets that can act as delegates, if empty then anyone can delegate their tokens to this gateway
   note?: string; // An additional note (256 character max) the gateway operator can set to indicate things like maintenance or other operational updates.
 };
 

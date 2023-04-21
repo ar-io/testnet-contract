@@ -1,4 +1,4 @@
-import { LEAVING_NETWORK_STATUS } from '../../constants';
+import { NETWORK_LEAVING_STATUS } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;
@@ -18,8 +18,8 @@ export const finalizeLeave = async (
 
   // If end date has passed, finish leave process and return all funds for the gateway operator and their delegates
   if (
-    gateways[target].status !== LEAVING_NETWORK_STATUS || 
-    gateways[target].end <= +SmartWeave.block.height) {
+    gateways[target].status !== NETWORK_LEAVING_STATUS || 
+    gateways[target].end > +SmartWeave.block.height) {
     throw new ContractError('This Gateway can not leave the network yet');
   }
 

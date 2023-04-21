@@ -9,9 +9,9 @@ import {
   DEFAULT_ANT_CONTRACT_ID,
   DEFAULT_CONTRACT_SETTINGS,
   DEFAULT_INITIAL_STATE,
-  DEFAULT_LEAVING_NETWORK_STATUS,
-  DEFAULT_MAINTENANCE_MODE_STATUS,
-  DEFAULT_NETWORK_JOIN_STATUS,
+  NETWORK_LEAVING_STATUS,
+  NETWORK_HIDDEN_STATUS,
+  NETWORK_JOIN_STATUS,
   DEFAULT_WALLET_FUND_AMOUNT,
 } from './constants';
 
@@ -30,6 +30,16 @@ export async function addFunds(
 export async function mineBlock(arweave: Arweave): Promise<boolean> {
   await arweave.api.get('mine');
   return true;
+}
+
+export async function getCurrentBlock(arweave: Arweave): Promise<number>{
+  return (await arweave.blocks.getCurrent()).height;
+}
+
+export async function mineBlocks(arweave: Arweave, blocks: number): Promise<void>{
+  for (let i = 0; i < blocks; i++) {
+    await mineBlock(arweave)
+  }
 }
 
 export async function createLocalWallet(
@@ -91,7 +101,7 @@ function createGateways(wallets: string[]) {
     delegatedStake: 301_000,
     start: 1,
     end: 0,
-    status: DEFAULT_NETWORK_JOIN_STATUS,
+    status: NETWORK_JOIN_STATUS,
     vaults: [
       {
         balance: 40_000,
@@ -134,7 +144,7 @@ function createGateways(wallets: string[]) {
   gateways[wallets[1]] = {
     operatorStake: 5_000, // this includes the additional vault we add below
     delegatedStake: 3_100, // this includes the additional delegate we add below
-    status: DEFAULT_NETWORK_JOIN_STATUS,
+    status: NETWORK_JOIN_STATUS,
     start: 1,
     end: 0,
     vaults: [
@@ -179,7 +189,7 @@ function createGateways(wallets: string[]) {
   gateways[wallets[2]] = {
     operatorStake: 500_000, // this includes the additional vault we add below
     delegatedStake: 0, // this includes the additional delegate we add below
-    status: DEFAULT_NETWORK_JOIN_STATUS,
+    status: NETWORK_JOIN_STATUS,
     start: 1,
     end: 0,
     vaults: [
@@ -219,7 +229,7 @@ function createGateways(wallets: string[]) {
   gateways[wallets[3]] = {
     operatorStake: 5_000, // this includes the additional vault we add below
     delegatedStake: 0, // this includes the additional delegate we add below
-    status: DEFAULT_MAINTENANCE_MODE_STATUS,
+    status: NETWORK_HIDDEN_STATUS,
     start: 1,
     end: 0,
     vaults: [
@@ -244,7 +254,7 @@ function createGateways(wallets: string[]) {
   gateways[wallets[4]] = {
     operatorStake: 10_000, // this includes the additional vault we add below
     delegatedStake: 0, // this includes the additional delegate we add below
-    status: DEFAULT_LEAVING_NETWORK_STATUS,
+    status: NETWORK_LEAVING_STATUS,
     start: 1,
     end: 4,
     vaults: [

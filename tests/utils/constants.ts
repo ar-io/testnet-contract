@@ -8,15 +8,12 @@ export const SECONDS_IN_A_YEAR = 31_536_000;
 export const DEFAULT_WALLET_FUND_AMOUNT = 1_000_000_000_000_000;
 export const DEFAULT_INITIAL_STATE = initialContractState;
 export const DEFAULT_TRANSFER_QTY = 100_000;
-export const DEFAULT_NETWORK_JOIN_STATUS = 'networkJoin';
-export const DEFAULT_MAINTENANCE_MODE_STATUS = 'maintenanceMode';
-export const DEFAULT_LEAVING_NETWORK_STATUS = 'leavingNetwork';
 export const DEFAULT_CONTRACT_SETTINGS = {
   minLockLength: 5,
   minNetworkJoinStakeAmount: 5_000,
   minDelegatedStakeAmount: 100,
-  minGatewayJoinLength: 5,
-  gatewayLeaveLength: 5,
+  minGatewayJoinLength: 2,
+  gatewayLeaveLength: 2,
   delegatedStakeWithdrawLength: 5,
   operatorStakeWithdrawLength: 5,
 };
