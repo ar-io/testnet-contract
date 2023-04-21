@@ -114,6 +114,22 @@ export async function setupInitialContractState(
   // set the owner to the first wallet
   state.owner = owner;
 
+  // add some reserved names
+  const currentDate = new Date(); // Get current date
+  const sixMonthsLater = new Date(); // Create a new date object
+  const sixMonthsPrevious = new Date(); // Create a new date object
+  sixMonthsLater.setMonth(currentDate.getMonth() + 6);
+  sixMonthsPrevious.setMonth(currentDate.getMonth() - 6);
+  state.reserved = {
+    ['www']: {}, // no owner, doesnt expire
+    ['google']: {
+      endTimestamp: sixMonthsLater.getTime() / 1000,
+    }, // no owner, expires in 6 months
+    ['twitter']: {
+      target: wallets[1],
+      endTimestamp: sixMonthsLater.getTime() / 1000,
+    }, // already expired and can be purchased by anyone
+  };
   return state;
 }
 

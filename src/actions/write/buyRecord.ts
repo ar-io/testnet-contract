@@ -1,9 +1,12 @@
 import {
+  DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE,
+  DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_INVALID_ARNS_NAME_MESSAGE,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
   DEFAULT_TIERS,
   MAX_NAME_LENGTH,
   MAX_YEARS,
+  MINIMUM_ALLOWED_NAME_LENGTH,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
@@ -24,6 +27,7 @@ export const buyRecord = async (
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
+  const reserved = state.reserved;
   const currentTiers =
     state.tiers?.current ??
     DEFAULT_TIERS.reduce(
@@ -89,10 +93,35 @@ export const buyRecord = async (
     typeof name !== 'string' ||
     name.length > MAX_NAME_LENGTH || // the name is too long
     !nameRes || // the name does not match our regular expression
-    name === 'www' || // reserved
     name === '' // reserved
   ) {
     throw new ContractError(DEFAULT_INVALID_ARNS_NAME_MESSAGE);
+  }
+
+  const reservedName = reserved[name];
+  /**
+   * Two scenarios:
+   *
+   * 1. name is reserved, regardless of length can be purchased only by target, unless expired
+   * 2. name is not reserved, and less than allowed length.
+   */
+  if (reservedName) {
+    const { target, endTimestamp: reservedEndTimestamp } = reservedName;
+    if (!target || (target && target !== caller)) {
+      throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
+    }
+
+    if (
+      reservedEndTimestamp &&
+      +SmartWeave.block.timestamp < reservedEndTimestamp
+    ) {
+      throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
+    }
+
+    // delete the name
+    delete reserved[name];
+  } else if (name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
+    throw new ContractError(DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE);
   }
 
   // calculate the total fee (initial registration + annual)
@@ -151,6 +180,7 @@ export const buyRecord = async (
 
   // update the records object
   state.records = records;
+  state.reserved = reserved;
 
   return { state };
 };
