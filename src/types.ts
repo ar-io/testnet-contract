@@ -29,6 +29,10 @@ export type IOState = PstState & {
   };
   approvedANTSourceCodeTxs: string[]; // An array of Smartweave Source Code transactions for whitelisted ANTs
   settings: ContractSettings; // protocol settings and parameters
+  reserved: {
+    // A list of all reserved names that are not allowed to be purchased at this time
+    [name: string]: ReservedName;
+  };
 };
 
 export type ContractSettings = {
@@ -81,6 +85,11 @@ export type ArNSName = {
   contractTxId: string; // The ANT Contract used to manage this name
   endTimestamp: number; // At what unix time (seconds since epoch) the lease ends
   tier: string; // The id of the tier selected at time of purchased
+};
+
+export type ReservedName = {
+  target?: string; // The target wallet address this name is reserved for
+  endTimestamp?: number; // At what unix time (seconds since epoch) this reserved name becomes available
 };
 
 // export type Foundation= {

@@ -11,12 +11,15 @@ export const RESERVED_ATOMIC_TX_ID = 'atomic';
 export const NETWORK_JOIN_STATUS = 'joined';
 export const NETWORK_LEAVING_STATUS = 'leaving';
 export const NETWORK_HIDDEN_STATUS = 'hidden';
+export const MINIMUM_ALLOWED_NAME_LENGTH = 5; // names less than 5 characters are reserved for auction
 export const DEFAULT_UNDERNAMES_COUNT = 10;
 export const ALLOWED_ACTIVE_TIERS = [1, 2, 3];
 export const DEFAULT_ANNUAL_PERCENTAGE_FEE = 0.1; // 10% of cost of name
 export const DEFAULT_UNDERNAME_REGISTRATION_IO_FEE = 1; // 1 IO token per undername
 export const DEFAULT_NON_CONTRACT_OWNER_MESSAGE = `Caller is not the owner of the ArNS!`;
 export const DEFAULT_INVALID_ARNS_NAME_MESSAGE = 'Invalid ArNS Record Name';
+export const DEFAULT_ARNS_NAME_RESERVED_MESSAGE = 'Name is reserved.';
+export const DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE = `Names shorter than ${MINIMUM_ALLOWED_NAME_LENGTH} characters must be reserved in order to be purchased.`;
 export const DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE =
   'This name already exists in an active lease';
 export const DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE =
