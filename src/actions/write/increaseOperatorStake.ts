@@ -1,4 +1,4 @@
-import { LEAVING_NETWORK_STATUS } from '../../constants';
+import { NETWORK_LEAVING_STATUS } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;
@@ -17,7 +17,7 @@ export const increaseOperatorStake = async (
     throw new ContractError("This Gateway's wallet is not registered");
   }
 
-  if (gateways[caller].status === LEAVING_NETWORK_STATUS) {
+  if (gateways[caller].status === NETWORK_LEAVING_STATUS) {
     throw new ContractError(
       'This Gateway is in the process of leaving the network and cannot have its stake adjusted',
     );

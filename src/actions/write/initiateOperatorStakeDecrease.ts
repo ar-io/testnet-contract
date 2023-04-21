@@ -1,4 +1,4 @@
-import { LEAVING_NETWORK_STATUS } from '../../constants';
+import { NETWORK_LEAVING_STATUS } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;
@@ -16,7 +16,7 @@ export const initiateOperatorStakeDecrease = async (
     throw new ContractError("This Gateway's wallet is not registered");
   }
 
-  if (gateways[caller].status === LEAVING_NETWORK_STATUS) {
+  if (gateways[caller].status === NETWORK_LEAVING_STATUS) {
     throw new ContractError(
       'This Gateway is in the process of leaving the network and cannot have its stake adjusted',
     );
@@ -45,12 +45,15 @@ export const initiateOperatorStakeDecrease = async (
   if (gateways[caller].vaults[id].end === 0) {
     // Unstake a single gateway vault that is active
     // Begin unstake process
-    state.gateways[caller].vaults[id].end =
+    gateways[caller].vaults[id].end =
       +SmartWeave.block.height + settings.operatorStakeWithdrawLength;
   } else {
     throw new ContractError(
       `This vault is already being unlocked at ${gateways[caller].vaults[id].end}`,
     );
   }
+
+  // update state
+  state.gateways = gateways;
   return { state };
 };

@@ -9,26 +9,32 @@ export const finalizeOperatorStakeDecrease = async (
   { caller, input: { target = caller } }: PstAction,
 ): Promise<ContractResult> => {
   const gateways = state.gateways;
+  const balances = state.balances;
 
   if (!(target in gateways)) {
     throw new ContractError("This Gateway's wallet is not registered");
   }
 
   // Finish unstake process for any ended gateway operator vaults and return tokens
-  for (let i = 0; i < gateways[caller].vaults.length; i += 1) {
+  const vaults = gateways[caller].vaults;
+  const remainingVaults = [];
+  for (const vault of vaults) {
     if (
-      gateways[target].vaults[i].end !== 0 &&
-      gateways[target].vaults[i].end <= +SmartWeave.block.height
+      vault.end !== 0 &&
+      vault.end <= +SmartWeave.block.height
     ) {
-      if (target in state.balances) {
-        state.balances[target] += gateways[target].vaults[i].balance;
-      } else {
-        state.balances[target] = gateways[target].vaults[i].balance;
-      }
-      state.gateways[target].operatorStake -=
-        state.gateways[target].vaults[i].balance; // deduct from operator stake
-      state.gateways[target].vaults.splice(i, 1);
+      balances[target] = (balances[target] ?? 0) + vault.balance;
+      gateways[target].operatorStake -= vault.balance;
+      continue;
     }
+    remainingVaults.push(vault);
   }
+
+  // update vaults
+  gateways[caller].vaults = remainingVaults;
+
+  // update state
+  state.balances = balances;
+  state.gateways = gateways;
   return { state };
 };
