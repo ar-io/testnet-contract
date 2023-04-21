@@ -9,10 +9,10 @@ import {
   DEFAULT_ANT_CONTRACT_ID,
   DEFAULT_CONTRACT_SETTINGS,
   DEFAULT_INITIAL_STATE,
-  DEFAULT_LEAVING_NETWORK_STATUS,
-  DEFAULT_MAINTENANCE_MODE_STATUS,
-  DEFAULT_NETWORK_JOIN_STATUS,
   DEFAULT_WALLET_FUND_AMOUNT,
+  NETWORK_HIDDEN_STATUS,
+  NETWORK_JOIN_STATUS,
+  NETWORK_LEAVING_STATUS,
 } from './constants';
 
 // ~~ Write function responsible for adding funds to the generated wallet ~~
@@ -30,6 +30,19 @@ export async function addFunds(
 export async function mineBlock(arweave: Arweave): Promise<boolean> {
   await arweave.api.get('mine');
   return true;
+}
+
+export async function getCurrentBlock(arweave: Arweave): Promise<number> {
+  return (await arweave.blocks.getCurrent()).height;
+}
+
+export async function mineBlocks(
+  arweave: Arweave,
+  blocks: number,
+): Promise<void> {
+  for (let i = 0; i < blocks; i++) {
+    await mineBlock(arweave);
+  }
 }
 
 export async function createLocalWallet(
@@ -91,7 +104,7 @@ function createGateways(wallets: string[]) {
     delegatedStake: 301_000,
     start: 1,
     end: 0,
-    status: DEFAULT_NETWORK_JOIN_STATUS,
+    status: NETWORK_JOIN_STATUS,
     vaults: [
       {
         balance: 40_000,
@@ -134,7 +147,7 @@ function createGateways(wallets: string[]) {
   gateways[wallets[1]] = {
     operatorStake: 5_000, // this includes the additional vault we add below
     delegatedStake: 3_100, // this includes the additional delegate we add below
-    status: DEFAULT_NETWORK_JOIN_STATUS,
+    status: NETWORK_JOIN_STATUS,
     start: 1,
     end: 0,
     vaults: [
@@ -179,7 +192,7 @@ function createGateways(wallets: string[]) {
   gateways[wallets[2]] = {
     operatorStake: 500_000, // this includes the additional vault we add below
     delegatedStake: 0, // this includes the additional delegate we add below
-    status: DEFAULT_NETWORK_JOIN_STATUS,
+    status: NETWORK_JOIN_STATUS,
     start: 1,
     end: 0,
     vaults: [
@@ -219,7 +232,7 @@ function createGateways(wallets: string[]) {
   gateways[wallets[3]] = {
     operatorStake: 5_000, // this includes the additional vault we add below
     delegatedStake: 0, // this includes the additional delegate we add below
-    status: DEFAULT_MAINTENANCE_MODE_STATUS,
+    status: NETWORK_HIDDEN_STATUS,
     start: 1,
     end: 0,
     vaults: [
@@ -244,7 +257,7 @@ function createGateways(wallets: string[]) {
   gateways[wallets[4]] = {
     operatorStake: 10_000, // this includes the additional vault we add below
     delegatedStake: 0, // this includes the additional delegate we add below
-    status: DEFAULT_LEAVING_NETWORK_STATUS,
+    status: NETWORK_LEAVING_STATUS,
     start: 1,
     end: 4,
     vaults: [
@@ -310,6 +323,22 @@ export async function setupInitialContractState(
   // configure some basic gateways
   state.gateways = createGateways(wallets);
 
+  // add some reserved names
+  const currentDate = new Date(); // Get current date
+  const sixMonthsLater = new Date(); // Create a new date object
+  const sixMonthsPrevious = new Date(); // Create a new date object
+  sixMonthsLater.setMonth(currentDate.getMonth() + 6);
+  sixMonthsPrevious.setMonth(currentDate.getMonth() - 6);
+  state.reserved = {
+    ['www']: {}, // no owner, doesnt expire
+    ['google']: {
+      endTimestamp: sixMonthsLater.getTime() / 1000,
+    }, // no owner, expires in 6 months
+    ['twitter']: {
+      target: wallets[1],
+      endTimestamp: sixMonthsLater.getTime() / 1000,
+    }, // already expired and can be purchased by anyone
+  };
   return state;
 }
 

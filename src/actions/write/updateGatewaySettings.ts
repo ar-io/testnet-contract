@@ -1,14 +1,13 @@
 import {
-  MAINTENANCE_MODE_STATUS,
   MAX_GATEWAY_LABEL_LENGTH,
   MAX_NOTE_LENGTH,
+  NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 import { isValidArweaveBase64URL, isValidFQDN } from '../../utilities';
 
 declare const ContractError;
-declare const SmartWeave: any;
 
 // Updates any of the settings of an existing gateway
 export const updateGatewaySettings = async (
@@ -29,6 +28,7 @@ export const updateGatewaySettings = async (
 ): Promise<ContractResult> => {
   const gateways = state.gateways;
 
+  // TODO: consistent checks
   if (!(caller in gateways)) {
     throw new ContractError('This caller does not have a registered gateway.');
   }
@@ -42,6 +42,7 @@ export const updateGatewaySettings = async (
   }
 
   if (port) {
+    // MAX PORT CONST
     if (!Number.isInteger(port) || port > 65535) {
       throw new ContractError('Invalid port number.');
     } else {
@@ -50,6 +51,7 @@ export const updateGatewaySettings = async (
   }
 
   if (protocol) {
+    // Gateway status check
     if (!(protocol === 'http' || protocol === 'https')) {
       throw new ContractError('Invalid protocol, must be http or https.');
     } else {
@@ -105,15 +107,17 @@ export const updateGatewaySettings = async (
   }
 
   if (status) {
-    if (
-      !(status === MAINTENANCE_MODE_STATUS || status === NETWORK_JOIN_STATUS)
-    ) {
+    if (!(status === NETWORK_HIDDEN_STATUS || status === NETWORK_JOIN_STATUS)) {
       throw new ContractError(
-        `Invalid gatway status, must be set to ${MAINTENANCE_MODE_STATUS} or ${NETWORK_JOIN_STATUS}`,
+        `Invalid gateway status, must be set to ${NETWORK_HIDDEN_STATUS} or ${NETWORK_JOIN_STATUS}`,
       );
     } else {
       gateways[caller].status = status;
     }
   }
+
+  // update the contract state
+  state.gateways[caller] = gateways[caller];
+
   return { state };
 };

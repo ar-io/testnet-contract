@@ -1,4 +1,4 @@
-import { LEAVING_NETWORK_STATUS } from '../../constants';
+import { NETWORK_LEAVING_STATUS } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;
@@ -16,22 +16,24 @@ export const initiateLeave = async (
     throw new ContractError('This target is not a registered gateway.');
   }
 
-  if (gateways[caller].status === LEAVING_NETWORK_STATUS) {
+  if (gateways[caller].status === NETWORK_LEAVING_STATUS) {
     throw new ContractError(
       'This Gateway is in the process of leaving the network',
     );
   }
 
   if (
-    state.gateways[caller].start + settings.minGatewayJoinLength >
+    gateways[caller].start + settings.minGatewayJoinLength >
     +SmartWeave.block.height
   ) {
     throw new ContractError('This Gateway has not been joined long enough');
   }
 
   // Begin leave process by setting end dates to all vaults and the gateway status to leaving network
-  state.gateways[caller].end =
-    +SmartWeave.block.height + settings.gatewayLeaveLength;
-  state.gateways[caller].status = LEAVING_NETWORK_STATUS;
+  gateways[caller].end = +SmartWeave.block.height + settings.gatewayLeaveLength;
+  gateways[caller].status = NETWORK_LEAVING_STATUS;
+
+  // set state
+  state.gateways = gateways;
   return { state };
 };
