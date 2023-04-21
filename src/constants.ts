@@ -3,6 +3,7 @@ export const MAX_YEARS = 3; // the maximum amount of years an arns name could be
 export const MAX_NAME_LENGTH = 32; // the maximum length of an arns name
 export const MAX_NOTE_LENGTH = 256; // the maximum size of a note field
 export const MAX_GATEWAY_LABEL_LENGTH = 16; // the maximum size of a label field
+export const MAX_PORT_NUMBER = 65535; // the default end port of tcp/udp port numbers
 export const TX_ID_LENGTH = 43; // the length of an arweave transaction id
 export const FOUNDATION_PERCENTAGE = 10; // the percentage of arns name purchases that goes to the foundation balance
 export const SECONDS_IN_A_YEAR = 31_536_000; // 52 weeks, 7 days per week, 24 hours per day, sixty minutes per hour, sixty seconds per minute

@@ -3,6 +3,7 @@ import {
   MAX_DELEGATES,
   MAX_GATEWAY_LABEL_LENGTH,
   MAX_NOTE_LENGTH,
+  MAX_PORT_NUMBER,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
@@ -59,8 +60,7 @@ export const joinNetwork = async (
     throw new ContractError('Label format not recognized.');
   }
 
-  // TODO: MAX PORT NUMBER as constant
-  if (!Number.isInteger(port) || port > 65535) {
+  if (!Number.isInteger(port) || port > MAX_PORT_NUMBER) {
     throw new ContractError('Invalid port number.');
   }
 

@@ -1,6 +1,7 @@
 import {
   MAX_GATEWAY_LABEL_LENGTH,
   MAX_NOTE_LENGTH,
+  MAX_PORT_NUMBER,
   NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
@@ -42,8 +43,7 @@ export const updateGatewaySettings = async (
   }
 
   if (port) {
-    // MAX PORT CONST
-    if (!Number.isInteger(port) || port > 65535) {
+    if (!Number.isInteger(port) || port > MAX_PORT_NUMBER) {
       throw new ContractError('Invalid port number.');
     } else {
       gateways[caller].settings.port = port;
