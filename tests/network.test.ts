@@ -3,11 +3,11 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts';
 import { IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import {
-  NETWORK_LEAVING_STATUS,
+  DEFAULT_CONTRACT_SETTINGS,
+  DEFAULT_WALLET_FUND_AMOUNT,
   NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
-  DEFAULT_WALLET_FUND_AMOUNT,
-  DEFAULT_CONTRACT_SETTINGS,
+  NETWORK_LEAVING_STATUS,
 } from './utils/constants';
 import {
   getCurrentBlock,
@@ -33,7 +33,9 @@ describe('Network', () => {
     beforeAll(async () => {
       owner = getLocalWallet(0);
       newGatewayOperator = getLocalWallet(5);
-      newGatewayOperatorAddress = await arweave.wallets.getAddress(newGatewayOperator);
+      newGatewayOperatorAddress = await arweave.wallets.getAddress(
+        newGatewayOperator,
+      );
       contract = warp.pst(srcContractId).connect(newGatewayOperator);
     });
 
@@ -58,12 +60,11 @@ describe('Network', () => {
           port: 3000,
           protocol: 'http',
           openDelegation: true,
-          note:
-            'Our gateway is the best test gateway. Contact bob@ar.io for more.'
-        }
+          note: 'Our gateway is the best test gateway. Contact bob@ar.io for more.',
+        };
         const writeInteraction = await contract.writeInteraction({
           function: 'joinNetwork',
-          ...joinGatewayPayload
+          ...joinGatewayPayload,
         });
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
@@ -99,12 +100,11 @@ describe('Network', () => {
           },
         });
       });
-      
+
       // TODO: add failed join network tests
-    })
+    });
 
     describe('operator stake', () => {
-
       it('should increase operator stake with correct parameters', async () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevState = prevCachedValue.state as IOState;
@@ -149,9 +149,9 @@ describe('Network', () => {
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
           writeInteraction!.originalTxId,
         );
-        expect(
-          newState.gateways[newGatewayOperatorAddress].vaults[id],
-        ).toEqual(prevState.gateways[newGatewayOperatorAddress].vaults[id]);
+        expect(newState.gateways[newGatewayOperatorAddress].vaults[id]).toEqual(
+          prevState.gateways[newGatewayOperatorAddress].vaults[id],
+        );
       });
 
       it('should initiate operator stake decrease when enough blocks have passed', async () => {
@@ -170,7 +170,10 @@ describe('Network', () => {
         );
         expect(
           newState.gateways[newGatewayOperatorAddress].vaults[id].end,
-        ).toEqual(await getCurrentBlock(arweave) + DEFAULT_CONTRACT_SETTINGS.operatorStakeWithdrawLength); // TO DO, make this more dynamic.  Need to fetch current block height
+        ).toEqual(
+          (await getCurrentBlock(arweave)) +
+            DEFAULT_CONTRACT_SETTINGS.operatorStakeWithdrawLength,
+        ); // TO DO, make this more dynamic.  Need to fetch current block height
       });
 
       it('should not initiate operator stake decrease if it brings the gateway below the minimum', async () => {
@@ -211,10 +214,14 @@ describe('Network', () => {
       it('should finalize operator stake decrease if its end block height has passed', async () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevState = prevCachedValue.state as IOState;
-        const prevVault =prevState.gateways[newGatewayOperatorAddress].vaults[1];
+        const prevVault =
+          prevState.gateways[newGatewayOperatorAddress].vaults[1];
         const prevBalance = prevState.balances[newGatewayOperatorAddress];
         // mine the remaining blocks
-        await mineBlocks(arweave, prevVault.end - await getCurrentBlock(arweave));
+        await mineBlocks(
+          arweave,
+          prevVault.end - (await getCurrentBlock(arweave)),
+        );
         const writeInteraction = await contract.writeInteraction({
           function: 'finalizeOperatorStakeDecrease',
         });
@@ -226,12 +233,8 @@ describe('Network', () => {
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
           writeInteraction!.originalTxId,
         );
-        expect(newVault).toEqual(
-          undefined,
-        );
-        expect(newBalance).toEqual(
-          prevBalance + prevVault.balance,
-        );
+        expect(newVault).toEqual(undefined);
+        expect(newBalance).toEqual(prevBalance + prevVault.balance);
       });
     });
 
@@ -239,15 +242,16 @@ describe('Network', () => {
       it('should modify gateway settings with correct parameters', async () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevState = prevCachedValue.state as IOState;
-        const prevGatewaySettings = prevState.gateways[newGatewayOperatorAddress].settings;
+        const prevGatewaySettings =
+          prevState.gateways[newGatewayOperatorAddress].settings;
         const delegateAllowList = [
-         await arweave.wallets.getAddress(await getLocalWallet(6)),
-         await arweave.wallets.getAddress(await getLocalWallet(7))
+          await arweave.wallets.getAddress(await getLocalWallet(6)),
+          await arweave.wallets.getAddress(await getLocalWallet(7)),
         ];
         const writeInteraction = await contract.writeInteraction({
           function: 'updateGatewaySettings',
           delegateAllowList,
-          status: NETWORK_HIDDEN_STATUS
+          status: NETWORK_HIDDEN_STATUS,
         });
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
@@ -260,9 +264,7 @@ describe('Network', () => {
           ...prevGatewaySettings,
           delegateAllowList,
         });
-        expect(newGateway.status).toEqual(
-          NETWORK_HIDDEN_STATUS,
-        );
+        expect(newGateway.status).toEqual(NETWORK_HIDDEN_STATUS);
       });
 
       it('should not modify gateway settings with invalid parameters', async () => {
@@ -303,15 +305,16 @@ describe('Network', () => {
     });
 
     describe('initiate leave', () => {
-
-
       it('should initiate leaving the network when the target is a gateway in the network and has joined long enough', async () => {
         // mine the required number of blocks
-        await mineBlocks(arweave, DEFAULT_CONTRACT_SETTINGS.minGatewayJoinLength);
+        await mineBlocks(
+          arweave,
+          DEFAULT_CONTRACT_SETTINGS.minGatewayJoinLength,
+        );
         const writeInteraction = await contract.writeInteraction({
           function: 'initiateLeave',
         });
-        
+
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
         const newState = newCachedValue.state as IOState;
@@ -321,7 +324,10 @@ describe('Network', () => {
         expect(newState.gateways[newGatewayOperatorAddress].status).toEqual(
           NETWORK_LEAVING_STATUS,
         );
-        expect(newState.gateways[newGatewayOperatorAddress].end).toEqual(await getCurrentBlock(arweave) + DEFAULT_CONTRACT_SETTINGS.gatewayLeaveLength)
+        expect(newState.gateways[newGatewayOperatorAddress].end).toEqual(
+          (await getCurrentBlock(arweave)) +
+            DEFAULT_CONTRACT_SETTINGS.gatewayLeaveLength,
+        );
       });
     });
 
@@ -331,7 +337,7 @@ describe('Network', () => {
         const prevState = prevCachedValue.state as IOState;
         const writeInteraction = await contract.writeInteraction({
           function: 'finalizeLeave',
-          target: 'not-existent-gateway'
+          target: 'not-existent-gateway',
         });
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
@@ -346,14 +352,28 @@ describe('Network', () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevState = prevCachedValue.state as IOState;
         const prevGateway = prevState.gateways[newGatewayOperatorAddress];
-        const prevDelegates = prevGateway.delegates
-        const delegatedBalances: {[x: string]: number} = Object.keys(prevDelegates).reduce((totalDelegations, d) => ({
-          ...totalDelegations,
-          [totalDelegations[d]]: Object.values(prevDelegates[d]).reduce((totalDelegated, x) => totalDelegated + x.balance, 0)
-        }), {});
-        const vaultedBalance = prevGateway.vaults.reduce((totalVaulted, v) => totalVaulted + v.balance, 0);
+        const prevDelegates = prevGateway.delegates;
+        const delegatedBalances: { [x: string]: number } = Object.keys(
+          prevDelegates,
+        ).reduce(
+          (totalDelegations, d) => ({
+            ...totalDelegations,
+            [totalDelegations[d]]: Object.values(prevDelegates[d]).reduce(
+              (totalDelegated, x) => totalDelegated + x.balance,
+              0,
+            ),
+          }),
+          {},
+        );
+        const vaultedBalance = prevGateway.vaults.reduce(
+          (totalVaulted, v) => totalVaulted + v.balance,
+          0,
+        );
         // mine the correct number of blocks necessary to leave
-        await mineBlocks(arweave, Math.max(0, prevGateway.end - await getCurrentBlock(arweave)));
+        await mineBlocks(
+          arweave,
+          Math.max(0, prevGateway.end - (await getCurrentBlock(arweave))),
+        );
         const writeInteraction = await contract.writeInteraction({
           function: 'finalizeLeave',
         });
@@ -364,15 +384,18 @@ describe('Network', () => {
           writeInteraction!.originalTxId,
         );
         expect(newState.gateways[newGatewayOperatorAddress]).toEqual(undefined);
-        expect(newState.balances[newGatewayOperatorAddress]).toEqual(prevState.balances[newGatewayOperatorAddress] + vaultedBalance)
+        expect(newState.balances[newGatewayOperatorAddress]).toEqual(
+          prevState.balances[newGatewayOperatorAddress] + vaultedBalance,
+        );
         // validate balances were returned
-        for (const [delegate, qty] of Object.entries(delegatedBalances)){
-          expect(newState.balances[delegate]).toEqual(prevState.balances[delegate] + qty)
+        for (const [delegate, qty] of Object.entries(delegatedBalances)) {
+          expect(newState.balances[delegate]).toEqual(
+            prevState.balances[delegate] + qty,
+          );
         }
       });
     });
-
-});
+  });
 
   describe('non-valid gateway operator', () => {
     let nonGatewayOperator: JWKInterface;
@@ -426,7 +449,7 @@ describe('Network', () => {
         });
         expect(gatewayTotalStake).toEqual(
           fullState.gateways[ownerAddress].operatorStake +
-          fullState.gateways[ownerAddress].delegatedStake,
+            fullState.gateways[ownerAddress].delegatedStake,
         );
       });
 

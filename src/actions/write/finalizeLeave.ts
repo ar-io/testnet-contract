@@ -18,17 +18,24 @@ export const finalizeLeave = async (
 
   // If end date has passed, finish leave process and return all funds for the gateway operator and their delegates
   if (
-    gateways[target].status !== NETWORK_LEAVING_STATUS || 
-    gateways[target].end > +SmartWeave.block.height) {
+    gateways[target].status !== NETWORK_LEAVING_STATUS ||
+    gateways[target].end > +SmartWeave.block.height
+  ) {
     throw new ContractError('This Gateway can not leave the network yet');
   }
 
   // iterate through the targets vaults and add back their vaulted balance to their current balance
-  balances[target] = gateways[target].vaults.reduce((totalVaulted, vault) => totalVaulted + vault.balance, balances[target]);
+  balances[target] = gateways[target].vaults.reduce(
+    (totalVaulted, vault) => totalVaulted + vault.balance,
+    balances[target],
+  );
 
   // iterate through each delegate and return their delegated tokens to their balance
   for (const delegate of Object.keys(gateways[target].delegates)) {
-    const totalQtyDelegated = gateways[target].delegates[delegate].reduce((totalQtyDelegated, d) => totalQtyDelegated += d.balance, 0);
+    const totalQtyDelegated = gateways[target].delegates[delegate].reduce(
+      (totalQtyDelegated, d) => (totalQtyDelegated += d.balance),
+      0,
+    );
     balances[delegate] = balances[delegate] ?? 0 + totalQtyDelegated;
   }
 

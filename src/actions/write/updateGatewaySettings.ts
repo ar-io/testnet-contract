@@ -1,7 +1,7 @@
 import {
-  NETWORK_HIDDEN_STATUS,
   MAX_GATEWAY_LABEL_LENGTH,
   MAX_NOTE_LENGTH,
+  NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
@@ -107,9 +107,7 @@ export const updateGatewaySettings = async (
   }
 
   if (status) {
-    if (
-      !(status === NETWORK_HIDDEN_STATUS || status === NETWORK_JOIN_STATUS)
-    ) {
+    if (!(status === NETWORK_HIDDEN_STATUS || status === NETWORK_JOIN_STATUS)) {
       throw new ContractError(
         `Invalid gateway status, must be set to ${NETWORK_HIDDEN_STATUS} or ${NETWORK_JOIN_STATUS}`,
       );

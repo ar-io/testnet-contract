@@ -9,10 +9,10 @@ import {
   DEFAULT_ANT_CONTRACT_ID,
   DEFAULT_CONTRACT_SETTINGS,
   DEFAULT_INITIAL_STATE,
-  NETWORK_LEAVING_STATUS,
+  DEFAULT_WALLET_FUND_AMOUNT,
   NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
-  DEFAULT_WALLET_FUND_AMOUNT,
+  NETWORK_LEAVING_STATUS,
 } from './constants';
 
 // ~~ Write function responsible for adding funds to the generated wallet ~~
@@ -32,13 +32,16 @@ export async function mineBlock(arweave: Arweave): Promise<boolean> {
   return true;
 }
 
-export async function getCurrentBlock(arweave: Arweave): Promise<number>{
+export async function getCurrentBlock(arweave: Arweave): Promise<number> {
   return (await arweave.blocks.getCurrent()).height;
 }
 
-export async function mineBlocks(arweave: Arweave, blocks: number): Promise<void>{
+export async function mineBlocks(
+  arweave: Arweave,
+  blocks: number,
+): Promise<void> {
   for (let i = 0; i < blocks; i++) {
-    await mineBlock(arweave)
+    await mineBlock(arweave);
   }
 }
 

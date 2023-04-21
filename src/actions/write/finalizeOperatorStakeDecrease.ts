@@ -19,10 +19,7 @@ export const finalizeOperatorStakeDecrease = async (
   const vaults = gateways[caller].vaults;
   const remainingVaults = [];
   for (const vault of vaults) {
-    if (
-      vault.end !== 0 &&
-      vault.end <= +SmartWeave.block.height
-    ) {
+    if (vault.end !== 0 && vault.end <= +SmartWeave.block.height) {
       balances[target] = (balances[target] ?? 0) + vault.balance;
       gateways[target].operatorStake -= vault.balance;
       continue;

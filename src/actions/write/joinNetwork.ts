@@ -78,7 +78,7 @@ export const joinNetwork = async (
   }
 
   if (note && typeof note !== 'string' && note > MAX_NOTE_LENGTH) {
-      throw new ContractError('Invalid note.');
+    throw new ContractError('Invalid note.');
   }
 
   if (typeof openDelegation !== 'boolean') {
@@ -91,8 +91,8 @@ export const joinNetwork = async (
     );
   }
 
-  if (delegateAllowList.length > MAX_DELEGATES){
-    throw ContractError('Invalid number of delegates.')
+  if (delegateAllowList.length > MAX_DELEGATES) {
+    throw ContractError('Invalid number of delegates.');
   }
 
   for (let i = 0; i < delegateAllowList.length; i += 1) {

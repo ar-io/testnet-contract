@@ -1,5 +1,10 @@
 import { PstState } from 'warp-contracts';
-import { NETWORK_HIDDEN_STATUS, NETWORK_LEAVING_STATUS, NETWORK_JOIN_STATUS } from './constants.js';
+
+import {
+  NETWORK_HIDDEN_STATUS,
+  NETWORK_JOIN_STATUS,
+  NETWORK_LEAVING_STATUS,
+} from './constants.js';
 
 export type IOState = PstState & {
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
@@ -38,8 +43,12 @@ export type ContractSettings = {
   operatorStakeWithdrawLength: number; // the amount of blocks that have to elapse before a gateway operator's stake is returned
 };
 
-const gatewayStatus = [NETWORK_JOIN_STATUS, NETWORK_HIDDEN_STATUS, NETWORK_LEAVING_STATUS] as const;
-export type GatewayStatus = (typeof gatewayStatus)[number];
+const gatewayStatus = [
+  NETWORK_JOIN_STATUS,
+  NETWORK_HIDDEN_STATUS,
+  NETWORK_LEAVING_STATUS,
+] as const;
+export type GatewayStatus = typeof gatewayStatus[number];
 
 export type Gateway = {
   operatorStake: number; // the total stake of this gateway's operator.
