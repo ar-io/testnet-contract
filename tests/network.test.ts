@@ -318,16 +318,18 @@ describe('Network', () => {
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
         const newState = newCachedValue.state as IOState;
+        const expectedEndBlock = await getCurrentBlock(arweave) + DEFAULT_CONTRACT_SETTINGS.gatewayLeaveLength;
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
           writeInteraction!.originalTxId,
         );
         expect(newState.gateways[newGatewayOperatorAddress].status).toEqual(
           NETWORK_LEAVING_STATUS,
         );
-        expect(newState.gateways[newGatewayOperatorAddress].end).toEqual(
-          (await getCurrentBlock(arweave)) +
-            DEFAULT_CONTRACT_SETTINGS.gatewayLeaveLength,
-        );
+        expect(newState.gateways[newGatewayOperatorAddress].end).toEqual(expectedEndBlock);
+        // check vaults
+        for (const vault of newState.gateways[newGatewayOperatorAddress].vaults){
+          expect(vault.end).toEqual(expectedEndBlock)
+        }
       });
     });
 
