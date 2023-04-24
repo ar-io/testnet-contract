@@ -45,6 +45,11 @@ beforeAll(async () => {
     await createLocalWallet(arweave),
     await createLocalWallet(arweave),
     await createLocalWallet(arweave),
+    await createLocalWallet(arweave),
+    await createLocalWallet(arweave),
+    await createLocalWallet(arweave),
+    await createLocalWallet(arweave),
+    await createLocalWallet(arweave),
   ];
   const [owner] = wallets;
 
