@@ -29,14 +29,15 @@ export const initiateLeave = async (
     throw new ContractError('This Gateway has not been joined long enough');
   }
 
-  const gatewayLeaveHeight = +SmartWeave.block.height + settings.gatewayLeaveLength;
+  const gatewayLeaveHeight =
+    +SmartWeave.block.height + settings.gatewayLeaveLength;
 
   // set all the vault end dates
   const vaults = gateways[caller].vaults;
-  for (const vault of vaults){
+  for (const vault of vaults) {
     // move up any exiting vaults to end when leaving the network
-    if(vault.end === 0 || vault.end > gatewayLeaveHeight){
-      vault.end = gatewayLeaveHeight
+    if (vault.end === 0 || vault.end > gatewayLeaveHeight) {
+      vault.end = gatewayLeaveHeight;
     }
   }
 
