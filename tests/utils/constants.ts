@@ -8,5 +8,14 @@ export const SECONDS_IN_A_YEAR = 31_536_000;
 export const DEFAULT_WALLET_FUND_AMOUNT = 1_000_000_000_000_000;
 export const DEFAULT_INITIAL_STATE = initialContractState;
 export const DEFAULT_TRANSFER_QTY = 100_000;
+export const DEFAULT_CONTRACT_SETTINGS = {
+  minLockLength: 5,
+  minNetworkJoinStakeAmount: 5_000,
+  minDelegatedStakeAmount: 100,
+  minGatewayJoinLength: 2,
+  gatewayLeaveLength: 2,
+  delegatedStakeWithdrawLength: 5,
+  operatorStakeWithdrawLength: 5,
+};
 // Also export all our other constants
 export * from '../../src/constants';
