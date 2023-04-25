@@ -10,7 +10,6 @@ import {
 import { getRecord } from './actions/read/record';
 import { getActiveTiers, getTier } from './actions/read/tiers';
 import { addANTSourceCodeTx } from './actions/write/addANTSourceCodeTx';
-import { approveFoundationAction } from './actions/write/approveFoundationAction';
 import { buyRecord } from './actions/write/buyRecord';
 import { createNewTier } from './actions/write/createNewTier.js';
 import { evolve } from './actions/write/evolve';
@@ -28,6 +27,7 @@ import { removeRecord } from './actions/write/removeRecord';
 import { setActiveTier } from './actions/write/setActiveTier';
 import { setFees } from './actions/write/setFees';
 import { setName } from './actions/write/setName';
+import { signFoundationAction } from './actions/write/signFoundationAction';
 import { transferTokens } from './actions/write/transferTokens';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
 import { updateState } from './actions/write/updateState';
@@ -108,8 +108,8 @@ export async function handle(
       return await updateGatewaySettings(state, action);
     case 'initiateFoundationAction':
       return await initiateFoundationAction(state, action);
-    case 'approveFoundationAction':
-      return await approveFoundationAction(state, action);
+    case 'signFoundationAction':
+      return await signFoundationAction(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognized: "${input.function}"`,

@@ -275,7 +275,7 @@ export type GARFunctions =
   | 'finalizeOperatorStakeDecrease'
   | 'updateGatewaySettings'
   | 'initiateFoundationAction'
-  | 'approveFoundationAction';
+  | 'signFoundationAction';
 
 export type FoundationFunctions = 'gateway' | 'updateState' | 'mint';
 

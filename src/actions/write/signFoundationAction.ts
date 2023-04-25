@@ -10,7 +10,7 @@ declare const ContractError;
 declare const SmartWeave: any;
 
 // Signals an approval for a proposed foundation action
-export const approveFoundationAction = async (
+export const signFoundationAction = async (
   state: IOState,
   { caller, input: { id } }: PstAction,
 ): Promise<ContractResult> => {
