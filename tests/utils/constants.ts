@@ -14,6 +14,7 @@ export const DEFAULT_INITIAL_STATE = initialContractState;
 export const DEFAULT_TRANSFER_QTY = 100_000;
 export const DEFAULT_CONTRACT_SETTINGS = {
   minLockLength: 5,
+  maxLockLength: 720 * 365 * 3,
   minNetworkJoinStakeAmount: 5_000,
   minDelegatedStakeAmount: 100,
   minGatewayJoinLength: 2,

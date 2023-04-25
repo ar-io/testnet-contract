@@ -39,7 +39,7 @@ export type IOState = PstState & {
   foundation: Foundation; // set of foundation wallets and controls used to sign actions to manage the smartweave contract
   vaults: {
     // a list of all vaults that have locked balances
-    [address: string]: [TokenVault];
+    [address: string]: TokenVault[];
     // a wallet can have multiple vaults
   };
 };
@@ -47,7 +47,7 @@ export type IOState = PstState & {
 export type ContractSettings = {
   // these settings can be modified via on-chain governance
   minLockLength: number; // the minimum amount of blocks tokens can be locked in a community vault
-  // lockMaxLength: number; // the maximum amount of blocks tokens can be locked in a community vault
+  maxLockLength: number; // the maximum amount of blocks tokens can be locked in a community vault
   minNetworkJoinStakeAmount: number; // the minimum amount of tokens needed to stake to join the ar.io network as a gateway
   minDelegatedStakeAmount: number; // the minimum amount of tokens needed to delegate stake to an ar.io network gateway
   minGatewayJoinLength: number; // the minimum amount of blocks a gateway can be joined to the ar.io network

@@ -63,14 +63,12 @@ export const initiateFoundationAction = async (
     if (lockLength) {
       if (
         !Number.isInteger(lockLength) ||
-        lockLength < settings['lockMinLength'] ||
-        lockLength > settings['lockMaxLength']
+        lockLength < settings['minLockLength'] ||
+        lockLength > settings['maxLockLength']
       ) {
         throw new ContractError(
-          `lockLength is out of range. lockLength must be between ${settings['lockMinLength']} - ${settings['lockMaxLength']}.`,
+          `lockLength is out of range. lockLength must be between ${settings['minLockLength']} - ${settings['maxLockLength']}.`,
         );
-      } else {
-        foundationAction.lockLength = lockLength;
       }
     } else {
       lockLength = 0;
