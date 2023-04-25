@@ -87,7 +87,7 @@ describe('Foundation', () => {
       const target = newFoundationMemberAddress1;
       const prevNewMemberBalance = prevState.balances[target] || 0;
       const writeInteraction = await contract.writeInteraction({
-        function: 'approveFoundationAction',
+        function: 'signFoundationAction',
         id,
       });
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -164,12 +164,12 @@ describe('Foundation', () => {
       const id2 = 2;
       const target = newFoundationMemberAddress1;
       const writeInteraction1 = await contract.writeInteraction({
-        function: 'approveFoundationAction',
+        function: 'signFoundationAction',
         id: id1,
       });
       const start1 = await getCurrentBlock(arweave);
       const writeInteraction2 = await contract.writeInteraction({
-        function: 'approveFoundationAction',
+        function: 'signFoundationAction',
         id: id2,
       });
       const start2 = await getCurrentBlock(arweave);

@@ -278,7 +278,7 @@ export type PstFunction =
   | 'finalizeOperatorStakeDecrease'
   | 'updateGatewaySettings'
   | 'initiateFoundationAction'
-  | 'approveFoundationAction';
+  | 'signFoundationAction';
 
 export type ContractResult =
   | { state: IOState }
