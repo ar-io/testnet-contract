@@ -33,6 +33,7 @@ export type IOState = PstState & {
     // A list of all reserved names that are not allowed to be purchased at this time
     [name: string]: ReservedName;
   };
+  foundation: Foundation; // set of foundation wallets and controls used to sign actions to manage the smartweave contract
 };
 
 export type ContractSettings = {
@@ -92,29 +93,29 @@ export type ReservedName = {
   endTimestamp?: number; // At what unix time (seconds since epoch) this reserved name becomes available
 };
 
-// export type Foundation= {
-//   // The settings and wallets used by the AR.IO Foundation.  This is for testing purposes only
-//   balance: number; // the amount of funds held by the foundation, collection from AR.IO services like ArNS
-//   actionPeriod: number; // the amount of blocks that must pass for all signers to approve a transfer
-//   minSignatures: number; // the minimum amount of signatures/approvals needed to move funds, must be less than the amount of total addresses
-//   addresses: string[]; // All of the foundation managed wallet addresses
-//   actions: FoundationAction[]; // A list of all on-chain actions performed by the foundation
-// }
+export type Foundation = {
+  // The settings and wallets used by the AR.IO Foundation.  This is for testing purposes only
+  balance: number; // the amount of funds held by the foundation multi sig vault, collection from AR.IO services like ArNS
+  actionPeriod: number; // the amount of blocks that must pass for all signers to approve a transfer
+  minSignatures: number; // the minimum amount of signatures/approvals needed to move funds, must be less than the amount of total addresses
+  addresses: string[]; // All of the foundation managed wallet addresses
+  actions: FoundationAction[]; // A list of all on-chain actions performed by the foundation
+};
 
-// export type FoundationAction= {
-//   id?: number; // the id number for this action
-//   type: FoundationActionType; // the specific kind of action being performed
-//   status?: FoundationActionStatus; // the latest status of this action
-//   start?: number; // the block height that this action started at
-//   totalSignatures?: number; // the amount of signatures collected for this action
-//   target?: string; // the target wallet added to the foundation addresses list
-//   value?: string | number; // the value for setting a specific configuration
-//   recipient?: string; // the target recipient of a foundation balance distribution
-//   qty?: number; // the amount of tokens distributed from the foundation balance
-//   note?: string; // a description of this foundation action
-//   signed?: string[]; // a list of the foundation wallets that have signed this action
-//   lockLength?: number; // determines the amount of blocks a foundation balance distribution is locked for
-// }
+export type FoundationAction = {
+  id?: number; // the id number for this action
+  type: FoundationActionType; // the specific kind of action being performed
+  status?: FoundationActionStatus; // the latest status of this action
+  start?: number; // the block height that this action started at
+  totalSignatures?: number; // the amount of signatures collected for this action
+  target?: string; // the target wallet added to the foundation addresses list
+  value?: string | number; // the value for setting a specific configuration
+  recipient?: string; // the target recipient of a foundation balance distribution
+  qty?: number; // the amount of tokens distributed from the foundation balance
+  note?: string; // a description of this foundation action
+  signed?: string[]; // a list of the foundation wallets that have signed this action
+  lockLength?: number; // determines the amount of blocks a foundation balance distribution is locked for
+};
 
 export type FoundationActionStatus = 'active' | 'passed' | 'failed';
 export type FoundationActionType =
@@ -263,7 +264,9 @@ export type PstFunction =
   | 'increaseOperatorStake'
   | 'initiateOperatorStakeDecrease'
   | 'finalizeOperatorStakeDecrease'
-  | 'updateGatewaySettings';
+  | 'updateGatewaySettings'
+  | 'initiateFoundationAction'
+  | 'approveFoundationAction';
 
 export type ContractResult =
   | { state: IOState }
