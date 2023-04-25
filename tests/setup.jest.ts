@@ -50,8 +50,21 @@ beforeAll(async () => {
     await createLocalWallet(arweave),
     await createLocalWallet(arweave),
     await createLocalWallet(arweave),
+    await createLocalWallet(arweave), // starting foundation member
+    await createLocalWallet(arweave),
+    await createLocalWallet(arweave),
+    await createLocalWallet(arweave),
+    await createLocalWallet(arweave),
   ];
   const [owner] = wallets;
+
+  // save wallets to disk
+  wallets.forEach((w, index) => {
+    fs.writeFileSync(
+      path.join(__dirname, `./wallets/${index}`),
+      JSON.stringify(w.wallet),
+    );
+  });
 
   // save wallets to disk
   wallets.forEach((w, index) => {

@@ -4,10 +4,12 @@ import * as fs from 'fs';
 import path from 'path';
 import { v4 as uuidV4 } from 'uuid';
 
-import { IOState, ServiceTier } from '../../src/types';
+import { Foundation, IOState, ServiceTier } from '../../src/types';
 import {
   DEFAULT_ANT_CONTRACT_ID,
   DEFAULT_CONTRACT_SETTINGS,
+  DEFAULT_FOUNDATION_ACTION_PERIOD,
+  DEFAULT_FOUNDATION_STARTING_BALANCE,
   DEFAULT_INITIAL_STATE,
   DEFAULT_WALLET_FUND_AMOUNT,
   NETWORK_HIDDEN_STATUS,
@@ -282,6 +284,18 @@ function createGateways(wallets: string[]) {
   return gateways;
 }
 
+function createFoundation(wallets: string[]) {
+  const foundation: Foundation = {
+    balance: DEFAULT_FOUNDATION_STARTING_BALANCE,
+    actionPeriod: DEFAULT_FOUNDATION_ACTION_PERIOD,
+    minSignatures: 1,
+    addresses: [wallets[7]],
+    actions: [],
+  };
+
+  return foundation;
+}
+
 export async function setupInitialContractState(
   owner: string,
   wallets: string[],
@@ -320,6 +334,9 @@ export async function setupInitialContractState(
   // configure the necessary contract settings
   state.settings = DEFAULT_CONTRACT_SETTINGS;
 
+  // configure the foundation
+  state.foundation = createFoundation(wallets);
+
   // configure some basic gateways
   state.gateways = createGateways(wallets);
 
@@ -332,11 +349,11 @@ export async function setupInitialContractState(
   state.reserved = {
     ['www']: {}, // no owner, doesnt expire
     ['google']: {
-      endTimestamp: sixMonthsLater.getTime() / 1000,
+      endTimestamp: Math.floor(sixMonthsLater.getTime() / 1000),
     }, // no owner, expires in 6 months
     ['twitter']: {
       target: wallets[1],
-      endTimestamp: sixMonthsLater.getTime() / 1000,
+      endTimestamp: Math.floor(sixMonthsLater.getTime() / 1000),
     }, // already expired and can be purchased by anyone
   };
   return state;

@@ -1,6 +1,9 @@
 import { PstState } from 'warp-contracts';
 
 import {
+  FOUNDATION_ACTION_ACTIVE_STATUS,
+  FOUNDATION_ACTION_FAILED_STATUS,
+  FOUNDATION_ACTION_PASSED_STATUS,
   NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
@@ -34,6 +37,11 @@ export type IOState = PstState & {
     [name: string]: ReservedName;
   };
   foundation: Foundation; // set of foundation wallets and controls used to sign actions to manage the smartweave contract
+  vaults: {
+    // a list of all vaults that have locked balances
+    [address: string]: [TokenVault];
+    // a wallet can have multiple vaults
+  };
 };
 
 export type ContractSettings = {
@@ -103,23 +111,28 @@ export type Foundation = {
 };
 
 export type FoundationAction = {
-  id?: number; // the id number for this action
+  id: number; // the id number for this action
   type: FoundationActionType; // the specific kind of action being performed
-  status?: FoundationActionStatus; // the latest status of this action
-  start?: number; // the block height that this action started at
-  totalSignatures?: number; // the amount of signatures collected for this action
-  target?: string; // the target wallet added to the foundation addresses list
+  status: FoundationActionStatus; // the latest status of this action
+  start: number; // the block height that this action started at
+  target?: string; // the target wallet used by this foundation action
   value?: string | number; // the value for setting a specific configuration
-  recipient?: string; // the target recipient of a foundation balance distribution
   qty?: number; // the amount of tokens distributed from the foundation balance
-  note?: string; // a description of this foundation action
-  signed?: string[]; // a list of the foundation wallets that have signed this action
+  note: string; // a description of this foundation action
+  signed: string[]; // a list of the foundation wallets that have signed this action
   lockLength?: number; // determines the amount of blocks a foundation balance distribution is locked for
 };
 
-export type FoundationActionStatus = 'active' | 'passed' | 'failed';
+const foundationActionStatus = [
+  FOUNDATION_ACTION_ACTIVE_STATUS,
+  FOUNDATION_ACTION_PASSED_STATUS,
+  FOUNDATION_ACTION_FAILED_STATUS,
+] as const;
+export type FoundationActionStatus = typeof foundationActionStatus[number];
+
 export type FoundationActionType =
   | 'transfer'
+  | 'transferLocked'
   | 'setMinSignatures'
   | 'setActionPeriod'
   | 'addAddress'
@@ -193,7 +206,6 @@ export type PstInput = {
   tierNumber: number;
   tierId: string;
   note: string;
-  recipient: string;
   lockLength: number;
   id: number;
   fees: {
