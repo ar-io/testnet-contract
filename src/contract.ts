@@ -10,6 +10,7 @@ import {
 import { getRecord } from './actions/read/record';
 import { getActiveTiers, getTier } from './actions/read/tiers';
 import { addANTSourceCodeTx } from './actions/write/addANTSourceCodeTx';
+import { approveFoundationAction } from './actions/write/approveFoundationAction';
 import { buyRecord } from './actions/write/buyRecord';
 import { createNewTier } from './actions/write/createNewTier.js';
 import { evolve } from './actions/write/evolve';
@@ -17,6 +18,7 @@ import { extendRecord } from './actions/write/extendRecord.js';
 import { finalizeLeave } from './actions/write/finalizeLeave';
 import { finalizeOperatorStakeDecrease } from './actions/write/finalizeOperatorStakeDecrease';
 import { increaseOperatorStake } from './actions/write/increaseOperatorStake';
+import { initiateFoundationAction } from './actions/write/initiateFoundationAction';
 import { initiateLeave } from './actions/write/initiateLeave';
 import { initiateOperatorStakeDecrease } from './actions/write/initiateOperatorStakeDecrease';
 import { joinNetwork } from './actions/write/joinNetwork';
@@ -99,6 +101,10 @@ export async function handle(
       return await finalizeOperatorStakeDecrease(state, action);
     case 'updateGatewaySettings':
       return await updateGatewaySettings(state, action);
+    case 'initiateFoundationAction':
+      return await initiateFoundationAction(state, action);
+    case 'approveFoundationAction':
+      return await approveFoundationAction(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognized: "${input.function}"`,

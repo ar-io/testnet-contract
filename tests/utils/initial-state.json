@@ -14,5 +14,7 @@
   },
   "fees": {},
   "settings": {},
-  "reserved": {}
+  "reserved": {},
+  "foundation": {},
+  "vaults": {}
 }
