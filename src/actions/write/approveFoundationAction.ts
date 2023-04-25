@@ -66,28 +66,30 @@ export const approveFoundationAction = async (
       }
       state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
     } else if (type === 'transferLocked') {
-      const recipient = state.foundation.actions[id].target;
+      const target = state.foundation.actions[id].target;
       const qty = state.foundation.actions[id].qty;
-      if (state.foundation.actions[id].lockLength) {
-        // transfer tokens directly to a locked vault
-        const start = +SmartWeave.block.height;
-        const end = start + action.lockLength;
-        if (recipient in state.vaults) {
-          state.vaults[recipient].push({
+      const lockLength = state.foundation.actions[id].lockLength;
+      const start = +SmartWeave.block.height;
+      let end = lockLength;
+      if (end !== 0) {
+        end = start + lockLength;
+      }
+      if (target in state.vaults) {
+        state.vaults[target].push({
+          balance: qty,
+          end,
+          start,
+        });
+      } else {
+        state.vaults[target] = [
+          {
             balance: qty,
             end,
             start,
-          });
-        } else {
-          state.vaults[recipient] = [
-            {
-              balance: qty,
-              end,
-              start,
-            },
-          ];
-        }
+          },
+        ];
       }
+
       state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
     } else if (type === 'addAddress') {
       // Must be a valid Arweave public wallet address. This is already checked on initialize

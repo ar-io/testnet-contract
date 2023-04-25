@@ -101,6 +101,99 @@ describe('Foundation', () => {
         DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
       );
     });
+
+    it('should initiate foundation token transfer locked', async () => {
+      const { cachedValue: prevCachedValue } = await contract.readState();
+      const prevState = prevCachedValue.state as IOState;
+      const type = 'transferLocked';
+      const qty = 300;
+      const lockLength = 10;
+      const target = newFoundationMemberAddress1;
+      const note = 'Testing transfer locked';
+      const prevFoundationBalance = prevState.foundation.balance;
+      const writeInteraction = await contract.writeInteraction({
+        function: 'initiateFoundationAction',
+        type,
+        target,
+        qty,
+        note,
+      });
+      const start1 = await getCurrentBlock(arweave);
+      const writeInteraction2 = await contract.writeInteraction({
+        function: 'initiateFoundationAction',
+        type,
+        target,
+        qty,
+        lockLength,
+        note,
+      });
+      const start2 = await getCurrentBlock(arweave);
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      expect(writeInteraction2?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(newState.foundation.balance).toEqual(
+        prevFoundationBalance - qty * 2,
+      );
+      expect(newState.foundation.actions[1]).toEqual({
+        id: 1,
+        note,
+        qty,
+        signed: [foundationMemberAddress],
+        start: start1,
+        lockLength: 0, // since we did not specify a lock length, it should be set to 0,
+        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        target,
+        type,
+      });
+      expect(newState.foundation.actions[2]).toEqual({
+        id: 2,
+        note,
+        qty,
+        signed: [foundationMemberAddress],
+        start: start2,
+        lockLength,
+        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        target,
+        type,
+      });
+    });
+
+    it('should approve and complete foundation token transfer locked', async () => {
+      const id1 = 1;
+      const id2 = 2;
+      const target = newFoundationMemberAddress1;
+      const writeInteraction1 = await contract.writeInteraction({
+        function: 'approveFoundationAction',
+        id: id1,
+      });
+      const start1 = await getCurrentBlock(arweave);
+      const writeInteraction2 = await contract.writeInteraction({
+        function: 'approveFoundationAction',
+        id: id2,
+      });
+      const start2 = await getCurrentBlock(arweave);
+      expect(writeInteraction1?.originalTxId).not.toBe(undefined);
+      expect(writeInteraction2?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(newState.vaults[target][0]).toEqual({
+        balance: newState.foundation.actions[id1].qty,
+        end: 0,
+        start: start1,
+      });
+      expect(newState.vaults[target][1]).toEqual({
+        balance: newState.foundation.actions[id1].qty,
+        end: start2 + (newState.foundation.actions[id2].lockLength || 0),
+        start: start2,
+      });
+      expect(newState.foundation.actions[id1].status).toEqual(
+        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+      );
+      expect(newState.foundation.actions[id2].status).toEqual(
+        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+      );
+    });
   });
 
   describe('non-valid foundation member', () => {
@@ -124,6 +217,7 @@ describe('Foundation', () => {
         const { cachedValue: newCachedValue } = await contract.readState();
         const newState = newCachedValue.state as IOState;
         console.log(JSON.stringify(newState.foundation, null, 5));
+        console.log(JSON.stringify(newState.vaults, null, 5));
       });
     });
 
