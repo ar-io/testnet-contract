@@ -30,7 +30,12 @@ import { transferTokens } from './actions/write/transferTokens';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
 import { updateState } from './actions/write/updateState';
 import { upgradeTier } from './actions/write/upgradeTier';
-import { ContractResult, IOState, PstAction, PstFunction } from './types';
+import {
+  ContractResult,
+  IOContractFunctions,
+  IOState,
+  PstAction,
+} from './types';
 
 declare const ContractError;
 
@@ -40,7 +45,7 @@ export async function handle(
 ): Promise<ContractResult> {
   const input = action.input;
 
-  switch (input.function as PstFunction) {
+  switch (input.function as IOContractFunctions) {
     case 'transfer':
       return await transferTokens(state, action);
     case 'mint':
@@ -65,21 +70,21 @@ export async function handle(
       return await addANTSourceCodeTx(state, action);
     case 'removeANTSourceCodeTx':
       return await removeANTSourceCodeTx(state, action);
-    case 'getBalance':
+    case 'balance':
       return await getBalance(state, action);
-    case 'getRecord':
+    case 'record':
       return await getRecord(state, action);
-    case 'getTier':
+    case 'tier':
       return await getTier(state, action);
-    case 'getActiveTiers':
+    case 'activeTiers':
       return await getActiveTiers(state);
-    case 'getGateway':
+    case 'gateway':
       return await getGateway(state, action);
-    case 'getGatewayTotalStake':
+    case 'gatewayTotalStake':
       return await getGatewayTotalStake(state, action);
-    case 'getGatewayRegistry':
+    case 'gatewayRegistry':
       return await getGatewayRegistry(state);
-    case 'getRankedGatewayRegistry':
+    case 'rankedGatewayRegistry':
       return await getRankedGatewayRegistry(state);
     case 'upgradeTier':
       return await upgradeTier(state, action);
