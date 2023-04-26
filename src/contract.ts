@@ -1,6 +1,6 @@
 // ~~ Put all the interactions from '../actions/` together to write the final handle function which will be exported
 // from the contract source. ~~
-import { getBalance } from './actions/read/balance';
+import { balance } from './actions/read/balance';
 import {
   getGateway,
   getGatewayRegistry,
@@ -71,7 +71,7 @@ export async function handle(
     case 'removeANTSourceCodeTx':
       return await removeANTSourceCodeTx(state, action);
     case 'balance':
-      return await getBalance(state, action);
+      return await balance(state, action);
     case 'record':
       return await getRecord(state, action);
     case 'tier':
