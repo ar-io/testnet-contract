@@ -30,7 +30,12 @@ import { transferTokens } from './actions/write/transferTokens';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
 import { updateState } from './actions/write/updateState';
 import { upgradeTier } from './actions/write/upgradeTier';
-import { ContractResult, IOState, PstAction, IOContractFunctions } from './types';
+import {
+  ContractResult,
+  IOContractFunctions,
+  IOState,
+  PstAction,
+} from './types';
 
 declare const ContractError;
 

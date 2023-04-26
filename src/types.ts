@@ -235,36 +235,39 @@ export type ServiceTierSettings = {
 
 export type PstFunctions = 'balance' | 'transfer' | 'evolve';
 
-export type PDNSFunctions = 'setFees'
-| 'buyRecord'
-| 'removeRecord'
-| 'extendRecord'
-| 'addANTSourceCodeTx'
-| 'removeANTSourceCodeTx'
-| 'setName'
-| 'setActiveTier'
-| 'createNewTier'
-| 'tier'
-| 'activeTiers'
-| 'upgradeTier'
-| 'record';
+export type PDNSFunctions =
+  | 'setFees'
+  | 'buyRecord'
+  | 'removeRecord'
+  | 'extendRecord'
+  | 'addANTSourceCodeTx'
+  | 'removeANTSourceCodeTx'
+  | 'setName'
+  | 'setActiveTier'
+  | 'createNewTier'
+  | 'tier'
+  | 'activeTiers'
+  | 'upgradeTier'
+  | 'record';
 
-export type GARFunctions = 'joinNetwork'
-| 'gatewayRegistry'
-| 'gatewayTotalStake'
-| 'initiateLeave'
-| 'finalizeLeave'
-| 'increaseOperatorStake'
-| 'rankedGatewayRegistry'
-| 'initiateOperatorStakeDecrease'
-| 'finalizeOperatorStakeDecrease'
-| 'updateGatewaySettings';
+export type GARFunctions =
+  | 'joinNetwork'
+  | 'gatewayRegistry'
+  | 'gatewayTotalStake'
+  | 'initiateLeave'
+  | 'finalizeLeave'
+  | 'increaseOperatorStake'
+  | 'rankedGatewayRegistry'
+  | 'initiateOperatorStakeDecrease'
+  | 'finalizeOperatorStakeDecrease'
+  | 'updateGatewaySettings';
 
-export type FoundationFunctions = 'gateway'
-| 'updateState'
-| 'mint';
+export type FoundationFunctions = 'gateway' | 'updateState' | 'mint';
 
-export type IOContractFunctions = FoundationFunctions & GARFunctions & PDNSFunctions & PstFunctions;
+export type IOContractFunctions = FoundationFunctions &
+  GARFunctions &
+  PDNSFunctions &
+  PstFunctions;
 
 export type ContractResult =
   | { state: IOState }
