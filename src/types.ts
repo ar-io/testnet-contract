@@ -273,11 +273,11 @@ export type GARFunctions =
   | 'rankedGatewayRegistry'
   | 'initiateOperatorStakeDecrease'
   | 'finalizeOperatorStakeDecrease'
-  | 'updateGatewaySettings'
+  | 'updateGatewaySettings';
+
+export type FoundationFunctions =
   | 'initiateFoundationAction'
   | 'signFoundationAction';
-
-export type FoundationFunctions = 'gateway' | 'updateState' | 'mint';
 
 export type IOContractFunctions = FoundationFunctions &
   GARFunctions &

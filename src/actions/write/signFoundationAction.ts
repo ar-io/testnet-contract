@@ -4,7 +4,6 @@ import {
   FOUNDATION_ACTION_PASSED_STATUS,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
-import { isValidArweaveBase64URL } from '../../utilities';
 
 declare const ContractError;
 declare const SmartWeave: any;
