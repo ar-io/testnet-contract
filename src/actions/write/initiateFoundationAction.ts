@@ -3,12 +3,7 @@ import {
   MAX_FOUNDATION_ACTION_PERIOD,
   MAX_NOTE_LENGTH,
 } from '../../constants';
-import {
-  ContractResult,
-  FoundationAction,
-  IOState,
-  PstAction,
-} from '../../types';
+import { ContractResult, IOState, PstAction } from '../../types';
 import { isValidArweaveBase64URL } from '../../utilities';
 
 declare const ContractError;
