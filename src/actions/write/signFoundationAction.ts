@@ -92,14 +92,7 @@ export const signFoundationAction = async (
 
       state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
     } else if (type === 'addAddress') {
-      // Must be a valid Arweave public wallet address. This is already checked on initialize
-      const target = isValidArweaveBase64URL(
-        state.foundation.actions[id].target,
-      );
-      if (!target || typeof target !== 'string') {
-        throw new ContractError('No valid target specified');
-      }
-      if (foundation.addresses.includes(target)) {
+      if (foundation.addresses.includes(state.foundation.actions[id].target)) {
         throw new ContractError(
           'Target is already added as a Foundation address',
         );
@@ -108,21 +101,15 @@ export const signFoundationAction = async (
       state.foundation.addresses.push(state.foundation.actions[id].target);
       state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
     } else if (type === 'removeAddress') {
-      // Must be a valid Arweave public wallet address. This is already checked on initialize
-      const target = isValidArweaveBase64URL(
-        state.foundation.actions[id].target,
-      );
-      if (!target || typeof target !== 'string') {
-        throw new ContractError('No valid target specified');
-      }
-
-      if (!foundation.addresses.includes(target)) {
+      if (!foundation.addresses.includes(state.foundation.actions[id].target)) {
         throw new ContractError(
           'Target is not in the list of Foundation addresses',
         );
       }
       // Find the index of the existing foundation address and remove it
-      const index = foundation.addresses.indexOf(target);
+      const index = foundation.addresses.indexOf(
+        state.foundation.actions[id].target,
+      );
       state.foundation.addresses.splice(index, 1);
       state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
     } else if (type === 'setMinSignatures') {
