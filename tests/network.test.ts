@@ -421,7 +421,7 @@ describe('Network', () => {
     describe('read interactions', () => {
       it('should be able to fetch gateway details via view state', async () => {
         const { result: gateway } = await contract.viewState({
-          function: 'getGateway',
+          function: 'gateway',
           target: ownerAddress,
         });
         const expectedGatewayObj = expect.objectContaining({
@@ -438,7 +438,7 @@ describe('Network', () => {
 
       it('should be return an error when fetching a non-existent gateway via viewState', async () => {
         const response = await contract.viewState({
-          function: 'getGateway',
+          function: 'gateway',
           target: 'non-existent-gateway',
         });
         expect(response).not.toBe(undefined);
@@ -451,7 +451,7 @@ describe('Network', () => {
         const { cachedValue } = await contract.readState();
         const fullState = cachedValue.state as IOState;
         const { result: gatewayTotalStake } = await contract.viewState({
-          function: 'getGatewayTotalStake',
+          function: 'gatewayTotalStake',
           target: ownerAddress,
         });
         expect(gatewayTotalStake).toEqual(
@@ -464,7 +464,7 @@ describe('Network', () => {
         const { cachedValue } = await contract.readState();
         const fullState = cachedValue.state as IOState;
         const { result: gateways } = await contract.viewState({
-          function: 'getGatewayRegistry',
+          function: 'gatewayRegistry',
         });
         expect(gateways).not.toBe(undefined);
         expect(gateways).toEqual(fullState.gateways);
@@ -472,7 +472,7 @@ describe('Network', () => {
 
       it('should be able to fetch stake ranked, active gateway address registry via view state', async () => {
         const { result: rankedGateways } = await contract.viewState({
-          function: 'getRankedGatewayRegistry',
+          function: 'rankedGatewayRegistry',
         });
         expect(rankedGateways).not.toBe(undefined); // TODO, make this more specific
       });
