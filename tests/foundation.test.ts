@@ -49,6 +49,7 @@ describe('Foundation', () => {
       );
       contract = warp.pst(srcContractId).connect(foundationMember);
     });
+
     it('should initiate foundation token transfer', async () => {
       const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
@@ -240,6 +241,7 @@ describe('Foundation', () => {
         type,
       });
     });
+
     it('should approve and complete foundation add address', async () => {
       const id1 = 3;
       const id2 = 4;
@@ -254,19 +256,20 @@ describe('Foundation', () => {
         id: id2,
       });
       expect(writeInteraction1?.originalTxId).not.toBe(undefined);
+      expect(writeInteraction2?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
       const newState = newCachedValue.state as IOState;
-      console.log(newCachedValue.errorMessages);
       expect(newState.foundation.actions[id1].status).toEqual(
         DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
       );
       expect(newState.foundation.addresses).toContain(target1);
       expect(newState.foundation.addresses).toContain(target2);
     });
+
     it('should initiate remove address', async () => {
       const type = 'removeAddress';
       const id = 5;
-      const target = newFoundationMemberAddress1;
+      const target = newFoundationMemberAddress2;
       const note = 'Removing member 2';
       const writeInteraction = await contract.writeInteraction({
         function: 'initiateFoundationAction',
@@ -288,9 +291,10 @@ describe('Foundation', () => {
         type,
       });
     });
+
     it('should approve and complete foundation remove address', async () => {
       const id = 5;
-      const target = newFoundationMemberAddress1;
+      const target = newFoundationMemberAddress2;
       const writeInteraction = await contract.writeInteraction({
         function: 'signFoundationAction',
         id: id,
@@ -303,6 +307,91 @@ describe('Foundation', () => {
         DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
       );
       expect(newState.foundation.addresses).not.toContain(target);
+    });
+
+    it('should initiate set action period', async () => {
+      contract = warp.pst(srcContractId).connect(newFoundationMember1);
+      const type = 'setActionPeriod';
+      const id = 6;
+      const value = 2;
+      const note = 'Changing action period';
+      const writeInteraction = await contract.writeInteraction({
+        function: 'initiateFoundationAction',
+        type,
+        note,
+        value,
+      });
+      const start = await getCurrentBlock(arweave);
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(newState.foundation.actions[id]).toEqual({
+        id,
+        note,
+        signed: [newFoundationMemberAddress1],
+        start: start,
+        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        type,
+        value,
+      });
+    });
+
+    it('should approve and complete foundation set action period', async () => {
+      const id = 6;
+      const target = newFoundationMemberAddress2;
+      const writeInteraction = await contract.writeInteraction({
+        function: 'signFoundationAction',
+        id: id,
+      });
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(newState.foundation.actions[id].status).toEqual(
+        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+      );
+      expect(newState.foundation.addresses).not.toContain(target);
+    });
+
+    it('should initiate set min signatures', async () => {
+      contract = warp.pst(srcContractId).connect(newFoundationMember1);
+      const type = 'setMinSignatures';
+      const id = 7;
+      const value = 2;
+      const note = 'Changing min signatures';
+      const writeInteraction = await contract.writeInteraction({
+        function: 'initiateFoundationAction',
+        type,
+        note,
+        value,
+      });
+      const start = await getCurrentBlock(arweave);
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(newState.foundation.actions[id]).toEqual({
+        id,
+        note,
+        signed: [newFoundationMemberAddress1],
+        start: start,
+        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        type,
+        value,
+      });
+    });
+
+    it('should approve and complete foundation set action period', async () => {
+      const id = 7;
+      const writeInteraction = await contract.writeInteraction({
+        function: 'signFoundationAction',
+        id: id,
+      });
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(newState.foundation.actions[id].status).toEqual(
+        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+      );
+      expect(newState.foundation.actionPeriod).toEqual(2);
     });
   });
 
