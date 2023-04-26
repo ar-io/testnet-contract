@@ -195,7 +195,7 @@ describe('Records', () => {
     describe('read interactions', () => {
       it('should be able to fetch record details via view state', async () => {
         const { result: record } = await contract.viewState({
-          function: 'getRecord',
+          function: 'record',
           name: 'name1',
         });
         const expectedTierObj = expect.objectContaining({
@@ -215,7 +215,7 @@ describe('Records', () => {
 
       it('should be return an error when fetching a non-existent record via viewState', async () => {
         const response = await contract.viewState({
-          function: 'getRecord',
+          function: 'record',
           name: 'non-existent-name',
         });
         expect(response).not.toBe(undefined);

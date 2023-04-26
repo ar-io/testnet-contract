@@ -188,9 +188,10 @@ export type ArNSNamePurchase = {
   contractTxId: string;
 };
 
+// TODO: break this up
 export type PstInput = {
   type: FoundationActionType;
-  function: PstFunction;
+  function: IOContractFunctions;
   target: string;
   value: string | number;
   name: string;
@@ -245,40 +246,43 @@ export type ServiceTierSettings = {
   maxUndernames: number;
 };
 
-// TODO: handle purchasing additional undernames
-export type PstFunction =
-  | 'transfer'
-  | 'transferLocked'
-  | 'mint'
+export type PstFunctions = 'balance' | 'transfer' | 'evolve';
+
+export type PDNSFunctions =
   | 'setFees'
-  | 'evolve'
   | 'buyRecord'
   | 'removeRecord'
   | 'extendRecord'
   | 'addANTSourceCodeTx'
   | 'removeANTSourceCodeTx'
-  | 'getBalance'
-  | 'getRecord'
-  | 'getGateway'
-  | 'getGatewayTotalStake'
-  | 'getGatewayRegistry'
-  | 'getRankedGatewayRegistry'
-  | 'updateState'
   | 'setName'
   | 'setActiveTier'
   | 'createNewTier'
-  | 'getTier'
-  | 'getActiveTiers'
+  | 'tier'
+  | 'activeTiers'
   | 'upgradeTier'
+  | 'record';
+
+export type GARFunctions =
   | 'joinNetwork'
+  | 'gatewayRegistry'
+  | 'gatewayTotalStake'
   | 'initiateLeave'
   | 'finalizeLeave'
   | 'increaseOperatorStake'
+  | 'rankedGatewayRegistry'
   | 'initiateOperatorStakeDecrease'
   | 'finalizeOperatorStakeDecrease'
   | 'updateGatewaySettings'
   | 'initiateFoundationAction'
   | 'signFoundationAction';
+
+export type FoundationFunctions = 'gateway' | 'updateState' | 'mint';
+
+export type IOContractFunctions = FoundationFunctions &
+  GARFunctions &
+  PDNSFunctions &
+  PstFunctions;
 
 export type ContractResult =
   | { state: IOState }

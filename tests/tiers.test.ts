@@ -223,7 +223,7 @@ describe('Tiers', () => {
   describe('no wallet', () => {
     it('should be able to get a tier via viewState', async () => {
       const { result: tier } = await contract.viewState({
-        function: 'getTier',
+        function: 'tier',
         tierNumber: 1,
       });
       expect(tier).not.toBe(undefined);
@@ -238,7 +238,7 @@ describe('Tiers', () => {
 
     it('should be able to get active tiers via viewState', async () => {
       const { result: activeTiers } = await contract.viewState({
-        function: 'getActiveTiers',
+        function: 'activeTiers',
       });
       const expectedTierObj = expect.objectContaining({
         tier: expect.any(String),
