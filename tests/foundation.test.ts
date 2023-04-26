@@ -194,6 +194,116 @@ describe('Foundation', () => {
         DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
       );
     });
+
+    it('should initiate add address', async () => {
+      const type = 'addAddress';
+      const id1 = 3;
+      const id2 = 4;
+      const target1 = newFoundationMemberAddress1;
+      const target2 = newFoundationMemberAddress2;
+      const note1 = 'Adding member 2';
+      const note2 = 'Adding member 3';
+      const writeInteraction1 = await contract.writeInteraction({
+        function: 'initiateFoundationAction',
+        type,
+        target: target1,
+        note: note1,
+      });
+      const start1 = await getCurrentBlock(arweave);
+      const writeInteraction2 = await contract.writeInteraction({
+        function: 'initiateFoundationAction',
+        type,
+        target: target2,
+        note: note2,
+      });
+      const start2 = await getCurrentBlock(arweave);
+      expect(writeInteraction1?.originalTxId).not.toBe(undefined);
+      expect(writeInteraction2?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(newState.foundation.actions[id1]).toEqual({
+        id: id1,
+        note: note1,
+        signed: [foundationMemberAddress],
+        start: start1,
+        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        target: target1,
+        type,
+      });
+      expect(newState.foundation.actions[id2]).toEqual({
+        id: id2,
+        note: note2,
+        signed: [foundationMemberAddress],
+        start: start2,
+        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        target: target2,
+        type,
+      });
+    });
+    it('should approve and complete foundation add address', async () => {
+      const id1 = 3;
+      const id2 = 4;
+      const target1 = newFoundationMemberAddress1;
+      const target2 = newFoundationMemberAddress2;
+      const writeInteraction1 = await contract.writeInteraction({
+        function: 'signFoundationAction',
+        id: id1,
+      });
+      const writeInteraction2 = await contract.writeInteraction({
+        function: 'signFoundationAction',
+        id: id2,
+      });
+      expect(writeInteraction1?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      console.log(newCachedValue.errorMessages);
+      expect(newState.foundation.actions[id1].status).toEqual(
+        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+      );
+      expect(newState.foundation.addresses).toContain(target1);
+      expect(newState.foundation.addresses).toContain(target2);
+    });
+    it('should initiate remove address', async () => {
+      const type = 'removeAddress';
+      const id = 5;
+      const target = newFoundationMemberAddress1;
+      const note = 'Removing member 2';
+      const writeInteraction = await contract.writeInteraction({
+        function: 'initiateFoundationAction',
+        type,
+        target,
+        note,
+      });
+      const start = await getCurrentBlock(arweave);
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(newState.foundation.actions[id]).toEqual({
+        id,
+        note,
+        signed: [foundationMemberAddress],
+        start: start,
+        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        target,
+        type,
+      });
+    });
+    it('should approve and complete foundation remove address', async () => {
+      const id = 5;
+      const target = newFoundationMemberAddress1;
+      const writeInteraction = await contract.writeInteraction({
+        function: 'signFoundationAction',
+        id: id,
+      });
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      console.log(newCachedValue.errorMessages);
+      expect(newState.foundation.actions[id].status).toEqual(
+        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+      );
+      expect(newState.foundation.addresses).not.toContain(target);
+    });
   });
 
   describe('non-valid foundation member', () => {
