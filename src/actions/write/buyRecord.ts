@@ -25,9 +25,9 @@ export const buyRecord = async (
     input: { name, contractTxId, years = 1, tierNumber = 1 },
   }: PstAction,
 ): Promise<ContractResult> => {
-  const balances = state.balances;
-  const records = state.records;
-  const reserved = state.reserved;
+  const balances = state.balances ?? {};
+  const records = state.records ?? {};
+  const reserved = state.reserved ?? {};
   const currentTiers =
     state.tiers?.current ??
     DEFAULT_TIERS.reduce(
@@ -104,24 +104,24 @@ export const buyRecord = async (
    * 1. name is reserved, regardless of length can be purchased only by target, unless expired
    * 2. name is not reserved, and less than allowed length.
    */
-  if (reserved[formattedName]) {
-    const { target, endTimestamp: reservedEndTimestamp } = reserved[formattedName];
-    if (!target || (target && target !== caller)) {
-      throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
-    }
+  // if (reserved[formattedName]) {
+  //   const { target, endTimestamp: reservedEndTimestamp } = reserved[formattedName];
+  //   if (!target || (target && target !== caller)) {
+  //     throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
+  //   }
 
-    if (
-      reservedEndTimestamp &&
-      +SmartWeave.block.timestamp < reservedEndTimestamp
-    ) {
-      throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
-    }
+  //   if (
+  //     reservedEndTimestamp &&
+  //     +SmartWeave.block.timestamp < reservedEndTimestamp
+  //   ) {
+  //     throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
+  //   }
 
-    // delete the name
-    delete reserved[formattedName];
-  } else if (name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
-    throw new ContractError(DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE);
-  }
+  //   // delete the name
+  //   delete reserved[formattedName];
+  // } else if (name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
+  //   throw new ContractError(DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE);
+  // }
 
   // calculate the total fee (initial registration + annual)
   const totalFee = calculateTotalRegistrationFee(
