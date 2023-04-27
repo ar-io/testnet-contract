@@ -83,30 +83,29 @@ export const buyRecord = async (
   const endTimestamp = currentBlockTime + SECONDS_IN_A_YEAR * years;
 
   // enforce lower case names
-  name = name.toLowerCase();
+  const formattedName = name.toLowerCase();
 
   // check if it is a valid subdomain name for the smartweave contract
   const namePattern = new RegExp('^[a-zA-Z0-9-]+$');
-  const nameRes = namePattern.test(name);
+  const nameRes = namePattern.test(formattedName);
   if (
-    name.charAt(0) === '-' || // the name has a leading dash
-    typeof name !== 'string' ||
-    name.length > MAX_NAME_LENGTH || // the name is too long
+    formattedName.charAt(0) === '-' || // the name has a leading dash
+    typeof formattedName !== 'string' ||
+    formattedName.length > MAX_NAME_LENGTH || // the name is too long
     !nameRes || // the name does not match our regular expression
-    name === '' // reserved
+    formattedName === '' // reserved
   ) {
     throw new ContractError(DEFAULT_INVALID_ARNS_NAME_MESSAGE);
   }
 
-  const reservedName = reserved[name];
   /**
    * Two scenarios:
    *
    * 1. name is reserved, regardless of length can be purchased only by target, unless expired
    * 2. name is not reserved, and less than allowed length.
    */
-  if (reservedName) {
-    const { target, endTimestamp: reservedEndTimestamp } = reservedName;
+  if (reserved[formattedName]) {
+    const { target, endTimestamp: reservedEndTimestamp } = reserved[formattedName];
     if (!target || (target && target !== caller)) {
       throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
     }
@@ -119,14 +118,14 @@ export const buyRecord = async (
     }
 
     // delete the name
-    delete reserved[name];
+    delete reserved[formattedName];
   } else if (name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
     throw new ContractError(DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE);
   }
 
   // calculate the total fee (initial registration + annual)
   const totalFee = calculateTotalRegistrationFee(
-    name,
+    formattedName,
     state,
     purchasedTier,
     years,
@@ -154,22 +153,22 @@ export const buyRecord = async (
 
   // Check if the requested name already exists, if not reduce balance and add it
   // TODO: foundation rewards logic
-  if (!records[name]) {
+  if (!records[formattedName]) {
     // No name created, so make a new one
     balances[caller] -= totalFee; // reduce callers balance
-    records[name] = {
+    records[formattedName] = {
       contractTxId,
       endTimestamp,
       tier: selectedTierID,
     };
     // assumes lease expiration
   } else if (
-    records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD <
+    records[formattedName].endTimestamp + SECONDS_IN_GRACE_PERIOD <
     currentBlockTime
   ) {
     // This name's lease has expired and can be repurchased
     balances[caller] -= totalFee; // reduce callers balance
-    records[name] = {
+    records[formattedName] = {
       contractTxId,
       endTimestamp,
       tier: selectedTierID,
