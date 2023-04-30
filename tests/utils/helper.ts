@@ -286,7 +286,6 @@ function createGateways(wallets: string[]) {
 
 function createFoundation(wallets: string[]) {
   const foundation: Foundation = {
-    balance: DEFAULT_FOUNDATION_STARTING_BALANCE,
     actionPeriod: DEFAULT_FOUNDATION_ACTION_PERIOD,
     minSignatures: 1,
     addresses: [wallets[7]],

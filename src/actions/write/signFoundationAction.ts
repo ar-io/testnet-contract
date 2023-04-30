@@ -39,10 +39,6 @@ export const signFoundationAction = async (
     action.status === FOUNDATION_ACTION_ACTIVE_STATUS &&
     action.signed.length < foundation.minSignatures
   ) {
-    if (type === 'transfer' || type === 'transferLocked') {
-      // return the qty back to the foundation
-      state.foundation.balance += state.foundation.actions[id].qty;
-    }
     state.foundation.actions[id].status = FOUNDATION_ACTION_FAILED_STATUS; // this vote has not completed within the action period
     return { state };
   }
@@ -55,42 +51,7 @@ export const signFoundationAction = async (
 
   // If there are enough signatures to complete the transaction, then it is executed
   if (state.foundation.actions[id].signed.length >= foundation.minSignatures) {
-    if (type === 'transfer') {
-      const target = state.foundation.actions[id].target;
-      const qty = state.foundation.actions[id].qty;
-      if (target in state.balances) {
-        state.balances[target] += qty;
-      } else {
-        state.balances[target] = qty;
-      }
-      state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
-    } else if (type === 'transferLocked') {
-      const target = state.foundation.actions[id].target;
-      const qty = state.foundation.actions[id].qty;
-      const lockLength = state.foundation.actions[id].lockLength;
-      const start = +SmartWeave.block.height;
-      let end = lockLength;
-      if (end !== 0) {
-        end = start + lockLength;
-      }
-      if (target in state.vaults) {
-        state.vaults[target].push({
-          balance: qty,
-          end,
-          start,
-        });
-      } else {
-        state.vaults[target] = [
-          {
-            balance: qty,
-            end,
-            start,
-          },
-        ];
-      }
-
-      state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
-    } else if (type === 'addAddress') {
+    if (type === 'addAddress') {
       if (foundation.addresses.includes(state.foundation.actions[id].target)) {
         throw new ContractError(
           'Target is already added as a Foundation address',
@@ -118,6 +79,10 @@ export const signFoundationAction = async (
     } else if (state.foundation.actions[id].type === 'setActionPeriod') {
       const value = state.foundation.actions[id].value;
       state.foundation.actionPeriod = +value;
+      state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
+    } else if (state.foundation.actions[id].type === 'setNameFees') {
+      const fees = state.foundation.actions[id].fees;
+      state.fees = fees;
       state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
     } else {
       throw new ContractError('Invalid vote type.');
