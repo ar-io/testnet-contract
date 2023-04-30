@@ -21,12 +21,9 @@ import { initiateFoundationAction } from './actions/write/initiateFoundationActi
 import { initiateLeave } from './actions/write/initiateLeave';
 import { initiateOperatorStakeDecrease } from './actions/write/initiateOperatorStakeDecrease';
 import { joinNetwork } from './actions/write/joinNetwork';
-import { mintTokens } from './actions/write/mintTokens';
 import { removeANTSourceCodeTx } from './actions/write/removeANTSourceCodeTx';
 import { removeRecord } from './actions/write/removeRecord';
 import { setActiveTier } from './actions/write/setActiveTier';
-import { setFees } from './actions/write/setFees';
-import { setName } from './actions/write/setName';
 import { signFoundationAction } from './actions/write/signFoundationAction';
 import { transferTokens } from './actions/write/transferTokens';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
@@ -50,10 +47,6 @@ export async function handle(
   switch (input.function as IOContractFunctions) {
     case 'transfer':
       return await transferTokens(state, action);
-    case 'mint':
-      return await mintTokens(state, action);
-    case 'setFees':
-      return await setFees(state, action);
     case 'buyRecord':
       return await buyRecord(state, action);
     case 'extendRecord':
@@ -66,8 +59,6 @@ export async function handle(
       return await evolve(state, action);
     case 'updateState':
       return await updateState(state, action);
-    case 'setName':
-      return await setName(state, action);
     case 'addANTSourceCodeTx':
       return await addANTSourceCodeTx(state, action);
     case 'removeANTSourceCodeTx':

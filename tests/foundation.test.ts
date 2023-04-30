@@ -23,6 +23,7 @@ describe('Foundation', () => {
   let foundationMember: JWKInterface;
   let foundationMemberAddress: string;
   let srcContractId: string;
+  let fees: { [x: string]: number };
 
   beforeAll(async () => {
     srcContractId = getLocalArNSContractId();
@@ -31,8 +32,8 @@ describe('Foundation', () => {
   describe('valid foundation member', () => {
     let newFoundationMember1: JWKInterface;
     let newFoundationMemberAddress1: string;
-    let newFoundationMember2: JWKInterface;
-    let newFoundationMemberAddress2: string;
+    let removedMember2: JWKInterface;
+    let removedMemberAddress: string;
 
     beforeAll(async () => {
       foundationMember = getLocalWallet(7);
@@ -43,14 +44,13 @@ describe('Foundation', () => {
       newFoundationMemberAddress1 = await arweave.wallets.getAddress(
         newFoundationMember1,
       );
-      newFoundationMember2 = getLocalWallet(9);
-      newFoundationMemberAddress2 = await arweave.wallets.getAddress(
-        newFoundationMember2,
-      );
+      removedMember2 = getLocalWallet(9);
+      removedMemberAddress = await arweave.wallets.getAddress(removedMember2);
       contract = warp.pst(srcContractId).connect(foundationMember);
+      fees = ((await contract.readState()).cachedValue.state as IOState).fees;
     });
 
-    it('should initiate foundation token transfer', async () => {
+    /*it('should initiate foundation token transfer', async () => {
       const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
       const type = 'transfer';
@@ -194,14 +194,14 @@ describe('Foundation', () => {
       expect(newState.foundation.actions[id2].status).toEqual(
         DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
       );
-    });
+    }); */
 
     it('should initiate add address', async () => {
       const type = 'addAddress';
-      const id1 = 3;
-      const id2 = 4;
+      const id1 = 0;
+      const id2 = 1;
       const target1 = newFoundationMemberAddress1;
-      const target2 = newFoundationMemberAddress2;
+      const target2 = removedMemberAddress;
       const note1 = 'Adding member 2';
       const note2 = 'Adding member 3';
       const writeInteraction1 = await contract.writeInteraction({
@@ -243,10 +243,10 @@ describe('Foundation', () => {
     });
 
     it('should approve and complete foundation add address', async () => {
-      const id1 = 3;
-      const id2 = 4;
+      const id1 = 0;
+      const id2 = 1;
       const target1 = newFoundationMemberAddress1;
-      const target2 = newFoundationMemberAddress2;
+      const target2 = removedMemberAddress;
       const writeInteraction1 = await contract.writeInteraction({
         function: 'signFoundationAction',
         id: id1,
@@ -268,8 +268,8 @@ describe('Foundation', () => {
 
     it('should initiate remove address', async () => {
       const type = 'removeAddress';
-      const id = 5;
-      const target = newFoundationMemberAddress2;
+      const id = 2;
+      const target = removedMemberAddress;
       const note = 'Removing member 2';
       const writeInteraction = await contract.writeInteraction({
         function: 'initiateFoundationAction',
@@ -293,8 +293,8 @@ describe('Foundation', () => {
     });
 
     it('should approve and complete foundation remove address', async () => {
-      const id = 5;
-      const target = newFoundationMemberAddress2;
+      const id = 2;
+      const target = removedMemberAddress;
       const writeInteraction = await contract.writeInteraction({
         function: 'signFoundationAction',
         id: id,
@@ -312,7 +312,7 @@ describe('Foundation', () => {
     it('should initiate set action period', async () => {
       contract = warp.pst(srcContractId).connect(newFoundationMember1);
       const type = 'setActionPeriod';
-      const id = 6;
+      const id = 3;
       const value = 2;
       const note = 'Changing action period';
       const writeInteraction = await contract.writeInteraction({
@@ -337,8 +337,8 @@ describe('Foundation', () => {
     });
 
     it('should approve and complete foundation set action period', async () => {
-      const id = 6;
-      const target = newFoundationMemberAddress2;
+      const id = 3;
+      const target = removedMemberAddress;
       const writeInteraction = await contract.writeInteraction({
         function: 'signFoundationAction',
         id: id,
@@ -355,7 +355,7 @@ describe('Foundation', () => {
     it('should initiate set min signatures', async () => {
       contract = warp.pst(srcContractId).connect(newFoundationMember1);
       const type = 'setMinSignatures';
-      const id = 7;
+      const id = 4;
       const value = 2;
       const note = 'Changing min signatures';
       const writeInteraction = await contract.writeInteraction({
@@ -379,8 +379,8 @@ describe('Foundation', () => {
       });
     });
 
-    it('should approve and complete foundation set action period', async () => {
-      const id = 7;
+    it('should approve and complete foundation set min signatures', async () => {
+      const id = 4;
       const writeInteraction = await contract.writeInteraction({
         function: 'signFoundationAction',
         id: id,
@@ -392,6 +392,108 @@ describe('Foundation', () => {
         DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
       );
       expect(newState.foundation.actionPeriod).toEqual(2);
+    });
+
+    it('should initiate set name fees', async () => {
+      contract = warp.pst(srcContractId).connect(foundationMember);
+      const type = 'setNameFees';
+      const id = 5;
+      const note = 'Modifying fees';
+      const writeInteraction = await contract.writeInteraction({
+        function: 'initiateFoundationAction',
+        type,
+        note,
+        fees: {
+          ...fees,
+          '32': 5,
+        },
+      });
+      const start = await getCurrentBlock(arweave);
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(newState.foundation.actions[id]).toEqual({
+        id,
+        note,
+        signed: [foundationMemberAddress],
+        start: start,
+        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        type,
+        fees: {
+          ...fees,
+          '32': 5,
+        },
+      });
+    });
+
+    it('should approve and complete set name fees', async () => {
+      contract = warp.pst(srcContractId).connect(newFoundationMember1);
+      const id = 5;
+      const writeInteraction = await contract.writeInteraction({
+        function: 'signFoundationAction',
+        id: id,
+      });
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(newState.foundation.actions[id].status).toEqual(
+        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+      );
+      expect(newState.fees).toEqual({
+        ...fees,
+        '32': 5,
+      });
+    });
+
+    it.each([
+      // TODO: other invalid fees
+      'not a number',
+      35.8,
+      0,
+    ])('should not be able to set invalid fee: %s', async (fee) => {
+      const type = 'setNameFees';
+      const note = 'Bad fees';
+      const writeInteraction = await contract.writeInteraction({
+        function: 'initiateFoundationAction',
+        type,
+        note,
+        fees: {
+          ...fees,
+          '32': fee,
+        },
+      });
+
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue } = await contract.readState();
+      expect(Object.keys(cachedValue.errorMessages)).toContain(
+        writeInteraction!.originalTxId,
+      );
+      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
+        expect.stringContaining('Invalid'),
+      );
+    });
+
+    it('should not be able to set an invalid number of fees', async () => {
+      const type = 'setNameFees';
+      const note = 'Bad fees';
+      const writeInteraction = await contract.writeInteraction({
+        function: 'initiateFoundationAction',
+        type,
+        note,
+        fees: {
+          ...fees,
+          '33': 5,
+        },
+      });
+
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue } = await contract.readState();
+      expect(Object.keys(cachedValue.errorMessages)).toContain(
+        writeInteraction!.originalTxId,
+      );
+      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
+        expect.stringContaining('Invalid'),
+      );
     });
   });
 

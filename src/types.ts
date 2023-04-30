@@ -103,7 +103,6 @@ export type ReservedName = {
 
 export type Foundation = {
   // The settings and wallets used by the AR.IO Foundation.  This is for testing purposes only
-  balance: number; // the amount of funds held by the foundation multi sig vault, collection from AR.IO services like ArNS
   actionPeriod: number; // the amount of blocks that must pass for all signers to approve a transfer
   minSignatures: number; // the minimum amount of signatures/approvals needed to move funds, must be less than the amount of total addresses
   addresses: string[]; // All of the foundation managed wallet addresses
@@ -117,10 +116,15 @@ export type FoundationAction = {
   start: number; // the block height that this action started at
   target?: string; // the target wallet used by this foundation action
   value?: string | number; // the value for setting a specific configuration
-  qty?: number; // the amount of tokens distributed from the foundation balance
+  fees?: {
+    // A list of all fees for purchasing ArNS names
+    [nameLength: string]: number;
+  };
+  newTier?: ServiceTier;
+  activeTierNumber?: number;
+  activeTierId?: string;
   note: string; // a description of this foundation action
   signed: string[]; // a list of the foundation wallets that have signed this action
-  lockLength?: number; // determines the amount of blocks a foundation balance distribution is locked for
 };
 
 const foundationActionStatus = [
@@ -131,12 +135,13 @@ const foundationActionStatus = [
 export type FoundationActionStatus = typeof foundationActionStatus[number];
 
 export type FoundationActionType =
-  | 'transfer'
-  | 'transferLocked'
   | 'setMinSignatures'
   | 'setActionPeriod'
   | 'addAddress'
-  | 'removeAddress';
+  | 'removeAddress'
+  | 'setNameFees'
+  | 'createNewTier'
+  | 'setActiveTier';
 
 export type TokenVault = {
   balance: number; // Positive integer, the amount locked
@@ -221,6 +226,10 @@ export type PstInput = {
   delegateAllowList: string[];
   version: string;
   status: string;
+  activeTierNumber: number;
+  activeTierId: string;
+  newTierFee: number;
+  newTierSettings: ServiceTierSettings;
 };
 
 export type PstResult = {
@@ -249,7 +258,6 @@ export type ServiceTierSettings = {
 export type PstFunctions = 'balance' | 'transfer' | 'evolve';
 
 export type PDNSFunctions =
-  | 'setFees'
   | 'buyRecord'
   | 'removeRecord'
   | 'extendRecord'
