@@ -145,7 +145,7 @@ export const initiateFoundationAction = async (
       throw new ContractError(DEFAULT_INVALID_TIER_MESSAGE);
     }
 
-    // the tier must exist in the history before it can be set as a current tier
+    // the tier must exist in the history before it can be set as an active tier
     const history = state.tiers.history;
     const existingTier = history.find((tier) => tier.id === activeTierId);
 
@@ -158,6 +158,10 @@ export const initiateFoundationAction = async (
       activeTierNumber,
       activeTierId,
     };
+  } else if (type === 'addReservedName') {
+    // TODO
+  } else if (type === 'removeReservedName') {
+    // TODO
   } else {
     throw new ContractError('Invalid action parameters.');
   }
