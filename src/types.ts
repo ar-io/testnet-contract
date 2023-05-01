@@ -141,7 +141,9 @@ export type FoundationActionType =
   | 'removeAddress'
   | 'setNameFees'
   | 'createNewTier'
-  | 'setActiveTier';
+  | 'setActiveTier'
+  | 'addReservedName'
+  | 'removeReservedName';
 
 export type TokenVault = {
   balance: number; // Positive integer, the amount locked

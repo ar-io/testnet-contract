@@ -84,6 +84,14 @@ export const signFoundationAction = async (
       const fees = state.foundation.actions[id].fees;
       state.fees = fees;
       state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
+    } else if (state.foundation.actions[id].type === 'createNewTier') {
+      // TODO
+    } else if (state.foundation.actions[id].type === 'setActiveTier') {
+      // TODO
+    } else if (type === 'addReservedName') {
+      // TODO
+    } else if (type === 'removeReservedName') {
+      // TODO
     } else {
       throw new ContractError('Invalid vote type.');
     }
