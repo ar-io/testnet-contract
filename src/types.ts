@@ -61,7 +61,7 @@ const gatewayStatus = [
   NETWORK_HIDDEN_STATUS,
   NETWORK_LEAVING_STATUS,
 ] as const;
-export type GatewayStatus = typeof gatewayStatus[number];
+export type GatewayStatus = (typeof gatewayStatus)[number];
 
 export type Gateway = {
   operatorStake: number; // the total stake of this gateway's operator.
@@ -132,7 +132,7 @@ const foundationActionStatus = [
   FOUNDATION_ACTION_PASSED_STATUS,
   FOUNDATION_ACTION_FAILED_STATUS,
 ] as const;
-export type FoundationActionStatus = typeof foundationActionStatus[number];
+export type FoundationActionStatus = (typeof foundationActionStatus)[number];
 
 export type FoundationActionType =
   | 'setMinSignatures'
@@ -141,9 +141,7 @@ export type FoundationActionType =
   | 'removeAddress'
   | 'setNameFees'
   | 'createNewTier'
-  | 'setActiveTier'
-  | 'addReservedName'
-  | 'removeReservedName';
+  | 'setActiveTier';
 
 export type TokenVault = {
   balance: number; // Positive integer, the amount locked
@@ -207,6 +205,8 @@ export type PstInput = {
     fee: number;
     settings: ServiceTierSettings;
   };
+  newTierFee: number;
+  newTierSettings: ServiceTierSettings;
   fee: number;
   years: number;
   qty: number;
@@ -230,8 +230,6 @@ export type PstInput = {
   status: string;
   activeTierNumber: number;
   activeTierId: string;
-  newTierFee: number;
-  newTierSettings: ServiceTierSettings;
 };
 
 export type PstResult = {

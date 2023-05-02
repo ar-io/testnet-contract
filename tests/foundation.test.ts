@@ -1,21 +1,15 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
-import { IOState } from '../src/types';
+import { IOState, ServiceTier } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import {
-  DEFAULT_CONTRACT_SETTINGS,
   DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
   DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
-  DEFAULT_WALLET_FUND_AMOUNT,
-  NETWORK_HIDDEN_STATUS,
-  NETWORK_JOIN_STATUS,
-  NETWORK_LEAVING_STATUS,
 } from './utils/constants';
 import {
   getCurrentBlock,
   getLocalArNSContractId,
   getLocalWallet,
-  mineBlocks,
 } from './utils/helper';
 
 describe('Foundation', () => {
@@ -49,152 +43,6 @@ describe('Foundation', () => {
       contract = warp.pst(srcContractId).connect(foundationMember);
       fees = ((await contract.readState()).cachedValue.state as IOState).fees;
     });
-
-    /*it('should initiate foundation token transfer', async () => {
-      const { cachedValue: prevCachedValue } = await contract.readState();
-      const prevState = prevCachedValue.state as IOState;
-      const type = 'transfer';
-      const qty = 200;
-      const target = newFoundationMemberAddress1;
-      const note = 'Testing transfer';
-      const prevFoundationBalance = prevState.foundation.balance;
-      const writeInteraction = await contract.writeInteraction({
-        function: 'initiateFoundationAction',
-        type,
-        target,
-        qty,
-        note,
-      });
-      expect(writeInteraction?.originalTxId).not.toBe(undefined);
-      const { cachedValue: newCachedValue } = await contract.readState();
-      const newState = newCachedValue.state as IOState;
-      expect(newState.foundation.balance).toEqual(prevFoundationBalance - qty);
-      expect(newState.foundation.actions[0]).toEqual({
-        id: 0,
-        note,
-        qty,
-        signed: [foundationMemberAddress],
-        start: 2,
-        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
-        target,
-        type,
-      });
-    });
-
-    it('should approve and complete foundation token transfer', async () => {
-      const { cachedValue: prevCachedValue } = await contract.readState();
-      const prevState = prevCachedValue.state as IOState;
-      const id = 0;
-      const target = newFoundationMemberAddress1;
-      const prevNewMemberBalance = prevState.balances[target] || 0;
-      const writeInteraction = await contract.writeInteraction({
-        function: 'signFoundationAction',
-        id,
-      });
-      expect(writeInteraction?.originalTxId).not.toBe(undefined);
-      const { cachedValue: newCachedValue } = await contract.readState();
-      //console.log(newCachedValue.errorMessages);
-      const newState = newCachedValue.state as IOState;
-      expect(newState.balances[target]).toEqual(
-        prevNewMemberBalance + (newState.foundation.actions[id].qty || 0),
-      );
-      expect(newState.foundation.actions[0].status).toEqual(
-        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
-      );
-    });
-
-    it('should initiate foundation token transfer locked', async () => {
-      const { cachedValue: prevCachedValue } = await contract.readState();
-      const prevState = prevCachedValue.state as IOState;
-      const type = 'transferLocked';
-      const qty = 300;
-      const lockLength = 10;
-      const target = newFoundationMemberAddress1;
-      const note = 'Testing transfer locked';
-      const prevFoundationBalance = prevState.foundation.balance;
-      const writeInteraction = await contract.writeInteraction({
-        function: 'initiateFoundationAction',
-        type,
-        target,
-        qty,
-        note,
-      });
-      const start1 = await getCurrentBlock(arweave);
-      const writeInteraction2 = await contract.writeInteraction({
-        function: 'initiateFoundationAction',
-        type,
-        target,
-        qty,
-        lockLength,
-        note,
-      });
-      const start2 = await getCurrentBlock(arweave);
-      expect(writeInteraction?.originalTxId).not.toBe(undefined);
-      expect(writeInteraction2?.originalTxId).not.toBe(undefined);
-      const { cachedValue: newCachedValue } = await contract.readState();
-      const newState = newCachedValue.state as IOState;
-      expect(newState.foundation.balance).toEqual(
-        prevFoundationBalance - qty * 2,
-      );
-      expect(newState.foundation.actions[1]).toEqual({
-        id: 1,
-        note,
-        qty,
-        signed: [foundationMemberAddress],
-        start: start1,
-        lockLength: 0, // since we did not specify a lock length, it should be set to 0,
-        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
-        target,
-        type,
-      });
-      expect(newState.foundation.actions[2]).toEqual({
-        id: 2,
-        note,
-        qty,
-        signed: [foundationMemberAddress],
-        start: start2,
-        lockLength,
-        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
-        target,
-        type,
-      });
-    });
-
-    it('should approve and complete foundation token transfer locked', async () => {
-      const id1 = 1;
-      const id2 = 2;
-      const target = newFoundationMemberAddress1;
-      const writeInteraction1 = await contract.writeInteraction({
-        function: 'signFoundationAction',
-        id: id1,
-      });
-      const start1 = await getCurrentBlock(arweave);
-      const writeInteraction2 = await contract.writeInteraction({
-        function: 'signFoundationAction',
-        id: id2,
-      });
-      const start2 = await getCurrentBlock(arweave);
-      expect(writeInteraction1?.originalTxId).not.toBe(undefined);
-      expect(writeInteraction2?.originalTxId).not.toBe(undefined);
-      const { cachedValue: newCachedValue } = await contract.readState();
-      const newState = newCachedValue.state as IOState;
-      expect(newState.vaults[target][0]).toEqual({
-        balance: newState.foundation.actions[id1].qty,
-        end: 0,
-        start: start1,
-      });
-      expect(newState.vaults[target][1]).toEqual({
-        balance: newState.foundation.actions[id1].qty,
-        end: start2 + (newState.foundation.actions[id2].lockLength || 0),
-        start: start2,
-      });
-      expect(newState.foundation.actions[id1].status).toEqual(
-        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
-      );
-      expect(newState.foundation.actions[id2].status).toEqual(
-        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
-      );
-    }); */
 
     it('should initiate add address', async () => {
       const type = 'addAddress';
@@ -302,7 +150,6 @@ describe('Foundation', () => {
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
       const newState = newCachedValue.state as IOState;
-      console.log(newCachedValue.errorMessages);
       expect(newState.foundation.actions[id].status).toEqual(
         DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
       );
@@ -495,6 +342,40 @@ describe('Foundation', () => {
         expect.stringContaining('Invalid'),
       );
     });
+
+    it('should initiate createNewTier', async () => {
+      contract = warp.pst(srcContractId).connect(foundationMember);
+      const type = 'createNewTier';
+      const id = 6;
+      const note = 'Creating new tier';
+      const newTier: ServiceTier = {
+        fee: 100,
+        settings: {
+          maxUndernames: 100,
+        },
+      };
+      const writeInteraction = await contract.writeInteraction({
+        function: 'initiateFoundationAction',
+        type,
+        note,
+        newTierFee: newTier.fee,
+        newTierSettings: newTier.settings,
+      });
+      const start = await getCurrentBlock(arweave);
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+
+      expect(newState.foundation.actions[id]).toEqual({
+        id,
+        note,
+        signed: [foundationMemberAddress],
+        start: start,
+        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        type,
+        newTier: expect.any(Object),
+      });
+    });
   });
 
   describe('non-valid foundation member', () => {
@@ -522,6 +403,6 @@ describe('Foundation', () => {
       });
     });
 
-    describe('write interactions', () => {});
+    //describe('write interactions', () => {});
   });
 });
