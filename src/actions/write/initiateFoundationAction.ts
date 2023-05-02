@@ -158,10 +158,6 @@ export const initiateFoundationAction = async (
       activeTierNumber,
       activeTierId,
     };
-  } else if (type === 'addReservedName') {
-    // TODO
-  } else if (type === 'removeReservedName') {
-    // TODO
   } else {
     throw new ContractError('Invalid action parameters.');
   }
@@ -177,5 +173,8 @@ export const initiateFoundationAction = async (
   };
 
   state.foundation.actions.push(foundationAction);
+
+  // TO DO
+  // If this user is the one and only signer, this action should be completed
   return { state };
 };

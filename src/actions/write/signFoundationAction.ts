@@ -85,13 +85,14 @@ export const signFoundationAction = async (
       state.fees = fees;
       state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
     } else if (state.foundation.actions[id].type === 'createNewTier') {
-      // TODO
+      const newTier = state.foundation.actions[id].newTier;
+      state.tiers.history.push(newTier);
+      state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
     } else if (state.foundation.actions[id].type === 'setActiveTier') {
-      // TODO
-    } else if (type === 'addReservedName') {
-      // TODO
-    } else if (type === 'removeReservedName') {
-      // TODO
+      const activeTierNumber = state.foundation.actions[id].activeTierNumber;
+      const activeTierId = state.foundation.actions[id].activeTierId;
+      state.tiers.current[activeTierNumber] = activeTierId;
+      state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
     } else {
       throw new ContractError('Invalid vote type.');
     }
