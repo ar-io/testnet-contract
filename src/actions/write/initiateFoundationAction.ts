@@ -27,7 +27,6 @@ export const initiateFoundationAction = async (
   { caller, input: { type, note, value } }: PstAction,
 ): Promise<ContractResult> => {
   const foundation = state.foundation;
-  let foundationAction: FoundationAction;
 
   // The caller must be in the foundation, or else this action cannot be initiated
   if (!foundation.addresses.includes(caller)) {
@@ -90,7 +89,7 @@ export const initiateFoundationAction = async (
       }
     }
   } else if (type === 'createNewTier') {
-    let newTier = value as ServiceTier;
+    const newTier = value as ServiceTier;
     if (!Number.isInteger(newTier.fee)) {
       throw new ContractError('Fee must be a valid number.');
     }
@@ -98,7 +97,7 @@ export const initiateFoundationAction = async (
     newTier.id = SmartWeave.transaction.id;
     value = newTier;
   } else if (type === 'setActiveTier') {
-    let activeTier = value as ActiveTier;
+    const activeTier = value as ActiveTier;
     if (
       !Number.isInteger(activeTier.tierNumber) ||
       !ALLOWED_ACTIVE_TIERS.includes(activeTier.tierNumber)
@@ -116,8 +115,7 @@ export const initiateFoundationAction = async (
     throw new ContractError('Invalid action parameters.');
   }
 
-  foundationAction = {
-    ...foundationAction,
+  const foundationAction: FoundationAction = {
     id: foundation.actions.length,
     status: FOUNDATION_ACTION_ACTIVE_STATUS,
     type,
