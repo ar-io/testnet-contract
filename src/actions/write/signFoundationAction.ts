@@ -3,7 +3,7 @@ import {
   FOUNDATION_ACTION_FAILED_STATUS,
   FOUNDATION_ACTION_PASSED_STATUS,
 } from '../../constants';
-import { ContractResult, IOState, PstAction } from '../../types';
+import { ContractResult, IOState, PstAction, ServiceTier } from '../../types';
 
 declare const ContractError;
 declare const SmartWeave: any;
@@ -52,24 +52,24 @@ export const signFoundationAction = async (
   // If there are enough signatures to complete the transaction, then it is executed
   if (state.foundation.actions[id].signed.length >= foundation.minSignatures) {
     if (type === 'addAddress') {
-      if (foundation.addresses.includes(state.foundation.actions[id].target)) {
+      const addressToAdd = state.foundation.actions[id].value.toString();
+      if (foundation.addresses.includes(addressToAdd)) {
         throw new ContractError(
           'Target is already added as a Foundation address',
         );
       }
       // Add the new address
-      state.foundation.addresses.push(state.foundation.actions[id].target);
+      state.foundation.addresses.push(addressToAdd);
       state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
     } else if (type === 'removeAddress') {
-      if (!foundation.addresses.includes(state.foundation.actions[id].target)) {
+      const addressToRemove = state.foundation.actions[id].value.toString();
+      if (!foundation.addresses.includes(addressToRemove)) {
         throw new ContractError(
           'Target is not in the list of Foundation addresses',
         );
       }
       // Find the index of the existing foundation address and remove it
-      const index = foundation.addresses.indexOf(
-        state.foundation.actions[id].target,
-      );
+      const index = foundation.addresses.indexOf(addressToRemove);
       state.foundation.addresses.splice(index, 1);
       state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
     } else if (type === 'setMinSignatures') {
@@ -81,11 +81,13 @@ export const signFoundationAction = async (
       state.foundation.actionPeriod = +value;
       state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
     } else if (state.foundation.actions[id].type === 'setNameFees') {
-      const fees = state.foundation.actions[id].fees;
+      const fees = state.foundation.actions[id].value as {
+        [nameLength: string]: number;
+      };
       state.fees = fees;
       state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
     } else if (state.foundation.actions[id].type === 'createNewTier') {
-      const newTier = state.foundation.actions[id].newTier;
+      const newTier = state.foundation.actions[id].value as ServiceTier;
       state.tiers.history.push(newTier);
       state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
     } else if (state.foundation.actions[id].type === 'setActiveTier') {

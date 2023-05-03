@@ -61,7 +61,7 @@ const gatewayStatus = [
   NETWORK_HIDDEN_STATUS,
   NETWORK_LEAVING_STATUS,
 ] as const;
-export type GatewayStatus = (typeof gatewayStatus)[number];
+export type GatewayStatus = typeof gatewayStatus[number];
 
 export type Gateway = {
   operatorStake: number; // the total stake of this gateway's operator.
@@ -114,12 +114,13 @@ export type FoundationAction = {
   type: FoundationActionType; // the specific kind of action being performed
   status: FoundationActionStatus; // the latest status of this action
   start: number; // the block height that this action started at
-  target?: string; // the target wallet used by this foundation action
-  value?: string | number; // the value for setting a specific configuration
-  fees?: {
-    // A list of all fees for purchasing ArNS names
-    [nameLength: string]: number;
-  };
+  value?: // the value for setting a specific configuration
+  | string
+    | number
+    | {
+        [nameLength: string]: number;
+      }
+    | ServiceTier;
   newTier?: ServiceTier;
   activeTierNumber?: number;
   activeTierId?: string;
@@ -132,7 +133,7 @@ const foundationActionStatus = [
   FOUNDATION_ACTION_PASSED_STATUS,
   FOUNDATION_ACTION_FAILED_STATUS,
 ] as const;
-export type FoundationActionStatus = (typeof foundationActionStatus)[number];
+export type FoundationActionStatus = typeof foundationActionStatus[number];
 
 export type FoundationActionType =
   | 'setMinSignatures'
@@ -198,7 +199,13 @@ export type PstInput = {
   type: FoundationActionType;
   function: IOContractFunctions;
   target: string;
-  value: string | number;
+  value:
+    | string
+    | number
+    | {
+        [nameLength: string]: number;
+      }
+    | ServiceTier;
   name: string;
   contractTxId: string;
   newTier: {
