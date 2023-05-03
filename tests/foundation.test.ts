@@ -20,7 +20,7 @@ describe('Foundation', () => {
   let foundationMemberAddress: string;
   let srcContractId: string;
   let fees: { [x: string]: number };
-  let newTier: ServiceTier = {
+  const newTier: ServiceTier = {
     fee: 100,
     settings: {
       maxUndernames: 100,
