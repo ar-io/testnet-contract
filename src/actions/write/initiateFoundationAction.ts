@@ -93,7 +93,11 @@ export const initiateFoundationAction = async (
     if (!Number.isInteger(newTier.fee)) {
       throw new ContractError('Fee must be a valid number.');
     }
-    // TODO: additional validation on tier settings
+
+    if (!Number.isInteger(newTier.settings.maxUndernames)) {
+      throw new ContractError('Max undernames must be a valid number.');
+    }
+
     newTier.id = SmartWeave.transaction.id;
     value = newTier;
   } else if (type === 'setActiveTier') {
