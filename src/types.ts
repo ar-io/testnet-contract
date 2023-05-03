@@ -120,6 +120,7 @@ export type FoundationAction = {
     | {
         [nameLength: string]: number;
       }
+    | ActiveTier
     | ServiceTier;
   newTier?: ServiceTier;
   activeTierNumber?: number;
@@ -205,6 +206,7 @@ export type PstInput = {
     | {
         [nameLength: string]: number;
       }
+    | ActiveTier
     | ServiceTier;
   name: string;
   contractTxId: string;
@@ -256,6 +258,8 @@ export type ServiceTier = {
   fee: number;
   settings: ServiceTierSettings;
 };
+
+export type ActiveTier = { tierNumber: number; tierId: string };
 
 // any tier settings offered
 export type ServiceTierSettings = {
