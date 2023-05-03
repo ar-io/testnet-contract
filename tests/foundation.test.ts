@@ -55,14 +55,14 @@ describe('Foundation', () => {
       const writeInteraction1 = await contract.writeInteraction({
         function: 'initiateFoundationAction',
         type,
-        target: target1,
+        value: target1,
         note: note1,
       });
       const start1 = await getCurrentBlock(arweave);
       const writeInteraction2 = await contract.writeInteraction({
         function: 'initiateFoundationAction',
         type,
-        target: target2,
+        value: target2,
         note: note2,
       });
       const start2 = await getCurrentBlock(arweave);
@@ -76,7 +76,7 @@ describe('Foundation', () => {
         signed: [foundationMemberAddress],
         start: start1,
         status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
-        target: target1,
+        value: target1,
         type,
       });
       expect(newState.foundation.actions[id2]).toEqual({
@@ -85,7 +85,7 @@ describe('Foundation', () => {
         signed: [foundationMemberAddress],
         start: start2,
         status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
-        target: target2,
+        value: target2,
         type,
       });
     });
@@ -117,12 +117,12 @@ describe('Foundation', () => {
     it('should initiate remove address', async () => {
       const type = 'removeAddress';
       const id = 2;
-      const target = removedMemberAddress;
+      const value = removedMemberAddress;
       const note = 'Removing member 2';
       const writeInteraction = await contract.writeInteraction({
         function: 'initiateFoundationAction',
         type,
-        target,
+        value,
         note,
       });
       const start = await getCurrentBlock(arweave);
@@ -135,7 +135,7 @@ describe('Foundation', () => {
         signed: [foundationMemberAddress],
         start: start,
         status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
-        target,
+        value,
         type,
       });
     });
@@ -250,7 +250,7 @@ describe('Foundation', () => {
         function: 'initiateFoundationAction',
         type,
         note,
-        fees: {
+        value: {
           ...fees,
           '32': 5,
         },
@@ -266,7 +266,7 @@ describe('Foundation', () => {
         start: start,
         status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
         type,
-        fees: {
+        value: {
           ...fees,
           '32': 5,
         },
@@ -304,7 +304,7 @@ describe('Foundation', () => {
         function: 'initiateFoundationAction',
         type,
         note,
-        fees: {
+        value: {
           ...fees,
           '32': fee,
         },
@@ -327,7 +327,7 @@ describe('Foundation', () => {
         function: 'initiateFoundationAction',
         type,
         note,
-        fees: {
+        value: {
           ...fees,
           '33': 5,
         },
@@ -348,7 +348,7 @@ describe('Foundation', () => {
       const type = 'createNewTier';
       const id = 6;
       const note = 'Creating new tier';
-      const newTier: ServiceTier = {
+      const value: ServiceTier = {
         fee: 100,
         settings: {
           maxUndernames: 100,
@@ -358,14 +358,14 @@ describe('Foundation', () => {
         function: 'initiateFoundationAction',
         type,
         note,
-        newTierFee: newTier.fee,
-        newTierSettings: newTier.settings,
+        value,
       });
       const start = await getCurrentBlock(arweave);
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
-      const { cachedValue: newCachedValue } = await contract.readState();
-      const newState = newCachedValue.state as IOState;
 
+      const { cachedValue: newCachedValue } = await contract.readState();
+      console.log(newCachedValue.errorMessages);
+      const newState = newCachedValue.state as IOState;
       expect(newState.foundation.actions[id]).toEqual({
         id,
         note,
@@ -373,7 +373,7 @@ describe('Foundation', () => {
         start: start,
         status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
         type,
-        newTier: expect.any(Object),
+        value: expect.any(Object),
       });
     });
   });

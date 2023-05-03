@@ -13,6 +13,7 @@ import {
   IOState,
   PstAction,
   ServiceTier,
+  ServiceTierSettings,
 } from '../../types';
 import { isValidArweaveBase64URL } from '../../utilities';
 
@@ -28,8 +29,6 @@ export const initiateFoundationAction = async (
       type,
       note,
       value,
-      target,
-      fees,
       activeTierNumber,
       activeTierId,
       newTierFee,
@@ -51,33 +50,30 @@ export const initiateFoundationAction = async (
     throw new ContractError('Note format not recognized.');
   }
 
-  if (target) {
-    if (!isValidArweaveBase64URL(target)) {
+  if (type === 'addAddress' && typeof value === 'string') {
+    if (!isValidArweaveBase64URL(value)) {
       throw new ContractError(
         'The target of this action is an invalid Arweave address?"',
       );
     }
-  }
-
-  if (type === 'addAddress') {
-    if (foundation.addresses.includes(target)) {
+    if (foundation.addresses.includes(value)) {
       throw new ContractError(
         'Target is already added as a Foundation address',
       );
     }
     foundationAction = {
       ...foundationAction,
-      target: target,
+      value,
     };
-  } else if (type === 'removeAddress') {
-    if (!foundation.addresses.includes(target)) {
+  } else if (type === 'removeAddress' && typeof value === 'string') {
+    if (!foundation.addresses.includes(value)) {
       throw new ContractError(
         'Target is not in the list of Foundation addresses',
       );
     }
     foundationAction = {
       ...foundationAction,
-      target: target,
+      value,
     };
   } else if (type === 'setMinSignatures' && typeof value === 'number') {
     if (
@@ -109,11 +105,11 @@ export const initiateFoundationAction = async (
     };
   } else if (
     type === 'setNameFees' &&
-    Object.keys(fees).length === MAX_NAME_LENGTH
+    Object.keys(value).length === MAX_NAME_LENGTH
   ) {
     // check validity of fee object
     for (let i = 1; i <= MAX_NAME_LENGTH; i++) {
-      if (!Number.isInteger(fees[i.toString()]) || fees[i.toString()] <= 0) {
+      if (!Number.isInteger(value[i.toString()]) || value[i.toString()] <= 0) {
         throw new ContractError(
           `Invalid value for fee ${i}. Must be an integer greater than 0`,
         );
@@ -121,21 +117,18 @@ export const initiateFoundationAction = async (
     }
     foundationAction = {
       ...foundationAction,
-      fees: fees,
+      value,
     };
   } else if (type === 'createNewTier') {
-    if (!Number.isInteger(newTierFee)) {
+    let newTier = value as ServiceTier;
+    if (!Number.isInteger(newTier.fee)) {
       throw new ContractError('Fee must be a valid number.');
     }
     // TODO: additional validation on tier settings
-    const newTier: ServiceTier = {
-      id: SmartWeave.transaction.id,
-      fee: newTierFee,
-      settings: newTierSettings,
-    };
+    newTier.id = SmartWeave.transaction.id;
     foundationAction = {
       ...foundationAction,
-      newTier,
+      value: newTier,
     };
   } else if (type === 'setActiveTier') {
     if (
