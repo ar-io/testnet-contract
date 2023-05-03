@@ -15,16 +15,11 @@ import { getCurrentBlockHeight } from './utilities';
     'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // ~~ Initialize `LoggerFactory` ~~
-  LoggerFactory.INST.logLevel('error');
+  LoggerFactory.INST.logLevel('fatal');
+
 
   // ~~ Initialize SmartWeave ~~
-  const warp = WarpFactory.forMainnet(
-    {
-      ...defaultCacheOptions,
-      inMemory: true,
-    },
-    true,
-  );
+  const warp = WarpFactory.forMainnet();
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
@@ -32,18 +27,7 @@ import { getCurrentBlockHeight } from './utilities';
   );
 
   // Read the ArNS Registry Contract
-  const pst = warp.pst(arnsRegistryContractTxId);
+  const pst = warp.pst(`bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U`);
   pst.connect(wallet);
-  const currentState = await pst.currentState();
-  const currentStateString = JSON.stringify(currentState, null, 5);
-  const currentStateJSON = JSON.parse(currentStateString);
-  console.log(currentStateJSON);
-
-  const block = await getCurrentBlockHeight();
-  const fileName = 'ArNS_State_' + block.toString() + '.json';
-  fs.writeFileSync(fileName, currentStateString);
-  console.log(
-    'Finished getting the ArNS state for the registry: %s',
-    arnsRegistryContractTxId,
-  );
+  console.log(`balance`, await pst.currentBalance('QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'))
 })();
