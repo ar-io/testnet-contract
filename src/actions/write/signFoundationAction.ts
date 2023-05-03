@@ -3,7 +3,13 @@ import {
   FOUNDATION_ACTION_FAILED_STATUS,
   FOUNDATION_ACTION_PASSED_STATUS,
 } from '../../constants';
-import { ContractResult, IOState, PstAction, ServiceTier } from '../../types';
+import {
+  ActiveTier,
+  ContractResult,
+  IOState,
+  PstAction,
+  ServiceTier,
+} from '../../types';
 
 declare const ContractError;
 declare const SmartWeave: any;
@@ -28,7 +34,7 @@ export const signFoundationAction = async (
 
   const action = foundation.actions[id];
   const type = state.foundation.actions[id].type;
-  // If this vote is not active, then do nothing
+  // If this vote is not active, then exit
   if (action.status !== FOUNDATION_ACTION_ACTIVE_STATUS) {
     throw new ContractError('This action is not active.');
   }
@@ -43,9 +49,8 @@ export const signFoundationAction = async (
     return { state };
   }
 
-  // the caller must not have already signed this transaction
+  // If this caller has not signed this action yet, then it is signed
   if (!action.signed.includes(caller)) {
-    // This is a valid active action, so increase signatures
     state.foundation.actions[id].signed.push(caller);
   }
 
@@ -60,7 +65,6 @@ export const signFoundationAction = async (
       }
       // Add the new address
       state.foundation.addresses.push(addressToAdd);
-      state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
     } else if (type === 'removeAddress') {
       const addressToRemove = state.foundation.actions[id].value.toString();
       if (!foundation.addresses.includes(addressToRemove)) {
@@ -71,36 +75,28 @@ export const signFoundationAction = async (
       // Find the index of the existing foundation address and remove it
       const index = foundation.addresses.indexOf(addressToRemove);
       state.foundation.addresses.splice(index, 1);
-      state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
     } else if (type === 'setMinSignatures') {
-      const value = +state.foundation.actions[id].value;
-      state.foundation.minSignatures = value;
-      state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
+      state.foundation.minSignatures = +state.foundation.actions[id].value;
     } else if (state.foundation.actions[id].type === 'setActionPeriod') {
-      const value = state.foundation.actions[id].value;
-      state.foundation.actionPeriod = +value;
-      state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
+      state.foundation.actionPeriod = +state.foundation.actions[id].value;
     } else if (state.foundation.actions[id].type === 'setNameFees') {
-      const fees = state.foundation.actions[id].value as {
+      state.fees = state.foundation.actions[id].value as {
         [nameLength: string]: number;
       };
-      state.fees = fees;
-      state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
     } else if (state.foundation.actions[id].type === 'createNewTier') {
-      const newTier = state.foundation.actions[id].value as ServiceTier;
-      state.tiers.history.push(newTier);
-      state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
+      state.tiers.history.push(
+        state.foundation.actions[id].value as ServiceTier,
+      );
     } else if (state.foundation.actions[id].type === 'setActiveTier') {
-      const activeTierNumber = state.foundation.actions[id].activeTierNumber;
-      const activeTierId = state.foundation.actions[id].activeTierId;
-      state.tiers.current[activeTierNumber] = activeTierId;
-      state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
+      const activeTier = state.foundation.actions[id].value as ActiveTier;
+      state.tiers.current[activeTier.tierNumber] = activeTier.tierId;
     } else {
       throw new ContractError('Invalid vote type.');
     }
+    state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
   } else {
     throw new ContractError(
-      'Caller has already approved this action and it is not ready to be finalized yet.',
+      'Caller has already approved this action but it still requires more signatures.',
     );
   }
   return { state };

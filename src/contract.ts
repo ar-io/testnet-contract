@@ -11,7 +11,6 @@ import { getRecord } from './actions/read/record';
 import { getActiveTiers, getTier } from './actions/read/tiers';
 import { addANTSourceCodeTx } from './actions/write/addANTSourceCodeTx';
 import { buyRecord } from './actions/write/buyRecord';
-import { createNewTier } from './actions/write/createNewTier.js';
 import { evolve } from './actions/write/evolve';
 import { extendRecord } from './actions/write/extendRecord.js';
 import { finalizeLeave } from './actions/write/finalizeLeave';
@@ -23,7 +22,6 @@ import { initiateOperatorStakeDecrease } from './actions/write/initiateOperatorS
 import { joinNetwork } from './actions/write/joinNetwork';
 import { removeANTSourceCodeTx } from './actions/write/removeANTSourceCodeTx';
 import { removeRecord } from './actions/write/removeRecord';
-import { setActiveTier } from './actions/write/setActiveTier';
 import { signFoundationAction } from './actions/write/signFoundationAction';
 import { transferTokens } from './actions/write/transferTokens';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
@@ -53,8 +51,6 @@ export async function handle(
       return await extendRecord(state, action);
     case 'removeRecord':
       return await removeRecord(state, action);
-    case 'setActiveTier':
-      return await setActiveTier(state, action);
     case 'evolve':
       return await evolve(state, action);
     case 'updateState':
@@ -81,8 +77,6 @@ export async function handle(
       return await getRankedGatewayRegistry(state);
     case 'upgradeTier':
       return await upgradeTier(state, action);
-    case 'createNewTier':
-      return await createNewTier(state, action);
     case 'joinNetwork':
       return await joinNetwork(state, action);
     case 'initiateLeave':
