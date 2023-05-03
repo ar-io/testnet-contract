@@ -8,6 +8,7 @@ import {
   MAX_NOTE_LENGTH,
 } from '../../constants';
 import {
+  ActiveTier,
   ContractResult,
   FoundationAction,
   IOState,
@@ -131,16 +132,17 @@ export const initiateFoundationAction = async (
       value: newTier,
     };
   } else if (type === 'setActiveTier') {
+    let activeTier = value as ActiveTier;
     if (
-      !Number.isInteger(activeTierNumber) ||
-      !ALLOWED_ACTIVE_TIERS.includes(activeTierNumber)
+      !Number.isInteger(activeTier.tierNumber) ||
+      !ALLOWED_ACTIVE_TIERS.includes(activeTier.tierNumber)
     ) {
       throw new ContractError(DEFAULT_INVALID_TIER_MESSAGE);
     }
 
     // the tier must exist in the history before it can be set as an active tier
     const history = state.tiers.history;
-    const existingTier = history.find((tier) => tier.id === activeTierId);
+    const existingTier = history.find((tier) => tier.id === activeTier.tierId);
 
     if (!existingTier) {
       throw new ContractError(DEFAULT_INVALID_ID_TIER_MESSAGE);
@@ -148,8 +150,7 @@ export const initiateFoundationAction = async (
 
     foundationAction = {
       ...foundationAction,
-      activeTierNumber,
-      activeTierId,
+      value: activeTier,
     };
   } else {
     throw new ContractError('Invalid action parameters.');
@@ -167,7 +168,8 @@ export const initiateFoundationAction = async (
 
   state.foundation.actions.push(foundationAction);
 
-  // TO DO
   // If this user is the one and only signer, this action should be completed
+  if (state.foundation.minSignatures === 1) {
+  }
   return { state };
 };

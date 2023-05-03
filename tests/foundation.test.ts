@@ -1,6 +1,7 @@
+import { Service } from 'ts-node';
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
-import { IOState, ServiceTier } from '../src/types';
+import { ActiveTier, IOState, ServiceTier } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import {
   DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
@@ -18,6 +19,12 @@ describe('Foundation', () => {
   let foundationMemberAddress: string;
   let srcContractId: string;
   let fees: { [x: string]: number };
+  let newTier: ServiceTier = {
+    fee: 100,
+    settings: {
+      maxUndernames: 100,
+    },
+  };
 
   beforeAll(async () => {
     srcContractId = getLocalArNSContractId();
@@ -28,6 +35,7 @@ describe('Foundation', () => {
     let newFoundationMemberAddress1: string;
     let removedMember2: JWKInterface;
     let removedMemberAddress: string;
+    let newTierId: string;
 
     beforeAll(async () => {
       foundationMember = getLocalWallet(7);
@@ -343,16 +351,63 @@ describe('Foundation', () => {
       );
     });
 
-    it('should initiate createNewTier', async () => {
+    it('should initiate create new tier', async () => {
       contract = warp.pst(srcContractId).connect(foundationMember);
       const type = 'createNewTier';
       const id = 6;
       const note = 'Creating new tier';
-      const value: ServiceTier = {
-        fee: 100,
-        settings: {
-          maxUndernames: 100,
-        },
+      const writeInteraction = await contract.writeInteraction({
+        function: 'initiateFoundationAction',
+        type,
+        note,
+        value: newTier,
+      });
+      const start = await getCurrentBlock(arweave);
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(newState.foundation.actions[id]).toEqual({
+        id,
+        note,
+        signed: [foundationMemberAddress],
+        start: start,
+        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        type,
+        value: expect.any(Object),
+      });
+      newTierId = writeInteraction!.originalTxId;
+    });
+
+    it('should approve and complete create new tier', async () => {
+      contract = warp.pst(srcContractId).connect(newFoundationMember1);
+      const id = 6;
+      const writeInteraction = await contract.writeInteraction({
+        function: 'signFoundationAction',
+        id: id,
+      });
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(newState.foundation.actions[id].status).toEqual(
+        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+      );
+      console.log(newState.tiers);
+      expect(newState.tiers.history[3]).toEqual({
+        id: newTierId,
+        ...newTier,
+      });
+    });
+
+    it('should initiate set active tier', async () => {
+      contract = warp.pst(srcContractId).connect(foundationMember);
+      const type = 'setActiveTier';
+      const id = 7;
+      const note = 'Setting active tier';
+      const tierNumber = 2;
+      const value: ActiveTier = {
+        tierId: newTierId,
+        tierNumber,
       };
       const writeInteraction = await contract.writeInteraction({
         function: 'initiateFoundationAction',
@@ -364,7 +419,6 @@ describe('Foundation', () => {
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
 
       const { cachedValue: newCachedValue } = await contract.readState();
-      console.log(newCachedValue.errorMessages);
       const newState = newCachedValue.state as IOState;
       expect(newState.foundation.actions[id]).toEqual({
         id,
@@ -399,7 +453,6 @@ describe('Foundation', () => {
         const { cachedValue: newCachedValue } = await contract.readState();
         const newState = newCachedValue.state as IOState;
         console.log(JSON.stringify(newState.foundation, null, 5));
-        console.log(JSON.stringify(newState.vaults, null, 5));
       });
     });
 
