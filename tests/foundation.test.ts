@@ -6,6 +6,7 @@ import { arweave, warp } from './setup.jest';
 import {
   DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
   DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+  DEFAULT_INVALID_TIER_MESSAGE,
 } from './utils/constants';
 import {
   getCurrentBlock,
@@ -83,7 +84,7 @@ describe('Foundation', () => {
         note: note1,
         signed: [foundationMemberAddress],
         start: start1,
-        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        status: DEFAULT_FOUNDATION_ACTION_PASSED_STATUS, // Since there is 1 signature, this should pass immediately
         value: target1,
         type,
       });
@@ -92,34 +93,10 @@ describe('Foundation', () => {
         note: note2,
         signed: [foundationMemberAddress],
         start: start2,
-        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        status: DEFAULT_FOUNDATION_ACTION_PASSED_STATUS, // Since there is 1 signature, this should pass immediately
         value: target2,
         type,
       });
-    });
-
-    it('should approve and complete foundation add address', async () => {
-      const id1 = 0;
-      const id2 = 1;
-      const target1 = newFoundationMemberAddress1;
-      const target2 = removedMemberAddress;
-      const writeInteraction1 = await contract.writeInteraction({
-        function: 'signFoundationAction',
-        id: id1,
-      });
-      const writeInteraction2 = await contract.writeInteraction({
-        function: 'signFoundationAction',
-        id: id2,
-      });
-      expect(writeInteraction1?.originalTxId).not.toBe(undefined);
-      expect(writeInteraction2?.originalTxId).not.toBe(undefined);
-      const { cachedValue: newCachedValue } = await contract.readState();
-      const newState = newCachedValue.state as IOState;
-      expect(newState.foundation.actions[id1].status).toEqual(
-        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
-      );
-      expect(newState.foundation.addresses).toContain(target1);
-      expect(newState.foundation.addresses).toContain(target2);
     });
 
     it('should initiate remove address', async () => {
@@ -142,26 +119,10 @@ describe('Foundation', () => {
         note,
         signed: [foundationMemberAddress],
         start: start,
-        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        status: DEFAULT_FOUNDATION_ACTION_PASSED_STATUS, // Since there is 1 signature, this should pass immediately
         value,
         type,
       });
-    });
-
-    it('should approve and complete foundation remove address', async () => {
-      const id = 2;
-      const target = removedMemberAddress;
-      const writeInteraction = await contract.writeInteraction({
-        function: 'signFoundationAction',
-        id: id,
-      });
-      expect(writeInteraction?.originalTxId).not.toBe(undefined);
-      const { cachedValue: newCachedValue } = await contract.readState();
-      const newState = newCachedValue.state as IOState;
-      expect(newState.foundation.actions[id].status).toEqual(
-        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
-      );
-      expect(newState.foundation.addresses).not.toContain(target);
     });
 
     it('should initiate set action period', async () => {
@@ -185,26 +146,10 @@ describe('Foundation', () => {
         note,
         signed: [newFoundationMemberAddress1],
         start: start,
-        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        status: DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
         type,
         value,
       });
-    });
-
-    it('should approve and complete foundation set action period', async () => {
-      const id = 3;
-      const target = removedMemberAddress;
-      const writeInteraction = await contract.writeInteraction({
-        function: 'signFoundationAction',
-        id: id,
-      });
-      expect(writeInteraction?.originalTxId).not.toBe(undefined);
-      const { cachedValue: newCachedValue } = await contract.readState();
-      const newState = newCachedValue.state as IOState;
-      expect(newState.foundation.actions[id].status).toEqual(
-        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
-      );
-      expect(newState.foundation.addresses).not.toContain(target);
     });
 
     it('should initiate set min signatures', async () => {
@@ -228,25 +173,10 @@ describe('Foundation', () => {
         note,
         signed: [newFoundationMemberAddress1],
         start: start,
-        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        status: DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
         type,
         value,
       });
-    });
-
-    it('should approve and complete foundation set min signatures', async () => {
-      const id = 4;
-      const writeInteraction = await contract.writeInteraction({
-        function: 'signFoundationAction',
-        id: id,
-      });
-      expect(writeInteraction?.originalTxId).not.toBe(undefined);
-      const { cachedValue: newCachedValue } = await contract.readState();
-      const newState = newCachedValue.state as IOState;
-      expect(newState.foundation.actions[id].status).toEqual(
-        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
-      );
-      expect(newState.foundation.actionPeriod).toEqual(2);
     });
 
     it('should initiate set name fees', async () => {
@@ -282,7 +212,7 @@ describe('Foundation', () => {
     });
 
     it('should approve and complete set name fees', async () => {
-      contract = warp.pst(srcContractId).connect(newFoundationMember1);
+      contract = warp.pst(srcContractId).connect(newFoundationMember1); // a second member is required to complete the action
       const id = 5;
       const writeInteraction = await contract.writeInteraction({
         function: 'signFoundationAction',
@@ -392,7 +322,6 @@ describe('Foundation', () => {
       expect(newState.foundation.actions[id].status).toEqual(
         DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
       );
-      console.log(newState.tiers);
       expect(newState.tiers.history[3]).toEqual({
         id: newTierId,
         ...newTier,
@@ -429,6 +358,82 @@ describe('Foundation', () => {
         type,
         value: expect.any(Object),
       });
+    });
+
+    it('should approve and complete set active tier', async () => {
+      contract = warp.pst(srcContractId).connect(newFoundationMember1);
+      const id = 7;
+      const writeInteraction = await contract.writeInteraction({
+        function: 'signFoundationAction',
+        id: id,
+      });
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(newState.foundation.actions[id].status).toEqual(
+        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+      );
+      expect(newState.tiers.current[2]).toEqual(newTierId);
+    });
+
+    it('should not able to set active tier to an invalid tier number', async () => {
+      contract = warp.pst(srcContractId).connect(foundationMember);
+      const type = 'setActiveTier';
+      const note = 'Setting bad active tier number';
+      const tierNumber = 5;
+      const value: ActiveTier = {
+        tierId: newTierId,
+        tierNumber,
+      };
+      const { cachedValue } = await contract.readState();
+      const state = cachedValue.state as IOState;
+      const originalTierId = state.tiers.current[2];
+      const writeInteraction = await contract.writeInteraction({
+        function: 'initiateFoundationAction',
+        type,
+        note,
+        value,
+      });
+
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      const errors = newCachedValue.errorMessages;
+      expect(errors[writeInteraction!.originalTxId]).toEqual(
+        DEFAULT_INVALID_TIER_MESSAGE,
+      );
+      expect(newState.foundation.actions.length).toEqual(
+        state.foundation.actions.length,
+      );
+    });
+
+    it('should not able to set active tier to an invalid tier id', async () => {
+      contract = warp.pst(srcContractId).connect(foundationMember);
+      const { cachedValue } = await contract.readState();
+      const state = cachedValue.state as IOState;
+      const type = 'setActiveTier';
+      const note = 'Setting bad active tier id';
+      const value: ActiveTier = {
+        tierId: 'a-bad-tier-id',
+        tierNumber: 4,
+      };
+      const writeInteraction = await contract.writeInteraction({
+        function: 'initiateFoundationAction',
+        type,
+        note,
+        value,
+      });
+
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      const errors = newCachedValue.errorMessages;
+      expect(errors[writeInteraction!.originalTxId]).toEqual(
+        DEFAULT_INVALID_TIER_MESSAGE,
+      );
+      expect(newState.foundation.actions.length).toEqual(
+        state.foundation.actions.length,
+      );
     });
   });
 

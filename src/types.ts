@@ -102,7 +102,7 @@ export type ReservedName = {
 };
 
 export type Foundation = {
-  // The settings and wallets used by the AR.IO Foundation.  This is for testing purposes only
+  // The settings and wallets used by the AR.IO Foundation.
   actionPeriod: number; // the amount of blocks that must pass for all signers to approve a transfer
   minSignatures: number; // the minimum amount of signatures/approvals needed to move funds, must be less than the amount of total addresses
   addresses: string[]; // All of the foundation managed wallet addresses
@@ -114,7 +114,7 @@ export type FoundationAction = {
   type: FoundationActionType; // the specific kind of action being performed
   status: FoundationActionStatus; // the latest status of this action
   start: number; // the block height that this action started at
-  value?: // the value for setting a specific configuration
+  value: // the value for setting a specific configuration
   | string
     | number
     | {
@@ -122,9 +122,6 @@ export type FoundationAction = {
       }
     | ActiveTier
     | ServiceTier;
-  newTier?: ServiceTier;
-  activeTierNumber?: number;
-  activeTierId?: string;
   note: string; // a description of this foundation action
   signed: string[]; // a list of the foundation wallets that have signed this action
 };
@@ -210,23 +207,13 @@ export type PstInput = {
     | ServiceTier;
   name: string;
   contractTxId: string;
-  newTier: {
-    fee: number;
-    settings: ServiceTierSettings;
-  };
-  newTierFee: number;
-  newTierSettings: ServiceTierSettings;
   fee: number;
   years: number;
   qty: number;
   tierNumber: number;
-  tierId: string;
   note: string;
   lockLength: number;
   id: number;
-  fees: {
-    [nameLength: string]: number;
-  };
   label: string;
   fqdn: string;
   port: number;
@@ -237,8 +224,6 @@ export type PstInput = {
   delegateAllowList: string[];
   version: string;
   status: string;
-  activeTierNumber: number;
-  activeTierId: string;
 };
 
 export type PstResult = {
