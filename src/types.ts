@@ -127,7 +127,8 @@ export type FoundationActionInputs =
   | ValidNumberInput
   | FeesInput
   | ActiveTier
-  | ServiceTier;
+  | ServiceTier
+  | ContractEvolutionInput;
 
 const foundationActionStatus = [
   FOUNDATION_ACTION_ACTIVE_STATUS,
@@ -143,7 +144,8 @@ export type FoundationActionType =
   | 'removeAddress'
   | 'setNameFees'
   | 'createNewTier'
-  | 'setActiveTier';
+  | 'setActiveTier'
+  | 'evolveContract';
 
 export type TokenVault = {
   balance: number; // Positive integer, the amount locked
@@ -220,6 +222,11 @@ export type PstInput = {
   delegateAllowList: string[];
   version: string;
   status: string;
+};
+
+export type ContractEvolutionInput = {
+  contractSrc: string; // The source code that this contract will evolve to
+  blockHeight?: number; // The height at which this evolution action takes effect
 };
 
 export type PstResult = {

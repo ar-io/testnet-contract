@@ -4,13 +4,17 @@ import {
   DEFAULT_INVALID_TIER_MESSAGE,
   FOUNDATION_ACTION_ACTIVE_STATUS,
   FOUNDATION_ACTION_PASSED_STATUS,
+  MAX_ALLOWED_EVOLUTION_DELAY,
   MAX_FOUNDATION_ACTION_PERIOD,
   MAX_NAME_LENGTH,
   MAX_NOTE_LENGTH,
+  MINIMUM_ALLOWED_EVOLUTION_DELAY,
 } from '../../constants';
 import {
   ActiveTier,
+  ContractEvolutionInput,
   ContractResult,
+  FeesInput,
   FoundationAction,
   IOState,
   PstAction,
@@ -135,6 +139,30 @@ export const initiateFoundationAction = async (
         throw new ContractError(DEFAULT_INVALID_ID_TIER_MESSAGE);
       }
       break;
+    case 'evolveContract':
+      if (
+        typeof (value as ContractEvolutionInput).contractSrc !== 'string' ||
+        !isValidArweaveBase64URL((value as ContractEvolutionInput).contractSrc) // must be a valid arweave transaction ID
+      ) {
+        throw new ContractError('Invalid contract evolution source code.');
+      }
+      if ((value as ContractEvolutionInput).blockHeight) {
+        if (
+          !Number.isInteger((value as ContractEvolutionInput).blockHeight) ||
+          (value as ContractEvolutionInput).blockHeight -
+            +SmartWeave.block.height <=
+            MAX_ALLOWED_EVOLUTION_DELAY ||
+          (value as ContractEvolutionInput).blockHeight -
+            +SmartWeave.block.height >
+            MINIMUM_ALLOWED_EVOLUTION_DELAY
+        ) {
+          throw new ContractError('Invalid contract evolution block height.');
+        } else {
+          (value as ContractEvolutionInput).blockHeight =
+            +SmartWeave.block.height + MINIMUM_ALLOWED_EVOLUTION_DELAY;
+        }
+      }
+      break;
     default:
       throw new ContractError('Invalid action parameters.');
   }
@@ -152,30 +180,37 @@ export const initiateFoundationAction = async (
 
   // If this user is the one and only signer, this action should be completed
   if (state.foundation.minSignatures === 1) {
-    if (type === 'addAddress') {
-      // Add the new address to the multi sig
-      state.foundation.addresses.push(foundationAction.value.toString());
-    } else if (type === 'removeAddress') {
-      // Find the index of the existing foundation address and remove it
-      const index = foundation.addresses.indexOf(
-        foundationAction.value.toString(),
-      );
-      state.foundation.addresses.splice(index, 1);
-    } else if (type === 'setMinSignatures') {
-      state.foundation.minSignatures = +foundationAction.value;
-    } else if (type === 'setActionPeriod') {
-      state.foundation.actionPeriod = +foundationAction.value;
-    } else if (type === 'setNameFees') {
-      const fees = foundationAction.value as {
-        [nameLength: string]: number;
-      };
-      state.fees = fees;
-    } else if (type === 'createNewTier') {
-      const newTier = foundationAction.value as ServiceTier;
-      state.tiers.history.push(newTier);
-    } else if (type === 'setActiveTier') {
-      const activeTier = foundationAction.value as ActiveTier;
-      state.tiers.current[activeTier.tierNumber] = activeTier.tierId;
+    switch (type) {
+      case 'addAddress':
+        // Add the new address to the multi sig
+        state.foundation.addresses.push(value.toString());
+        break;
+      case 'removeAddress':
+        // Find the index of the existing foundation address and remove it
+        state.foundation.addresses.splice(
+          foundation.addresses.indexOf(value.toString()),
+          1,
+        );
+        break;
+      case 'setMinSignatures':
+        state.foundation.minSignatures = +value;
+        break;
+      case 'setActionPeriod':
+        state.foundation.actionPeriod = +value;
+        break;
+      case 'setNameFees':
+        state.fees = value as FeesInput;
+        break;
+      case 'createNewTier':
+        state.tiers.history.push(value as ServiceTier);
+        break;
+      case 'setActiveTier':
+        state.tiers.current[(value as ActiveTier).tierNumber] = (
+          value as ActiveTier
+        ).tierId;
+        break;
+      default:
+        break;
     }
     state.foundation.actions[foundationAction.id].status =
       FOUNDATION_ACTION_PASSED_STATUS;

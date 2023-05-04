@@ -86,9 +86,7 @@ export const signFoundationAction = async (
         state.foundation.actionPeriod = +value;
         break;
       case 'setNameFees':
-        state.fees = value as {
-          [nameLength: string]: number;
-        };
+        state.fees = value as FeesInput;
         break;
       case 'createNewTier':
         state.tiers.history.push(value as ServiceTier);
