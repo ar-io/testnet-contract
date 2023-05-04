@@ -1,5 +1,5 @@
 import { DEFAULT_ANNUAL_PERCENTAGE_FEE } from './constants';
-import { IOState, ServiceTier, ValidNumberInput, WalletAddress } from './types';
+import { IOState, ServiceTier } from './types';
 
 export function calculateTotalRegistrationFee(
   name: string,
