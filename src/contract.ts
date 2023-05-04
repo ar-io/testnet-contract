@@ -60,11 +60,7 @@ export async function handle(
     case 'removeANTSourceCodeTx':
       return await removeANTSourceCodeTx(state, action);
     case 'balance':
-<<<<<<< HEAD
-      return await getBalance(state, action);
-=======
       return await balance(state, action);
->>>>>>> 92b62b211dcb0f7280ca036cd8ee975fc44729ba
     case 'record':
       return await getRecord(state, action);
     case 'tier':

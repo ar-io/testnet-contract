@@ -55,43 +55,51 @@ export const signFoundationAction = async (
   }
 
   // If there are enough signatures to complete the transaction, then it is executed
+  const value = state.foundation.actions[id].value;
   if (state.foundation.actions[id].signed.length >= foundation.minSignatures) {
-    if (type === 'addAddress') {
-      const addressToAdd = state.foundation.actions[id].value.toString();
-      if (foundation.addresses.includes(addressToAdd)) {
-        throw new ContractError(
-          'Target is already added as a Foundation address',
+    switch (type) {
+      case 'addAddress':
+        if (foundation.addresses.includes(value.toString())) {
+          throw new ContractError(
+            'Target is already added as a Foundation address',
+          );
+        }
+        // Add the new address
+        state.foundation.addresses.push(value.toString());
+        break;
+      case 'removeAddress':
+        if (!foundation.addresses.includes(value.toString())) {
+          throw new ContractError(
+            'Target is not in the list of Foundation addresses',
+          );
+        }
+        // Find the index of the existing foundation address and remove it
+        state.foundation.addresses.splice(
+          foundation.addresses.indexOf(value.toString()),
+          1,
         );
-      }
-      // Add the new address
-      state.foundation.addresses.push(addressToAdd);
-    } else if (type === 'removeAddress') {
-      const addressToRemove = state.foundation.actions[id].value.toString();
-      if (!foundation.addresses.includes(addressToRemove)) {
-        throw new ContractError(
-          'Target is not in the list of Foundation addresses',
-        );
-      }
-      // Find the index of the existing foundation address and remove it
-      const index = foundation.addresses.indexOf(addressToRemove);
-      state.foundation.addresses.splice(index, 1);
-    } else if (type === 'setMinSignatures') {
-      state.foundation.minSignatures = +state.foundation.actions[id].value;
-    } else if (state.foundation.actions[id].type === 'setActionPeriod') {
-      state.foundation.actionPeriod = +state.foundation.actions[id].value;
-    } else if (state.foundation.actions[id].type === 'setNameFees') {
-      state.fees = state.foundation.actions[id].value as {
-        [nameLength: string]: number;
-      };
-    } else if (state.foundation.actions[id].type === 'createNewTier') {
-      state.tiers.history.push(
-        state.foundation.actions[id].value as ServiceTier,
-      );
-    } else if (state.foundation.actions[id].type === 'setActiveTier') {
-      const activeTier = state.foundation.actions[id].value as ActiveTier;
-      state.tiers.current[activeTier.tierNumber] = activeTier.tierId;
-    } else {
-      throw new ContractError('Invalid vote type.');
+        break;
+      case 'setMinSignatures':
+        state.foundation.minSignatures = +value;
+        break;
+      case 'setActionPeriod':
+        state.foundation.actionPeriod = +value;
+        break;
+      case 'setNameFees':
+        state.fees = value as {
+          [nameLength: string]: number;
+        };
+        break;
+      case 'createNewTier':
+        state.tiers.history.push(value as ServiceTier);
+        break;
+      case 'setActiveTier':
+        state.tiers.current[(value as ActiveTier).tierNumber] = (
+          value as ActiveTier
+        ).tierId;
+        break;
+      default:
+        throw new ContractError('Invalid vote type.');
     }
     state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
   } else {
