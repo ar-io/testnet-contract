@@ -142,7 +142,10 @@ export const initiateFoundationAction = async (
     case 'evolveContract':
       if (
         typeof (value as ContractEvolutionInput).contractSrc !== 'string' ||
-        !isValidArweaveBase64URL((value as ContractEvolutionInput).contractSrc) // must be a valid arweave transaction ID
+        !isValidArweaveBase64URL(
+          (value as ContractEvolutionInput).contractSrc,
+        ) || // must be a valid arweave transaction ID
+        (value as ContractEvolutionInput).contractSrc === state.evolve // must be new source code
       ) {
         throw new ContractError('Invalid contract evolution source code.');
       }
@@ -150,13 +153,17 @@ export const initiateFoundationAction = async (
         if (
           !Number.isInteger((value as ContractEvolutionInput).blockHeight) ||
           (value as ContractEvolutionInput).blockHeight -
-            +SmartWeave.block.height <=
+            +SmartWeave.block.height >=
             MAX_ALLOWED_EVOLUTION_DELAY ||
           (value as ContractEvolutionInput).blockHeight -
-            +SmartWeave.block.height >
+            +SmartWeave.block.height <
             MINIMUM_ALLOWED_EVOLUTION_DELAY
         ) {
-          throw new ContractError('Invalid contract evolution block height.');
+          throw new ContractError(
+            `Invalid contract evolution block height of ${
+              (value as ContractEvolutionInput).blockHeight
+            }. Current height of ${+SmartWeave.block.height}`,
+          );
         } else {
           (value as ContractEvolutionInput).blockHeight =
             +SmartWeave.block.height + MINIMUM_ALLOWED_EVOLUTION_DELAY;
@@ -208,6 +215,9 @@ export const initiateFoundationAction = async (
         state.tiers.current[(value as ActiveTier).tierNumber] = (
           value as ActiveTier
         ).tierId;
+        break;
+      case 'evolveContract':
+        // there is no action taken as the evolve method must be run
         break;
       default:
         break;

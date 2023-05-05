@@ -1,22 +1,38 @@
-import { DEFAULT_NON_CONTRACT_OWNER_MESSAGE } from '../../constants';
-import { ContractResult, IOState, PstAction } from '../../types';
+import {
+  FOUNDATION_ACTION_PASSED_STATUS,
+  FOUNDATION_EVOLUTION_COMPLETE_STATUS,
+} from '../../constants';
+import {
+  ContractEvolutionInput,
+  ContractResult,
+  IOState,
+  PstAction,
+} from '../../types';
 
 declare const ContractError;
+declare const SmartWeave: any;
 
 // Updates this contract to new source code
 export const evolve = async (
   state: IOState,
-  { caller, input: { value } }: PstAction,
+  { input: { id } }: PstAction,
 ): Promise<ContractResult> => {
-  const owner = state.owner;
+  const foundationActions = state.foundation.actions;
 
-  if (caller !== owner) {
-    throw new ContractError(DEFAULT_NON_CONTRACT_OWNER_MESSAGE);
+  if (
+    foundationActions[id].type === 'evolveContract' &&
+    foundationActions[id].status === FOUNDATION_ACTION_PASSED_STATUS &&
+    (foundationActions[id].value as ContractEvolutionInput).blockHeight <=
+      +SmartWeave.block.height
+  ) {
+    state.foundation.actions[id].status ===
+      FOUNDATION_EVOLUTION_COMPLETE_STATUS;
+    state.evolve = (
+      foundationActions[id].value as ContractEvolutionInput
+    ).contractSrc;
+  } else {
+    throw new ContractError('Invalid contract evolution operation.');
   }
-
-  // TODO: regex on the string
-
-  state.evolve = value.toString();
 
   return { state };
 };

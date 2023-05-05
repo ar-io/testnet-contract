@@ -6,6 +6,7 @@ import {
 import {
   ActiveTier,
   ContractResult,
+  FeesInput,
   IOState,
   PstAction,
   ServiceTier,
@@ -95,6 +96,9 @@ export const signFoundationAction = async (
         state.tiers.current[(value as ActiveTier).tierNumber] = (
           value as ActiveTier
         ).tierId;
+        break;
+      case 'evolveContract':
+        // there is no action taken as the evolve method must be run
         break;
       default:
         throw new ContractError('Invalid vote type.');

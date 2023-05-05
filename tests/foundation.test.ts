@@ -1,7 +1,13 @@
-import { Service } from 'ts-node';
+import * as fs from 'fs';
+import path from 'path';
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
-import { ActiveTier, IOState, ServiceTier } from '../src/types';
+import {
+  ActiveTier,
+  ContractEvolutionInput,
+  IOState,
+  ServiceTier,
+} from '../src/types';
 import { arweave, warp } from './setup.jest';
 import {
   DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
@@ -20,6 +26,7 @@ describe('Foundation', () => {
   let foundationMemberAddress: string;
   let srcContractId: string;
   let fees: { [x: string]: number };
+  let newLocalSourceCodeJS;
   const newTier: ServiceTier = {
     fee: 100,
     settings: {
@@ -29,6 +36,11 @@ describe('Foundation', () => {
 
   beforeAll(async () => {
     srcContractId = getLocalArNSContractId();
+    srcContractId = getLocalArNSContractId();
+    newLocalSourceCodeJS = fs.readFileSync(
+      path.join(__dirname, '../dist/contract.js'),
+      'utf8',
+    );
   });
 
   describe('valid foundation member', () => {
@@ -434,6 +446,74 @@ describe('Foundation', () => {
       expect(newState.foundation.actions.length).toEqual(
         state.foundation.actions.length,
       );
+    });
+
+    it('should initiate contract evolution', async () => {
+      contract = warp.pst(srcContractId).connect(foundationMember);
+      const type = 'evolveContract';
+      const id = 8;
+      const note = 'Evolving this contract!';
+      const evolveSrcTx = await warp.createSource(
+        { src: newLocalSourceCodeJS },
+        foundationMember,
+      );
+      const evolveSrcTxId = await warp.saveSource(evolveSrcTx);
+      const value: ContractEvolutionInput = {
+        contractSrc: evolveSrcTxId,
+        blockHeight: (await getCurrentBlock(arweave)) + 5,
+      };
+      const writeInteraction = await contract.writeInteraction({
+        function: 'initiateFoundationAction',
+        type,
+        note,
+        value,
+      });
+      const start = await getCurrentBlock(arweave);
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+
+      const { cachedValue: newCachedValue } = await contract.readState();
+      console.log(newCachedValue.errorMessages);
+      const newState = newCachedValue.state as IOState;
+      expect(newState.foundation.actions[id]).toEqual({
+        id,
+        note,
+        signed: [foundationMemberAddress],
+        start: start,
+        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        type,
+        value: expect.any(Object),
+      });
+    });
+
+    it('should approve contract evolution', async () => {
+      contract = warp.pst(srcContractId).connect(newFoundationMember1);
+      const id = 8;
+      const writeInteraction = await contract.writeInteraction({
+        function: 'signFoundationAction',
+        id: id,
+      });
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(newState.foundation.actions[id].status).toEqual(
+        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+      );
+    });
+
+    it('should complete contract evolution and set new source code', async () => {
+      contract = warp.pst(srcContractId).connect(newFoundationMember1);
+      const id = 8;
+      const writeInteraction = await contract.writeInteraction({
+        function: 'signFoundationAction',
+        id: id,
+      });
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(newState.foundation.actions[id].status).toEqual(
+        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+      );
+      expect(newState.tiers.current[2]).toEqual(newTierId);
     });
   });
 
