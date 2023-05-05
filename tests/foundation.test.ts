@@ -14,6 +14,7 @@ import {
   DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
   DEFAULT_FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS,
   DEFAULT_INVALID_TIER_MESSAGE,
+  DEFAULT_MINIMUM_ALLOWED_EVOLUTION_DELAY,
 } from './utils/constants';
 import {
   getCurrentBlock,
@@ -461,7 +462,9 @@ describe('Foundation', () => {
       const evolveSrcTxId = await warp.saveSource(evolveSrcTx);
       const value: DelayedEvolveInput = {
         contractSrcTxId: evolveSrcTxId,
-        evolveHeight: (await getCurrentBlock(arweave)) + 5,
+        evolveHeight:
+          (await getCurrentBlock(arweave)) +
+          DEFAULT_MINIMUM_ALLOWED_EVOLUTION_DELAY,
       };
       const writeInteraction = await contract.writeInteraction({
         function: 'initiateFoundationAction',
