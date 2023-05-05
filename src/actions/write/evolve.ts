@@ -15,20 +15,21 @@ declare const SmartWeave: any;
 // Updates this contract to new source code
 export const evolve = async (
   state: IOState,
-  { input: { id } }: PstAction,
+  { input: { value } }: PstAction,
 ): Promise<ContractResult> => {
   const foundationActions = state.foundation.actions;
+  const index = +value;
 
   if (
-    foundationActions[id].type === 'evolveContract' &&
-    foundationActions[id].status === FOUNDATION_ACTION_PASSED_STATUS &&
-    (foundationActions[id].value as ContractEvolutionInput).blockHeight <=
+    foundationActions[index].type === 'evolveContract' &&
+    foundationActions[index].status === FOUNDATION_ACTION_PASSED_STATUS &&
+    (foundationActions[index].value as ContractEvolutionInput).blockHeight <=
       +SmartWeave.block.height
   ) {
-    state.foundation.actions[id].status ===
+    state.foundation.actions[index].status ===
       FOUNDATION_EVOLUTION_COMPLETE_STATUS;
     state.evolve = (
-      foundationActions[id].value as ContractEvolutionInput
+      foundationActions[index].value as ContractEvolutionInput
     ).contractSrc;
   } else {
     throw new ContractError('Invalid contract evolution operation.');
