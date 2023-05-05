@@ -17,7 +17,6 @@ import { getCurrentBlockHeight } from './utilities';
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel('fatal');
 
-
   // ~~ Initialize SmartWeave ~~
   const warp = WarpFactory.forMainnet();
 
@@ -29,5 +28,8 @@ import { getCurrentBlockHeight } from './utilities';
   // Read the ArNS Registry Contract
   const pst = warp.pst(`bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U`);
   pst.connect(wallet);
-  console.log(`balance`, await pst.currentBalance('QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'))
+  console.log(
+    `balance`,
+    await pst.currentBalance('QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'),
+  );
 })();
