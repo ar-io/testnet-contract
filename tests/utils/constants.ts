@@ -2,8 +2,9 @@ import initialContractState from './initial-state.json';
 
 export const DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS = 'active';
 export const DEFAULT_FOUNDATION_ACTION_PASSED_STATUS = 'passed';
+export const DEFAULT_FOUNDATION_ACTION_FAILED_STATUS = 'failed';
 export const DEFAULT_FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS = 'evolved';
-export const DEFAULT_MINIMUM_ALLOWED_EVOLUTION_DELAY = 2; // 2 blocks for testing purposes, but should be 720 * 7; // 720 blocks per day times 7 days
+export const DEFAULT_MINIMUM_ALLOWED_EVOLUTION_DELAY = 4; // 4 blocks for testing purposes, but should be 720 * 7; // 720 blocks per day times 7 days
 export const DEFAULT_FOUNDATION_ACTION_PERIOD = 1;
 export const DEFAULT_FOUNDATION_STARTING_BALANCE = 10_000;
 export const TRANSFER_AMOUNT = 5_000_000;

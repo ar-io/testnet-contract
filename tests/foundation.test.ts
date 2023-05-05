@@ -11,6 +11,7 @@ import {
 import { arweave, warp } from './setup.jest';
 import {
   DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+  DEFAULT_FOUNDATION_ACTION_FAILED_STATUS,
   DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
   DEFAULT_FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS,
   DEFAULT_INVALID_TIER_MESSAGE,
@@ -20,6 +21,8 @@ import {
   getCurrentBlock,
   getLocalArNSContractId,
   getLocalWallet,
+  mineBlock,
+  mineBlocks,
 } from './utils/helper';
 
 describe('Foundation', () => {
@@ -477,6 +480,7 @@ describe('Foundation', () => {
 
       const { cachedValue: newCachedValue } = await contract.readState();
       const newState = newCachedValue.state as IOState;
+      console.log(newCachedValue.errorMessages);
       expect(newState.foundation.actions[id]).toEqual({
         id,
         note,
@@ -564,6 +568,45 @@ describe('Foundation', () => {
       );
       expect(newState.foundation.actions[+id].status).toEqual(
         DEFAULT_FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS,
+      );
+    });
+
+    it('should initiate an action which then fails if no signatures obtained within action period', async () => {
+      contract = warp.pst(srcContractId).connect(foundationMember);
+      const type = 'setMinSignatures';
+      const id = 9;
+      const value = 1;
+      const note = 'Bad idea, dont agree to this!';
+      const writeInteraction = await contract.writeInteraction({
+        function: 'initiateFoundationAction',
+        type,
+        note,
+        value,
+      });
+      const start = await getCurrentBlock(arweave);
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: cachedValue } = await contract.readState();
+      const state = cachedValue.state as IOState;
+      expect(state.foundation.actions[id]).toEqual({
+        id,
+        note,
+        signed: [foundationMemberAddress],
+        start: start,
+        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        type,
+        value,
+      });
+      await mineBlocks(arweave, state.foundation.actionPeriod);
+      contract = warp.pst(srcContractId).connect(newFoundationMember1);
+      const writeInteraction2 = await contract.writeInteraction({
+        function: 'signFoundationAction',
+        id: id,
+      });
+      expect(writeInteraction2?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(newState.foundation.actions[id].status).toEqual(
+        DEFAULT_FOUNDATION_ACTION_FAILED_STATUS,
       );
     });
   });
