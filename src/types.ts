@@ -4,7 +4,7 @@ import {
   FOUNDATION_ACTION_ACTIVE_STATUS,
   FOUNDATION_ACTION_FAILED_STATUS,
   FOUNDATION_ACTION_PASSED_STATUS,
-  FOUNDATION_EVOLUTION_COMPLETE_STATUS,
+  FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS,
   NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
@@ -62,7 +62,7 @@ const gatewayStatus = [
   NETWORK_HIDDEN_STATUS,
   NETWORK_LEAVING_STATUS,
 ] as const;
-export type GatewayStatus = (typeof gatewayStatus)[number];
+export type GatewayStatus = typeof gatewayStatus[number];
 
 export type Gateway = {
   operatorStake: number; // the total stake of this gateway's operator.
@@ -129,15 +129,15 @@ export type FoundationActionInputs =
   | FeesInput
   | ActiveTier
   | ServiceTier
-  | ContractEvolutionInput;
+  | DelayedEvolveInput;
 
 const foundationActionStatus = [
   FOUNDATION_ACTION_ACTIVE_STATUS,
   FOUNDATION_ACTION_PASSED_STATUS,
   FOUNDATION_ACTION_FAILED_STATUS,
-  FOUNDATION_EVOLUTION_COMPLETE_STATUS,
+  FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS,
 ] as const;
-export type FoundationActionStatus = (typeof foundationActionStatus)[number];
+export type FoundationActionStatus = typeof foundationActionStatus[number];
 
 export type FoundationActionType =
   | 'setMinSignatures'
@@ -147,7 +147,7 @@ export type FoundationActionType =
   | 'setNameFees'
   | 'createNewTier'
   | 'setActiveTier'
-  | 'evolveContract';
+  | 'delayedEvolve';
 
 export type TokenVault = {
   balance: number; // Positive integer, the amount locked
@@ -226,9 +226,9 @@ export type PstInput = {
   status: string;
 };
 
-export type ContractEvolutionInput = {
-  contractSrc: string; // The source code that this contract will evolve to
-  blockHeight?: number; // The height at which this evolution action takes effect
+export type DelayedEvolveInput = {
+  contractSrcTxId: string; // The source code that this contract will evolve to
+  evolveHeight?: number; // The height at which this evolution action takes effect
 };
 
 export type PstResult = {

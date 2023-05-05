@@ -4,7 +4,7 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import {
   ActiveTier,
-  ContractEvolutionInput,
+  DelayedEvolveInput,
   IOState,
   ServiceTier,
 } from '../src/types';
@@ -12,6 +12,7 @@ import { arweave, warp } from './setup.jest';
 import {
   DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
   DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+  DEFAULT_FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS,
   DEFAULT_INVALID_TIER_MESSAGE,
 } from './utils/constants';
 import {
@@ -46,7 +47,7 @@ describe('Foundation', () => {
   describe('valid foundation member', () => {
     let newFoundationMember1: JWKInterface;
     let newFoundationMemberAddress1: string;
-    let removedMember2: JWKInterface;
+    let removedMember: JWKInterface;
     let removedMemberAddress: string;
     let newTierId: string;
 
@@ -59,8 +60,8 @@ describe('Foundation', () => {
       newFoundationMemberAddress1 = await arweave.wallets.getAddress(
         newFoundationMember1,
       );
-      removedMember2 = getLocalWallet(9);
-      removedMemberAddress = await arweave.wallets.getAddress(removedMember2);
+      removedMember = getLocalWallet(9);
+      removedMemberAddress = await arweave.wallets.getAddress(removedMember);
       contract = warp.pst(srcContractId).connect(foundationMember);
       fees = ((await contract.readState()).cachedValue.state as IOState).fees;
     });
@@ -141,7 +142,7 @@ describe('Foundation', () => {
       contract = warp.pst(srcContractId).connect(newFoundationMember1);
       const type = 'setActionPeriod';
       const id = 3;
-      const value = 2;
+      const value = 4;
       const note = 'Changing action period';
       const writeInteraction = await contract.writeInteraction({
         function: 'initiateFoundationAction',
@@ -448,9 +449,9 @@ describe('Foundation', () => {
       );
     });
 
-    it('should initiate contract evolution', async () => {
+    it('should initiate delayed contract evolution', async () => {
       contract = warp.pst(srcContractId).connect(foundationMember);
-      const type = 'evolveContract';
+      const type = 'delayedEvolve';
       const id = 8;
       const note = 'Evolving this contract!';
       const evolveSrcTx = await warp.createSource(
@@ -458,9 +459,9 @@ describe('Foundation', () => {
         foundationMember,
       );
       const evolveSrcTxId = await warp.saveSource(evolveSrcTx);
-      const value: ContractEvolutionInput = {
-        contractSrc: evolveSrcTxId,
-        blockHeight: (await getCurrentBlock(arweave)) + 5,
+      const value: DelayedEvolveInput = {
+        contractSrcTxId: evolveSrcTxId,
+        evolveHeight: (await getCurrentBlock(arweave)) + 5,
       };
       const writeInteraction = await contract.writeInteraction({
         function: 'initiateFoundationAction',
@@ -472,7 +473,6 @@ describe('Foundation', () => {
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
 
       const { cachedValue: newCachedValue } = await contract.readState();
-      console.log(newCachedValue.errorMessages);
       const newState = newCachedValue.state as IOState;
       expect(newState.foundation.actions[id]).toEqual({
         id,
@@ -485,7 +485,46 @@ describe('Foundation', () => {
       });
     });
 
-    it('should approve contract evolution', async () => {
+    it('should not complete contract evolution if it is not fully approved', async () => {
+      contract = warp.pst(srcContractId).connect(newFoundationMember1);
+      const { cachedValue: cachedValue } = await contract.readState();
+      const state = cachedValue.state as IOState;
+      const id = '8';
+      const evolveInteraction = await contract.evolve(id, {
+        disableBundling: true,
+      });
+
+      expect(evolveInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(newState.evolve).toEqual(state.evolve);
+      expect(newState.foundation.actions[id].status).toEqual(
+        DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+      );
+      expect(Object.keys(newCachedValue.errorMessages)).toContain(
+        evolveInteraction!.originalTxId,
+      );
+    });
+
+    it('should not approve delayed contract evolution if not valid foundation member', async () => {
+      contract = warp.pst(srcContractId).connect(removedMember);
+      const id = 8;
+      const writeInteraction = await contract.writeInteraction({
+        function: 'signFoundationAction',
+        id: id,
+      });
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(newState.foundation.actions[id].status).toEqual(
+        DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+      );
+      expect(Object.keys(newCachedValue.errorMessages)).toContain(
+        writeInteraction!.originalTxId,
+      );
+    });
+
+    it('should approve delayed contract evolution', async () => {
       contract = warp.pst(srcContractId).connect(newFoundationMember1);
       const id = 8;
       const writeInteraction = await contract.writeInteraction({
@@ -502,18 +541,27 @@ describe('Foundation', () => {
 
     it('should complete contract evolution and set new source code', async () => {
       contract = warp.pst(srcContractId).connect(newFoundationMember1);
-      const id = 8;
-      const writeInteraction = await contract.writeInteraction({
-        function: 'signFoundationAction',
-        id: id,
+      const { cachedValue: cachedValue } = await contract.readState();
+      const state = cachedValue.state as IOState;
+      const id = '8';
+      const evolveInteraction = await contract.evolve(id, {
+        disableBundling: true,
       });
-      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+
+      expect(evolveInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
       const newState = newCachedValue.state as IOState;
-      expect(newState.foundation.actions[id].status).toEqual(
-        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+      expect(newState.evolve).toEqual(
+        (newState.foundation.actions[id].value as DelayedEvolveInput)
+          .contractSrcTxId,
       );
-      expect(newState.tiers.current[2]).toEqual(newTierId);
+      expect(newState.evolve).not.toEqual(state.evolve);
+      expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
+        evolveInteraction!.originalTxId,
+      );
+      expect(newState.foundation.actions[+id].status).toEqual(
+        DEFAULT_FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS,
+      );
     });
   });
 
@@ -541,6 +589,29 @@ describe('Foundation', () => {
       });
     });
 
-    //describe('write interactions', () => {});
+    describe('write interactions', () => {
+      it('should not initiate add address if not foundation member', async () => {
+        const { cachedValue: cachedValue } = await contract.readState();
+        const state = cachedValue.state as IOState;
+        const type = 'addAddress';
+        const target = nonFoundationMemberAddress;
+        const note = 'Sneaky add';
+        const writeInteraction = await contract.writeInteraction({
+          function: 'initiateFoundationAction',
+          type,
+          value: target,
+          note: note,
+        });
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue: newCachedValue } = await contract.readState();
+        const newState = newCachedValue.state as IOState;
+        expect(Object.keys(newCachedValue.errorMessages)).toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(state.foundation.actions.length).toEqual(
+          newState.foundation.actions.length,
+        );
+      });
+    });
   });
 });

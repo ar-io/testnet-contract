@@ -97,7 +97,7 @@ export const signFoundationAction = async (
           value as ActiveTier
         ).tierId;
         break;
-      case 'evolveContract':
+      case 'delayedEvolve':
         // there is no action taken as the evolve method must be run
         break;
       default:

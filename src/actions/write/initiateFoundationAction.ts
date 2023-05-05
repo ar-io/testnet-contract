@@ -12,8 +12,8 @@ import {
 } from '../../constants';
 import {
   ActiveTier,
-  ContractEvolutionInput,
   ContractResult,
+  DelayedEvolveInput,
   FeesInput,
   FoundationAction,
   IOState,
@@ -139,33 +139,33 @@ export const initiateFoundationAction = async (
         throw new ContractError(DEFAULT_INVALID_ID_TIER_MESSAGE);
       }
       break;
-    case 'evolveContract':
+    case 'delayedEvolve':
       if (
-        typeof (value as ContractEvolutionInput).contractSrc !== 'string' ||
+        typeof (value as DelayedEvolveInput).contractSrcTxId !== 'string' ||
         !isValidArweaveBase64URL(
-          (value as ContractEvolutionInput).contractSrc,
+          (value as DelayedEvolveInput).contractSrcTxId,
         ) || // must be a valid arweave transaction ID
-        (value as ContractEvolutionInput).contractSrc === state.evolve // must be new source code
+        (value as DelayedEvolveInput).contractSrcTxId === state.evolve // must be new source code
       ) {
         throw new ContractError('Invalid contract evolution source code.');
       }
-      if ((value as ContractEvolutionInput).blockHeight) {
+      if ((value as DelayedEvolveInput).evolveHeight) {
         if (
-          !Number.isInteger((value as ContractEvolutionInput).blockHeight) ||
-          (value as ContractEvolutionInput).blockHeight -
+          !Number.isInteger((value as DelayedEvolveInput).evolveHeight) ||
+          (value as DelayedEvolveInput).evolveHeight -
             +SmartWeave.block.height >=
             MAX_ALLOWED_EVOLUTION_DELAY ||
-          (value as ContractEvolutionInput).blockHeight -
+          (value as DelayedEvolveInput).evolveHeight -
             +SmartWeave.block.height <
             MINIMUM_ALLOWED_EVOLUTION_DELAY
         ) {
           throw new ContractError(
             `Invalid contract evolution block height of ${
-              (value as ContractEvolutionInput).blockHeight
+              (value as DelayedEvolveInput).evolveHeight
             }. Current height of ${+SmartWeave.block.height}`,
           );
         } else {
-          (value as ContractEvolutionInput).blockHeight =
+          (value as DelayedEvolveInput).evolveHeight =
             +SmartWeave.block.height + MINIMUM_ALLOWED_EVOLUTION_DELAY;
         }
       }
@@ -216,7 +216,7 @@ export const initiateFoundationAction = async (
           value as ActiveTier
         ).tierId;
         break;
-      case 'evolveContract':
+      case 'delayedEvolve':
         // there is no action taken as the evolve method must be run
         break;
       default:

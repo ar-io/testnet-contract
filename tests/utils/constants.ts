@@ -2,6 +2,7 @@ import initialContractState from './initial-state.json';
 
 export const DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS = 'active';
 export const DEFAULT_FOUNDATION_ACTION_PASSED_STATUS = 'passed';
+export const DEFAULT_FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS = 'evolved';
 export const DEFAULT_FOUNDATION_ACTION_PERIOD = 1;
 export const DEFAULT_FOUNDATION_STARTING_BALANCE = 10_000;
 export const TRANSFER_AMOUNT = 5_000_000;
