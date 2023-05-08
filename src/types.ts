@@ -40,13 +40,13 @@ export type IOState = PstState & {
   };
   // auctions
   auctions: {
-    [name: string]: Auction
-  }
+    [name: string]: Auction;
+  };
 };
 
 export type Fees = {
   [nameLength: string]: number;
-}
+};
 
 export type Auction = {
   initialPrice: number,
@@ -59,13 +59,13 @@ export type Auction = {
 }
 
 export type AuctionSettings = {
-  id: string,
-  floorPriceMultiplier: number,
-  startPriceMultiplier: number,
-  duration: number,
-  decayRate: number,
-  decayInterval: number,
-}
+  id: string;
+  floorPriceMultiplier: number;
+  startPriceMultiplier: number;
+  duration: number;
+  decayRate: number;
+  decayInterval: number;
+};
 
 export type ContractSettings = {
   // these settings can be modified via on-chain governance
@@ -78,14 +78,14 @@ export type ContractSettings = {
     gatewayLeaveLength: number; // the amount of blocks that have to elapse before a gateway leaves the network
     delegatedStakeWithdrawLength: number; // the amount of blocks that have to elapse before a delegated stake is returned
     operatorStakeWithdrawLength: number; // the amount of blocks that have to elapse before a gateway operator's stake is returned
-  },
+  };
   auctions: {
-    current: string,
-    history: AuctionSettings[]
-  },
+    current: string;
+    history: AuctionSettings[];
+  };
   permabuy: {
-    multiplier: number
-  }
+    multiplier: number;
+  };
 };
 
 const gatewayStatus = [

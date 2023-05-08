@@ -39,7 +39,7 @@ export function calculateAnnualRenewalFee(
 export function calculatePermabuyFee(
   name: string,
   fees: Fees,
-  multiplier: number
+  multiplier: number,
 ) {
   return fees[name.length.toString()] * multiplier;
 }
