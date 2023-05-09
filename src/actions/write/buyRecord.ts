@@ -1,4 +1,5 @@
 import {
+  ARWEAVE_TX_ID_REGEX,
   DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE,
   DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
@@ -10,7 +11,7 @@ import {
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
-import { ContractResult, IOState, PstAction, ServiceTier } from '../../types';
+import { ArNSNamePurchase, ContractResult, IOState, PstAction, ServiceTier } from '../../types';
 import { calculateTotalRegistrationFee } from '../../utilities';
 // composed by ajv at build
 import { validateBuyRecord } from '../../validations.mjs';
@@ -62,6 +63,10 @@ export const buyRecord = (
     tier: tiers.current[0],
   }); // does validation on constructor
   const { name, contractTxId, years, tier } = buyRecordInput;
+
+  if(!name){
+    throw Error(DEFAULT_INVALID_ARNS_NAME_MESSAGE);
+  }
 
   // Check if the user has enough tokens to purchase the name
   if (

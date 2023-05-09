@@ -25,6 +25,8 @@ export const DEFAULT_UNDERNAMES_COUNT = 10;
 export const ALLOWED_ACTIVE_TIERS = [1, 2, 3];
 export const DEFAULT_ANNUAL_PERCENTAGE_FEE = 0.1; // 10% of cost of name
 export const DEFAULT_UNDERNAME_REGISTRATION_IO_FEE = 1; // 1 IO token per undername
+export const DEFAULT_PERMABUY_TIER = 3;
+export const DEFAULT_PERMABUY_EXPIRATION = 0;
 export const DEFAULT_NON_CONTRACT_OWNER_MESSAGE = `Caller is not the owner of the ArNS!`;
 export const DEFAULT_INVALID_ARNS_NAME_MESSAGE = 'Invalid ArNS Record Name';
 export const DEFAULT_ARNS_NAME_RESERVED_MESSAGE = 'Name is reserved.';
@@ -119,3 +121,4 @@ export const DEFAULT_AUCTION_SETTINGS: AuctionSettings = {
   decayRate: 0.05, // 5% decay
   duration: 5040, // approx 7 days,
 };
+export const ARWEAVE_TX_ID_REGEX = new RegExp('^[a-zA-Z0-9_-]{43}$');

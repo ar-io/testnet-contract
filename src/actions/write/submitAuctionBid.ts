@@ -1,13 +1,20 @@
 import {
+  calculateMinimumAuctionBid,
   calculatePermabuyFee,
   calculateTotalRegistrationFee,
 } from '@/utilities.js';
 
 import {
   DEFAULT_AUCTION_SETTINGS,
+  DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
+  DEFAULT_PERMABUY_EXPIRATION,
+  DEFAULT_PERMABUY_TIER,
+  DEFAULT_TIERS,
   RESERVED_ATOMIC_TX_ID,
+  SECONDS_IN_A_YEAR,
 } from '../../constants';
 import {
+  Auction,
   AuctionBidDetails,
   AuctionSettings,
   ContractResult,
@@ -27,30 +34,49 @@ export const submitAuctionBid = async (
   { caller, input }: PstAction,
 ): Promise<ContractResult> => {
   const { name, qty, type, details } = input as SubmitBidPayload;
-
   const { auctions, fees, records, tiers, settings } = state;
-  // TODO: we may need to default this value
-  const currentAuctionSettings: AuctionSettings =
-    settings.auctions.history.find((a) => a.id === settings.auctions.current) ??
-    DEFAULT_AUCTION_SETTINGS;
   const formattedName = name.trim().toLowerCase();
-  const bidDetails: AuctionBidDetails = {
-    contractTxId: details.contractTxId ?? RESERVED_ATOMIC_TX_ID,
-  };
 
   // validate name
-  if (!formattedName) {
+  if (!name) {
     throw ContractError('Name is required.');
   }
 
-  if (Object.keys(formattedName).includes(formattedName)) {
-    throw ContractError('Name is not available for auction');
+  // already an owned name
+  if (Object.keys(records).includes(formattedName)) {
+    throw ContractError(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
   }
 
   // validate type
   if (!type || !auctionTypes.includes(type)) {
     throw ContractError('Invalid auction type.');
   }
+  
+  // get the current auction settings, create one of it doesn't exist yet
+  let currentAuctionSettings: AuctionSettings = settings.auctions.history.find((a) => a.id === settings.auctions.current)
+  if(!currentAuctionSettings){
+    const newAuctionSetting = {
+      id: +SmartWeave.transaction.id,
+      ...DEFAULT_AUCTION_SETTINGS
+    }
+    settings.auctions.history.push(newAuctionSetting);
+    settings.auctions.current = newAuctionSetting.id;
+    currentAuctionSettings = newAuctionSetting;
+  }
+
+  const currentTiers =
+    state.tiers?.current ??
+    DEFAULT_TIERS.reduce(
+      (acc, tier, index) => ({
+        ...acc,
+        [index + 1]: tier.id,
+      }),
+      {},
+    );
+
+  const bidDetails: AuctionBidDetails = {
+    contractTxId: details.contractTxId ?? RESERVED_ATOMIC_TX_ID,
+  };
 
   let registrationFee;
 
@@ -85,20 +111,47 @@ export const submitAuctionBid = async (
   // validate if no current auction
   if (Object.keys(auctions).includes(formattedName)) {
     // it's a pending auction, so validate it's a decent bid and update state
+    const existingAuction: Auction = state.auctions[formattedName];
+    const { startHeight, initialPrice, floorPrice } = existingAuction;
+    const { decayInterval, decayRate }= currentAuctionSettings;
+    const requiredMinimumBid = calculateMinimumAuctionBid({
+      startHeight,
+      initialPrice,
+      floorPrice,
+      currentBlockHeight: +SmartWeave.block.height,
+      decayRate, 
+      decayInterval, 
+    })
 
-    // update the state to include the auction
+    if(qty < requiredMinimumBid){
+      throw Error(`The bid (${qty} IO) is less than the current required minimum bid of ${requiredMinimumBid} IO.`)
+    }
+
+    const endTimestamp = existingAuction.type === 'lease' ? +SmartWeave.block.height + SECONDS_IN_A_YEAR * bidDetails.years: DEFAULT_PERMABUY_EXPIRATION;
+    const tierNumber = existingAuction.type === 'lease' ? existingAuction.details.tierNumber : DEFAULT_PERMABUY_TIER;
+    // the bid has been won, update the records
+    records[formattedName] = {
+      contractTxId: bidDetails.contractTxId,
+      type: existingAuction.type,
+      endTimestamp: endTimestamp,
+      tier: currentTiers[tierNumber]
+    }
+
+    delete auctions[formattedName];
     state.auctions = auctions;
+    state.records = records;
     return { state };
   } else {
+    const { id: auctionSettingsID, floorPriceMultiplier, startPriceMultiplier } = currentAuctionSettings;
     // no current auction, create one
     const initialAuctionBid = {
-      auctionSettingsID: currentAuctionSettings.id,
+      auctionSettingsID,
       floorPrice: Math.max(
         qty,
-        registrationFee * currentAuctionSettings.floorPriceMultiplier,
+        registrationFee * floorPriceMultiplier,
       ),
       initialPrice:
-        registrationFee * currentAuctionSettings.startPriceMultiplier,
+        registrationFee * startPriceMultiplier,
       initiator: caller,
       details: bidDetails,
       // TODO: potentially increment by 1?
