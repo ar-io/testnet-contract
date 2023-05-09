@@ -25,7 +25,7 @@ import {
   mineBlocks,
 } from './utils/helper';
 
-describe('Foundation', () => {
+describe('FoundationAction', () => {
   let contract: Contract<PstState>;
   let foundationMember: JWKInterface;
   let foundationMemberAddress: string;
@@ -70,7 +70,7 @@ describe('Foundation', () => {
       fees = ((await contract.readState()).cachedValue.state as IOState).fees;
     });
 
-    it('should initiate add address', async () => {
+    it('should initiate and complete add address', async () => {
       const type = 'addAddress';
       const id1 = 0;
       const id2 = 1;
@@ -79,14 +79,14 @@ describe('Foundation', () => {
       const note1 = 'Adding member 2';
       const note2 = 'Adding member 3';
       const writeInteraction1 = await contract.writeInteraction({
-        function: 'initiateFoundationAction',
+        function: 'foundationAction',
         type,
         value: target1,
         note: note1,
       });
       const start1 = await getCurrentBlock(arweave);
       const writeInteraction2 = await contract.writeInteraction({
-        function: 'initiateFoundationAction',
+        function: 'foundationAction',
         type,
         value: target2,
         note: note2,
@@ -116,13 +116,13 @@ describe('Foundation', () => {
       });
     });
 
-    it('should initiate remove address', async () => {
+    it('should initiate and complete remove address', async () => {
       const type = 'removeAddress';
       const id = 2;
       const value = removedMemberAddress;
       const note = 'Removing member 2';
       const writeInteraction = await contract.writeInteraction({
-        function: 'initiateFoundationAction',
+        function: 'foundationAction',
         type,
         value,
         note,
@@ -142,14 +142,14 @@ describe('Foundation', () => {
       });
     });
 
-    it('should initiate set action period', async () => {
+    it('should initiate and complete set action period', async () => {
       contract = warp.pst(srcContractId).connect(newFoundationMember1);
       const type = 'setActionPeriod';
       const id = 3;
-      const value = 4;
+      const value = 5;
       const note = 'Changing action period';
       const writeInteraction = await contract.writeInteraction({
-        function: 'initiateFoundationAction',
+        function: 'foundationAction',
         type,
         note,
         value,
@@ -169,14 +169,14 @@ describe('Foundation', () => {
       });
     });
 
-    it('should initiate set min signatures', async () => {
+    it('should initiate and complete set min signatures', async () => {
       contract = warp.pst(srcContractId).connect(newFoundationMember1);
       const type = 'setMinSignatures';
       const id = 4;
       const value = 2;
       const note = 'Changing min signatures';
       const writeInteraction = await contract.writeInteraction({
-        function: 'initiateFoundationAction',
+        function: 'foundationAction',
         type,
         note,
         value,
@@ -202,7 +202,7 @@ describe('Foundation', () => {
       const id = 5;
       const note = 'Modifying fees';
       const writeInteraction = await contract.writeInteraction({
-        function: 'initiateFoundationAction',
+        function: 'foundationAction',
         type,
         note,
         value: {
@@ -214,6 +214,7 @@ describe('Foundation', () => {
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
       const newState = newCachedValue.state as IOState;
+      console.log(newCachedValue.errorMessages);
       expect(newState.foundation.actions[id]).toEqual({
         id,
         note,
@@ -228,11 +229,36 @@ describe('Foundation', () => {
       });
     });
 
+    it.each([
+      // Invalid IDs
+      'not a number',
+      5.8,
+      0,
+    ])(
+      'should not approve and complete foundation action if an invalid ID is provided %s',
+      async (id) => {
+        contract = warp.pst(srcContractId).connect(newFoundationMember1); // a second member is required to complete the action
+        const writeInteraction = await contract.writeInteraction({
+          function: 'foundationAction',
+          id: id,
+        });
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue } = await contract.readState();
+        expect(Object.keys(cachedValue.errorMessages)).toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(
+          cachedValue.errorMessages[writeInteraction!.originalTxId],
+        ).toEqual(expect.stringContaining('Invalid'));
+      },
+    );
+
     it('should approve and complete set name fees', async () => {
       contract = warp.pst(srcContractId).connect(newFoundationMember1); // a second member is required to complete the action
       const id = 5;
       const writeInteraction = await contract.writeInteraction({
-        function: 'signFoundationAction',
+        function: 'foundationAction',
         id: id,
       });
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -256,7 +282,7 @@ describe('Foundation', () => {
       const type = 'setNameFees';
       const note = 'Bad fees';
       const writeInteraction = await contract.writeInteraction({
-        function: 'initiateFoundationAction',
+        function: 'foundationAction',
         type,
         note,
         value: {
@@ -279,7 +305,7 @@ describe('Foundation', () => {
       const type = 'setNameFees';
       const note = 'Bad fees';
       const writeInteraction = await contract.writeInteraction({
-        function: 'initiateFoundationAction',
+        function: 'foundationAction',
         type,
         note,
         value: {
@@ -304,7 +330,7 @@ describe('Foundation', () => {
       const id = 6;
       const note = 'Creating new tier';
       const writeInteraction = await contract.writeInteraction({
-        function: 'initiateFoundationAction',
+        function: 'foundationAction',
         type,
         note,
         value: newTier,
@@ -330,7 +356,7 @@ describe('Foundation', () => {
       contract = warp.pst(srcContractId).connect(newFoundationMember1);
       const id = 6;
       const writeInteraction = await contract.writeInteraction({
-        function: 'signFoundationAction',
+        function: 'foundationAction',
         id: id,
       });
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -356,7 +382,7 @@ describe('Foundation', () => {
         tierNumber,
       };
       const writeInteraction = await contract.writeInteraction({
-        function: 'initiateFoundationAction',
+        function: 'foundationAction',
         type,
         note,
         value,
@@ -381,7 +407,7 @@ describe('Foundation', () => {
       contract = warp.pst(srcContractId).connect(newFoundationMember1);
       const id = 7;
       const writeInteraction = await contract.writeInteraction({
-        function: 'signFoundationAction',
+        function: 'foundationAction',
         id: id,
       });
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -406,7 +432,7 @@ describe('Foundation', () => {
       const state = cachedValue.state as IOState;
       const originalTierId = state.tiers.current[2];
       const writeInteraction = await contract.writeInteraction({
-        function: 'initiateFoundationAction',
+        function: 'foundationAction',
         type,
         note,
         value,
@@ -435,7 +461,7 @@ describe('Foundation', () => {
         tierNumber: 4,
       };
       const writeInteraction = await contract.writeInteraction({
-        function: 'initiateFoundationAction',
+        function: 'foundationAction',
         type,
         note,
         value,
@@ -470,7 +496,7 @@ describe('Foundation', () => {
           DEFAULT_MINIMUM_ALLOWED_EVOLUTION_DELAY,
       };
       const writeInteraction = await contract.writeInteraction({
-        function: 'initiateFoundationAction',
+        function: 'foundationAction',
         type,
         note,
         value,
@@ -480,7 +506,6 @@ describe('Foundation', () => {
 
       const { cachedValue: newCachedValue } = await contract.readState();
       const newState = newCachedValue.state as IOState;
-      console.log(newCachedValue.errorMessages);
       expect(newState.foundation.actions[id]).toEqual({
         id,
         note,
@@ -517,7 +542,7 @@ describe('Foundation', () => {
       contract = warp.pst(srcContractId).connect(removedMember);
       const id = 8;
       const writeInteraction = await contract.writeInteraction({
-        function: 'signFoundationAction',
+        function: 'foundationAction',
         id: id,
       });
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -535,7 +560,7 @@ describe('Foundation', () => {
       contract = warp.pst(srcContractId).connect(newFoundationMember1);
       const id = 8;
       const writeInteraction = await contract.writeInteraction({
-        function: 'signFoundationAction',
+        function: 'foundationAction',
         id: id,
       });
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -578,7 +603,7 @@ describe('Foundation', () => {
       const value = 1;
       const note = 'Bad idea, dont agree to this!';
       const writeInteraction = await contract.writeInteraction({
-        function: 'initiateFoundationAction',
+        function: 'foundationAction',
         type,
         note,
         value,
@@ -599,7 +624,7 @@ describe('Foundation', () => {
       await mineBlocks(arweave, state.foundation.actionPeriod);
       contract = warp.pst(srcContractId).connect(newFoundationMember1);
       const writeInteraction2 = await contract.writeInteraction({
-        function: 'signFoundationAction',
+        function: 'foundationAction',
         id: id,
       });
       expect(writeInteraction2?.originalTxId).not.toBe(undefined);
@@ -643,7 +668,7 @@ describe('Foundation', () => {
         const target = nonFoundationMemberAddress;
         const note = 'Sneaky add';
         const writeInteraction = await contract.writeInteraction({
-          function: 'initiateFoundationAction',
+          function: 'foundationAction',
           type,
           value: target,
           note: note,
