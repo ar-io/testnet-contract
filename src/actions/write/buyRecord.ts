@@ -1,5 +1,4 @@
 import {
-  ARWEAVE_TX_ID_REGEX,
   DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE,
   DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
@@ -11,7 +10,12 @@ import {
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
-import { ArNSNamePurchase, ContractResult, IOState, PstAction, ServiceTier } from '../../types';
+import {
+  ContractResult,
+  IOState,
+  PstAction,
+  ServiceTier,
+} from '../../types';
 import { calculateTotalRegistrationFee } from '../../utilities';
 // composed by ajv at build
 import { validateBuyRecord } from '../../validations.mjs';
@@ -48,13 +52,6 @@ export const buyRecord = (
   state: IOState,
   { caller, input }: PstAction,
 ): ContractResult => {
-<<<<<<< HEAD
-=======
-  // does validation on constructor
-  const buyRecordInput = new BuyRecord(input);
-  const { name, contractTxId, years, tierNumber } = buyRecordInput;
-
->>>>>>> d204cb6 (chore: formatting)
   // get all other relevant state data
   const { balances, records, reserved, fees, tiers = DEFAULT_TIERS } = state;
   const { current: currentTiers, history: allTiers } = tiers;
@@ -63,10 +60,6 @@ export const buyRecord = (
     tier: tiers.current[0],
   }); // does validation on constructor
   const { name, contractTxId, years, tier } = buyRecordInput;
-
-  if(!name){
-    throw Error(DEFAULT_INVALID_ARNS_NAME_MESSAGE);
-  }
 
   // Check if the user has enough tokens to purchase the name
   if (
@@ -94,13 +87,8 @@ export const buyRecord = (
 
   // the tier purchased
   const purchasedTier: ServiceTier = allTiers.find((t) => t.id === tier);
-
   // set the end lease period for this based on number of years
   const endTimestamp = currentBlockTime + SECONDS_IN_A_YEAR * years;
-
-  if (!reserved[name] && name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
-    throw new ContractError(DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE);
-  }
 
   if (reserved[name]) {
     const { target, endTimestamp: reservedEndTimestamp } = reserved[name];

@@ -55,17 +55,3 @@ export function isValidArweaveBase64URL(base64URL: string) {
   const base64URLRegex = new RegExp('^[a-zA-Z0-9_-]{43}$');
   return base64URLRegex.test(base64URL);
 }
-
-export function calculateMinimumAuctionBid({
-  startHeight,
-  initialPrice,
-  floorPrice,
-  currentBlockHeight,
-  decayInterval,
-  decayRate,
-}){
-  const blockIntervalsPassed = Math.floor((currentBlockHeight - startHeight) / decayInterval);
-  const dutchAuctionBid = initialPrice * Math.pow(decayRate, blockIntervalsPassed)
-  const minimumBid = Math.max(dutchAuctionBid, floorPrice);
-  return minimumBid;  
-}

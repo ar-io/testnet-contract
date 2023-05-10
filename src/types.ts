@@ -62,7 +62,7 @@ export type AuctionSettings = {
   id: string;
   floorPriceMultiplier: number;
   startPriceMultiplier: number;
-  duration: number;
+  blockDuration: number;
   decayRate: number;
   decayInterval: number;
 };
