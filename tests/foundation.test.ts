@@ -10,12 +10,12 @@ import {
 } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import {
-  DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
-  DEFAULT_FOUNDATION_ACTION_FAILED_STATUS,
-  DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
-  DEFAULT_FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS,
   DEFAULT_INVALID_TIER_MESSAGE,
   DEFAULT_MINIMUM_ALLOWED_EVOLUTION_DELAY,
+  FOUNDATION_ACTION_ACTIVE_STATUS,
+  FOUNDATION_ACTION_FAILED_STATUS,
+  FOUNDATION_ACTION_PASSED_STATUS,
+  FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS,
 } from './utils/constants';
 import {
   getCurrentBlock,
@@ -101,7 +101,7 @@ describe('FoundationAction', () => {
         note: note1,
         signed: [foundationMemberAddress],
         startHeight: start1,
-        status: DEFAULT_FOUNDATION_ACTION_PASSED_STATUS, // Since there is 1 signature, this should pass immediately
+        status: FOUNDATION_ACTION_PASSED_STATUS, // Since there is 1 signature, this should pass immediately
         value: target1,
         type,
       });
@@ -110,7 +110,7 @@ describe('FoundationAction', () => {
         note: note2,
         signed: [foundationMemberAddress],
         startHeight: start2,
-        status: DEFAULT_FOUNDATION_ACTION_PASSED_STATUS, // Since there is 1 signature, this should pass immediately
+        status: FOUNDATION_ACTION_PASSED_STATUS, // Since there is 1 signature, this should pass immediately
         value: target2,
         type,
       });
@@ -136,7 +136,7 @@ describe('FoundationAction', () => {
         note,
         signed: [foundationMemberAddress],
         startHeight: start,
-        status: DEFAULT_FOUNDATION_ACTION_PASSED_STATUS, // Since there is 1 signature, this should pass immediately
+        status: FOUNDATION_ACTION_PASSED_STATUS, // Since there is 1 signature, this should pass immediately
         value,
         type,
       });
@@ -163,7 +163,7 @@ describe('FoundationAction', () => {
         note,
         signed: [newFoundationMemberAddress1],
         startHeight: start,
-        status: DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+        status: FOUNDATION_ACTION_PASSED_STATUS,
         type,
         value,
       });
@@ -190,7 +190,7 @@ describe('FoundationAction', () => {
         note,
         signed: [newFoundationMemberAddress1],
         startHeight: start,
-        status: DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+        status: FOUNDATION_ACTION_PASSED_STATUS,
         type,
         value,
       });
@@ -220,7 +220,7 @@ describe('FoundationAction', () => {
         note,
         signed: [foundationMemberAddress],
         startHeight: start,
-        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        status: FOUNDATION_ACTION_ACTIVE_STATUS,
         type,
         value: {
           ...fees,
@@ -265,7 +265,7 @@ describe('FoundationAction', () => {
       const { cachedValue: newCachedValue } = await contract.readState();
       const newState = newCachedValue.state as IOState;
       expect(newState.foundation.actions[id].status).toEqual(
-        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+        FOUNDATION_ACTION_PASSED_STATUS,
       );
       expect(newState.fees).toEqual({
         ...fees,
@@ -345,7 +345,7 @@ describe('FoundationAction', () => {
         note,
         signed: [foundationMemberAddress],
         startHeight: start,
-        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        status: FOUNDATION_ACTION_ACTIVE_STATUS,
         type,
         value: expect.any(Object),
       });
@@ -363,7 +363,7 @@ describe('FoundationAction', () => {
       const { cachedValue: newCachedValue } = await contract.readState();
       const newState = newCachedValue.state as IOState;
       expect(newState.foundation.actions[id].status).toEqual(
-        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+        FOUNDATION_ACTION_PASSED_STATUS,
       );
       expect(newState.tiers.history[3]).toEqual({
         id: newTierId,
@@ -397,7 +397,7 @@ describe('FoundationAction', () => {
         note,
         signed: [foundationMemberAddress],
         startHeight: start,
-        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        status: FOUNDATION_ACTION_ACTIVE_STATUS,
         type,
         value: expect.any(Object),
       });
@@ -414,7 +414,7 @@ describe('FoundationAction', () => {
       const { cachedValue: newCachedValue } = await contract.readState();
       const newState = newCachedValue.state as IOState;
       expect(newState.foundation.actions[id].status).toEqual(
-        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+        FOUNDATION_ACTION_PASSED_STATUS,
       );
       expect(newState.tiers.current[2]).toEqual(newTierId);
     });
@@ -511,7 +511,7 @@ describe('FoundationAction', () => {
         note,
         signed: [foundationMemberAddress],
         startHeight: start,
-        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        status: FOUNDATION_ACTION_ACTIVE_STATUS,
         type,
         value: expect.any(Object),
       });
@@ -531,7 +531,7 @@ describe('FoundationAction', () => {
       const newState = newCachedValue.state as IOState;
       expect(newState.evolve).toEqual(state.evolve);
       expect(newState.foundation.actions[id].status).toEqual(
-        DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        FOUNDATION_ACTION_ACTIVE_STATUS,
       );
       expect(Object.keys(newCachedValue.errorMessages)).toContain(
         evolveInteraction!.originalTxId,
@@ -549,7 +549,7 @@ describe('FoundationAction', () => {
       const { cachedValue: newCachedValue } = await contract.readState();
       const newState = newCachedValue.state as IOState;
       expect(newState.foundation.actions[id].status).toEqual(
-        DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        FOUNDATION_ACTION_ACTIVE_STATUS,
       );
       expect(Object.keys(newCachedValue.errorMessages)).toContain(
         writeInteraction!.originalTxId,
@@ -567,7 +567,7 @@ describe('FoundationAction', () => {
       const { cachedValue: newCachedValue } = await contract.readState();
       const newState = newCachedValue.state as IOState;
       expect(newState.foundation.actions[id].status).toEqual(
-        DEFAULT_FOUNDATION_ACTION_PASSED_STATUS,
+        FOUNDATION_ACTION_PASSED_STATUS,
       );
     });
 
@@ -592,7 +592,7 @@ describe('FoundationAction', () => {
         evolveInteraction!.originalTxId,
       );
       expect(newState.foundation.actions[+id].status).toEqual(
-        DEFAULT_FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS,
+        FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS,
       );
     });
 
@@ -617,7 +617,7 @@ describe('FoundationAction', () => {
         note,
         signed: [foundationMemberAddress],
         startHeight: start,
-        status: DEFAULT_FOUNDATION_ACTION_ACTIVE_STATUS,
+        status: FOUNDATION_ACTION_ACTIVE_STATUS,
         type,
         value,
       });
@@ -631,7 +631,7 @@ describe('FoundationAction', () => {
       const { cachedValue: newCachedValue } = await contract.readState();
       const newState = newCachedValue.state as IOState;
       expect(newState.foundation.actions[id].status).toEqual(
-        DEFAULT_FOUNDATION_ACTION_FAILED_STATUS,
+        FOUNDATION_ACTION_FAILED_STATUS,
       );
     });
   });
