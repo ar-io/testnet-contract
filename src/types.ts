@@ -62,7 +62,7 @@ const gatewayStatus = [
   NETWORK_HIDDEN_STATUS,
   NETWORK_LEAVING_STATUS,
 ] as const;
-export type GatewayStatus = typeof gatewayStatus[number];
+export type GatewayStatus = (typeof gatewayStatus)[number];
 
 export type Gateway = {
   operatorStake: number; // the total stake of this gateway's operator.
@@ -114,8 +114,8 @@ export type FoundationAction = {
   id: number; // the id number for this action
   type: FoundationActionType; // the specific kind of action being performed
   status: FoundationActionStatus; // the latest status of this action
-  start: number; // the block height that this action started at
-  value: FoundationActionInputs; // the value for setting a specific configuration
+  startHeight: number; // the block height that this action started at
+  value: FoundationActionInput; // the value for setting a specific configuration
   note: string; // a description of this foundation action
   signed: string[]; // a list of the foundation wallets that have signed this action
 };
@@ -123,7 +123,7 @@ export type FoundationAction = {
 export type WalletAddress = string;
 export type ValidNumberInput = number;
 export type FeesInput = { [nameLength: string]: number };
-export type FoundationActionInputs =
+export type FoundationActionInput =
   | WalletAddress
   | ValidNumberInput
   | FeesInput
@@ -137,7 +137,7 @@ const foundationActionStatus = [
   FOUNDATION_ACTION_FAILED_STATUS,
   FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS,
 ] as const;
-export type FoundationActionStatus = typeof foundationActionStatus[number];
+export type FoundationActionStatus = (typeof foundationActionStatus)[number];
 
 export type FoundationActionType =
   | 'setMinSignatures'
@@ -204,7 +204,7 @@ export type PstInput = {
   type: FoundationActionType;
   function: IOContractFunctions;
   target: string;
-  value: FoundationActionInputs;
+  value: FoundationActionInput;
   name: string;
   contractTxId: string;
   fee: number;

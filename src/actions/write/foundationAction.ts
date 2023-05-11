@@ -184,7 +184,7 @@ export const foundationAction = async (
       type,
       note,
       signed: [caller],
-      start: +SmartWeave.block.height,
+      startHeight: +SmartWeave.block.height,
       value,
     };
     state.foundation.actions.push(foundationAction);
@@ -201,7 +201,8 @@ export const foundationAction = async (
 
     //If this action is active, but is outside of the action period and has not received all signatures, then this signature does not count and mark the action as failed
     if (
-      +SmartWeave.block.height >= action.start + foundation.actionPeriod &&
+      +SmartWeave.block.height >=
+        action.startHeight + foundation.actionPeriod &&
       action.status === FOUNDATION_ACTION_ACTIVE_STATUS &&
       action.signed.length < foundation.minSignatures
     ) {
