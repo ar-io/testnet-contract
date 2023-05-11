@@ -111,7 +111,7 @@ export type Foundation = {
 };
 
 export type FoundationAction = {
-  id: number; // the id number for this action
+  id: string; // the id number for this action
   type: FoundationActionType; // the specific kind of action being performed
   status: FoundationActionStatus; // the latest status of this action
   startHeight: number; // the block height that this action started at
@@ -121,11 +121,11 @@ export type FoundationAction = {
 };
 
 export type WalletAddress = string;
-export type ValidNumberInput = number;
+export type ValidStringInput = string;
 export type FeesInput = { [nameLength: string]: number };
 export type FoundationActionInput =
   | WalletAddress
-  | ValidNumberInput
+  | ValidStringInput
   | FeesInput
   | ActiveTier
   | ServiceTier
@@ -213,7 +213,7 @@ export type PstInput = {
   tierNumber: number;
   note: string;
   lockLength: number;
-  id: number;
+  id: string;
   label: string;
   fqdn: string;
   port: number;

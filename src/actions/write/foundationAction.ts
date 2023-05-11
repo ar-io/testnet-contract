@@ -32,6 +32,12 @@ export const foundationAction = async (
   { caller, input: { type, note, value, id } }: PstAction,
 ): Promise<ContractResult> => {
   const foundation = state.foundation;
+  const actionId: string = id ?? SmartWeave.transaction.id;
+  const action: FoundationAction = foundation.actions.find(
+    (action) => action.id === actionId,
+  );
+
+  let actionIndex = foundation.actions.indexOf(action);
 
   // The caller must be in the foundation, or else this action cannot be initiated
   if (!foundation.addresses.includes(caller)) {
@@ -41,7 +47,7 @@ export const foundationAction = async (
   }
 
   // If this is a new action, it must have a type, note and value to set)
-  if (type && note && value) {
+  if (type && note && value && !id) {
     if (typeof note !== 'string' || note.length > MAX_NOTE_LENGTH) {
       throw new ContractError('Note format not recognized.');
     }
@@ -177,9 +183,8 @@ export const foundationAction = async (
         throw new ContractError('Invalid action parameters.');
     }
 
-    id = foundation.actions.length;
     const foundationAction: FoundationAction = {
-      id,
+      id: actionId,
       status: FOUNDATION_ACTION_ACTIVE_STATUS,
       type,
       note,
@@ -187,14 +192,11 @@ export const foundationAction = async (
       startHeight: +SmartWeave.block.height,
       value,
     };
-    state.foundation.actions.push(foundationAction);
+    actionIndex = state.foundation.actions.push(foundationAction) - 1; // Capture the updated index in case it must be signed at the end
   } else if (id) {
-    // this is an existing action that is being signedso it must have a valid id
-    if (!Number.isInteger(id)) {
-      throw new ContractError('Invalid value for "id". Must be an integer.');
+    if (!action) {
+      throw new ContractError('This action does not exist.');
     }
-    const action = foundation.actions[id];
-    // If this action is not active, then exit
     if (action.status !== FOUNDATION_ACTION_ACTIVE_STATUS) {
       throw new ContractError('This action is not active.');
     }
@@ -206,13 +208,14 @@ export const foundationAction = async (
       action.status === FOUNDATION_ACTION_ACTIVE_STATUS &&
       action.signed.length < foundation.minSignatures
     ) {
-      state.foundation.actions[id].status = FOUNDATION_ACTION_FAILED_STATUS; // this action has not completed within the action period
+      state.foundation.actions[actionIndex].status =
+        FOUNDATION_ACTION_FAILED_STATUS; // this action has not completed within the action period
       return { state };
     }
 
     // If this caller has not signed this action yet, then it is signed
     if (!action.signed.includes(caller)) {
-      state.foundation.actions[id].signed.push(caller);
+      state.foundation.actions[actionIndex].signed.push(caller);
     }
   } else {
     throw new ContractError(
@@ -221,10 +224,13 @@ export const foundationAction = async (
   }
 
   // Complete this action if it has enough signatures.
-  if (state.foundation.actions[id].signed.length >= foundation.minSignatures) {
+  if (
+    state.foundation.actions[actionIndex].signed.length >=
+    foundation.minSignatures
+  ) {
     // If there are enough signatures to complete the transaction, then it is executed
-    const value = state.foundation.actions[id].value;
-    const type = state.foundation.actions[id].type;
+    const value = state.foundation.actions[actionIndex].value;
+    const type = state.foundation.actions[actionIndex].type;
     switch (type) {
       case 'addAddress':
         if (foundation.addresses.includes(value.toString())) {
@@ -270,7 +276,8 @@ export const foundationAction = async (
       default:
         throw new ContractError('Invalid action type.');
     }
-    state.foundation.actions[id].status = FOUNDATION_ACTION_PASSED_STATUS;
+    state.foundation.actions[actionIndex].status =
+      FOUNDATION_ACTION_PASSED_STATUS;
   }
 
   return { state };
