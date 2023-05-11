@@ -315,6 +315,9 @@ export async function setupInitialContractState(
   // configure the foundation
   state.foundation = createFoundation(wallets);
 
+  // configure the foundation
+  state.foundation = createFoundation(wallets);
+
   // configure some basic gateways
   state.gateways = createGateways(wallets);
 
