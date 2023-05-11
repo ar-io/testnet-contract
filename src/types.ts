@@ -62,7 +62,7 @@ const gatewayStatus = [
   NETWORK_HIDDEN_STATUS,
   NETWORK_LEAVING_STATUS,
 ] as const;
-export type GatewayStatus = (typeof gatewayStatus)[number];
+export type GatewayStatus = typeof gatewayStatus[number];
 
 export type Gateway = {
   operatorStake: number; // the total stake of this gateway's operator.
@@ -137,7 +137,7 @@ const foundationActionStatus = [
   FOUNDATION_ACTION_FAILED_STATUS,
   FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS,
 ] as const;
-export type FoundationActionStatus = (typeof foundationActionStatus)[number];
+export type FoundationActionStatus = typeof foundationActionStatus[number];
 
 export type FoundationActionType =
   | 'setMinSignatures'
