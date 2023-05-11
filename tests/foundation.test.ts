@@ -41,7 +41,6 @@ describe('FoundationAction', () => {
 
   beforeAll(async () => {
     srcContractId = getLocalArNSContractId();
-    srcContractId = getLocalArNSContractId();
     newLocalSourceCodeJS = fs.readFileSync(
       path.join(__dirname, '../dist/contract.js'),
       'utf8',
