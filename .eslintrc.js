@@ -4,12 +4,7 @@ module.exports = {
   env: {
     node: true,
   },
-  extends: [
-    'eslint:recommended',
-    'plugin:jest-formatting/recommended',
-    'plugin:@typescript-eslint/eslint-recommended',
-    'plugin:@typescript-eslint/recommended',
-  ],
+  extends: ['eslint:recommended', 'plugin:jest-formatting/recommended'],
   parserOptions: {
     ecmaVersion: 2020,
   },

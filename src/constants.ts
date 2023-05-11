@@ -26,6 +26,7 @@ export const DEFAULT_UNDERNAME_REGISTRATION_IO_FEE = 1; // 1 IO token per undern
 export const DEFAULT_NON_CONTRACT_OWNER_MESSAGE = `Caller is not the owner of the ArNS!`;
 export const DEFAULT_INVALID_ARNS_NAME_MESSAGE = 'Invalid ArNS Record Name';
 export const DEFAULT_ARNS_NAME_RESERVED_MESSAGE = 'Name is reserved.';
+export const INVALID_INPUT_MESSAGE = 'Invalid input for interaction';
 export const DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE = `Names shorter than ${MINIMUM_ALLOWED_NAME_LENGTH} characters must be reserved in order to be purchased.`;
 export const DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE =
   'This name already exists in an active lease';

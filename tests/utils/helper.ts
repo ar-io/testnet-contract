@@ -2,9 +2,8 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import path from 'path';
-import { v4 as uuidV4 } from 'uuid';
 
-import { Foundation, IOState, ServiceTier } from '../../src/types';
+import { Foundation, IOState } from '../../src/types';
 import {
   DEFAULT_ANT_CONTRACT_ID,
   DEFAULT_CONTRACT_SETTINGS,
@@ -312,6 +311,9 @@ export async function setupInitialContractState(
   state.settings = {
     registry: DEFAULT_CONTRACT_SETTINGS,
   };
+
+  // configure the foundation
+  state.foundation = createFoundation(wallets);
 
   // configure the foundation
   state.foundation = createFoundation(wallets);

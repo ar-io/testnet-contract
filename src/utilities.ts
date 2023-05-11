@@ -1,29 +1,29 @@
 import { DEFAULT_ANNUAL_PERCENTAGE_FEE } from './constants';
-import { IOState, ServiceTier } from './types';
+import { Fees, ServiceTier } from './types';
 
 export function calculateTotalRegistrationFee(
   name: string,
-  state: IOState,
+  fees: Fees,
   tier: ServiceTier,
   years: number,
 ) {
   // Initial cost to register a name
-  const initialNamePurchaseFee = state.fees[name.length.toString()];
+  const initialNamePurchaseFee = fees[name.length.toString()];
 
   // total cost to purchase name and tier
   return (
-    initialNamePurchaseFee + calculateAnnualRenewalFee(name, state, tier, years)
+    initialNamePurchaseFee + calculateAnnualRenewalFee(name, fees, tier, years)
   );
 }
 
 export function calculateAnnualRenewalFee(
   name: string,
-  state: IOState,
+  fees: Fees,
   tier: ServiceTier,
   years: number,
 ) {
   // Determine annual registration price of name
-  const initialNamePurchaseFee = state.fees[name.length.toString()];
+  const initialNamePurchaseFee = fees[name.length.toString()];
 
   // Annual fee is specific % of initial purchase cost
   const nameAnnualRegistrationFee =

@@ -1,34 +1,49 @@
+import { ContractResult, IOState, PstAction, ServiceTier } from '../../types';
+
 import {
   DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE,
   DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
-  DEFAULT_INVALID_ARNS_NAME_MESSAGE,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
   DEFAULT_TIERS,
-  MAX_NAME_LENGTH,
+  INVALID_INPUT_MESSAGE,
   MAX_YEARS,
   MINIMUM_ALLOWED_NAME_LENGTH,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
-  TX_ID_LENGTH,
 } from '../../constants';
-import { ContractResult, IOState, PstAction, ServiceTier } from '../../types';
 import { calculateTotalRegistrationFee } from '../../utilities';
+
+// composed by ajv at build
+import { validateBuyRecord } from '../../validations-mjs.mjs';
 
 declare const ContractError;
 declare const SmartWeave: any;
 
-export const buyRecord = async (
+export type BuyRecord = {
+  name: string;
+  contractTxId: string;
+  years: number;
+  tierNumber: number;
+};
+
+export const buyRecord = (
   state: IOState,
-  {
-    caller,
-    input: { name, contractTxId, years = 1, tierNumber = 1 },
-  }: PstAction,
-): Promise<ContractResult> => {
-  const balances = state.balances;
-  const records = state.records;
-  const reserved = state.reserved;
-  const { tiers = DEFAULT_TIERS } = state;
+  { caller, input }: PstAction,
+): ContractResult => {
+  // validate using ajv validator
+  if (!validateBuyRecord(input)) {
+    throw new ContractError(INVALID_INPUT_MESSAGE);
+  }
+
+  // we know it's solid, can safely cast as type
+  const {
+    name,
+    contractTxId = RESERVED_ATOMIC_TX_ID,
+    years = 1,
+    tierNumber = 1,
+  } = input as BuyRecord;
+  const { balances, records, reserved, fees, tiers = DEFAULT_TIERS } = state;
   const { current: currentTiers, history: allTiers } = tiers;
   const currentBlockTime = +SmartWeave.block.timestamp;
 
@@ -42,23 +57,20 @@ export const buyRecord = async (
     throw new ContractError(`Caller balance is not defined!`);
   }
 
-  // Check if it includes a valid number of years
-  if (!Number.isInteger(years) || years > MAX_YEARS || years <= 0) {
+  // Additional check if it includes a valid number of years (TODO: this may be set in contract settings)
+  if (years > MAX_YEARS || years <= 0) {
     throw new ContractError(
       'Invalid value for "years". Must be an integer greater than zero and less than the max years',
     );
   }
 
   // list of all active tier ID's
-  const activeTierNumbers = currentTiers.map((k, indx) => indx + 1);
+  const activeTierNumbers = currentTiers.map((_, indx) => indx + 1);
   if (
-    !Number.isInteger(tierNumber) ||
     !activeTierNumbers.includes(tierNumber)
   ) {
     throw new ContractError(
-      `Invalid value for "tier". Must be ${Object.values(
-        activeTierNumbers,
-      ).join(',')}`,
+      `Invalid value for "tier". Must be one of: ${activeTierNumbers.join(',')}`,
     );
   }
 
@@ -77,17 +89,11 @@ export const buyRecord = async (
   // enforce lower case names
   const formattedName = name.toLowerCase();
 
-  // check if it is a valid subdomain name for the smartweave contract
-  const namePattern = new RegExp('^[a-zA-Z0-9-]+$');
-  const nameRes = namePattern.test(formattedName);
   if (
-    formattedName.charAt(0) === '-' || // the name has a leading dash
-    typeof formattedName !== 'string' ||
-    formattedName.length > MAX_NAME_LENGTH || // the name is too long
-    !nameRes || // the name does not match our regular expression
-    formattedName === '' // reserved
+    !reserved[formattedName] &&
+    formattedName.length < MINIMUM_ALLOWED_NAME_LENGTH
   ) {
-    throw new ContractError(DEFAULT_INVALID_ARNS_NAME_MESSAGE);
+    throw new ContractError(DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE);
   }
 
   /**
@@ -117,10 +123,34 @@ export const buyRecord = async (
     throw new ContractError(DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE);
   }
 
+  if (reserved[formattedName]) {
+    const { target, endTimestamp: reservedEndTimestamp } =
+      reserved[formattedName];
+
+    /**
+     * Two scenarios:
+     *
+     * 1. name is reserved, regardless of length can be purchased only by target, unless expired
+     * 2. name is reserved, but only for a certain amount of time
+     */
+    const handleReservedName = () => {
+      const reservedByCaller = target === caller;
+      const reservedExpired = reservedEndTimestamp &&
+        reservedEndTimestamp <= +SmartWeave.block.timestamp;
+      if (reservedByCaller || reservedExpired) {
+        delete reserved[formattedName];
+        return;
+      }
+
+      throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
+    };
+
+    handleReservedName();
+  }
   // calculate the total fee (initial registration + annual)
   const totalFee = calculateTotalRegistrationFee(
     formattedName,
-    state,
+    fees,
     purchasedTier,
     years,
   );
@@ -131,45 +161,29 @@ export const buyRecord = async (
     );
   }
 
-  if (typeof contractTxId !== 'string') {
-    throw new ContractError('ANT Smartweave Contract Address must be a string');
-  } else if (contractTxId.toLowerCase() === RESERVED_ATOMIC_TX_ID) {
-    // if this is an atomic name registration, then the transaction ID for this interaction is used for the ANT smartweave contract address
-    contractTxId = SmartWeave.transaction.id;
-  } else {
-    // check if it is a valid arweave transaction id for the smartweave contract
-    const txIdPattern = new RegExp('^[a-zA-Z0-9_-]{43}$');
-    const txIdres = txIdPattern.test(contractTxId);
-    if (contractTxId.length !== TX_ID_LENGTH || !txIdres) {
-      throw new ContractError('Invalid ANT Smartweave Contract Address');
-    }
-  }
+  const selectedContractTxId =
+    contractTxId === RESERVED_ATOMIC_TX_ID
+      ? SmartWeave.transaction.id
+      : contractTxId;
 
   // Check if the requested name already exists, if not reduce balance and add it
   // TODO: foundation rewards logic
-  if (!records[formattedName]) {
-    // No name created, so make a new one
-    balances[caller] -= totalFee; // reduce callers balance
-    records[formattedName] = {
-      contractTxId,
-      endTimestamp,
-      tier: selectedTierID,
-    };
-    // assumes lease expiration
-  } else if (
-    records[formattedName].endTimestamp + SECONDS_IN_GRACE_PERIOD <
-    currentBlockTime
+  if (
+    records[formattedName] &&
+    records[formattedName].endTimestamp + SECONDS_IN_GRACE_PERIOD >
+      +SmartWeave.block.timestamp
   ) {
-    // This name's lease has expired and can be repurchased
-    balances[caller] -= totalFee; // reduce callers balance
-    records[formattedName] = {
-      contractTxId,
-      endTimestamp,
-      tier: selectedTierID,
-    };
-  } else {
+    // No name created, so make a new one
     throw new ContractError(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
   }
+
+  // record can be purchased
+  balances[caller] -= totalFee; // reduce callers balance
+  records[formattedName] = {
+    contractTxId: selectedContractTxId,
+    endTimestamp,
+    tier: selectedTierID,
+  };
 
   // update the records object
   state.records = records;
