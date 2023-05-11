@@ -17,7 +17,7 @@ export const evolve = async (
   state: IOState,
   { input: { value } }: PstAction,
 ): Promise<ContractResult> => {
-  const foundationActions = state.foundation.actions;
+  const foundationActions = state.foundation?.actions ?? {};
   const index = +value; // We look up the source code tx to evolve to by the corresponding foundation action id
 
   // There are no caller checks, as anyone can invoke the evolutiona as long as conditions are met
