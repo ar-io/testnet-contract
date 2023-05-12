@@ -21,7 +21,6 @@ import {
   getCurrentBlock,
   getLocalArNSContractId,
   getLocalWallet,
-  mineBlock,
   mineBlocks,
 } from './utils/helper';
 
@@ -53,7 +52,6 @@ describe('FoundationAction', () => {
     let removedMember: JWKInterface;
     let removedMemberAddress: string;
     let newTierId: string;
-    let txId: string;
 
     beforeAll(async () => {
       foundationMember = getLocalWallet(7);
@@ -70,75 +68,100 @@ describe('FoundationAction', () => {
       fees = ((await contract.readState()).cachedValue.state as IOState).fees;
     });
 
-    it('should initiate and complete add address', async () => {
-      const type = 'addAddress';
-      const id1 = 0;
-      const id2 = 1;
-      const target1 = newFoundationMemberAddress1;
-      const target2 = removedMemberAddress;
-      const note1 = 'Adding member 2';
-      const note2 = 'Adding member 3';
-      const writeInteraction1 = await contract.writeInteraction({
-        function: 'foundationAction',
-        type,
-        value: target1,
-        note: note1,
+    describe('adding and removing addresses', () => {
+      it('should immediately add an address when minimum required signatures is < 1', async () => {
+        const type = 'addAddress';
+        const target1 = newFoundationMemberAddress1;
+        const note = 'Adding member 2';
+        const writeInteraction = await contract.writeInteraction({
+          function: 'foundationAction',
+          type,
+          value: newFoundationMemberAddress1,
+          note,
+        });
+        const startHeight = await getCurrentBlock(arweave);
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue: newCachedValue } = await contract.readState();
+        const newState = newCachedValue.state as IOState;
+        const action = newState.foundation.actions.find(
+          (a) => a.id === writeInteraction!.originalTxId,
+        );
+        expect(action).not.toBe(undefined);
+        expect(action).toEqual({
+          id: expect.any(String),
+          note: note,
+          signed: [foundationMemberAddress],
+          startHeight,
+          status: FOUNDATION_ACTION_PASSED_STATUS, // Since there is 1 signature, this should pass immediately
+          value: target1,
+          type,
+        });
       });
-      const start1 = await getCurrentBlock(arweave);
-      const writeInteraction2 = await contract.writeInteraction({
-        function: 'foundationAction',
-        type,
-        value: target2,
-        note: note2,
-      });
-      const start2 = await getCurrentBlock(arweave);
-      expect(writeInteraction1?.originalTxId).not.toBe(undefined);
-      expect(writeInteraction2?.originalTxId).not.toBe(undefined);
-      const { cachedValue: newCachedValue } = await contract.readState();
-      const newState = newCachedValue.state as IOState;
-      expect(newState.foundation.actions[id1]).toEqual({
-        id: expect.any(String),
-        note: note1,
-        signed: [foundationMemberAddress],
-        startHeight: start1,
-        status: FOUNDATION_ACTION_PASSED_STATUS, // Since there is 1 signature, this should pass immediately
-        value: target1,
-        type,
-      });
-      expect(newState.foundation.actions[id2]).toEqual({
-        id: expect.any(String),
-        note: note2,
-        signed: [foundationMemberAddress],
-        startHeight: start2,
-        status: FOUNDATION_ACTION_PASSED_STATUS, // Since there is 1 signature, this should pass immediately
-        value: target2,
-        type,
-      });
-    });
 
-    it('should initiate and complete remove address', async () => {
-      const type = 'removeAddress';
-      const id = 2;
-      const value = removedMemberAddress;
-      const note = 'Removing member 2';
-      const writeInteraction = await contract.writeInteraction({
-        function: 'foundationAction',
-        type,
-        value,
-        note,
+      it('should immediately remove an address when minimum signatures is < 1', async () => {
+        const addNote = 'Adding an address';
+        const addInteraction = await contract.writeInteraction({
+          function: 'foundationAction',
+          type: 'addAddress',
+          value: removedMemberAddress,
+          note: addNote,
+        });
+        const startHeight = await getCurrentBlock(arweave);
+        const removeNote = 'Removing an address';
+        const removeInteraction = await contract.writeInteraction({
+          function: 'foundationAction',
+          type: 'removeAddress',
+          value: removedMemberAddress,
+          note: removeNote,
+        });
+        const removeHeight = await getCurrentBlock(arweave);
+        expect(addInteraction?.originalTxId).not.toBe(undefined);
+        expect(removeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue: newCachedValue } = await contract.readState();
+        const newState = newCachedValue.state as IOState;
+        const addAction = newState.foundation.actions.find(
+          (a) => a.id === addInteraction!.originalTxId,
+        );
+        expect(addAction).not.toBe(undefined);
+        expect(addAction).toEqual({
+          id: addInteraction!.originalTxId,
+          note: addNote,
+          signed: [foundationMemberAddress],
+          startHeight,
+          status: FOUNDATION_ACTION_PASSED_STATUS, // Since there is 1 signature, this should pass immediately
+          value: removedMemberAddress,
+          type: 'addAddress',
+        });
+        const removeAction = newState.foundation.actions.find(
+          (a) => a.id === removeInteraction!.originalTxId,
+        );
+        expect(removeAction).not.toBe(undefined);
+        expect(removeAction).toEqual({
+          id: removeInteraction!.originalTxId,
+          note: removeNote,
+          signed: [foundationMemberAddress],
+          startHeight: removeHeight,
+          status: FOUNDATION_ACTION_PASSED_STATUS, // Since there is 1 signature, this should pass immediately
+          value: removedMemberAddress,
+          type: 'removeAddress',
+        });
       });
-      const start = await getCurrentBlock(arweave);
-      expect(writeInteraction?.originalTxId).not.toBe(undefined);
-      const { cachedValue: newCachedValue } = await contract.readState();
-      const newState = newCachedValue.state as IOState;
-      expect(newState.foundation.actions[id]).toEqual({
-        id: expect.any(String),
-        note,
-        signed: [foundationMemberAddress],
-        startHeight: start,
-        status: FOUNDATION_ACTION_PASSED_STATUS, // Since there is 1 signature, this should pass immediately
-        value,
-        type,
+
+      it('should throw an error when trying to remove an address that is not in the foundation address list', async () => {
+        const removeInteraction = await contract.writeInteraction({
+          function: 'foundationAction',
+          type: 'removeAddress',
+          value: 'non-existen-address',
+          note: 'Removing a bad address',
+        });
+        expect(removeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue: newCachedValue } = await contract.readState();
+        expect(Object.keys(newCachedValue.errorMessages)).toContain(
+          removeInteraction!.originalTxId,
+        );
+        expect(
+          newCachedValue.errorMessages[removeInteraction!.originalTxId],
+        ).toBe('Target is not in the list of Foundation addresses');
       });
     });
 
@@ -169,30 +192,34 @@ describe('FoundationAction', () => {
       });
     });
 
-    it('should initiate and complete set min signatures', async () => {
-      contract = warp.pst(srcContractId).connect(newFoundationMember1);
-      const type = 'setMinSignatures';
-      const id = 4;
-      const value = 2;
-      const note = 'Changing min signatures';
-      const writeInteraction = await contract.writeInteraction({
-        function: 'foundationAction',
-        type,
-        note,
-        value,
-      });
-      const start = await getCurrentBlock(arweave);
-      expect(writeInteraction?.originalTxId).not.toBe(undefined);
-      const { cachedValue: newCachedValue } = await contract.readState();
-      const newState = newCachedValue.state as IOState;
-      expect(newState.foundation.actions[id]).toEqual({
-        id: expect.any(String),
-        note,
-        signed: [newFoundationMemberAddress1],
-        startHeight: start,
-        status: FOUNDATION_ACTION_PASSED_STATUS,
-        type,
-        value,
+    describe('setting minimum signatures', () => {
+      it('should immediately initiate and complete set min signatures when min signatures > 1', async () => {
+        contract = warp.pst(srcContractId).connect(newFoundationMember1);
+        const type = 'setMinSignatures';
+        const value = 2;
+        const note = 'Changing min signatures';
+        const writeInteraction = await contract.writeInteraction({
+          function: 'foundationAction',
+          type,
+          note,
+          value,
+        });
+        const start = await getCurrentBlock(arweave);
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue: newCachedValue } = await contract.readState();
+        const newState = newCachedValue.state as IOState;
+        const action = newState.foundation.actions.find(
+          (a) => a.id === writeInteraction!.originalTxId,
+        );
+        expect(action).toEqual({
+          id: writeInteraction!.originalTxId,
+          note,
+          signed: [newFoundationMemberAddress1],
+          startHeight: start,
+          status: FOUNDATION_ACTION_PASSED_STATUS,
+          type,
+          value,
+        });
       });
     });
 
@@ -386,6 +413,7 @@ describe('FoundationAction', () => {
         expect(newState.foundation.actions.length).toEqual(
           state.foundation.actions.length,
         );
+        expect(newState.tiers.current[2]).toEqual(originalTierId);
       });
 
       it('should not able to set active tier to an invalid tier id', async () => {
@@ -686,23 +714,11 @@ describe('FoundationAction', () => {
     let nonFoundationMemberAddress: string;
 
     beforeAll(async () => {
-      foundationMember = getLocalWallet(0);
-      foundationMemberAddress = await arweave.wallets.getAddress(
-        foundationMember,
-      );
       nonFoundationMember = getLocalWallet(6);
       contract = warp.pst(srcContractId).connect(nonFoundationMember);
       nonFoundationMemberAddress = await arweave.wallets.getAddress(
         nonFoundationMember,
       );
-    });
-
-    describe('read interactions', () => {
-      it('TODO', async () => {
-        const { cachedValue: newCachedValue } = await contract.readState();
-        const newState = newCachedValue.state as IOState;
-        console.log(JSON.stringify(newState.foundation, null, 5));
-      });
     });
 
     describe('write interactions', () => {
