@@ -22,17 +22,17 @@ export const getTier = async (
   }
 
   // the tier object requested
-  const selectedTiter: ServiceTier = validTiers.find(
+  const selectedTier: ServiceTier = validTiers.find(
     (t) => t.id === currentTiers[tierNumber],
   );
 
-  if (!selectedTiter) {
+  if (!selectedTier) {
     throw new ContractError('Tier was not published to state. Try again.');
   }
 
   return {
     result: {
-      ...selectedTiter,
+      ...selectedTier,
     },
   };
 };

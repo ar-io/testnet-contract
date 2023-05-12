@@ -11,21 +11,17 @@ import { getRecord } from './actions/read/record';
 import { getActiveTiers, getTier } from './actions/read/tiers';
 import { addANTSourceCodeTx } from './actions/write/addANTSourceCodeTx';
 import { buyRecord } from './actions/write/buyRecord';
-import { createNewTier } from './actions/write/createNewTier.js';
 import { evolve } from './actions/write/evolve';
 import { extendRecord } from './actions/write/extendRecord.js';
 import { finalizeLeave } from './actions/write/finalizeLeave';
 import { finalizeOperatorStakeDecrease } from './actions/write/finalizeOperatorStakeDecrease';
+import { foundationAction } from './actions/write/foundationAction';
 import { increaseOperatorStake } from './actions/write/increaseOperatorStake';
 import { initiateLeave } from './actions/write/initiateLeave';
 import { initiateOperatorStakeDecrease } from './actions/write/initiateOperatorStakeDecrease';
 import { joinNetwork } from './actions/write/joinNetwork';
-import { mintTokens } from './actions/write/mintTokens';
 import { removeANTSourceCodeTx } from './actions/write/removeANTSourceCodeTx';
 import { removeRecord } from './actions/write/removeRecord';
-import { setActiveTier } from './actions/write/setActiveTier';
-import { setFees } from './actions/write/setFees';
-import { setName } from './actions/write/setName';
 import { transferTokens } from './actions/write/transferTokens';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
 import { updateState } from './actions/write/updateState';
@@ -48,24 +44,16 @@ export async function handle(
   switch (input.function as IOContractFunctions) {
     case 'transfer':
       return await transferTokens(state, action);
-    case 'mint':
-      return await mintTokens(state, action);
-    case 'setFees':
-      return await setFees(state, action);
     case 'buyRecord':
       return await buyRecord(state, action);
     case 'extendRecord':
       return await extendRecord(state, action);
     case 'removeRecord':
       return await removeRecord(state, action);
-    case 'setActiveTier':
-      return await setActiveTier(state, action);
     case 'evolve':
       return await evolve(state, action);
     case 'updateState':
       return await updateState(state, action);
-    case 'setName':
-      return await setName(state, action);
     case 'addANTSourceCodeTx':
       return await addANTSourceCodeTx(state, action);
     case 'removeANTSourceCodeTx':
@@ -88,8 +76,6 @@ export async function handle(
       return await getRankedGatewayRegistry(state);
     case 'upgradeTier':
       return await upgradeTier(state, action);
-    case 'createNewTier':
-      return await createNewTier(state, action);
     case 'joinNetwork':
       return await joinNetwork(state, action);
     case 'initiateLeave':
@@ -104,6 +90,8 @@ export async function handle(
       return await finalizeOperatorStakeDecrease(state, action);
     case 'updateGatewaySettings':
       return await updateGatewaySettings(state, action);
+    case 'foundationAction':
+      return await foundationAction(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognized: "${input.function}"`,

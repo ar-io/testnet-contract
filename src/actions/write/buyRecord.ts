@@ -105,7 +105,8 @@ export const buyRecord = async (
    * 2. name is not reserved, and less than allowed length.
    */
   if (reserved[formattedName]) {
-    const { target, endTimestamp: reservedEndTimestamp } = reserved[formattedName];
+    const { target, endTimestamp: reservedEndTimestamp } =
+      reserved[formattedName];
     if (!target || (target && target !== caller)) {
       throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
     }
