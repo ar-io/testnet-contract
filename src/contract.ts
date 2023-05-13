@@ -9,7 +9,6 @@ import {
 } from './actions/read/gateways';
 import { getRecord } from './actions/read/record';
 import { getActiveTiers, getTier } from './actions/read/tiers';
-import { addANTSourceCodeTx } from './actions/write/addANTSourceCodeTx';
 import { buyRecord } from './actions/write/buyRecord';
 import { evolve } from './actions/write/evolve';
 import { extendRecord } from './actions/write/extendRecord.js';
@@ -20,11 +19,8 @@ import { increaseOperatorStake } from './actions/write/increaseOperatorStake';
 import { initiateLeave } from './actions/write/initiateLeave';
 import { initiateOperatorStakeDecrease } from './actions/write/initiateOperatorStakeDecrease';
 import { joinNetwork } from './actions/write/joinNetwork';
-import { removeANTSourceCodeTx } from './actions/write/removeANTSourceCodeTx';
-import { removeRecord } from './actions/write/removeRecord';
 import { transferTokens } from './actions/write/transferTokens';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
-import { updateState } from './actions/write/updateState';
 import { upgradeTier } from './actions/write/upgradeTier';
 import {
   ContractResult,
@@ -48,16 +44,8 @@ export async function handle(
       return await buyRecord(state, action);
     case 'extendRecord':
       return await extendRecord(state, action);
-    case 'removeRecord':
-      return await removeRecord(state, action);
     case 'evolve':
       return await evolve(state, action);
-    case 'updateState':
-      return await updateState(state, action);
-    case 'addANTSourceCodeTx':
-      return await addANTSourceCodeTx(state, action);
-    case 'removeANTSourceCodeTx':
-      return await removeANTSourceCodeTx(state, action);
     case 'balance':
       return await balance(state, action);
     case 'record':
