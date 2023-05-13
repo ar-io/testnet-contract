@@ -1,5 +1,3 @@
-import { ContractResult, IOState, PstAction, ServiceTier } from '../../types';
-
 import {
   DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE,
   DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
@@ -12,6 +10,7 @@ import {
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
+import { ContractResult, IOState, PstAction, ServiceTier } from '../../types';
 import { calculateTotalRegistrationFee } from '../../utilities';
 // composed by ajv at build
 import { validateBuyRecord } from '../../validations.mjs';
@@ -113,8 +112,6 @@ export const buyRecord = (
 
       throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
     };
-
-
 
     handleReservedName();
   }
