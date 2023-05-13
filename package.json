@@ -40,8 +40,5 @@
     "uuid": "^9.0.0",
     "warp-contracts": "^1.4.4",
     "warp-contracts-plugin-deploy": "^1.0.1"
-  },
-  "dependencies": {
-    "eslint-plugin-no-only-tests": "^3.1.0"
   }
 }
