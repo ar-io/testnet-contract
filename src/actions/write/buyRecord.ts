@@ -97,7 +97,7 @@ export const buyRecord = (
   }
 
   if (reserved[formattedName]) {
-    const { target, endTimestamp: reservedEndTimestamp } =
+    const { target, endTimestamp: reservedEndTimestamp  = -1} =
       reserved[formattedName];
 
     /**
