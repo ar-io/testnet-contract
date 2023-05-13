@@ -42,29 +42,37 @@ export const DEFAULT_INVALID_TIER_MESSAGE = 'Invalid tier.';
 export const DEFAULT_INVALID_ID_TIER_MESSAGE =
   'Invalid tier ID. Must be present in state before it can be used as a current tier.';
 export const DEFAULT_INVALID_YEARS_MESSAGE = `Invalid number of years. Must be an integer and less than ${MAX_YEARS}`;
-export const DEFAULT_TIERS = [
-  {
-    id: 'a27dbfe4-6992-4276-91fb-5b97ae8c3ffa',
-    fee: 100,
-    settings: {
-      maxUndernames: 100,
-    },
-  },
-  {
-    id: '93685bbb-8246-4e7e-bef8-d2e7e6c5d44a',
-    fee: 1000,
-    settings: {
-      maxUndernames: 1000,
-    },
-  },
-  {
-    id: 'b6c8ee18-2481-4c1b-886c-dbe6b606486a',
-    fee: 10000,
-    settings: {
-      maxUndernames: 10000,
-    },
-  },
+export const DEFAULT_CURRENT_TIERS = [
+  'a27dbfe4-6992-4276-91fb-5b97ae8c3ffa',
+  '93685bbb-8246-4e7e-bef8-d2e7e6c5d44a',
+  'b6c8ee18-2481-4c1b-886c-dbe6b606486a',
 ];
+export const DEFAULT_TIERS = {
+  current: DEFAULT_CURRENT_TIERS,
+  history: [
+    {
+      id: DEFAULT_CURRENT_TIERS[0],
+      fee: 100,
+      settings: {
+        maxUndernames: 100,
+      },
+    },
+    {
+      id: DEFAULT_CURRENT_TIERS[1],
+      fee: 1000,
+      settings: {
+        maxUndernames: 1000,
+      },
+    },
+    {
+      id: DEFAULT_CURRENT_TIERS[2],
+      fee: 10000,
+      settings: {
+        maxUndernames: 10000,
+      },
+    },
+  ],
+};
 export const DEFAULT_FEE_STRUCTURE = {
   '1': 4218750000,
   '2': 1406250000,

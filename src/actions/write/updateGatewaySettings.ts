@@ -13,21 +13,19 @@ declare const ContractError;
 // Updates any of the settings of an existing gateway
 export const updateGatewaySettings = async (
   state: IOState,
-  {
-    caller,
-    input: {
-      label,
-      fqdn,
-      port,
-      protocol,
-      openDelegation,
-      delegateAllowList,
-      note,
-      status,
-    },
-  }: PstAction,
+  { caller, input }: PstAction,
 ): Promise<ContractResult> => {
   const gateways = state.gateways;
+  const {
+    label,
+    fqdn,
+    port,
+    protocol,
+    openDelegation,
+    delegateAllowList,
+    note,
+    status,
+  } = input as any;
 
   // TODO: consistent checks
   if (!(caller in gateways)) {

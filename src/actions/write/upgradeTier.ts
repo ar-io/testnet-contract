@@ -1,6 +1,8 @@
 import {
   DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
+  DEFAULT_CURRENT_TIERS,
   DEFAULT_INVALID_TIER_MESSAGE,
+  DEFAULT_TIERS,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
@@ -35,15 +37,16 @@ export const upgradeTier = async (
   }
 
   // get the current tier
-  const currentNameTier = allTiers.find((t) => t.id === records[name].tier);
+  const currentNameTier =
+    allTiers.find((t) => t.id === records[name].tier) ??
+    DEFAULT_TIERS.history[0];
 
   // Check if it includes a valid tier number
-  const allowedTierNumbers = Object.keys(currentTiers).map((t) => +t);
-  const currentTierNumber = +Object.keys(currentTiers).find(
-    (tier) => currentTiers[tier] === currentNameTier.id,
+  const allowedTierNumbers = [...Array.from(DEFAULT_CURRENT_TIERS).keys()].map(
+    (k) => k + 1,
   );
+  const currentTierNumber = (currentTiers.indexOf(tierNumber) ?? 0) + 1;
   if (
-    !Number.isInteger(tierNumber) ||
     !allowedTierNumbers.includes(tierNumber) ||
     tierNumber <= currentTierNumber
   ) {
@@ -94,6 +97,9 @@ export const upgradeTier = async (
   // reduce balance set the end lease period for this record based on number of years
   balances[caller] -= totalTierFeeUpgrade;
   records[name].tier = selectedUpgradeTier.id;
+
+  state.balances = balances;
+  state.records = records;
 
   return { state };
 };

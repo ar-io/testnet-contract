@@ -7,11 +7,14 @@ declare const SmartWeave: any;
 // Locks tokens into a new gateway operator vault
 export const increaseOperatorStake = async (
   state: IOState,
-  { caller, input: { qty } }: PstAction,
+  { caller, input }: PstAction,
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const gateways = state.gateways;
-  const settings = state.settings;
+  const settings = state.settings.registry;
+
+  // TODO: object type validation
+  const { qty } = input as any;
 
   if (!(caller in gateways)) {
     throw new ContractError("This Gateway's wallet is not registered");

@@ -61,15 +61,7 @@ beforeAll(async () => {
   // save wallets to disk
   wallets.forEach((w, index) => {
     fs.writeFileSync(
-      path.join(__dirname, `./wallets/${index}`),
-      JSON.stringify(w.wallet),
-    );
-  });
-
-  // save wallets to disk
-  wallets.forEach((w, index) => {
-    fs.writeFileSync(
-      path.join(__dirname, `./wallets/${index}`),
+      path.join(__dirname, `./wallets/${index}.json`),
       JSON.stringify(w.wallet),
     );
   });

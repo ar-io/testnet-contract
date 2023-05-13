@@ -1,6 +1,7 @@
 import {
   DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
   DEFAULT_INVALID_YEARS_MESSAGE,
+  DEFAULT_TIERS,
   MAX_YEARS,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
@@ -14,12 +15,16 @@ declare const SmartWeave: any;
 // Increases the lease time for an existing record
 export const extendRecord = async (
   state: IOState,
-  { caller, input: { name, years } }: PstAction,
+  { caller, input }: PstAction,
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
   const currentBlockTime = +SmartWeave.block.timestamp;
   const allTiers = state.tiers.history;
+  const fees = state.fees;
+
+  // TODO: object parse validation
+  const { name, years } = input as any;
 
   // Check if the user has enough tokens to purchase the name
   if (
@@ -64,12 +69,14 @@ export const extendRecord = async (
     );
   }
 
-  const purchasedTier = allTiers.find((t) => t.id === records[name].tier);
+  const purchasedTier =
+    allTiers.find((t) => t.id === records[name].tier) ??
+    DEFAULT_TIERS.history[0];
 
   // total cost to extend a record for the given tier
   const totalExtensionAnnualFee = calculateAnnualRenewalFee(
     name,
-    state,
+    fees,
     purchasedTier,
     years,
   );
