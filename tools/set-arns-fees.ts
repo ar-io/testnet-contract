@@ -1,9 +1,13 @@
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
-import { LoggerFactory, WarpNodeFactory } from 'warp-contracts';
+import {
+  LoggerFactory,
+  WarpFactory,
+  defaultCacheOptions,
+} from 'warp-contracts';
 
-import { keyfile } from '../constants';
+import { keyfile } from './constants';
 
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID
@@ -45,18 +49,16 @@ import { keyfile } from '../constants';
     '32': 100000,
   };
 
-  // Initialize Arweave
-  const arweave = Arweave.init({
-    host: 'arweave.net',
-    port: 443,
-    protocol: 'https',
-  });
-
   // Initialize `LoggerFactory`
   LoggerFactory.INST.logLevel('error');
 
   // Initialize SmartWeave
-  const smartweave = WarpNodeFactory.memCached(arweave);
+  const smartweave = WarpFactory.forMainnet(
+    {
+      ...defaultCacheOptions,
+    },
+    true,
+  );
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(

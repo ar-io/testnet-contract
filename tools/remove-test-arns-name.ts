@@ -6,7 +6,7 @@ import {
   defaultCacheOptions,
 } from 'warp-contracts';
 
-import { testKeyfile } from '../src/constants';
+import { testKeyfile } from './constants';
 import { deployedTestContracts } from './deployed-contracts';
 
 (async () => {
