@@ -3,14 +3,13 @@
   "version": "0.1.6",
   "private": true,
   "scripts": {
-    "build": "yarn run clean && yarn run build-ts",
-    "build-ts": "node build.js",
+    "build": "yarn clean && node build.js",
     "clean": "rimraf ./dist",
     "format:check": "prettier . --check",
     "format:fix": "prettier . --write",
     "lint:check": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "yarn run clean && node build.js && jest tests --runInBand"
+    "test": "yarn build && jest tests --runInBand"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.16.7",
@@ -30,7 +29,6 @@
     "eslint": "^6.7.2",
     "eslint-plugin-jest-formatting": "^3.1.0",
     "eslint-plugin-prettier": "^3.3.1",
-    "eslint-plugin-vue": "^9.9.0",
     "jest": "^27.4.3",
     "jsonschema": "^1.4.1",
     "node-sass": "^6.0.0",
