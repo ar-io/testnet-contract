@@ -1,5 +1,3 @@
-import { ContractResult, IOState, PstAction, ServiceTier } from '../../types';
-
 import {
   DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE,
   DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
@@ -12,6 +10,7 @@ import {
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
+import { ContractResult, IOState, PstAction, ServiceTier } from '../../types';
 import { calculateTotalRegistrationFee } from '../../utilities';
 
 // composed by ajv at build
@@ -97,7 +96,7 @@ export const buyRecord = (
   }
 
   if (reserved[formattedName]) {
-    const { target, endTimestamp: reservedEndTimestamp  = -1} =
+    const { target, endTimestamp: reservedEndTimestamp } =
       reserved[formattedName];
 
     /**
@@ -105,6 +104,7 @@ export const buyRecord = (
      *
      * 1. name is reserved, regardless of length can be purchased only by target, unless expired
      * 2. name is reserved, but only for a certain amount of time
+     * 3. name is reserved, with no target and no timestamp (i.e. target and timestamp are empty)
      */
     const handleReservedName = () => {
       const reservedByCaller = target === caller;
@@ -117,8 +117,6 @@ export const buyRecord = (
 
       throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
     };
-
-
 
     handleReservedName();
   }
@@ -150,7 +148,7 @@ export const buyRecord = (
     // No name created, so make a new one
     throw new ContractError(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
   }
-  
+
   // TODO: foundation rewards logic
   // record can be purchased
   balances[caller] -= totalFee; // reduce callers balance

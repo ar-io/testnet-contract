@@ -16,19 +16,18 @@ const buyRecordSchema = {
     },
     years: {
       type: 'integer',
-      minimum: 1,
-      maximum: 3,
+      minimum: 1, // TODO: these validations should pull from state
+      maximum: 3, // TODO: these validations should pull from state
     },
     tierNumber: {
       type: 'integer',
-      minimum: 1,
-      maximum: 3,
+      minimum: 1, // TODO: these validations should pull from state
+      maximum: 3, // TODO: these validations should pull from state
     },
   },
   required: ['name'],
   additionalProperties: false,
 };
-
 
 module.exports = {
   buyRecordSchema

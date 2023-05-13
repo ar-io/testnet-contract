@@ -4,7 +4,7 @@ const Ajv = require('ajv');
 const standaloneCode = require('ajv/dist/standalone').default;
 const { build } = require('esbuild');
 const replace = require('replace-in-file');
-const { buyRecordSchema } = require('./schemas.js');
+const { buyRecordSchema } = require('./src/schemas');
 // build our validation source code
 const ajv = new Ajv({
   schemas: [buyRecordSchema],
