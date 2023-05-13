@@ -114,6 +114,8 @@ export const buyRecord = (
       throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
     };
 
+
+
     handleReservedName();
   }
   // calculate the total fee (initial registration + annual)
@@ -145,7 +147,6 @@ export const buyRecord = (
     // No name created, so make a new one
     throw new ContractError(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
   }
-
   // TODO: foundation rewards logic
   // record can be purchased
   balances[caller] -= totalFee; // reduce callers balance

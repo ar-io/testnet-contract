@@ -41,6 +41,5 @@
     "uuid": "^9.0.0",
     "warp-contracts": "^1.4.7",
     "warp-contracts-plugin-deploy": "^1.0.1"
-  },
-  "dependencies": {}
+  }
 }
