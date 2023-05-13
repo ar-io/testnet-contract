@@ -377,7 +377,7 @@ describe('Records', () => {
       );
     });
 
-    it('should be able to buy reserved name when the caller is the target of the reserved name', async () => {
+    it('should be able to buy reserved name if it is the target of the reserved name', async () => {
       await contract.connect(nonContractOwner);
       const namePurchase = {
         name: 'twitter',

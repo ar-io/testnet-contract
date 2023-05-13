@@ -15,7 +15,7 @@ import {
 import { calculateTotalRegistrationFee } from '../../utilities';
 
 // composed by ajv at build
-import { validateBuyRecord } from '../../validations-mjs.mjs';
+import { validateBuyRecord } from '../../validations.mjs';
 
 declare const ContractError;
 declare const SmartWeave: any;
@@ -96,33 +96,6 @@ export const buyRecord = (
     throw new ContractError(DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE);
   }
 
-  /**
-   * Two scenarios:
-   *
-   * 1. name is reserved, regardless of length can be purchased only by target, unless expired
-   * 2. name is not reserved, and less than allowed length.
-   */
-  if (reserved[formattedName]) {
-    const { target, endTimestamp: reservedEndTimestamp } =
-      reserved[formattedName];
-    if (!target || (target && target !== caller)) {
-      throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
-    }
-
-    if (
-      !target &&
-      reservedEndTimestamp &&
-      +SmartWeave.block.timestamp < reservedEndTimestamp
-    ) {
-      throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
-    }
-
-    // delete the name
-    delete reserved[formattedName];
-  } else if (name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
-    throw new ContractError(DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE);
-  }
-
   if (reserved[formattedName]) {
     const { target, endTimestamp: reservedEndTimestamp } =
       reserved[formattedName];
@@ -144,6 +117,8 @@ export const buyRecord = (
 
       throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
     };
+
+
 
     handleReservedName();
   }
@@ -167,7 +142,6 @@ export const buyRecord = (
       : contractTxId;
 
   // Check if the requested name already exists, if not reduce balance and add it
-  // TODO: foundation rewards logic
   if (
     records[formattedName] &&
     records[formattedName].endTimestamp + SECONDS_IN_GRACE_PERIOD >
@@ -176,7 +150,8 @@ export const buyRecord = (
     // No name created, so make a new one
     throw new ContractError(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
   }
-
+  
+  // TODO: foundation rewards logic
   // record can be purchased
   balances[caller] -= totalFee; // reduce callers balance
   records[formattedName] = {
