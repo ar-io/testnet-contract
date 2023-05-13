@@ -26,9 +26,7 @@ export type IOState = PstState & {
     [nameLength: string]: number;
   };
   tiers: {
-    current: {
-      [x: number]: string;
-    };
+    current: string[];
     history: ServiceTier[];
   };
   settings: ContractSettings; // protocol settings and parameters
@@ -45,15 +43,17 @@ export type IOState = PstState & {
 };
 
 export type ContractSettings = {
-  // these settings can be modified via on-chain governance
-  minLockLength: number; // the minimum amount of blocks tokens can be locked in a community vault
-  maxLockLength: number; // the maximum amount of blocks tokens can be locked in a community vault
-  minNetworkJoinStakeAmount: number; // the minimum amount of tokens needed to stake to join the ar.io network as a gateway
-  minDelegatedStakeAmount: number; // the minimum amount of tokens needed to delegate stake to an ar.io network gateway
-  minGatewayJoinLength: number; // the minimum amount of blocks a gateway can be joined to the ar.io network
-  gatewayLeaveLength: number; // the amount of blocks that have to elapse before a gateway leaves the network
-  delegatedStakeWithdrawLength: number; // the amount of blocks that have to elapse before a delegated stake is returned
-  operatorStakeWithdrawLength: number; // the amount of blocks that have to elapse before a gateway operator's stake is returned
+  registry: {
+    // these settings can be modified via on-chain governance
+    minLockLength: number; // the minimum amount of blocks tokens can be locked in a community vault
+    maxLockLength: number; // the maximum amount of blocks tokens can be locked in a community vault
+    minNetworkJoinStakeAmount: number; // the minimum amount of tokens needed to stake to join the ar.io network as a gateway
+    minDelegatedStakeAmount: number; // the minimum amount of tokens needed to delegate stake to an ar.io network gateway
+    minGatewayJoinLength: number; // the minimum amount of blocks a gateway can be joined to the ar.io network
+    gatewayLeaveLength: number; // the amount of blocks that have to elapse before a gateway leaves the network
+    delegatedStakeWithdrawLength: number; // the amount of blocks that have to elapse before a delegated stake is returned
+    operatorStakeWithdrawLength: number; // the amount of blocks that have to elapse before a gateway operator's stake is returned
+  }
 };
 
 const gatewayStatus = [
@@ -187,7 +187,7 @@ export type VoteType =
   | 'set';
 
 export type PstAction = {
-  input: PstInput;
+  input: any; // TODO: add validation to these inputs
   caller: string;
 };
 
@@ -196,33 +196,6 @@ export type ArNSNamePurchase = {
   years: number;
   tierNumber?: number;
   contractTxId: string;
-};
-
-// TODO: break this up
-export type PstInput = {
-  type: FoundationActionType;
-  function: IOContractFunctions;
-  target: string;
-  value: FoundationActionInput;
-  name: string;
-  contractTxId: string;
-  fee: number;
-  years: number;
-  qty: number;
-  tierNumber: number;
-  note: string;
-  lockLength: number;
-  id: string;
-  label: string;
-  fqdn: string;
-  port: number;
-  protocol: AllowedProtocols;
-  penalty: number;
-  settings: ContractSettings;
-  openDelegation: boolean;
-  delegateAllowList: string[];
-  version: string;
-  status: string;
 };
 
 export type DelayedEvolveInput = {

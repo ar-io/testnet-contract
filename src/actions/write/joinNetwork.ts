@@ -15,23 +15,23 @@ declare const SmartWeave: any;
 // Adds a gateway into the address registry and joins it to the ar.io network
 export const joinNetwork = async (
   state: IOState,
-  {
-    caller,
-    input: {
-      qty,
-      label,
-      fqdn,
-      port,
-      protocol,
-      openDelegation = false,
-      delegateAllowList = [],
-      note,
-    },
-  }: PstAction,
+  { caller, input }: PstAction,
 ): Promise<ContractResult> => {
   const balances = state.balances;
-  const settings = state.settings;
+  const settings = state.settings.registry;
   const gateways = state.gateways;
+
+  // TODO: object parse validation
+  const {
+    qty,
+    label,
+    fqdn,
+    port,
+    protocol,
+    openDelegation = false,
+    delegateAllowList = [],
+    note,
+  } = input as any;
 
   if (!Number.isInteger(qty) || qty <= 0) {
     throw new ContractError('Invalid value for "qty". Must be an integer');

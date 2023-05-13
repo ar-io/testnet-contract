@@ -9,7 +9,7 @@ export const initiateLeave = async (
   state: IOState,
   { caller }: PstAction,
 ): Promise<ContractResult> => {
-  const settings = state.settings;
+  const settings = state.settings.registry;
   const gateways = state.gateways;
 
   if (!(caller in gateways)) {

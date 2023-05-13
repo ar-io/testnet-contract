@@ -10,6 +10,7 @@ import {
   DEFAULT_CONTRACT_SETTINGS,
   DEFAULT_FOUNDATION_ACTION_PERIOD,
   DEFAULT_INITIAL_STATE,
+  DEFAULT_TIERS,
   DEFAULT_WALLET_FUND_AMOUNT,
   NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
@@ -59,23 +60,8 @@ export async function createLocalWallet(
   };
 }
 
-export function createTiers(count = 3): ServiceTier[] {
-  const tiers: ServiceTier[] = [];
-  for (let i = 1; i <= count; i++) {
-    const newTier = {
-      id: uuidV4(),
-      fee: i * 100,
-      settings: {
-        maxUndernames: i * 100,
-      },
-    };
-    tiers.push(newTier);
-  }
-  return tiers;
-}
-
 function createFees(count = 32, start = DEFAULT_WALLET_FUND_AMOUNT) {
-  const fees = {};
+  const fees: any = {};
   for (let i = 1; i <= count; i++) {
     // TODO: write a better algo
     fees[i] = Math.round(start * ((count - i) / 100000));
@@ -83,12 +69,12 @@ function createFees(count = 32, start = DEFAULT_WALLET_FUND_AMOUNT) {
   return fees;
 }
 
-function createRecords(tiers, count = 3) {
-  const records = {};
+function createRecords(tiers: string[], count = 3) {
+  const records: any = {};
   for (let i = 0; i < count; i++) {
     const name = `name${i + 1}`;
     const obj = {
-      tier: tiers[i].id,
+      tier: tiers[0],
       contractTxID: DEFAULT_ANT_CONTRACT_ID,
       endTimestamp: new Date('01/01/2025').getTime() / 1000,
     };
@@ -99,7 +85,7 @@ function createRecords(tiers, count = 3) {
 
 function createGateways(wallets: string[]) {
   // TODO write a better algo
-  const gateways = {};
+  const gateways: any = {};
   gateways[wallets[0]] = {
     operatorStake: 50_000,
     delegatedStake: 301_000,
@@ -299,21 +285,14 @@ export async function setupInitialContractState(
   wallets: string[],
 ): Promise<IOState> {
   const state: IOState = DEFAULT_INITIAL_STATE as unknown as IOState;
-  const tiers = createTiers();
   // set the tiers
-  state.tiers = {
-    current: tiers.reduce((current, tier, index) => {
-      current[index + 1] = tier.id;
-      return current;
-    }, {}),
-    history: tiers,
-  };
+  state.tiers = DEFAULT_TIERS;
 
   // set the fees
   state.fees = createFees();
 
   // create wallets and set balances
-  state.balances = wallets.reduce((current, wallet) => {
+  state.balances = wallets.reduce((current: any, wallet) => {
     current[wallet] = DEFAULT_WALLET_FUND_AMOUNT;
     return current;
   }, {});
@@ -324,13 +303,15 @@ export async function setupInitialContractState(
   };
 
   // create some records
-  state.records = createRecords(tiers);
+  state.records = createRecords(state.tiers.current);
 
   // set the owner to the first wallet
   state.owner = owner;
 
   // configure the necessary contract settings
-  state.settings = DEFAULT_CONTRACT_SETTINGS;
+  state.settings = {
+    registry: DEFAULT_CONTRACT_SETTINGS
+  }
 
   // configure the foundation
   state.foundation = createFoundation(wallets);
