@@ -8,9 +8,13 @@ declare const ContractError;
 
 export const transferTokens = async (
   state: IOState,
-  { caller, input: { target, qty } }: PstAction,
+  { caller, input }: PstAction,
 ): Promise<ContractResult> => {
   const balances = state.balances;
+
+  // todo: do object parsing and validation on
+  const { target, qty } = input as any;
+
   if (!Number.isInteger(qty)) {
     throw new ContractError('Invalid value for "qty". Must be an integer');
   }

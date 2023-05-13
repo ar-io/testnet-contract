@@ -30,8 +30,8 @@ describe('FoundationAction', () => {
   let foundationMemberAddress: string;
   let srcContractId: string;
   let fees: { [x: string]: number };
-  let newLocalSourceCodeJS;
-  const newTier: ServiceTier = {
+  let newLocalSourceCodeJS: any;
+  const newTier: Omit<ServiceTier, 'id'> = {
     fee: 100,
     settings: {
       maxUndernames: 100,

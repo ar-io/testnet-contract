@@ -45,7 +45,7 @@ describe('Network', () => {
         const prevState = prevCachedValue.state as IOState;
         const prevBalance =
           prevCachedValue.state.balances[newGatewayOperatorAddress];
-        const qty = prevState.settings.minNetworkJoinStakeAmount; // must meet the minimum
+        const qty = prevState.settings.registry.minNetworkJoinStakeAmount; // must meet the minimum
         const label = 'Test Gateway'; // friendly label
         const fqdn = 'jest.io';
         const port = 3000;
@@ -111,7 +111,7 @@ describe('Network', () => {
         const prevBalance = prevState.balances[newGatewayOperatorAddress];
         const prevGatewayOperatorBalance =
           prevState.gateways[newGatewayOperatorAddress].operatorStake;
-        const qty = prevState.settings.minDelegatedStakeAmount; // must meet the minimum
+        const qty = prevState.settings.registry.minDelegatedStakeAmount; // must meet the minimum
         const writeInteraction = await contract.writeInteraction({
           function: 'increaseOperatorStake',
           qty,
@@ -363,7 +363,7 @@ describe('Network', () => {
         const delegatedBalances: { [x: string]: number } = Object.keys(
           prevDelegates,
         ).reduce(
-          (totalDelegations, d) => ({
+          (totalDelegations: any, d) => ({
             ...totalDelegations,
             [totalDelegations[d]]: Object.values(prevDelegates[d]).reduce(
               (totalDelegated, x) => totalDelegated + x.balance,

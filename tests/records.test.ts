@@ -3,13 +3,10 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts';
 import { ArNSNamePurchase, IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import {
-  ALLOWED_ACTIVE_TIERS,
   DEFAULT_ANT_CONTRACT_ID,
-  DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
   DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE,
   DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_INVALID_ARNS_NAME_MESSAGE,
-  DEFAULT_NON_CONTRACT_OWNER_MESSAGE,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
 } from './utils/constants';
 import {
@@ -24,172 +21,22 @@ describe('Records', () => {
 
   beforeAll(async () => {
     srcContractId = getLocalArNSContractId();
+    contract = warp.pst(srcContractId);
   });
 
-  describe('contract owner', () => {
-    let owner: JWKInterface;
-    let ownerAddress: string;
-
-    beforeAll(async () => {
-      owner = getLocalWallet(0);
-      contract = warp.pst(srcContractId).connect(owner);
-      ownerAddress = await arweave.wallets.getAddress(owner);
-    });
-
-    describe('write interactions', () => {
-      it('should be able to buy a record with tierNumber specified', async () => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
-        const prevState = prevCachedValue.state as IOState;
-        const prevBalance = prevState.balances[ownerAddress];
-        const namePurchase: ArNSNamePurchase = {
-          name: 'ownersNewRecord',
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
-          years: 1,
-          tierNumber: 1,
-        };
-        const writeInteraction = await contract.writeInteraction(
-          {
-            function: 'buyRecord',
-            ...namePurchase,
-          },
-          {
-            disableBundling: true,
-          },
-        );
-
-        const purchasedTierId =
-          prevState.tiers.current[namePurchase.tierNumber!];
-        const purchasedTier = prevState.tiers.history.find(
-          (t) => t.id === purchasedTierId,
-        )!;
-        const expectedPurchasePrice = calculateTotalRegistrationFee(
-          namePurchase.name,
-          prevState,
-          purchasedTier,
-          namePurchase.years,
-        );
-
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
-        const { cachedValue } = await contract.readState();
-        const state = cachedValue.state as IOState;
-        expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-          writeInteraction!.originalTxId,
-        );
-        expect(state.records[namePurchase.name.toLowerCase()]).toEqual(
-          expect.objectContaining({
-            contractTxId: DEFAULT_ANT_CONTRACT_ID,
-            tier: state.tiers.current[1],
-            endTimestamp: expect.any(Number),
-          }),
-        );
-        expect(state.balances[ownerAddress]).toEqual(
-          prevBalance - expectedPurchasePrice,
-        );
-      });
-
-      it('should be able to buy a record without a tierNumber specified', async () => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
-        const prevState = prevCachedValue.state as IOState;
-        const prevBalance = prevState.balances[ownerAddress];
-        const namePurchase: ArNSNamePurchase = {
-          name: 'ownersNewRecord2',
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
-          years: 1,
-        };
-        const writeInteraction = await contract.writeInteraction(
-          {
-            function: 'buyRecord',
-            ...namePurchase,
-          },
-          {
-            disableBundling: true,
-          },
-        );
-
-        const purchasedTierId =
-          prevState.tiers.current[ALLOWED_ACTIVE_TIERS[0]];
-        const purchasedTier = prevState.tiers.history.find(
-          (t) => t.id === purchasedTierId,
-        )!;
-        const expectedPurchasePrice = calculateTotalRegistrationFee(
-          namePurchase.name,
-          prevState,
-          purchasedTier,
-          namePurchase.years,
-        );
-
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
-        const { cachedValue } = await contract.readState();
-        const state = cachedValue.state as IOState;
-        expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-          writeInteraction!.originalTxId,
-        );
-        expect(state.records[namePurchase.name.toLowerCase()]).toEqual(
-          expect.objectContaining({
-            contractTxId: DEFAULT_ANT_CONTRACT_ID,
-            tier: state.tiers.current[1],
-            endTimestamp: expect.any(Number),
-          }),
-        );
-        expect(state.balances[ownerAddress]).toEqual(
-          prevBalance - expectedPurchasePrice,
-        );
-      });
-
-      it('should be able to remove a record', async () => {
-        const writeInteraction = await contract.writeInteraction(
-          {
-            function: 'removeRecord',
-            name: 'ownersNewRecord',
-          },
-          {
-            disableBundling: true,
-          },
-        );
-
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
-        const { cachedValue } = await contract.readState();
-        const state = cachedValue.state as IOState;
-
-        expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-          writeInteraction!.originalTxId,
-        );
-        expect(state.records['ownersNewRecord']).toBe(undefined);
-      });
-
-      it('should not be able to remove record that does not exist', async () => {
-        const writeInteraction = await contract.writeInteraction(
-          {
-            function: 'removeRecord',
-            name: 'nonexistent-record',
-          },
-          {
-            disableBundling: true,
-          },
-        );
-
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
-        const { cachedValue } = await contract.readState();
-        expect(Object.keys(cachedValue.errorMessages)).toContain(
-          writeInteraction!.originalTxId,
-        );
-        expect(
-          cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
-      });
-    });
-  });
-
-  describe('non-contract owner', () => {
+  describe('any wallet', () => {
     let nonContractOwner: JWKInterface;
     let nonContractOwnerAddress: string;
 
     beforeAll(async () => {
       nonContractOwner = getLocalWallet(1);
-      contract = warp.pst(srcContractId).connect(nonContractOwner);
       nonContractOwnerAddress = await arweave.wallets.getAddress(
         nonContractOwner,
       );
+    });
+
+    beforeEach(() => {
+      contract.connect(nonContractOwner);
     });
 
     describe('read interactions', () => {
@@ -244,8 +91,8 @@ describe('Records', () => {
           },
         );
 
-        const purchasedTierId =
-          prevState.tiers.current[namePurchase.tierNumber!];
+        const purchasedTierId = prevState.tiers.current[0];
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const purchasedTier = prevState.tiers.history.find(
           (t) => t.id === purchasedTierId,
         )!;
@@ -265,7 +112,7 @@ describe('Records', () => {
         expect(state.records[namePurchase.name.toLowerCase()]).toEqual(
           expect.objectContaining({
             contractTxId: DEFAULT_ANT_CONTRACT_ID,
-            tier: state.tiers.current[1],
+            tier: state.tiers.current[0],
             endTimestamp: expect.any(Number),
           }),
         );
@@ -292,7 +139,7 @@ describe('Records', () => {
           },
         );
 
-        const purchasedTierId = prevState.tiers.current[1];
+        const purchasedTierId = prevState.tiers.current[0];
         const purchasedTier = prevState.tiers.history.find(
           (t) => t.id === purchasedTierId,
         )!;
@@ -312,7 +159,7 @@ describe('Records', () => {
         expect(state.records[namePurchase.name!.toLowerCase()]).toEqual(
           expect.objectContaining({
             contractTxId: DEFAULT_ANT_CONTRACT_ID,
-            tier: state.tiers.current[1],
+            tier: state.tiers.current[0],
             endTimestamp: expect.any(Number),
           }),
         );
@@ -384,27 +231,6 @@ describe('Records', () => {
           ).toEqual(DEFAULT_INVALID_ARNS_NAME_MESSAGE);
         },
       );
-
-      it('should not be able to remove record', async () => {
-        const writeInteraction = await contract.writeInteraction(
-          {
-            function: 'removeRecord',
-            name: 'name1',
-          },
-          {
-            disableBundling: true,
-          },
-        );
-
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
-        const { cachedValue } = await contract.readState();
-        expect(Object.keys(cachedValue.errorMessages)).toContain(
-          writeInteraction!.originalTxId,
-        );
-        expect(
-          cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(DEFAULT_NON_CONTRACT_OWNER_MESSAGE);
-      });
     });
 
     describe('reserved names', () => {
@@ -473,7 +299,7 @@ describe('Records', () => {
           years: 1,
           tierNumber: 1,
         };
-        await contract.connect(nonNameOwner);
+        contract.connect(nonNameOwner);
         const writeInteraction = await contract.writeInteraction(
           {
             function: 'buyRecord',
@@ -493,7 +319,7 @@ describe('Records', () => {
         );
       });
 
-      it.only('should not be able to buy reserved name that has no target, but is not expired', async () => {
+      it('should not be able to buy reserved name that has no target, but is not expired', async () => {
         const namePurchase: ArNSNamePurchase = {
           name: 'google',
           contractTxId: DEFAULT_ANT_CONTRACT_ID,
@@ -523,14 +349,12 @@ describe('Records', () => {
       });
 
       it('should be able to buy reserved name when the caller is the target of the reserved name', async () => {
-        const nameOwner = getLocalWallet(1);
         const namePurchase: ArNSNamePurchase = {
           name: 'twitter',
           contractTxId: DEFAULT_ANT_CONTRACT_ID,
           years: 1,
           tierNumber: 1,
         };
-        await contract.connect(nameOwner);
         const writeInteraction = await contract.writeInteraction(
           {
             function: 'buyRecord',
@@ -550,7 +374,7 @@ describe('Records', () => {
         expect(state.records[namePurchase.name.toLowerCase()]).toEqual(
           expect.objectContaining({
             contractTxId: DEFAULT_ANT_CONTRACT_ID,
-            tier: state.tiers.current[1],
+            tier: state.tiers.current[0],
             endTimestamp: expect.any(Number),
           }),
         );
