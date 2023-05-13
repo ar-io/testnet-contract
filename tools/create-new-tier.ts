@@ -6,7 +6,7 @@ import {
   defaultCacheOptions,
 } from 'warp-contracts';
 
-import { keyfile } from '../constants';
+import { keyfile } from './constants';
 
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID

@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 import axiosRetry, { exponentialDelay } from 'axios-retry';
 
-declare const ContractError;
+declare const ContractError: any;
 
 export function isArweaveAddress(address: string) {
   const trimmedAddress = address.toString().trim();
@@ -19,7 +19,6 @@ export function isipV4Address(ipV4Address: string) {
   ) {
     return true;
   }
-  alert('You have entered an invalid IP address!');
   return false;
 }
 

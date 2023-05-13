@@ -3,7 +3,7 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import { LoggerFactory, WarpFactory } from 'warp-contracts';
 
-import { testKeyfile } from '../constants';
+import { testKeyfile } from './constants';
 
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID
