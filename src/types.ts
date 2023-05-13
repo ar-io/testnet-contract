@@ -31,7 +31,6 @@ export type IOState = PstState & {
     };
     history: ServiceTier[];
   };
-  approvedANTSourceCodeTxs: string[]; // An array of Smartweave Source Code transactions for whitelisted ANTs
   settings: ContractSettings; // protocol settings and parameters
   reserved: {
     // A list of all reserved names that are not allowed to be purchased at this time
