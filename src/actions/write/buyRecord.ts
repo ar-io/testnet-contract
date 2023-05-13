@@ -28,16 +28,8 @@ export const buyRecord = async (
   const balances = state.balances;
   const records = state.records;
   const reserved = state.reserved;
-  const currentTiers =
-    state.tiers?.current ??
-    DEFAULT_TIERS.reduce(
-      (acc, tier, index) => ({
-        ...acc,
-        [index + 1]: tier.id,
-      }),
-      {},
-    );
-  const allTiers = state.tiers?.history ?? DEFAULT_TIERS;
+  const { tiers = DEFAULT_TIERS } = state;
+  const { current: currentTiers, history: allTiers } = tiers;
   const currentBlockTime = +SmartWeave.block.timestamp;
 
   // Check if the user has enough tokens to purchase the name
@@ -58,20 +50,20 @@ export const buyRecord = async (
   }
 
   // list of all active tier ID's
-  const activeTierNumbers = Object.keys(currentTiers).map((k) => +k);
+  const activeTierNumbers = currentTiers.map((k, indx) => indx + 1);
   if (
     !Number.isInteger(tierNumber) ||
     !activeTierNumbers.includes(tierNumber)
   ) {
     throw new ContractError(
-      `Invalid value for "tier". Must be ${Object.values(currentTiers).join(
-        ',',
-      )}`,
+      `Invalid value for "tier". Must be ${Object.values(
+        activeTierNumbers,
+      ).join(',')}`,
     );
   }
 
   // the tier purchased
-  const selectedTierID = currentTiers[tierNumber];
+  const selectedTierID = currentTiers[tierNumber - 1];
   const purchasedTier: ServiceTier =
     allTiers.find((t) => t.id === selectedTierID) ?? DEFAULT_TIERS[0];
 
@@ -112,6 +104,7 @@ export const buyRecord = async (
     }
 
     if (
+      !target &&
       reservedEndTimestamp &&
       +SmartWeave.block.timestamp < reservedEndTimestamp
     ) {
@@ -181,6 +174,6 @@ export const buyRecord = async (
   // update the records object
   state.records = records;
   state.reserved = reserved;
-
+  state.balances = balances;
   return { state };
 };

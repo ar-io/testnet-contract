@@ -310,8 +310,8 @@ export async function setupInitialContractState(
 
   // configure the necessary contract settings
   state.settings = {
-    registry: DEFAULT_CONTRACT_SETTINGS
-  }
+    registry: DEFAULT_CONTRACT_SETTINGS,
+  };
 
   // configure the foundation
   state.foundation = createFoundation(wallets);
@@ -340,7 +340,7 @@ export async function setupInitialContractState(
 
 export function getLocalWallet(index = 0): JWKInterface {
   const wallet = JSON.parse(
-    fs.readFileSync(path.join(__dirname, `../wallets/${index}`), 'utf8'),
+    fs.readFileSync(path.join(__dirname, `../wallets/${index}.json`), 'utf8'),
   ) as unknown as JWKInterface;
   return wallet;
 }

@@ -53,7 +53,7 @@ export type ContractSettings = {
     gatewayLeaveLength: number; // the amount of blocks that have to elapse before a gateway leaves the network
     delegatedStakeWithdrawLength: number; // the amount of blocks that have to elapse before a delegated stake is returned
     operatorStakeWithdrawLength: number; // the amount of blocks that have to elapse before a gateway operator's stake is returned
-  }
+  };
 };
 
 const gatewayStatus = [
