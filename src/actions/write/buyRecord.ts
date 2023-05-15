@@ -18,29 +18,41 @@ import { validateBuyRecord } from '../../validations.mjs';
 declare const ContractError;
 declare const SmartWeave: any;
 
-export type BuyRecord = {
+export class BuyRecord {
+  function = 'buyRecord';
   name: string;
   contractTxId: string;
   years: number;
   tierNumber: number;
-};
+
+  constructor(input: any){
+    // validate using ajv validator
+    if (!validateBuyRecord(input)) {
+      throw new ContractError(INVALID_INPUT_MESSAGE);
+    }
+    const { name, contractTxId = RESERVED_ATOMIC_TX_ID, years = 1, tierNumber = 1 } = input;
+    this.name = name;
+    this.contractTxId = contractTxId;
+    this.years = years;
+    this.tierNumber = tierNumber
+  }
+}
 
 export const buyRecord = (
   state: IOState,
   { caller, input }: PstAction,
 ): ContractResult => {
-  // validate using ajv validator
-  if (!validateBuyRecord(input)) {
-    throw new ContractError(INVALID_INPUT_MESSAGE);
-  }
 
-  // we know it's solid, can safely cast as type
+  // does validation on constructor
+  const buyRecordInput = new BuyRecord(input);
   const {
     name,
-    contractTxId = RESERVED_ATOMIC_TX_ID,
-    years = 1,
-    tierNumber = 1,
-  } = input as BuyRecord;
+    contractTxId,
+    years,
+    tierNumber,
+  } = buyRecordInput;
+
+  // get all other relevant state data
   const { balances, records, reserved, fees, tiers = DEFAULT_TIERS } = state;
   const { current: currentTiers, history: allTiers } = tiers;
   const currentBlockTime = +SmartWeave.block.timestamp;

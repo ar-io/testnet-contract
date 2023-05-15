@@ -358,16 +358,31 @@
   }
 
   // src/actions/write/buyRecord.ts
-  var buyRecord = (state, { caller, input }) => {
-    if (!validateBuyRecord(input)) {
-      throw new ContractError(INVALID_INPUT_MESSAGE);
+  var BuyRecord = class {
+    function = "buyRecord";
+    name;
+    contractTxId;
+    years;
+    tierNumber;
+    constructor(input) {
+      if (!validateBuyRecord(input)) {
+        throw new ContractError(INVALID_INPUT_MESSAGE);
+      }
+      const { name, contractTxId = RESERVED_ATOMIC_TX_ID, years = 1, tierNumber = 1 } = input;
+      this.name = name;
+      this.contractTxId = contractTxId;
+      this.years = years;
+      this.tierNumber = tierNumber;
     }
+  };
+  var buyRecord = (state, { caller, input }) => {
+    const buyRecordInput = new BuyRecord(input);
     const {
       name,
-      contractTxId = RESERVED_ATOMIC_TX_ID,
-      years = 1,
-      tierNumber = 1
-    } = input;
+      contractTxId,
+      years,
+      tierNumber
+    } = buyRecordInput;
     const { balances, records, reserved, fees, tiers = DEFAULT_TIERS } = state;
     const { current: currentTiers, history: allTiers } = tiers;
     const currentBlockTime = +SmartWeave.block.timestamp;
@@ -382,7 +397,9 @@
     const activeTierNumbers = currentTiers.map((_, indx) => indx + 1);
     if (!activeTierNumbers.includes(tierNumber)) {
       throw new ContractError(
-        `Invalid value for "tier". Must be one of: ${activeTierNumbers.join(",")}`
+        `Invalid value for "tier". Must be one of: ${activeTierNumbers.join(
+          ","
+        )}`
       );
     }
     const selectedTierID = currentTiers[tierNumber - 1];
