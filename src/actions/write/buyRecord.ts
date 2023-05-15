@@ -47,6 +47,13 @@ export const buyRecord = (
   state: IOState,
   { caller, input }: PstAction,
 ): ContractResult => {
+<<<<<<< HEAD
+=======
+  // does validation on constructor
+  const buyRecordInput = new BuyRecord(input);
+  const { name, contractTxId, years, tierNumber } = buyRecordInput;
+
+>>>>>>> d204cb6 (chore: formatting)
   // get all other relevant state data
   const { balances, records, reserved, fees, tiers = DEFAULT_TIERS } = state;
   const { current: currentTiers, history: allTiers } = tiers;
