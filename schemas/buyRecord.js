@@ -19,30 +19,15 @@ const buyRecordSchema = {
       minimum: 1, // TODO: these validations should pull from state
       maximum: 3, // TODO: these validations should pull from state
     },
-<<<<<<< HEAD
     tier: {
       type: 'string',
       pattern: '^[a-zA-Z0-9-]{43}$',
     },
   },
   required: ['name', 'function'],
-=======
-    tierNumber: {
-      type: 'integer',
-      minimum: 1, // TODO: these validations should pull from state
-      maximum: 3, // TODO: these validations should pull from state
-    },
-  },
-  required: ['name'],
->>>>>>> a3bc56c (chore: move schemas to folder so we can break them up)
   additionalProperties: false,
 };
 
 module.exports = {
-<<<<<<< HEAD
   buyRecordSchema,
 };
-=======
-  buyRecordSchema
-}
->>>>>>> a3bc56c (chore: move schemas to folder so we can break them up)

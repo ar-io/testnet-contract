@@ -378,6 +378,66 @@ describe('Records', () => {
       },
     );
 
+    it.each(['', '1', 'string', '*&*##$%#', 100, 2.3, false, true])(
+      'should not be able to purchase a name with an invalid number of years: %s',
+      async (badYear) => {
+        const namePurchase = {
+          name: 'good-name',
+          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          years: badYear,
+          tierNumber: 1,
+        };
+        const writeInteraction = await contract.writeInteraction(
+          {
+            function: 'buyRecord',
+            ...namePurchase,
+          },
+          {
+            disableBundling: true,
+          },
+        );
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue } = await contract.readState();
+        expect(Object.keys(cachedValue.errorMessages)).toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(
+          cachedValue.errorMessages[writeInteraction!.originalTxId],
+        ).toEqual(INVALID_INPUT_MESSAGE);
+      },
+    );
+
+    it.each(['', '1', 'string', '*&*##$%#', 100, 2.3, false, true])(
+      'should not be able to purchase a name with an invalid tier number: %s',
+      async (badTierNumber) => {
+        const namePurchase = {
+          name: 'good-name',
+          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          years: 1,
+          tierNumber: badTierNumber,
+        };
+        const writeInteraction = await contract.writeInteraction(
+          {
+            function: 'buyRecord',
+            ...namePurchase,
+          },
+          {
+            disableBundling: true,
+          },
+        );
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue } = await contract.readState();
+        expect(Object.keys(cachedValue.errorMessages)).toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(
+          cachedValue.errorMessages[writeInteraction!.originalTxId],
+        ).toEqual(INVALID_INPUT_MESSAGE);
+      },
+    );
+
     it('should not be able to buy a reserved name when not the reserved target', async () => {
       const reservedNamePurchase1 = {
         name: 'www', // this short name is not owned by anyone and has no expiration
