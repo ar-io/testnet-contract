@@ -39,6 +39,8 @@
   var MINIMUM_ALLOWED_NAME_LENGTH = 5;
   var ALLOWED_ACTIVE_TIERS = [1, 2, 3];
   var DEFAULT_ANNUAL_PERCENTAGE_FEE = 0.1;
+  var DEFAULT_PERMABUY_TIER = 3;
+  var DEFAULT_PERMABUY_EXPIRATION = 0;
   var DEFAULT_ARNS_NAME_RESERVED_MESSAGE = "Name is reserved.";
   var INVALID_INPUT_MESSAGE = "Invalid input for interaction";
   var DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE = `Names shorter than ${MINIMUM_ALLOWED_NAME_LENGTH} characters must be reserved in order to be purchased.`;
@@ -46,6 +48,7 @@
   var DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE = "Name does not exist in the ArNS Contract!";
   var DEFAULT_INSUFFICIENT_FUNDS_MESSAGE = "Insufficient funds for this transaction.";
   var DEFAULT_INVALID_TARGET_MESSAGE = "Invalid target specified";
+  var DEFAULT_INVALID_QTY_MESSAGE = "Invalid quantity. Must be an integer and greater than 0.";
   var DEFAULT_INVALID_TIER_MESSAGE = "Invalid tier.";
   var DEFAULT_INVALID_ID_TIER_MESSAGE = "Invalid tier ID. Must be present in state before it can be used as a current tier.";
   var DEFAULT_INVALID_YEARS_MESSAGE = `Invalid number of years. Must be an integer and less than ${MAX_YEARS}`;
@@ -206,6 +209,24 @@
     const tierAnnualFee = tier.fee;
     return (nameAnnualRegistrationFee + tierAnnualFee) * years;
   }
+  function calculatePermabuyFee(name, fees, multiplier) {
+    return fees[name.length.toString()] * multiplier;
+  }
+  function calculateMinimumAuctionBid({
+    startHeight,
+    initialPrice,
+    floorPrice,
+    currentBlockHeight,
+    decayInterval,
+    decayRate
+  }) {
+    const blockIntervalsPassed = Math.floor(
+      (currentBlockHeight - startHeight) / decayInterval
+    );
+    const dutchAuctionBid = initialPrice * Math.pow(decayRate, blockIntervalsPassed);
+    const minimumBid = Math.max(dutchAuctionBid, floorPrice);
+    return minimumBid;
+  }
   function isValidFQDN(fqdn) {
     const fqdnRegex = /^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{1,6}$/;
     return fqdnRegex.test(fqdn);
@@ -356,6 +377,195 @@
     validate10.errors = vErrors;
     return errors === 0;
   }
+  var validateAuctionBid = validate11;
+  var pattern3 = new RegExp("^([a-zA-Z0-9-_]{43})$", "u");
+  function validate11(data, { instancePath = "", parentData, parentDataProperty, rootData = data } = {}) {
+    ;
+    let vErrors = null;
+    let errors = 0;
+    if (errors === 0) {
+      if (data && typeof data == "object" && !Array.isArray(data)) {
+        let missing0;
+        if (data.name === void 0 && (missing0 = "name") || data.details === void 0 && (missing0 = "details")) {
+          validate11.errors = [{ instancePath, schemaPath: "#/required", keyword: "required", params: { missingProperty: missing0 }, message: "must have required property '" + missing0 + "'" }];
+          return false;
+        } else {
+          const _errs1 = errors;
+          for (const key0 in data) {
+            if (!(key0 === "function" || key0 === "name" || key0 === "qty" || key0 === "details")) {
+              validate11.errors = [{ instancePath, schemaPath: "#/additionalProperties", keyword: "additionalProperties", params: { additionalProperty: key0 }, message: "must NOT have additional properties" }];
+              return false;
+              break;
+            }
+          }
+          if (_errs1 === errors) {
+            if (data.function !== void 0) {
+              let data0 = data.function;
+              const _errs2 = errors;
+              if (typeof data0 !== "string") {
+                validate11.errors = [{ instancePath: instancePath + "/function", schemaPath: "#/properties/function/type", keyword: "type", params: { type: "string" }, message: "must be string" }];
+                return false;
+              }
+              if ("submitAuctionBid" !== data0) {
+                validate11.errors = [{ instancePath: instancePath + "/function", schemaPath: "#/properties/function/const", keyword: "const", params: { allowedValue: "submitAuctionBid" }, message: "must be equal to constant" }];
+                return false;
+              }
+              var valid0 = _errs2 === errors;
+            } else {
+              var valid0 = true;
+            }
+            if (valid0) {
+              if (data.name !== void 0) {
+                let data1 = data.name;
+                const _errs4 = errors;
+                if (errors === _errs4) {
+                  if (typeof data1 === "string") {
+                    if (!pattern0.test(data1)) {
+                      validate11.errors = [{ instancePath: instancePath + "/name", schemaPath: "#/properties/name/pattern", keyword: "pattern", params: { pattern: "^(?!-)[a-zA-Z0-9-]{1,32}$" }, message: 'must match pattern "^(?!-)[a-zA-Z0-9-]{1,32}$"' }];
+                      return false;
+                    }
+                  } else {
+                    validate11.errors = [{ instancePath: instancePath + "/name", schemaPath: "#/properties/name/type", keyword: "type", params: { type: "string" }, message: "must be string" }];
+                    return false;
+                  }
+                }
+                var valid0 = _errs4 === errors;
+              } else {
+                var valid0 = true;
+              }
+              if (valid0) {
+                if (data.qty !== void 0) {
+                  let data2 = data.qty;
+                  const _errs6 = errors;
+                  if (errors === _errs6) {
+                    if (typeof data2 == "number" && isFinite(data2)) {
+                      if (data2 < 0 || isNaN(data2)) {
+                        validate11.errors = [{ instancePath: instancePath + "/qty", schemaPath: "#/properties/qty/minimum", keyword: "minimum", params: { comparison: ">=", limit: 0 }, message: "must be >= 0" }];
+                        return false;
+                      }
+                    } else {
+                      validate11.errors = [{ instancePath: instancePath + "/qty", schemaPath: "#/properties/qty/type", keyword: "type", params: { type: "number" }, message: "must be number" }];
+                      return false;
+                    }
+                  }
+                  var valid0 = _errs6 === errors;
+                } else {
+                  var valid0 = true;
+                }
+                if (valid0) {
+                  if (data.details !== void 0) {
+                    let data3 = data.details;
+                    const _errs8 = errors;
+                    if (errors === _errs8) {
+                      if (data3 && typeof data3 == "object" && !Array.isArray(data3)) {
+                        let missing1;
+                        if (data3.contractTxId === void 0 && (missing1 = "contractTxId")) {
+                          validate11.errors = [{ instancePath: instancePath + "/details", schemaPath: "#/properties/details/required", keyword: "required", params: { missingProperty: missing1 }, message: "must have required property '" + missing1 + "'" }];
+                          return false;
+                        } else {
+                          const _errs10 = errors;
+                          for (const key1 in data3) {
+                            if (!(key1 === "contractTxId" || key1 === "years" || key1 === "tierNumber")) {
+                              validate11.errors = [{ instancePath: instancePath + "/details", schemaPath: "#/properties/details/additionalProperties", keyword: "additionalProperties", params: { additionalProperty: key1 }, message: "must NOT have additional properties" }];
+                              return false;
+                              break;
+                            }
+                          }
+                          if (_errs10 === errors) {
+                            if (data3.contractTxId !== void 0) {
+                              let data4 = data3.contractTxId;
+                              const _errs11 = errors;
+                              if (errors === _errs11) {
+                                if (typeof data4 === "string") {
+                                  if (!pattern3.test(data4)) {
+                                    validate11.errors = [{ instancePath: instancePath + "/details/contractTxId", schemaPath: "#/properties/details/properties/contractTxId/pattern", keyword: "pattern", params: { pattern: "^([a-zA-Z0-9-_]{43})$" }, message: 'must match pattern "^([a-zA-Z0-9-_]{43})$"' }];
+                                    return false;
+                                  }
+                                } else {
+                                  validate11.errors = [{ instancePath: instancePath + "/details/contractTxId", schemaPath: "#/properties/details/properties/contractTxId/type", keyword: "type", params: { type: "string" }, message: "must be string" }];
+                                  return false;
+                                }
+                              }
+                              var valid1 = _errs11 === errors;
+                            } else {
+                              var valid1 = true;
+                            }
+                            if (valid1) {
+                              if (data3.years !== void 0) {
+                                let data5 = data3.years;
+                                const _errs13 = errors;
+                                if (!(typeof data5 == "number" && (!(data5 % 1) && !isNaN(data5)) && isFinite(data5))) {
+                                  validate11.errors = [{ instancePath: instancePath + "/details/years", schemaPath: "#/properties/details/properties/years/type", keyword: "type", params: { type: "integer" }, message: "must be integer" }];
+                                  return false;
+                                }
+                                if (errors === _errs13) {
+                                  if (typeof data5 == "number" && isFinite(data5)) {
+                                    if (data5 > 3 || isNaN(data5)) {
+                                      validate11.errors = [{ instancePath: instancePath + "/details/years", schemaPath: "#/properties/details/properties/years/maximum", keyword: "maximum", params: { comparison: "<=", limit: 3 }, message: "must be <= 3" }];
+                                      return false;
+                                    } else {
+                                      if (data5 < 1 || isNaN(data5)) {
+                                        validate11.errors = [{ instancePath: instancePath + "/details/years", schemaPath: "#/properties/details/properties/years/minimum", keyword: "minimum", params: { comparison: ">=", limit: 1 }, message: "must be >= 1" }];
+                                        return false;
+                                      }
+                                    }
+                                  }
+                                }
+                                var valid1 = _errs13 === errors;
+                              } else {
+                                var valid1 = true;
+                              }
+                              if (valid1) {
+                                if (data3.tierNumber !== void 0) {
+                                  let data6 = data3.tierNumber;
+                                  const _errs15 = errors;
+                                  if (!(typeof data6 == "number" && (!(data6 % 1) && !isNaN(data6)) && isFinite(data6))) {
+                                    validate11.errors = [{ instancePath: instancePath + "/details/tierNumber", schemaPath: "#/properties/details/properties/tierNumber/type", keyword: "type", params: { type: "integer" }, message: "must be integer" }];
+                                    return false;
+                                  }
+                                  if (errors === _errs15) {
+                                    if (typeof data6 == "number" && isFinite(data6)) {
+                                      if (data6 > 3 || isNaN(data6)) {
+                                        validate11.errors = [{ instancePath: instancePath + "/details/tierNumber", schemaPath: "#/properties/details/properties/tierNumber/maximum", keyword: "maximum", params: { comparison: "<=", limit: 3 }, message: "must be <= 3" }];
+                                        return false;
+                                      } else {
+                                        if (data6 < 1 || isNaN(data6)) {
+                                          validate11.errors = [{ instancePath: instancePath + "/details/tierNumber", schemaPath: "#/properties/details/properties/tierNumber/minimum", keyword: "minimum", params: { comparison: ">=", limit: 1 }, message: "must be >= 1" }];
+                                          return false;
+                                        }
+                                      }
+                                    }
+                                  }
+                                  var valid1 = _errs15 === errors;
+                                } else {
+                                  var valid1 = true;
+                                }
+                              }
+                            }
+                          }
+                        }
+                      } else {
+                        validate11.errors = [{ instancePath: instancePath + "/details", schemaPath: "#/properties/details/type", keyword: "type", params: { type: "object" }, message: "must be object" }];
+                        return false;
+                      }
+                    }
+                    var valid0 = _errs8 === errors;
+                  } else {
+                    var valid0 = true;
+                  }
+                }
+              }
+            }
+          }
+        }
+      } else {
+        validate11.errors = [{ instancePath, schemaPath: "#/type", keyword: "type", params: { type: "object" }, message: "must be object" }];
+        return false;
+      }
+    }
+    validate11.errors = vErrors;
+    return errors === 0;
+  }
 
   // src/actions/write/buyRecord.ts
   var BuyRecord = class {
@@ -368,7 +578,12 @@
       if (!validateBuyRecord(input)) {
         throw new ContractError(INVALID_INPUT_MESSAGE);
       }
-      const { name, contractTxId = RESERVED_ATOMIC_TX_ID, years = 1, tierNumber = 1 } = input;
+      const {
+        name,
+        contractTxId = RESERVED_ATOMIC_TX_ID,
+        years = 1,
+        tierNumber = 1
+      } = input;
       this.name = name;
       this.contractTxId = contractTxId;
       this.years = years;
@@ -377,12 +592,7 @@
   };
   var buyRecord = (state, { caller, input }) => {
     const buyRecordInput = new BuyRecord(input);
-    const {
-      name,
-      contractTxId,
-      years,
-      tierNumber
-    } = buyRecordInput;
+    const { name, contractTxId, years, tierNumber } = buyRecordInput;
     const { balances, records, reserved, fees, tiers = DEFAULT_TIERS } = state;
     const { current: currentTiers, history: allTiers } = tiers;
     const currentBlockTime = +SmartWeave.block.timestamp;
@@ -444,7 +654,8 @@
     records[formattedName] = {
       contractTxId: selectedContractTxId,
       endTimestamp,
-      tier: selectedTierID
+      tier: selectedTierID,
+      type: "lease"
     };
     state.records = records;
     state.reserved = reserved;
@@ -954,6 +1165,143 @@
     return { state };
   };
 
+  // src/actions/write/submitAuctionBid.ts
+  var AuctionBid = class {
+    name;
+    qty;
+    type;
+    details;
+    constructor(input) {
+      if (!validateAuctionBid(input)) {
+        throw new ContractError(INVALID_INPUT_MESSAGE);
+      }
+      const { name, qty, type, details } = input;
+      this.name = name.trim().toLowerCase();
+      this.qty = qty;
+      this.type = type ?? "lease";
+      this.details = {
+        contractTxId: details.contractTxId,
+        years: this.type === "lease" ? details.years ?? 1 : DEFAULT_PERMABUY_EXPIRATION,
+        tierNumber: this.type === "lease" ? details.tierNumber ?? 1 : DEFAULT_PERMABUY_TIER
+        // the top tier
+      };
+    }
+  };
+  var submitAuctionBid = async (state, { caller, input }) => {
+    const { auctions = {}, fees, records, tiers, settings, balances, vaults } = state;
+    const {
+      name,
+      qty: submittedBid,
+      type,
+      details: bidDetails
+    } = new AuctionBid(input);
+    if (Object.keys(records).includes(name)) {
+      throw ContractError(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
+    }
+    const currentAuctionSettings = settings.auctions.history.find((a) => a.id === settings.auctions.current);
+    if (!currentAuctionSettings) {
+      throw Error("No auctions settings found.");
+    }
+    const currentTiers = tiers?.current;
+    const tierHistory = tiers?.history;
+    if (!currentTiers || !tierHistory.length) {
+      throw Error("No tiers found.");
+    }
+    const currentBlockHeight = +SmartWeave.block.height;
+    const { decayInterval, decayRate, auctionDuration } = currentAuctionSettings;
+    const serviceTier = tierHistory.find(
+      (t) => t.id === currentTiers[bidDetails.tierNumber - 1]
+    );
+    const registrationFee = type === "lease" ? calculateTotalRegistrationFee(name, fees, serviceTier, bidDetails.years) : calculatePermabuyFee(name, fees, settings.permabuy.multiplier);
+    if (Object.keys(auctions).includes(name)) {
+      const existingAuction = auctions[name];
+      const { startHeight, initialPrice, floorPrice, vault } = existingAuction;
+      const auctionEndHeight = startHeight + auctionDuration;
+      const endTimestamp = +SmartWeave.block.height + SECONDS_IN_A_YEAR * bidDetails.years;
+      const tier = currentTiers[existingAuction.details.tierNumber - 1];
+      const type2 = existingAuction.type;
+      if (startHeight > currentBlockHeight || currentBlockHeight > auctionEndHeight) {
+        records[name] = {
+          contractTxId: existingAuction.details.contractTxId,
+          tier,
+          endTimestamp,
+          type: type2
+        };
+        delete auctions[name];
+        state.auctions = auctions;
+        state.records = records;
+        state.balances = balances;
+        throw Error("The auction has already been won.");
+      }
+      const requiredMinimumBid = calculateMinimumAuctionBid({
+        startHeight,
+        initialPrice,
+        floorPrice,
+        currentBlockHeight,
+        decayRate,
+        decayInterval
+      });
+      if (submittedBid && submittedBid < requiredMinimumBid) {
+        throw Error(
+          `The bid (${submittedBid} IO) is less than the current required minimum bid of ${requiredMinimumBid} IO.`
+        );
+      }
+      const finalBid = submittedBid ? Math.min(submittedBid, requiredMinimumBid) : requiredMinimumBid;
+      if (!walletHasSufficientBalance(balances, caller, finalBid)) {
+        throw Error(DEFAULT_INVALID_QTY_MESSAGE);
+      }
+      records[name] = {
+        contractTxId: bidDetails.contractTxId,
+        endTimestamp,
+        tier,
+        type: type2
+      };
+      const { wallet: initiator, qty } = vault;
+      balances[initiator] += qty;
+      balances[caller] -= finalBid;
+      delete auctions[name];
+      state.auctions = auctions;
+      state.records = records;
+      state.balances = balances;
+      return { state };
+    }
+    if (!Object.keys(auctions).includes(name)) {
+      const {
+        id: auctionSettingsId,
+        floorPriceMultiplier,
+        startPriceMultiplier
+      } = currentAuctionSettings;
+      const calculatedFloor = registrationFee * floorPriceMultiplier;
+      const floorPrice = submittedBid ? Math.max(submittedBid, calculatedFloor) : calculatedFloor;
+      const initialPrice = registrationFee * startPriceMultiplier;
+      if (!walletHasSufficientBalance(balances, caller, floorPrice)) {
+        throw Error(DEFAULT_INVALID_QTY_MESSAGE);
+      }
+      const initialAuctionBid = {
+        auctionSettingsId,
+        floorPrice,
+        initialPrice,
+        details: bidDetails,
+        // TODO: potentially increment by 1?
+        startHeight: currentBlockHeight,
+        type,
+        vault: {
+          wallet: caller,
+          qty: floorPrice
+        }
+      };
+      auctions[name] = initialAuctionBid;
+      balances[caller] -= floorPrice;
+      state.auctions = auctions;
+      state.vaults = vaults;
+      state.balances = balances;
+      return { state };
+    }
+  };
+  function walletHasSufficientBalance(balances, wallet, qty) {
+    return balances[wallet] && balances[wallet] >= qty;
+  }
+
   // src/actions/write/transferTokens.ts
   var transferTokens = async (state, { caller, input }) => {
     const balances = state.balances;
@@ -1176,6 +1524,8 @@
         return updateGatewaySettings(state, action);
       case "foundationAction":
         return foundationAction(state, action);
+      case "submitAuctionBid":
+        return submitAuctionBid(state, action);
       default:
         throw new ContractError(
           `No function supplied or function not recognized: "${input.function}"`

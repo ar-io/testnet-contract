@@ -1,11 +1,9 @@
 import {
-  DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE,
   DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
   DEFAULT_TIERS,
   INVALID_INPUT_MESSAGE,
   MAX_YEARS,
-  MINIMUM_ALLOWED_NAME_LENGTH,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
@@ -151,6 +149,7 @@ export const buyRecord = (
     contractTxId: selectedContractTxId,
     endTimestamp,
     tier,
+    type: 'lease'
   };
 
   // update the records object

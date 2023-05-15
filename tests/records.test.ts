@@ -3,7 +3,7 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts';
 import { IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import {
-  DEFAULT_ANT_CONTRACT_ID,
+  DEFAULT_ANT_CONTRACT_IDS,
   DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE,
   DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
@@ -76,7 +76,7 @@ describe('Records', () => {
       const prevBalance = prevState.balances[nonContractOwnerAddress];
       const namePurchase = {
         name: 'newName',
-        contractTxId: DEFAULT_ANT_CONTRACT_ID,
+        contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
         years: 1,
       };
       const writeInteraction = await contract.writeInteraction(
@@ -108,8 +108,13 @@ describe('Records', () => {
       );
       expect(records[namePurchase.name.toLowerCase()]).toEqual(
         expect.objectContaining({
+<<<<<<< HEAD
           contractTxId: DEFAULT_ANT_CONTRACT_ID,
           tier: tiers.current[0],
+=======
+          contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
+          tier: state.tiers.current[0],
+>>>>>>> 2406025 (fix(buyRecord): update buy record and tests)
           endTimestamp: expect.any(Number),
         }),
       );
@@ -124,7 +129,7 @@ describe('Records', () => {
       const prevBalance = prevState.balances[nonContractOwnerAddress];
       const namePurchase = {
         name: 'newName2',
-        contractTxId: DEFAULT_ANT_CONTRACT_ID,
+        contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
       };
       const writeInteraction = await contract.writeInteraction(
         {
@@ -155,8 +160,13 @@ describe('Records', () => {
       );
       expect(records[namePurchase.name!.toLowerCase()]).toEqual(
         expect.objectContaining({
+<<<<<<< HEAD
           contractTxId: DEFAULT_ANT_CONTRACT_ID,
           tier: tiers.current[0],
+=======
+          contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
+          tier: state.tiers.current[0],
+>>>>>>> 2406025 (fix(buyRecord): update buy record and tests)
           endTimestamp: expect.any(Number),
         }),
       );
@@ -168,7 +178,7 @@ describe('Records', () => {
     it('should not be able to purchase a name that has not expired', async () => {
       const namePurchase = {
         name: 'newName',
-        contractTxId: DEFAULT_ANT_CONTRACT_ID,
+        contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
         years: 1,
       };
       const writeInteraction = await contract.writeInteraction(
@@ -208,7 +218,7 @@ describe('Records', () => {
       async (badName) => {
         const namePurchase = {
           name: badName,
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
           years: 1,
         };
         const writeInteraction = await contract.writeInteraction(
@@ -383,7 +393,7 @@ describe('Records', () => {
       async (badYear) => {
         const namePurchase = {
           name: 'good-name',
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
           years: badYear,
           tierNumber: 1,
         };
@@ -413,7 +423,7 @@ describe('Records', () => {
       async (badTierNumber) => {
         const namePurchase = {
           name: 'good-name',
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
           years: 1,
           tierNumber: badTierNumber,
         };
@@ -441,7 +451,7 @@ describe('Records', () => {
     it('should not be able to buy a reserved name when not the reserved target', async () => {
       const reservedNamePurchase1 = {
         name: 'www', // this short name is not owned by anyone and has no expiration
-        contractTxId: DEFAULT_ANT_CONTRACT_ID,
+        contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
         years: 1,
       };
       const writeInteraction = await contract.writeInteraction(
@@ -469,7 +479,7 @@ describe('Records', () => {
     it('should not be able to buy a record when name when is shorter than minimum allowed characters and it is not reserved', async () => {
       const namePurchase = {
         name: 'iam',
-        contractTxId: DEFAULT_ANT_CONTRACT_ID,
+        contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
         years: 1,
       };
       const writeInteraction = await contract.writeInteraction(
@@ -495,7 +505,7 @@ describe('Records', () => {
       const nonNameOwner = getLocalWallet(2);
       const namePurchase = {
         name: 'twitter',
-        contractTxId: DEFAULT_ANT_CONTRACT_ID,
+        contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
         years: 1,
       };
       await contract.connect(nonNameOwner);
@@ -521,7 +531,7 @@ describe('Records', () => {
     it('should not be able to buy reserved name that has no target, but is not expired', async () => {
       const namePurchase = {
         name: 'google',
-        contractTxId: DEFAULT_ANT_CONTRACT_ID,
+        contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
         years: 1,
       };
       const writeInteraction = await contract.writeInteraction(
@@ -550,7 +560,7 @@ describe('Records', () => {
       await contract.connect(nonContractOwner);
       const namePurchase = {
         name: 'twitter',
-        contractTxId: DEFAULT_ANT_CONTRACT_ID,
+        contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
         years: 1,
       };
       const writeInteraction = await contract.writeInteraction(
@@ -569,8 +579,13 @@ describe('Records', () => {
       expect(records[namePurchase.name.toLowerCase()]).not.toBe(undefined);
       expect(records[namePurchase.name.toLowerCase()]).toEqual(
         expect.objectContaining({
+<<<<<<< HEAD
           contractTxId: DEFAULT_ANT_CONTRACT_ID,
           tier: tiers.current[0],
+=======
+          contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
+          tier: state.tiers.current[0],
+>>>>>>> 2406025 (fix(buyRecord): update buy record and tests)
           endTimestamp: expect.any(Number),
         }),
       );
