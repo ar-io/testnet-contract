@@ -219,6 +219,7 @@
   var validateBuyRecord = validate10;
   var pattern0 = new RegExp("^(?!-)[a-zA-Z0-9-]{1,32}$", "u");
   var pattern1 = new RegExp("^(atomic|[a-zA-Z0-9-_]{43})$", "u");
+  var pattern2 = new RegExp("^[a-zA-Z0-9-]{43}$", "u");
   function validate10(data, { instancePath = "", parentData, parentDataProperty, rootData = data } = {}) {
     ;
     let vErrors = null;
@@ -226,13 +227,13 @@
     if (errors === 0) {
       if (data && typeof data == "object" && !Array.isArray(data)) {
         let missing0;
-        if (data.name === void 0 && (missing0 = "name")) {
+        if (data.name === void 0 && (missing0 = "name") || data.function === void 0 && (missing0 = "function")) {
           validate10.errors = [{ instancePath, schemaPath: "#/required", keyword: "required", params: { missingProperty: missing0 }, message: "must have required property '" + missing0 + "'" }];
           return false;
         } else {
           const _errs1 = errors;
           for (const key0 in data) {
-            if (!(key0 === "function" || key0 === "name" || key0 === "contractTxId" || key0 === "years" || key0 === "tierNumber")) {
+            if (!(key0 === "function" || key0 === "name" || key0 === "contractTxId" || key0 === "years" || key0 === "tier")) {
               validate10.errors = [{ instancePath, schemaPath: "#/additionalProperties", keyword: "additionalProperties", params: { additionalProperty: key0 }, message: "must NOT have additional properties" }];
               return false;
               break;
@@ -318,24 +319,18 @@
                     var valid0 = true;
                   }
                   if (valid0) {
-                    if (data.tierNumber !== void 0) {
-                      let data4 = data.tierNumber;
+                    if (data.tier !== void 0) {
+                      let data4 = data.tier;
                       const _errs10 = errors;
-                      if (!(typeof data4 == "number" && (!(data4 % 1) && !isNaN(data4)) && isFinite(data4))) {
-                        validate10.errors = [{ instancePath: instancePath + "/tierNumber", schemaPath: "#/properties/tierNumber/type", keyword: "type", params: { type: "integer" }, message: "must be integer" }];
-                        return false;
-                      }
                       if (errors === _errs10) {
-                        if (typeof data4 == "number" && isFinite(data4)) {
-                          if (data4 > 3 || isNaN(data4)) {
-                            validate10.errors = [{ instancePath: instancePath + "/tierNumber", schemaPath: "#/properties/tierNumber/maximum", keyword: "maximum", params: { comparison: "<=", limit: 3 }, message: "must be <= 3" }];
+                        if (typeof data4 === "string") {
+                          if (!pattern2.test(data4)) {
+                            validate10.errors = [{ instancePath: instancePath + "/tier", schemaPath: "#/properties/tier/pattern", keyword: "pattern", params: { pattern: "^[a-zA-Z0-9-]{43}$" }, message: 'must match pattern "^[a-zA-Z0-9-]{43}$"' }];
                             return false;
-                          } else {
-                            if (data4 < 1 || isNaN(data4)) {
-                              validate10.errors = [{ instancePath: instancePath + "/tierNumber", schemaPath: "#/properties/tierNumber/minimum", keyword: "minimum", params: { comparison: ">=", limit: 1 }, message: "must be >= 1" }];
-                              return false;
-                            }
                           }
+                        } else {
+                          validate10.errors = [{ instancePath: instancePath + "/tier", schemaPath: "#/properties/tier/type", keyword: "type", params: { type: "string" }, message: "must be string" }];
+                          return false;
                         }
                       }
                       var valid0 = _errs10 === errors;
@@ -363,29 +358,31 @@
     name;
     contractTxId;
     years;
-    tierNumber;
-    constructor(input) {
+    tier;
+    constructor(input, defaults) {
       if (!validateBuyRecord(input)) {
         throw new ContractError(INVALID_INPUT_MESSAGE);
       }
-      const { name, contractTxId = RESERVED_ATOMIC_TX_ID, years = 1, tierNumber = 1 } = input;
-      this.name = name;
+      const {
+        name,
+        contractTxId = RESERVED_ATOMIC_TX_ID,
+        years = 1,
+        tier = defaults.tier
+      } = input;
+      this.name = name.trim().toLowerCase();
       this.contractTxId = contractTxId;
       this.years = years;
-      this.tierNumber = tierNumber;
+      this.tier = tier;
     }
   };
   var buyRecord = (state, { caller, input }) => {
-    const buyRecordInput = new BuyRecord(input);
-    const {
-      name,
-      contractTxId,
-      years,
-      tierNumber
-    } = buyRecordInput;
     const { balances, records, reserved, fees, tiers = DEFAULT_TIERS } = state;
     const { current: currentTiers, history: allTiers } = tiers;
     const currentBlockTime = +SmartWeave.block.timestamp;
+    const buyRecordInput = new BuyRecord(input, {
+      tier: tiers.current[0]
+    });
+    const { name, contractTxId, years, tier } = buyRecordInput;
     if (!balances[caller] || balances[caller] == void 0 || balances[caller] == null || isNaN(balances[caller])) {
       throw new ContractError(`Caller balance is not defined!`);
     }
@@ -394,31 +391,25 @@
         'Invalid value for "years". Must be an integer greater than zero and less than the max years'
       );
     }
-    const activeTierNumbers = currentTiers.map((_, indx) => indx + 1);
-    if (!activeTierNumbers.includes(tierNumber)) {
+    if (!currentTiers.includes(tier)) {
       throw new ContractError(
-        `Invalid value for "tier". Must be one of: ${activeTierNumbers.join(
+        `Invalid value for "tier". Must be one of: ${tier.join(
           ","
         )}`
       );
     }
-    const selectedTierID = currentTiers[tierNumber - 1];
-    const purchasedTier = allTiers.find((t) => t.id === selectedTierID) ?? DEFAULT_TIERS[0];
-    if (!purchasedTier) {
-      throw new ContractError("The tier purchased is not in the states history.");
-    }
+    const purchasedTier = allTiers.find((t) => t.id === tier);
     const endTimestamp = currentBlockTime + SECONDS_IN_A_YEAR * years;
-    const formattedName = name.toLowerCase();
-    if (!reserved[formattedName] && formattedName.length < MINIMUM_ALLOWED_NAME_LENGTH) {
+    if (!reserved[name] && name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
       throw new ContractError(DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE);
     }
-    if (reserved[formattedName]) {
-      const { target, endTimestamp: reservedEndTimestamp } = reserved[formattedName];
+    if (reserved[name]) {
+      const { target, endTimestamp: reservedEndTimestamp } = reserved[name];
       const handleReservedName = () => {
         const reservedByCaller = target === caller;
         const reservedExpired = reservedEndTimestamp && reservedEndTimestamp <= +SmartWeave.block.timestamp;
         if (reservedByCaller || reservedExpired) {
-          delete reserved[formattedName];
+          delete reserved[name];
           return;
         }
         throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
@@ -426,7 +417,7 @@
       handleReservedName();
     }
     const totalFee = calculateTotalRegistrationFee(
-      formattedName,
+      name,
       fees,
       purchasedTier,
       years
@@ -437,14 +428,14 @@
       );
     }
     const selectedContractTxId = contractTxId === RESERVED_ATOMIC_TX_ID ? SmartWeave.transaction.id : contractTxId;
-    if (records[formattedName] && records[formattedName].endTimestamp + SECONDS_IN_GRACE_PERIOD > +SmartWeave.block.timestamp) {
+    if (records[name] && records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD > +SmartWeave.block.timestamp) {
       throw new ContractError(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
     }
     balances[caller] -= totalFee;
-    records[formattedName] = {
+    records[name] = {
       contractTxId: selectedContractTxId,
       endTimestamp,
-      tier: selectedTierID
+      tier
     };
     state.records = records;
     state.reserved = reserved;

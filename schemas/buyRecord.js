@@ -19,13 +19,12 @@ const buyRecordSchema = {
       minimum: 1, // TODO: these validations should pull from state
       maximum: 3, // TODO: these validations should pull from state
     },
-    tierNumber: {
-      type: 'integer',
-      minimum: 1, // TODO: these validations should pull from state
-      maximum: 3, // TODO: these validations should pull from state
+    tier: {
+      type: 'string',
+      pattern: '^[a-zA-Z0-9-]{43}$',
     },
   },
-  required: ['name'],
+  required: ['name', 'function'],
   additionalProperties: false,
 };
 

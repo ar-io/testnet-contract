@@ -27,6 +27,7 @@ describe('Records', () => {
   describe('any wallet', () => {
     let nonContractOwner: JWKInterface;
     let nonContractOwnerAddress: string;
+    let prevState: IOState;
 
     beforeAll(async () => {
       nonContractOwner = getLocalWallet(1);
@@ -35,8 +36,9 @@ describe('Records', () => {
       );
     });
 
-    beforeEach(() => {
+    beforeEach(async () => {
       contract.connect(nonContractOwner);
+      prevState = (await contract.readState()).cachedValue.state as IOState;
     });
 
     it('should be able to fetch record details via view state', async () => {
@@ -76,7 +78,6 @@ describe('Records', () => {
         name: 'newName',
         contractTxId: DEFAULT_ANT_CONTRACT_ID,
         years: 1,
-        tierNumber: 1,
       };
       const writeInteraction = await contract.writeInteraction(
         {
@@ -101,18 +102,18 @@ describe('Records', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      const state = cachedValue.state as IOState;
+      const { balances, records , tiers, } = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).not.toContain(
         writeInteraction!.originalTxId,
       );
-      expect(state.records[namePurchase.name.toLowerCase()]).toEqual(
+      expect(records[namePurchase.name.toLowerCase()]).toEqual(
         expect.objectContaining({
           contractTxId: DEFAULT_ANT_CONTRACT_ID,
-          tier: state.tiers.current[0],
+          tier: tiers.current[0],
           endTimestamp: expect.any(Number),
         }),
       );
-      expect(state.balances[nonContractOwnerAddress]).toEqual(
+      expect(balances[nonContractOwnerAddress]).toEqual(
         prevBalance - expectedPurchasePrice,
       );
     });
@@ -148,18 +149,18 @@ describe('Records', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      const state = cachedValue.state as IOState;
+      const { balances, records, tiers} = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).not.toContain(
         writeInteraction!.originalTxId,
       );
-      expect(state.records[namePurchase.name!.toLowerCase()]).toEqual(
+      expect(records[namePurchase.name!.toLowerCase()]).toEqual(
         expect.objectContaining({
           contractTxId: DEFAULT_ANT_CONTRACT_ID,
-          tier: state.tiers.current[0],
+          tier: tiers.current[0],
           endTimestamp: expect.any(Number),
         }),
       );
-      expect(state.balances[nonContractOwnerAddress]).toEqual(
+      expect(balances[nonContractOwnerAddress]).toEqual(
         prevBalance - expectedPurchasePrice,
       );
     });
@@ -169,7 +170,6 @@ describe('Records', () => {
         name: 'newName',
         contractTxId: DEFAULT_ANT_CONTRACT_ID,
         years: 1,
-        tierNumber: 1,
       };
       const writeInteraction = await contract.writeInteraction(
         {
@@ -183,12 +183,15 @@ describe('Records', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
+      const { records, balances } = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).toContain(
         writeInteraction!.originalTxId,
       );
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
         DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
       );
+      expect(balances[nonContractOwnerAddress]).toEqual(prevState.balances[nonContractOwnerAddress]);
+      expect(records).toEqual(prevState.records);
     });
 
     it.each([
@@ -205,7 +208,51 @@ describe('Records', () => {
           name: badName,
           contractTxId: DEFAULT_ANT_CONTRACT_ID,
           years: 1,
-          tierNumber: 1,
+          };
+        const writeInteraction = await contract.writeInteraction(
+          {
+            function: 'buyRecord',
+            ...namePurchase,
+          },
+          {
+            disableBundling: true,
+          },
+        );
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue } = await contract.readState();
+        const { balances, records } = cachedValue.state as IOState;
+        expect(Object.keys(cachedValue.errorMessages)).toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(
+          cachedValue.errorMessages[writeInteraction!.originalTxId],
+        ).toEqual(INVALID_INPUT_MESSAGE);
+        expect(balances[nonContractOwnerAddress]).toEqual(prevState.balances[nonContractOwnerAddress]);
+        expect(records).toEqual(prevState.records);
+      },
+    );
+
+    it.each([
+      // TODO: add other known invalid names
+      '',
+      '*&*##$%#',
+      '-leading',
+      'this-is-a-looong-name-a-verrrryyyyy-loooooong-name-that-is-too-long',
+      'test.subdomain.name',
+      false,
+      true,
+      0,
+      1,
+      3.54
+    ])(
+      'should not be able to purchase an invalid tier: %s',
+      async (badTier) => {
+        const namePurchase = {
+          name: 'bad-tier',
+          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          years: 1,
+          tier: badTier
         };
         const writeInteraction = await contract.writeInteraction(
           {
@@ -234,6 +281,11 @@ describe('Records', () => {
       'invalid$special/charcters!',
       'to-short',
       '123456890123456789012345678901234',
+      false,
+      true,
+      0, 
+      1,
+      5.34
     ])(
       'should not be able to purchase a name with an invalid contractTxId: %s',
       async (badTxId) => {
@@ -241,8 +293,7 @@ describe('Records', () => {
           name: 'bad-transaction-id',
           contractTxId: badTxId,
           years: 1,
-          tierNumber: 1,
-        };
+          };
         const writeInteraction = await contract.writeInteraction(
           {
             function: 'buyRecord',
@@ -271,8 +322,7 @@ describe('Records', () => {
           name: 'good-name',
           contractTxId: DEFAULT_ANT_CONTRACT_ID,
           years: badYear,
-          tierNumber: 1,
-        };
+          };
         const writeInteraction = await contract.writeInteraction(
           {
             function: 'buyRecord',
@@ -329,7 +379,6 @@ describe('Records', () => {
         name: 'www', // this short name is not owned by anyone and has no expiration
         contractTxId: DEFAULT_ANT_CONTRACT_ID,
         years: 1,
-        tierNumber: 1,
       };
       const writeInteraction = await contract.writeInteraction(
         {
@@ -358,7 +407,6 @@ describe('Records', () => {
         name: 'iam',
         contractTxId: DEFAULT_ANT_CONTRACT_ID,
         years: 1,
-        tierNumber: 1,
       };
       const writeInteraction = await contract.writeInteraction(
         {
@@ -385,7 +433,6 @@ describe('Records', () => {
         name: 'twitter',
         contractTxId: DEFAULT_ANT_CONTRACT_ID,
         years: 1,
-        tierNumber: 1,
       };
       await contract.connect(nonNameOwner);
       const writeInteraction = await contract.writeInteraction(
@@ -412,7 +459,6 @@ describe('Records', () => {
         name: 'google',
         contractTxId: DEFAULT_ANT_CONTRACT_ID,
         years: 1,
-        tierNumber: 1,
       };
       const writeInteraction = await contract.writeInteraction(
         {
@@ -442,7 +488,6 @@ describe('Records', () => {
         name: 'twitter',
         contractTxId: DEFAULT_ANT_CONTRACT_ID,
         years: 1,
-        tierNumber: 1,
       };
       const writeInteraction = await contract.writeInteraction(
         {
@@ -456,21 +501,21 @@ describe('Records', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      const state = cachedValue.state as IOState;
-      expect(state.records[namePurchase.name.toLowerCase()]).not.toBe(
+      const { records, reserved, tiers } = cachedValue.state as IOState;
+      expect(records[namePurchase.name.toLowerCase()]).not.toBe(
         undefined,
       );
-      expect(state.records[namePurchase.name.toLowerCase()]).toEqual(
+      expect(records[namePurchase.name.toLowerCase()]).toEqual(
         expect.objectContaining({
           contractTxId: DEFAULT_ANT_CONTRACT_ID,
-          tier: state.tiers.current[0],
+          tier: tiers.current[0],
           endTimestamp: expect.any(Number),
         }),
       );
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(
         undefined,
       );
-      expect(state.reserved[namePurchase.name.toLowerCase()]).toEqual(
+      expect(reserved[namePurchase.name.toLowerCase()]).toEqual(
         undefined,
       );
     });

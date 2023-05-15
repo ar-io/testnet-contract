@@ -23,9 +23,9 @@ export class BuyRecord {
   name: string;
   contractTxId: string;
   years: number;
-  tierNumber: number;
+  tier: string;
 
-  constructor(input: any) {
+  constructor(input: any, defaults: { tier: string}) {
     // validate using ajv validator
     if (!validateBuyRecord(input)) {
       throw new ContractError(INVALID_INPUT_MESSAGE);
@@ -34,12 +34,12 @@ export class BuyRecord {
       name,
       contractTxId = RESERVED_ATOMIC_TX_ID,
       years = 1,
-      tierNumber = 1,
+      tier = defaults.tier,
     } = input;
-    this.name = name;
+    this.name = name.trim().toLowerCase();
     this.contractTxId = contractTxId;
     this.years = years;
-    this.tierNumber = tierNumber;
+    this.tier = tier;
   }
 }
 
@@ -47,14 +47,15 @@ export const buyRecord = (
   state: IOState,
   { caller, input }: PstAction,
 ): ContractResult => {
-  // does validation on constructor
-  const buyRecordInput = new BuyRecord(input);
-  const { name, contractTxId, years, tierNumber } = buyRecordInput;
-
+  
   // get all other relevant state data
   const { balances, records, reserved, fees, tiers = DEFAULT_TIERS } = state;
   const { current: currentTiers, history: allTiers } = tiers;
   const currentBlockTime = +SmartWeave.block.timestamp;
+  const buyRecordInput = new BuyRecord(input, {
+    tier: tiers.current[0]
+  });// does validation on constructor
+  const { name, contractTxId, years, tier } = buyRecordInput;
 
   // Check if the user has enough tokens to purchase the name
   if (
@@ -74,40 +75,31 @@ export const buyRecord = (
   }
 
   // list of all active tier ID's
-  const activeTierNumbers = currentTiers.map((_, indx) => indx + 1);
-  if (!activeTierNumbers.includes(tierNumber)) {
+  if (!currentTiers.includes(tier)) {
     throw new ContractError(
-      `Invalid value for "tier". Must be one of: ${activeTierNumbers.join(
+      `Invalid value for "tier". Must be one of: ${tier.join(
         ',',
       )}`,
     );
   }
 
   // the tier purchased
-  const selectedTierID = currentTiers[tierNumber - 1];
   const purchasedTier: ServiceTier =
-    allTiers.find((t) => t.id === selectedTierID) ?? DEFAULT_TIERS[0];
-
-  if (!purchasedTier) {
-    throw new ContractError('The tier purchased is not in the states history.');
-  }
+    allTiers.find((t) => t.id === tier);
 
   // set the end lease period for this based on number of years
   const endTimestamp = currentBlockTime + SECONDS_IN_A_YEAR * years;
 
-  // enforce lower case names
-  const formattedName = name.toLowerCase();
-
   if (
-    !reserved[formattedName] &&
-    formattedName.length < MINIMUM_ALLOWED_NAME_LENGTH
+    !reserved[name] &&
+    name.length < MINIMUM_ALLOWED_NAME_LENGTH
   ) {
     throw new ContractError(DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE);
   }
 
-  if (reserved[formattedName]) {
+  if (reserved[name]) {
     const { target, endTimestamp: reservedEndTimestamp } =
-      reserved[formattedName];
+      reserved[name];
 
     /**
      * Three scenarios:
@@ -122,7 +114,7 @@ export const buyRecord = (
         reservedEndTimestamp &&
         reservedEndTimestamp <= +SmartWeave.block.timestamp;
       if (reservedByCaller || reservedExpired) {
-        delete reserved[formattedName];
+        delete reserved[name];
         return;
       }
 
@@ -133,7 +125,7 @@ export const buyRecord = (
   }
   // calculate the total fee (initial registration + annual)
   const totalFee = calculateTotalRegistrationFee(
-    formattedName,
+    name,
     fees,
     purchasedTier,
     years,
@@ -145,6 +137,7 @@ export const buyRecord = (
     );
   }
 
+  // TODO: we may be able to move this to the class
   const selectedContractTxId =
     contractTxId === RESERVED_ATOMIC_TX_ID
       ? SmartWeave.transaction.id
@@ -152,8 +145,8 @@ export const buyRecord = (
 
   // Check if the requested name already exists, if not reduce balance and add it
   if (
-    records[formattedName] &&
-    records[formattedName].endTimestamp + SECONDS_IN_GRACE_PERIOD >
+    records[name] &&
+    records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD >
       +SmartWeave.block.timestamp
   ) {
     // No name created, so make a new one
@@ -163,10 +156,10 @@ export const buyRecord = (
   // TODO: foundation rewards logic
   // record can be purchased
   balances[caller] -= totalFee; // reduce callers balance
-  records[formattedName] = {
+  records[name] = {
     contractTxId: selectedContractTxId,
     endTimestamp,
-    tier: selectedTierID,
+    tier,
   };
 
   // update the records object
