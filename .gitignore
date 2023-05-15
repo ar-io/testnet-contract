@@ -6,6 +6,11 @@ node_modules
 logs
 coverage
 
+# ajv
+src/validations.mjs
+
+# source
+
 # keys
 **key**.json
 
