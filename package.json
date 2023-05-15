@@ -18,6 +18,7 @@
     "@types/node": "^18.15.7",
     "@typescript-eslint/eslint-plugin": "^4.18.0",
     "@typescript-eslint/parser": "^4.18.0",
+    "ajv": "^8.12.0",
     "arlocal": "^1.1.60",
     "arweave": "^1.13.7",
     "axios": "^0.26.0",
@@ -37,7 +38,7 @@
     "ts-node": "^10.9.1",
     "typescript": "4.3.5",
     "uuid": "^9.0.0",
-    "warp-contracts": "^1.4.4",
+    "warp-contracts": "^1.4.7",
     "warp-contracts-plugin-deploy": "^1.0.1"
   }
 }
