@@ -77,7 +77,7 @@ export const buyRecord = (
   // list of all active tier ID's
   if (!currentTiers.includes(tier)) {
     throw new ContractError(
-      `Invalid value for "tier". Must be one of: ${tier.join(
+      `Invalid value for "tier". Must be one of: ${currentTiers.join(
         ',',
       )}`,
     );
