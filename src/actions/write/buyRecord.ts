@@ -25,7 +25,7 @@ export class BuyRecord {
   years: number;
   tier: string;
 
-  constructor(input: any, defaults: { tier: string}) {
+  constructor(input: any, defaults: { tier: string }) {
     // validate using ajv validator
     if (!validateBuyRecord(input)) {
       throw new ContractError(INVALID_INPUT_MESSAGE);
@@ -47,14 +47,13 @@ export const buyRecord = (
   state: IOState,
   { caller, input }: PstAction,
 ): ContractResult => {
-  
   // get all other relevant state data
   const { balances, records, reserved, fees, tiers = DEFAULT_TIERS } = state;
   const { current: currentTiers, history: allTiers } = tiers;
   const currentBlockTime = +SmartWeave.block.timestamp;
   const buyRecordInput = new BuyRecord(input, {
-    tier: tiers.current[0]
-  });// does validation on constructor
+    tier: tiers.current[0],
+  }); // does validation on constructor
   const { name, contractTxId, years, tier } = buyRecordInput;
 
   // Check if the user has enough tokens to purchase the name
@@ -77,29 +76,22 @@ export const buyRecord = (
   // list of all active tier ID's
   if (!currentTiers.includes(tier)) {
     throw new ContractError(
-      `Invalid value for "tier". Must be one of: ${currentTiers.join(
-        ',',
-      )}`,
+      `Invalid value for "tier". Must be one of: ${currentTiers.join(',')}`,
     );
   }
 
   // the tier purchased
-  const purchasedTier: ServiceTier =
-    allTiers.find((t) => t.id === tier);
+  const purchasedTier: ServiceTier = allTiers.find((t) => t.id === tier);
 
   // set the end lease period for this based on number of years
   const endTimestamp = currentBlockTime + SECONDS_IN_A_YEAR * years;
 
-  if (
-    !reserved[name] &&
-    name.length < MINIMUM_ALLOWED_NAME_LENGTH
-  ) {
+  if (!reserved[name] && name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
     throw new ContractError(DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE);
   }
 
   if (reserved[name]) {
-    const { target, endTimestamp: reservedEndTimestamp } =
-      reserved[name];
+    const { target, endTimestamp: reservedEndTimestamp } = reserved[name];
 
     /**
      * Three scenarios:

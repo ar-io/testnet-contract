@@ -102,7 +102,7 @@ describe('Records', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      const { balances, records , tiers, } = cachedValue.state as IOState;
+      const { balances, records, tiers } = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).not.toContain(
         writeInteraction!.originalTxId,
       );
@@ -149,7 +149,7 @@ describe('Records', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      const { balances, records, tiers} = cachedValue.state as IOState;
+      const { balances, records, tiers } = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).not.toContain(
         writeInteraction!.originalTxId,
       );
@@ -190,7 +190,9 @@ describe('Records', () => {
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
         DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
       );
-      expect(balances[nonContractOwnerAddress]).toEqual(prevState.balances[nonContractOwnerAddress]);
+      expect(balances[nonContractOwnerAddress]).toEqual(
+        prevState.balances[nonContractOwnerAddress],
+      );
       expect(records).toEqual(prevState.records);
     });
 
@@ -208,7 +210,7 @@ describe('Records', () => {
           name: badName,
           contractTxId: DEFAULT_ANT_CONTRACT_ID,
           years: 1,
-          };
+        };
         const writeInteraction = await contract.writeInteraction(
           {
             function: 'buyRecord',
@@ -228,7 +230,9 @@ describe('Records', () => {
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
         ).toEqual(INVALID_INPUT_MESSAGE);
-        expect(balances[nonContractOwnerAddress]).toEqual(prevState.balances[nonContractOwnerAddress]);
+        expect(balances[nonContractOwnerAddress]).toEqual(
+          prevState.balances[nonContractOwnerAddress],
+        );
         expect(records).toEqual(prevState.records);
       },
     );
@@ -244,7 +248,7 @@ describe('Records', () => {
       true,
       0,
       1,
-      3.54
+      3.54,
     ])(
       'should not be able to purchase an invalid tier: %s',
       async (badTier) => {
@@ -252,7 +256,7 @@ describe('Records', () => {
           name: 'bad-tier',
           contractTxId: DEFAULT_ANT_CONTRACT_ID,
           years: 1,
-          tier: badTier
+          tier: badTier,
         };
         const writeInteraction = await contract.writeInteraction(
           {
@@ -283,9 +287,9 @@ describe('Records', () => {
       '123456890123456789012345678901234',
       false,
       true,
-      0, 
+      0,
       1,
-      5.34
+      5.34,
     ])(
       'should not be able to purchase a name with an invalid contractTxId: %s',
       async (badTxId) => {
@@ -293,7 +297,7 @@ describe('Records', () => {
           name: 'bad-transaction-id',
           contractTxId: badTxId,
           years: 1,
-          };
+        };
         const writeInteraction = await contract.writeInteraction(
           {
             function: 'buyRecord',
@@ -322,7 +326,7 @@ describe('Records', () => {
           name: 'good-name',
           contractTxId: DEFAULT_ANT_CONTRACT_ID,
           years: badYear,
-          };
+        };
         const writeInteraction = await contract.writeInteraction(
           {
             function: 'buyRecord',
@@ -502,9 +506,7 @@ describe('Records', () => {
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       const { records, reserved, tiers } = cachedValue.state as IOState;
-      expect(records[namePurchase.name.toLowerCase()]).not.toBe(
-        undefined,
-      );
+      expect(records[namePurchase.name.toLowerCase()]).not.toBe(undefined);
       expect(records[namePurchase.name.toLowerCase()]).toEqual(
         expect.objectContaining({
           contractTxId: DEFAULT_ANT_CONTRACT_ID,
@@ -515,9 +517,7 @@ describe('Records', () => {
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(
         undefined,
       );
-      expect(reserved[namePurchase.name.toLowerCase()]).toEqual(
-        undefined,
-      );
+      expect(reserved[namePurchase.name.toLowerCase()]).toEqual(undefined);
     });
   });
 });
