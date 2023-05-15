@@ -1,19 +1,16 @@
 import {
+  DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE,
   DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
   DEFAULT_TIERS,
   INVALID_INPUT_MESSAGE,
   MAX_YEARS,
+  MINIMUM_ALLOWED_NAME_LENGTH,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
-import {
-  ContractResult,
-  IOState,
-  PstAction,
-  ServiceTier,
-} from '../../types';
+import { ContractResult, IOState, PstAction, ServiceTier } from '../../types';
 import { calculateTotalRegistrationFee } from '../../utilities';
 // composed by ajv at build
 import { validateBuyRecord } from '../../validations.mjs';
@@ -85,8 +82,13 @@ export const buyRecord = (
 
   // the tier purchased
   const purchasedTier: ServiceTier = allTiers.find((t) => t.id === tier);
+
   // set the end lease period for this based on number of years
   const endTimestamp = currentBlockTime + SECONDS_IN_A_YEAR * years;
+
+  if (!reserved[name] && name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
+    throw new ContractError(DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE);
+  }
 
   if (reserved[name]) {
     const { target, endTimestamp: reservedEndTimestamp } = reserved[name];
@@ -142,6 +144,7 @@ export const buyRecord = (
     // No name created, so make a new one
     throw new ContractError(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
   }
+
   // TODO: foundation rewards logic
   // record can be purchased
   balances[caller] -= totalFee; // reduce callers balance
@@ -149,7 +152,7 @@ export const buyRecord = (
     contractTxId: selectedContractTxId,
     endTimestamp,
     tier,
-    type: 'lease'
+    type: 'lease',
   };
 
   // update the records object

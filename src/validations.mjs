@@ -8,13 +8,14 @@ const schema11 = {
     name: { type: 'string', pattern: '^(?!-)[a-zA-Z0-9-]{1,32}$' },
     contractTxId: { type: 'string', pattern: '^(atomic|[a-zA-Z0-9-_]{43})$' },
     years: { type: 'integer', minimum: 1, maximum: 3 },
-    tierNumber: { type: 'integer', minimum: 1, maximum: 3 },
+    tier: { type: 'string', pattern: '^[a-zA-Z0-9-]{43}$' },
   },
-  required: ['name'],
+  required: ['name', 'function'],
   additionalProperties: false,
 };
 const pattern0 = new RegExp('^(?!-)[a-zA-Z0-9-]{1,32}$', 'u');
 const pattern1 = new RegExp('^(atomic|[a-zA-Z0-9-_]{43})$', 'u');
+const pattern2 = new RegExp('^[a-zA-Z0-9-]{43}$', 'u');
 function validate10(
   data,
   { instancePath = '', parentData, parentDataProperty, rootData = data } = {},
@@ -24,7 +25,10 @@ function validate10(
   if (errors === 0) {
     if (data && typeof data == 'object' && !Array.isArray(data)) {
       let missing0;
-      if (data.name === undefined && (missing0 = 'name')) {
+      if (
+        (data.name === undefined && (missing0 = 'name')) ||
+        (data.function === undefined && (missing0 = 'function'))
+      ) {
         validate10.errors = [
           {
             instancePath,
@@ -44,7 +48,7 @@ function validate10(
               key0 === 'name' ||
               key0 === 'contractTxId' ||
               key0 === 'years' ||
-              key0 === 'tierNumber'
+              key0 === 'tier'
             )
           ) {
             validate10.errors = [
@@ -225,55 +229,37 @@ function validate10(
                   var valid0 = true;
                 }
                 if (valid0) {
-                  if (data.tierNumber !== undefined) {
-                    let data4 = data.tierNumber;
+                  if (data.tier !== undefined) {
+                    let data4 = data.tier;
                     const _errs10 = errors;
-                    if (
-                      !(
-                        typeof data4 == 'number' &&
-                        !(data4 % 1) &&
-                        !isNaN(data4) &&
-                        isFinite(data4)
-                      )
-                    ) {
-                      validate10.errors = [
-                        {
-                          instancePath: instancePath + '/tierNumber',
-                          schemaPath: '#/properties/tierNumber/type',
-                          keyword: 'type',
-                          params: { type: 'integer' },
-                          message: 'must be integer',
-                        },
-                      ];
-                      return false;
-                    }
                     if (errors === _errs10) {
-                      if (typeof data4 == 'number' && isFinite(data4)) {
-                        if (data4 > 3 || isNaN(data4)) {
+                      if (typeof data4 === 'string') {
+                        if (!pattern2.test(data4)) {
                           validate10.errors = [
                             {
-                              instancePath: instancePath + '/tierNumber',
-                              schemaPath: '#/properties/tierNumber/maximum',
-                              keyword: 'maximum',
-                              params: { comparison: '<=', limit: 3 },
-                              message: 'must be <= 3',
+                              instancePath: instancePath + '/tier',
+                              schemaPath: '#/properties/tier/pattern',
+                              keyword: 'pattern',
+                              params: { pattern: '^[a-zA-Z0-9-]{43}$' },
+                              message:
+                                'must match pattern "' +
+                                '^[a-zA-Z0-9-]{43}$' +
+                                '"',
                             },
                           ];
                           return false;
-                        } else {
-                          if (data4 < 1 || isNaN(data4)) {
-                            validate10.errors = [
-                              {
-                                instancePath: instancePath + '/tierNumber',
-                                schemaPath: '#/properties/tierNumber/minimum',
-                                keyword: 'minimum',
-                                params: { comparison: '>=', limit: 1 },
-                                message: 'must be >= 1',
-                              },
-                            ];
-                            return false;
-                          }
                         }
+                      } else {
+                        validate10.errors = [
+                          {
+                            instancePath: instancePath + '/tier',
+                            schemaPath: '#/properties/tier/type',
+                            keyword: 'type',
+                            params: { type: 'string' },
+                            message: 'must be string',
+                          },
+                        ];
+                        return false;
                       }
                     }
                     var valid0 = _errs10 === errors;
@@ -325,7 +311,7 @@ const schema12 = {
   required: ['name', 'details'],
   additionalProperties: false,
 };
-const pattern3 = new RegExp('^([a-zA-Z0-9-_]{43})$', 'u');
+const pattern4 = new RegExp('^([a-zA-Z0-9-_]{43})$', 'u');
 function validate11(
   data,
   { instancePath = '', parentData, parentDataProperty, rootData = data } = {},
@@ -534,7 +520,7 @@ function validate11(
                             const _errs11 = errors;
                             if (errors === _errs11) {
                               if (typeof data4 === 'string') {
-                                if (!pattern3.test(data4)) {
+                                if (!pattern4.test(data4)) {
                                   validate11.errors = [
                                     {
                                       instancePath:

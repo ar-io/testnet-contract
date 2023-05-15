@@ -108,13 +108,8 @@ describe('Records', () => {
       );
       expect(records[namePurchase.name.toLowerCase()]).toEqual(
         expect.objectContaining({
-<<<<<<< HEAD
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
-          tier: tiers.current[0],
-=======
           contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
-          tier: state.tiers.current[0],
->>>>>>> 2406025 (fix(buyRecord): update buy record and tests)
+          tier: tiers.current[0],
           endTimestamp: expect.any(Number),
         }),
       );
@@ -160,13 +155,8 @@ describe('Records', () => {
       );
       expect(records[namePurchase.name!.toLowerCase()]).toEqual(
         expect.objectContaining({
-<<<<<<< HEAD
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
-          tier: tiers.current[0],
-=======
           contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
-          tier: state.tiers.current[0],
->>>>>>> 2406025 (fix(buyRecord): update buy record and tests)
+          tier: tiers.current[0],
           endTimestamp: expect.any(Number),
         }),
       );
@@ -264,7 +254,7 @@ describe('Records', () => {
       async (badTier) => {
         const namePurchase = {
           name: 'bad-tier',
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
           years: 1,
           tier: badTier,
         };
@@ -334,7 +324,7 @@ describe('Records', () => {
       async (badYear) => {
         const namePurchase = {
           name: 'good-name',
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
           years: badYear,
         };
         const writeInteraction = await contract.writeInteraction(
@@ -363,7 +353,7 @@ describe('Records', () => {
       async (badTierNumber) => {
         const namePurchase = {
           name: 'good-name',
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
           years: 1,
           tierNumber: badTierNumber,
         };
@@ -579,13 +569,8 @@ describe('Records', () => {
       expect(records[namePurchase.name.toLowerCase()]).not.toBe(undefined);
       expect(records[namePurchase.name.toLowerCase()]).toEqual(
         expect.objectContaining({
-<<<<<<< HEAD
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
-          tier: tiers.current[0],
-=======
           contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
-          tier: state.tiers.current[0],
->>>>>>> 2406025 (fix(buyRecord): update buy record and tests)
+          tier: tiers.current[0],
           endTimestamp: expect.any(Number),
         }),
       );
