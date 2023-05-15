@@ -30,5 +30,5 @@ const buyRecordSchema = {
 };
 
 module.exports = {
-  buyRecordSchema
-}
+  buyRecordSchema,
+};

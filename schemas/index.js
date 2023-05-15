@@ -1,5 +1,5 @@
-const { buyRecordSchema } = require("./buyRecord");
+const { buyRecordSchema } = require('./buyRecord');
 
 module.exports = {
-    buyRecordSchema
-}
+  buyRecordSchema,
+};

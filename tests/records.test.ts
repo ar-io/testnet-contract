@@ -6,7 +6,6 @@ import {
   DEFAULT_ANT_CONTRACT_ID,
   DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE,
   DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
-  DEFAULT_INVALID_ARNS_NAME_MESSAGE,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
   INVALID_INPUT_MESSAGE,
 } from './utils/constants';
@@ -243,6 +242,66 @@ describe('Records', () => {
           contractTxId: badTxId,
           years: 1,
           tierNumber: 1,
+        };
+        const writeInteraction = await contract.writeInteraction(
+          {
+            function: 'buyRecord',
+            ...namePurchase,
+          },
+          {
+            disableBundling: true,
+          },
+        );
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue } = await contract.readState();
+        expect(Object.keys(cachedValue.errorMessages)).toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(
+          cachedValue.errorMessages[writeInteraction!.originalTxId],
+        ).toEqual(INVALID_INPUT_MESSAGE);
+      },
+    );
+
+    it.each(['', '1', 'string', '*&*##$%#', 100, 2.3, false, true])(
+      'should not be able to purchase a name with an invalid number of years: %s',
+      async (badYear) => {
+        const namePurchase = {
+          name: 'good-name',
+          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          years: badYear,
+          tierNumber: 1,
+        };
+        const writeInteraction = await contract.writeInteraction(
+          {
+            function: 'buyRecord',
+            ...namePurchase,
+          },
+          {
+            disableBundling: true,
+          },
+        );
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue } = await contract.readState();
+        expect(Object.keys(cachedValue.errorMessages)).toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(
+          cachedValue.errorMessages[writeInteraction!.originalTxId],
+        ).toEqual(INVALID_INPUT_MESSAGE);
+      },
+    );
+
+    it.each(['', '1', 'string', '*&*##$%#', 100, 2.3, false, true])(
+      'should not be able to purchase a name with an invalid tier number: %s',
+      async (badTierNumber) => {
+        const namePurchase = {
+          name: 'good-name',
+          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          years: 1,
+          tierNumber: badTierNumber,
         };
         const writeInteraction = await contract.writeInteraction(
           {

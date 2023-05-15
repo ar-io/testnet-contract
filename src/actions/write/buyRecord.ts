@@ -12,7 +12,6 @@ import {
 } from '../../constants';
 import { ContractResult, IOState, PstAction, ServiceTier } from '../../types';
 import { calculateTotalRegistrationFee } from '../../utilities';
-
 // composed by ajv at build
 import { validateBuyRecord } from '../../validations.mjs';
 
@@ -65,11 +64,11 @@ export const buyRecord = (
 
   // list of all active tier ID's
   const activeTierNumbers = currentTiers.map((_, indx) => indx + 1);
-  if (
-    !activeTierNumbers.includes(tierNumber)
-  ) {
+  if (!activeTierNumbers.includes(tierNumber)) {
     throw new ContractError(
-      `Invalid value for "tier". Must be one of: ${activeTierNumbers.join(',')}`,
+      `Invalid value for "tier". Must be one of: ${activeTierNumbers.join(
+        ',',
+      )}`,
     );
   }
 
@@ -108,7 +107,8 @@ export const buyRecord = (
      */
     const handleReservedName = () => {
       const reservedByCaller = target === caller;
-      const reservedExpired = reservedEndTimestamp &&
+      const reservedExpired =
+        reservedEndTimestamp &&
         reservedEndTimestamp <= +SmartWeave.block.timestamp;
       if (reservedByCaller || reservedExpired) {
         delete reserved[formattedName];
