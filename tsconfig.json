@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "module": "commonjs",
-    "jsx": "preserve",
+    "module": "es6",
     "importHelpers": true,
     "moduleResolution": "node",
     "skipLibCheck": true,
@@ -16,15 +15,8 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "lib": ["esnext", "dom", "dom.iterable", "scripthost"]
+    "lib": ["esnext"]
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.vue",
-    "tests/**/*.ts",
-    "tests/**/*.tsx",
-    "utils/_helpers.ts"
-  ],
-  "exclude": ["node_modules", "tests"]
+  "include": ["src"],
+  "exclude": ["node_modules", "tests", "src/*.js"]
 }

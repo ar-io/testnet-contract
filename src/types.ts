@@ -42,9 +42,13 @@ export type IOState = PstState & {
   };
 };
 
+export type Fees = {
+  [nameLength: string]: number;
+};
+
 export type ContractSettings = {
+  // these settings can be modified via on-chain governance
   registry: {
-    // these settings can be modified via on-chain governance
     minLockLength: number; // the minimum amount of blocks tokens can be locked in a community vault
     maxLockLength: number; // the maximum amount of blocks tokens can be locked in a community vault
     minNetworkJoinStakeAmount: number; // the minimum amount of tokens needed to stake to join the ar.io network as a gateway
@@ -187,7 +191,7 @@ export type VoteType =
   | 'set';
 
 export type PstAction = {
-  input: any; // TODO: add validation to these inputs
+  input: any;
   caller: string;
 };
 
