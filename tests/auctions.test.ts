@@ -1,6 +1,7 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import {
+  DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_AUCTION_SETTINGS,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
   INVALID_INPUT_MESSAGE,
@@ -344,6 +345,105 @@ describe('Auctions', () => {
             expect(balances[separateWalletAddress]).toEqual(
               prevState.balances[separateWalletAddress],
             );
+          });
+
+          it('should throw an error if a name is reserved that has no expiration', async () => {
+            const auctionBid = {
+              name: 'www',
+              details: {
+                contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
+              },
+            };
+            const writeInteraction = await contract.writeInteraction({
+              function: 'submitAuctionBid',
+              ...auctionBid,
+            });
+            expect(writeInteraction?.originalTxId).not.toBe(undefined);
+            const { cachedValue } = await contract.readState();
+            const { auctions, balances } = cachedValue.state as IOState;
+            expect(Object.keys(cachedValue.errorMessages)).toContain(
+              writeInteraction!.originalTxId,
+            );
+            expect(
+              cachedValue.errorMessages[writeInteraction!.originalTxId],
+            ).toEqual(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
+            expect(auctions[auctionBid.name]).toBeUndefined();
+            expect(balances[nonContractOwnerAddress]).toEqual(
+              prevState.balances[nonContractOwnerAddress],
+            );
+          });
+          it('should throw an error if a name is reserved for a specific wallet without an expiration', async () => {
+            const auctionBid = {
+              name: 'twitter',
+              details: {
+                contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
+              },
+            };
+            // connect using another wallet
+            const separateWallet = await getLocalWallet(2);
+            const separateWalletAddress = await arweave.wallets.getAddress(
+              separateWallet,
+            );
+            await contract.connect(separateWallet);
+            const writeInteraction = await contract.writeInteraction({
+              function: 'submitAuctionBid',
+              ...auctionBid,
+            });
+            expect(writeInteraction?.originalTxId).not.toBe(undefined);
+            const { cachedValue } = await contract.readState();
+            const { auctions, balances } = cachedValue.state as IOState;
+            expect(Object.keys(cachedValue.errorMessages)).toContain(
+              writeInteraction!.originalTxId,
+            );
+            expect(
+              cachedValue.errorMessages[writeInteraction!.originalTxId],
+            ).toEqual(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
+            expect(auctions[auctionBid.name]).toBeUndefined();
+            expect(balances[separateWalletAddress]).toEqual(
+              prevState.balances[separateWalletAddress],
+            );
+          });
+          it('should start the auction if the reserved target submits the auction bid', async () => {
+            const auctionBid = {
+              name: 'twitter',
+              details: {
+                contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
+              },
+            };
+            const writeInteraction = await contract.writeInteraction({
+              function: 'submitAuctionBid',
+              ...auctionBid,
+            });
+            expect(writeInteraction?.originalTxId).not.toBe(undefined);
+            const { cachedValue } = await contract.readState();
+            const { auctions, balances, reserved } =
+              cachedValue.state as IOState;
+            expect(Object.keys(cachedValue.errorMessages)).not.toContain(
+              writeInteraction!.originalTxId,
+            );
+            expect(auctions[auctionBid.name]).toEqual(
+              expect.objectContaining({
+                floorPrice: expect.any(Number),
+                initialPrice: expect.any(Number),
+                type: 'lease',
+                auctionSettingsId: DEFAULT_AUCTION_SETTINGS.current,
+                startHeight: await getCurrentBlock(arweave),
+                details: {
+                  contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
+                  years: 1,
+                  tierNumber: 1,
+                },
+                vault: {
+                  wallet: nonContractOwnerAddress,
+                  qty: expect.any(Number),
+                },
+              }),
+            );
+            expect(balances[nonContractOwnerAddress]).toEqual(
+              prevState.balances[nonContractOwnerAddress] -
+                auctions[auctionBid.name].vault.qty,
+            );
+            expect(reserved[auctionBid.name]).toBeUndefined();
           });
         });
       });

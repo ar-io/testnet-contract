@@ -1,10 +1,12 @@
 import {
+  DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_INVALID_QTY_MESSAGE,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
   DEFAULT_PERMABUY_EXPIRATION,
   DEFAULT_PERMABUY_TIER,
   INVALID_INPUT_MESSAGE,
   SECONDS_IN_A_YEAR,
+  SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
 import {
   AuctionSettings,
@@ -17,6 +19,7 @@ import {
   calculateMinimumAuctionBid,
   calculatePermabuyFee,
   calculateTotalRegistrationFee,
+  walletHasSufficientBalance,
 } from '../../utilities';
 // composed by ajv at build
 import { validateAuctionBid } from '../../validations.mjs';
@@ -39,10 +42,10 @@ export class AuctionBid {
       throw new ContractError(INVALID_INPUT_MESSAGE);
     }
 
-    const { name, qty, type, details } = input;
+    const { name, qty, type = 'lease', details } = input;
     this.name = name.trim().toLowerCase();
     this.qty = qty;
-    this.type = type ?? 'lease';
+    this.type = type;
     this.details = {
       contractTxId: details.contractTxId,
       years:
@@ -55,7 +58,6 @@ export class AuctionBid {
   }
 }
 
-// Signals an approval for a proposed foundation action
 export const submitAuctionBid = async (
   state: IOState,
   { caller, input }: PstAction,
@@ -64,10 +66,10 @@ export const submitAuctionBid = async (
     auctions = {},
     fees,
     records,
+    reserved,
     tiers,
     settings,
     balances,
-    vaults,
   } = state;
 
   // does validation on constructor
@@ -78,9 +80,58 @@ export const submitAuctionBid = async (
     details: bidDetails,
   } = new AuctionBid(input);
 
-  // already an owned name
-  if (Object.keys(records).includes(name)) {
-    throw new ContractError(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
+  // name already exists on an active lease
+  if (records[name]) {
+    const { endTimestamp, type } = records[name];
+
+    /**
+     * Three scenarios:
+     *
+     * 1. The name is currently in records, but it's lease is expired
+     * 2. The name is currently in records, and not expired
+     * 3. The name is currently in records and is a permabuy
+     * @returns
+     */
+    const handleExistingName = () => {
+      if (
+        type === 'lease' &&
+        endTimestamp &&
+        endTimestamp + SECONDS_IN_GRACE_PERIOD <= +SmartWeave.block.timestamp
+      ) {
+        delete records[name];
+        return;
+      }
+
+      throw new ContractError(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
+    };
+
+    handleExistingName();
+  }
+
+  if (reserved[name]) {
+    const { target, endTimestamp: reservedEndTimestamp } = reserved[name];
+
+    /**
+     * Three scenarios:
+     *
+     * 1. name is reserved, regardless of length can be purchased only by target, unless expired
+     * 2. name is reserved, but only for a certain amount of time
+     * 3. name is reserved, with no target and no timestamp (i.e. target and timestamp are empty)
+     */
+    const handleReservedName = () => {
+      const reservedByCaller = target === caller;
+      const reservedExpired =
+        reservedEndTimestamp &&
+        reservedEndTimestamp <= +SmartWeave.block.timestamp;
+      if (reservedByCaller || reservedExpired) {
+        delete reserved[name];
+        return;
+      }
+
+      throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
+    };
+
+    handleReservedName();
   }
 
   // get the current auction settings, create one of it doesn't exist yet
@@ -113,12 +164,12 @@ export const submitAuctionBid = async (
       : calculatePermabuyFee(name, fees, settings.permabuy.multiplier);
 
   // current auction in the state, validate the bid and update state
-  if (Object.keys(auctions).includes(name)) {
+  if (auctions[name]) {
     const existingAuction = auctions[name];
     const { startHeight, initialPrice, floorPrice, vault } = existingAuction;
     const auctionEndHeight = startHeight + auctionDuration;
     const endTimestamp =
-      +SmartWeave.block.height + SECONDS_IN_A_YEAR * bidDetails.years; // 0 for permabuy
+      +SmartWeave.block.timestamp + SECONDS_IN_A_YEAR * bidDetails.years; // 0 for permabuy
     const tier = currentTiers[existingAuction.details.tierNumber - 1];
     const type = existingAuction.type;
     if (
@@ -201,14 +252,16 @@ export const submitAuctionBid = async (
 
     // delete the auction
     delete auctions[name];
+    // update the state
     state.auctions = auctions;
-    state.records = records;
     state.balances = balances;
+    state.records = records;
+    state.reserved = reserved;
     return { state };
   }
 
   // no current auction, create one and vault the balance from the user
-  if (!Object.keys(auctions).includes(name)) {
+  if (!auctions[name]) {
     const {
       id: auctionSettingsId,
       floorPriceMultiplier,
@@ -242,18 +295,11 @@ export const submitAuctionBid = async (
     auctions[name] = initialAuctionBid;
     balances[caller] -= floorPrice;
 
-    // update the state to include the auction, notice not records have been updated
+    // update the state
     state.auctions = auctions;
-    state.vaults = vaults;
     state.balances = balances;
+    state.records = records;
+    state.reserved = reserved;
     return { state };
   }
 };
-
-export function walletHasSufficientBalance(
-  balances: { [x: string]: number },
-  wallet: string,
-  qty: number,
-): boolean {
-  return balances[wallet] && balances[wallet] >= qty;
-}

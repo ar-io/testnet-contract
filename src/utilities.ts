@@ -79,3 +79,11 @@ export function isValidArweaveBase64URL(base64URL: string) {
   const base64URLRegex = new RegExp('^[a-zA-Z0-9_-]{43}$');
   return base64URLRegex.test(base64URL);
 }
+
+export function walletHasSufficientBalance(
+  balances: { [x: string]: number },
+  wallet: string,
+  qty: number,
+): boolean {
+  return balances[wallet] && balances[wallet] >= qty;
+}
