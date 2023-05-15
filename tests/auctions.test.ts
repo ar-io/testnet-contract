@@ -1,7 +1,6 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import {
-    DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_AUCTION_SETTINGS,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
   INVALID_INPUT_MESSAGE,
@@ -180,17 +179,17 @@ describe('Auctions', () => {
 
           beforeEach(async () => {
             prevState = (await contract.readState()).cachedValue
-            .state as IOState;
+              .state as IOState;
             contract.connect(nonContractOwner);
-          })
+          });
 
           it('should create the initial auction object', async () => {
             const writeInteraction = await contract.writeInteraction({
-                function: 'submitAuctionBid',
-                ...auctionBid,
+              function: 'submitAuctionBid',
+              ...auctionBid,
             });
             expect(writeInteraction?.originalTxId).not.toBe(undefined);
-            const { cachedValue} = await contract.readState();
+            const { cachedValue } = await contract.readState();
             const { auctions, balances } = cachedValue.state as IOState;
             expect(auctions[auctionBid.name]).not.toBe(undefined);
             expect(auctions[auctionBid.name]).toEqual(
@@ -256,7 +255,7 @@ describe('Auctions', () => {
               expect(auctions[auctionBid.name]).toEqual(auctionObj);
               expect(records[auctionBid.name]).toBeUndefined();
               expect(balances[nonContractOwnerAddress]).toEqual(
-                prevState.balances[nonContractOwnerAddress]
+                prevState.balances[nonContractOwnerAddress],
               );
               expect(balances[secondAddress]).toEqual(
                 prevState.balances[secondAddress],
@@ -317,28 +316,34 @@ describe('Auctions', () => {
 
           it('should throw an error if the name already exist in records ', async () => {
             const auctionBid = {
-                name: 'apple',
-                details: {
-                  contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
-                },
+              name: 'apple',
+              details: {
+                contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
+              },
             };
             // connect using another wallet
             const separateWallet = await getLocalWallet(2);
-            const separateWalletAddress = await arweave.wallets.getAddress(separateWallet);
+            const separateWalletAddress = await arweave.wallets.getAddress(
+              separateWallet,
+            );
             await contract.connect(separateWallet);
             const writeInteraction = await contract.writeInteraction({
-                function: 'submitAuctionBid',
-                ...auctionBid,
+              function: 'submitAuctionBid',
+              ...auctionBid,
             });
             expect(writeInteraction?.originalTxId).not.toBe(undefined);
             const { cachedValue } = await contract.readState();
-            const { auctions, balances} = cachedValue.state as IOState;
+            const { auctions, balances } = cachedValue.state as IOState;
             expect(Object.keys(cachedValue.errorMessages)).toContain(
               writeInteraction!.originalTxId,
             );
-            expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
+            expect(
+              cachedValue.errorMessages[writeInteraction!.originalTxId],
+            ).toEqual(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
             expect(auctions[auctionBid.name]).toBeUndefined();
-            expect(balances[separateWalletAddress]).toEqual(prevState.balances[separateWalletAddress]);
+            expect(balances[separateWalletAddress]).toEqual(
+              prevState.balances[separateWalletAddress],
+            );
           });
         });
       });
