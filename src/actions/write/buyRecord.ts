@@ -111,7 +111,7 @@ export const buyRecord = (
       reserved[formattedName];
 
     /**
-     * Two scenarios:
+     * Three scenarios:
      *
      * 1. name is reserved, regardless of length can be purchased only by target, unless expired
      * 2. name is reserved, but only for a certain amount of time
