@@ -25,16 +25,21 @@ export class BuyRecord {
   years: number;
   tierNumber: number;
 
-  constructor(input: any){
+  constructor(input: any) {
     // validate using ajv validator
     if (!validateBuyRecord(input)) {
       throw new ContractError(INVALID_INPUT_MESSAGE);
     }
-    const { name, contractTxId = RESERVED_ATOMIC_TX_ID, years = 1, tierNumber = 1 } = input;
+    const {
+      name,
+      contractTxId = RESERVED_ATOMIC_TX_ID,
+      years = 1,
+      tierNumber = 1,
+    } = input;
     this.name = name;
     this.contractTxId = contractTxId;
     this.years = years;
-    this.tierNumber = tierNumber
+    this.tierNumber = tierNumber;
   }
 }
 
@@ -42,15 +47,9 @@ export const buyRecord = (
   state: IOState,
   { caller, input }: PstAction,
 ): ContractResult => {
-
   // does validation on constructor
   const buyRecordInput = new BuyRecord(input);
-  const {
-    name,
-    contractTxId,
-    years,
-    tierNumber,
-  } = buyRecordInput;
+  const { name, contractTxId, years, tierNumber } = buyRecordInput;
 
   // get all other relevant state data
   const { balances, records, reserved, fees, tiers = DEFAULT_TIERS } = state;
