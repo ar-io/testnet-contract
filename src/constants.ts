@@ -1,4 +1,4 @@
-import { AuctionSettings } from './types';
+import { Auction, AuctionSettings } from './types';
 
 export const MAX_DELEGATES = 1000; // the maximum amount of delegates that can be added to a single gateway
 export const MAX_YEARS = 3; // the maximum amount of years an arns name could be leased for
@@ -113,12 +113,14 @@ export const DEFAULT_FEE_STRUCTURE = {
   '32': 50,
 };
 export const DEFAULT_AUCTION_SETTINGS_ID = 'default-auction-settings';
-export const DEFAULT_AUCTION_SETTINGS: AuctionSettings = {
-  id: DEFAULT_AUCTION_SETTINGS_ID,
-  floorPriceMultiplier: 10,
-  startPriceMultiplier: 1000,
-  decayInterval: 20, // decrement every 20 blocks
-  decayRate: 0.05, // 5% decay
-  duration: 5040, // approx 7 days,
-};
-export const ARWEAVE_TX_ID_REGEX = new RegExp('^[a-zA-Z0-9_-]{43}$');
+export const DEFAULT_AUCTION_SETTINGS: {current: string, history: AuctionSettings[]} = {
+  current: DEFAULT_AUCTION_SETTINGS_ID,
+  history: [{
+    id: DEFAULT_AUCTION_SETTINGS_ID,
+    floorPriceMultiplier: 10,
+    startPriceMultiplier: 1000,
+    decayInterval: 20, // decrement every 20 blocks
+    decayRate: 0.05, // 5% decay
+    auctionDuration: 5040, // approx 7 days,
+  }]
+}

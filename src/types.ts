@@ -49,20 +49,27 @@ export type Fees = {
 };
 
 export type Auction = {
-  initialPrice: number,
-  floorPrice: number,
-  startHeight: number,
-  auctionSettingsID: string,
-  details?: any,
-  initiator: string,
-  type: 'lease' | 'permabuy',
-}
+  initialPrice: number;
+  floorPrice: number;
+  startHeight: number;
+  auctionSettingsId: string;
+  type: 'lease' | 'permabuy';
+  details: {
+    contractTxId: string;
+    years: number;
+    tierNumber: number;
+  };
+  vault: {
+    wallet: string;
+    qty: number;
+  };
+};
 
 export type AuctionSettings = {
   id: string;
   floorPriceMultiplier: number;
   startPriceMultiplier: number;
-  blockDuration: number;
+  auctionDuration: number;
   decayRate: number;
   decayInterval: number;
 };
@@ -126,6 +133,7 @@ export type ArNSName = {
   contractTxId: string; // The ANT Contract used to manage this name
   endTimestamp: number; // At what unix time (seconds since epoch) the lease ends
   tier: string; // The id of the tier selected at time of purchased
+  type: 'lease' | 'permabuy';
 };
 
 export type ReservedName = {
