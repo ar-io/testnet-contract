@@ -202,48 +202,83 @@ describe('Auctions', () => {
                         auctionObj = auctions[auctionBid.name]
                     });
 
-                    it('should update the records object when a winning bid comes in', async () => {
-                        // fast forward a few blocks, then construct winning bid
-                        const auctionSettings: AuctionSettings =  DEFAULT_AUCTION_SETTINGS.history[0];
-                        await mineBlocks(arweave, 10);
-                        const winningBidQty = calculateMinimumAuctionBid({
-                            startHeight: auctionObj.startHeight,
-                            initialPrice: auctionObj.initialPrice,
-                            floorPrice: auctionObj.floorPrice,
-                            currentBlockHeight: await getCurrentBlock(arweave),
-                            decayInterval: auctionSettings.decayInterval,
-                            decayRate: auctionSettings.decayRate,
-                        });
-                        const auctionBid = {
-                            name: 'apple',
-                            qty: winningBidQty,
-                            details: {
-                                contractTxId: DEFAULT_ANT_CONTRACT_IDS[1]
+                    describe('another bid', () => {
+                        it('should throw an error when the bid does not meet the minimum required', async () => {
+                            const auctionBid = {
+                                name: 'apple',
+                                qty: 100, // not going to win it
+                                details: {
+                                    contractTxId: DEFAULT_ANT_CONTRACT_IDS[1]
+                                }
                             }
-                        }
-                        // connect using another wallet
-                        const separateWallet = await getLocalWallet(2);
-                        await contract.connect(separateWallet);
-                        const winnerAddress = await arweave.wallets.getAddress(separateWallet)
-                        const writeInteraction = await contract.writeInteraction({
-                            function: 'submitAuctionBid',
-                            ...auctionBid,
-                        })
-                        expect(writeInteraction?.originalTxId).not.toBeUndefined();
-                        const { cachedValue} = await contract.readState();
-                        expect(cachedValue.errorMessages).not.toContain(auctionTxId);
-                        const { auctions, records, tiers, balances } = cachedValue.state as IOState;
-                        const { wallet: initiator, qty } = auctionObj.vault;
-                        expect(auctions[auctionBid.name]).toBeUndefined();
-                        expect(records[auctionBid.name]).toEqual({
-                            contractTxId: DEFAULT_ANT_CONTRACT_IDS[1],
-                            endTimestamp: expect.any(Number),
-                            tier: tiers.current[0],
-                            type: 'lease'
+                            // connect using another wallet
+                            const separateWallet = await getLocalWallet(2);
+                            await contract.connect(separateWallet);
+                            const secondAddress = await arweave.wallets.getAddress(separateWallet)
+                            const writeInteraction = await contract.writeInteraction({
+                                function: 'submitAuctionBid',
+                                ...auctionBid,
+                            })
+                            expect(writeInteraction?.originalTxId).not.toBeUndefined();
+                            const { cachedValue} = await contract.readState();
+                            expect(Object.keys(cachedValue.errorMessages)).toContain(
+                                writeInteraction!.originalTxId,
+                            );
+                            expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(expect.stringContaining(`The bid (${100} IO) is less than the current required minimum bid`))
+                            const { auctions, records, balances } = cachedValue.state as IOState;
+                            expect(auctions[auctionBid.name]).toEqual(auctionObj);
+                            expect(records[auctionBid.name]).toBeUndefined();
+                            expect(balances[nonContractOwnerAddress]).toEqual(initialState.balances[nonContractOwnerAddress] - auctionObj.vault.qty)
+                            expect(balances[secondAddress]).toEqual(initialState.balances[secondAddress]);
                         });
-                        expect(balances[winnerAddress]).toEqual(initialState.balances[winnerAddress] - winningBidQty);
-                        expect(balances[initiator]).toEqual(initialState.balances[initiator])
+
+                        it('should update the records object when a winning bid comes in', async () => {
+                            // fast forward a few blocks, then construct winning bid
+                            const auctionSettings: AuctionSettings =  DEFAULT_AUCTION_SETTINGS.history[0];
+                            await mineBlocks(arweave, 10);
+                            const winningBidQty = calculateMinimumAuctionBid({
+                                startHeight: auctionObj.startHeight,
+                                initialPrice: auctionObj.initialPrice,
+                                floorPrice: auctionObj.floorPrice,
+                                currentBlockHeight: await getCurrentBlock(arweave),
+                                decayInterval: auctionSettings.decayInterval,
+                                decayRate: auctionSettings.decayRate,
+                            });
+                            const auctionBid = {
+                                name: 'apple',
+                                qty: winningBidQty,
+                                details: {
+                                    contractTxId: DEFAULT_ANT_CONTRACT_IDS[1]
+                                }
+                            }
+                            // connect using another wallet
+                            const separateWallet = await getLocalWallet(2);
+                            await contract.connect(separateWallet);
+                            const winnerAddress = await arweave.wallets.getAddress(separateWallet)
+                            const writeInteraction = await contract.writeInteraction({
+                                function: 'submitAuctionBid',
+                                ...auctionBid,
+                            })
+                            expect(writeInteraction?.originalTxId).not.toBeUndefined();
+                            const { cachedValue} = await contract.readState();
+                            expect(cachedValue.errorMessages).not.toContain(auctionTxId);
+                            const { auctions, records, tiers, balances } = cachedValue.state as IOState;
+                            const { wallet: initiator, qty } = auctionObj.vault;
+                            expect(auctions[auctionBid.name]).toBeUndefined();
+                            expect(records[auctionBid.name]).toEqual({
+                                contractTxId: DEFAULT_ANT_CONTRACT_IDS[1],
+                                endTimestamp: expect.any(Number),
+                                tier: tiers.current[0],
+                                type: 'lease'
+                            });
+                            expect(balances[winnerAddress]).toEqual(initialState.balances[winnerAddress] - winningBidQty);
+                            expect(balances[initiator]).toEqual(initialState.balances[initiator])
+                        })
                     })
+
+
+
+                   
                 })
             })
         })
