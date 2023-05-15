@@ -374,8 +374,19 @@
     if (!balances[caller] || balances[caller] == void 0 || balances[caller] == null || isNaN(balances[caller])) {
       throw new ContractError(`Caller balance is not defined!`);
     }
-    const selectedTierID = currentTiers[tierNumber];
-    const purchasedTier = allTiers.find((t) => t.id === selectedTierID) ?? DEFAULT_TIERS.history[0];
+    if (years > MAX_YEARS || years <= 0) {
+      throw new ContractError(
+        'Invalid value for "years". Must be an integer greater than zero and less than the max years'
+      );
+    }
+    const activeTierNumbers = currentTiers.map((_, indx) => indx + 1);
+    if (!activeTierNumbers.includes(tierNumber)) {
+      throw new ContractError(
+        `Invalid value for "tier". Must be one of: ${activeTierNumbers.join(",")}`
+      );
+    }
+    const selectedTierID = currentTiers[tierNumber - 1];
+    const purchasedTier = allTiers.find((t) => t.id === selectedTierID) ?? DEFAULT_TIERS[0];
     if (!purchasedTier) {
       throw new ContractError("The tier purchased is not in the states history.");
     }
