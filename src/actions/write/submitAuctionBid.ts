@@ -1,10 +1,4 @@
 import {
-  calculateMinimumAuctionBid,
-  calculatePermabuyFee,
-  calculateTotalRegistrationFee,
-} from '../../utilities';
-
-import {
   DEFAULT_INVALID_QTY_MESSAGE,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
   DEFAULT_PERMABUY_EXPIRATION,
@@ -19,6 +13,11 @@ import {
   PstAction,
   ServiceTier,
 } from '../../types';
+import {
+  calculateMinimumAuctionBid,
+  calculatePermabuyFee,
+  calculateTotalRegistrationFee,
+} from '../../utilities';
 // composed by ajv at build
 import { validateAuctionBid } from '../../validations.mjs';
 
@@ -61,7 +60,15 @@ export const submitAuctionBid = async (
   state: IOState,
   { caller, input }: PstAction,
 ): Promise<ContractResult> => {
-  const { auctions = {}, fees, records, tiers, settings, balances, vaults } = state;
+  const {
+    auctions = {},
+    fees,
+    records,
+    tiers,
+    settings,
+    balances,
+    vaults,
+  } = state;
 
   // does validation on constructor
   const {
@@ -242,7 +249,6 @@ export const submitAuctionBid = async (
     return { state };
   }
 };
-
 
 export function walletHasSufficientBalance(
   balances: { [x: string]: number },

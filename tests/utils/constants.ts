@@ -8,8 +8,8 @@ export const INTERACTION_COST = 20000;
 export const DEFAULT_ANT_CONTRACT_IDS = [
   'MSFTfeBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU',
   'xSFTfoBVyaJ8s9n7GxIyJNNc62jEVCKD7lbL3fV8kzU',
-  'ySFTfrBVyaJ8s9n7GxIyJNNc62jEVCcD7lbL3fV8kzU'
-]
+  'ySFTfrBVyaJ8s9n7GxIyJNNc62jEVCcD7lbL3fV8kzU',
+];
 export const SECONDS_IN_A_YEAR = 31_536_000;
 export const DEFAULT_WALLET_FUND_AMOUNT = 1_000_000_000_000_000;
 export const DEFAULT_INITIAL_STATE = initialContractState;

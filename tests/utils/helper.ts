@@ -303,7 +303,7 @@ export async function setupInitialContractState(
   };
 
   // setup auctions
-  state.auctions = {}
+  state.auctions = {};
 
   // create some records
   state.records = createRecords(state.tiers.current);
@@ -316,7 +316,7 @@ export async function setupInitialContractState(
     registry: DEFAULT_CONTRACT_SETTINGS,
     auctions: DEFAULT_AUCTION_SETTINGS,
     permabuy: {
-      multiplier: 100
+      multiplier: 100,
     },
   };
 
@@ -325,8 +325,6 @@ export async function setupInitialContractState(
 
   // configure some basic gateways
   state.gateways = createGateways(wallets);
-
-
 
   // add some reserved names
   const currentDate = new Date(); // Get current date
