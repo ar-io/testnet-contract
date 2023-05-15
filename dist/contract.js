@@ -1188,7 +1188,15 @@
     }
   };
   var submitAuctionBid = async (state, { caller, input }) => {
-    const { auctions = {}, fees, records, tiers, settings, balances, vaults } = state;
+    const {
+      auctions = {},
+      fees,
+      records,
+      tiers,
+      settings,
+      balances,
+      vaults
+    } = state;
     const {
       name,
       qty: submittedBid,
@@ -1196,7 +1204,7 @@
       details: bidDetails
     } = new AuctionBid(input);
     if (Object.keys(records).includes(name)) {
-      throw ContractError(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
+      throw new ContractError(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
     }
     const currentAuctionSettings = settings.auctions.history.find((a) => a.id === settings.auctions.current);
     if (!currentAuctionSettings) {

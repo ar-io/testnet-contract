@@ -80,7 +80,7 @@ export const submitAuctionBid = async (
 
   // already an owned name
   if (Object.keys(records).includes(name)) {
-    throw ContractError(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
+    throw new ContractError(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
   }
 
   // get the current auction settings, create one of it doesn't exist yet
