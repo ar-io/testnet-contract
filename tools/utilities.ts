@@ -42,20 +42,14 @@ export async function retryFetch(reqURL: string): Promise<AxiosResponse<any>> {
       return exponentialDelay(retryNumber);
     },
   });
-  return await axiosInstance.get(reqURL, {
-    responseType: 'arraybuffer',
-  });
+  return await axiosInstance.get(reqURL);
 }
 
 // Gets the latest block height
 export async function getCurrentBlockHeight() {
-  let height = 0;
-  try {
-    const response = await retryFetch(`https://arweave.net/height`);
-    height = await response.data;
+    const { status, data: height } = await retryFetch(`https://arweave.net/height`);
+    if (status !== 200){
+      throw Error('Unable to fetch current height.')
+    }
     return height;
-  } catch (err) {
-    console.error(err);
-  }
-  return height;
 }

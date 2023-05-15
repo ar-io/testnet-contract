@@ -5,7 +5,8 @@ import path from 'path';
 
 import { Foundation, IOState } from '../../src/types';
 import {
-  DEFAULT_ANT_CONTRACT_ID,
+  DEFAULT_ANT_CONTRACT_IDS,
+  DEFAULT_AUCTION_SETTINGS,
   DEFAULT_CONTRACT_SETTINGS,
   DEFAULT_FOUNDATION_ACTION_PERIOD,
   DEFAULT_INITIAL_STATE,
@@ -74,7 +75,7 @@ function createRecords(tiers: string[], count = 3) {
     const name = `name${i + 1}`;
     const obj = {
       tier: tiers[0],
-      contractTxID: DEFAULT_ANT_CONTRACT_ID,
+      contractTxID: DEFAULT_ANT_CONTRACT_IDS[0],
       endTimestamp: new Date('01/01/2025').getTime() / 1000,
     };
     records[name] = obj;
@@ -301,6 +302,9 @@ export async function setupInitialContractState(
     [owner]: DEFAULT_WALLET_FUND_AMOUNT,
   };
 
+  // setup auctions
+  state.auctions = {}
+
   // create some records
   state.records = createRecords(state.tiers.current);
 
@@ -310,6 +314,10 @@ export async function setupInitialContractState(
   // configure the necessary contract settings
   state.settings = {
     registry: DEFAULT_CONTRACT_SETTINGS,
+    auctions: DEFAULT_AUCTION_SETTINGS,
+    permabuy: {
+      multiplier: 100
+    },
   };
 
   // configure the foundation
@@ -317,6 +325,8 @@ export async function setupInitialContractState(
 
   // configure some basic gateways
   state.gateways = createGateways(wallets);
+
+
 
   // add some reserved names
   const currentDate = new Date(); // Get current date
