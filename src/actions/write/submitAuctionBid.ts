@@ -1,117 +1,119 @@
 import {
+  calculateMinimumAuctionBid,
   calculatePermabuyFee,
   calculateTotalRegistrationFee,
-} from '@/utilities';
+} from '../../utilities';
 
 import {
   DEFAULT_INVALID_QTY_MESSAGE,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
   DEFAULT_PERMABUY_EXPIRATION,
   DEFAULT_PERMABUY_TIER,
+  INVALID_INPUT_MESSAGE,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
 import {
-  Auction,
-  AuctionBidDetails,
   AuctionSettings,
   ContractResult,
   IOState,
   PstAction,
   ServiceTier,
-  SubmitBidPayload,
-  TokenVault,
-  auctionTypes,
 } from '../../types';
+// composed by ajv at build
+import { validateAuctionBid } from '../../validations.mjs';
 
 declare const ContractError;
 declare const SmartWeave: any;
 
+export class AuctionBid {
+  name: string;
+  qty?: number;
+  type: 'lease' | 'permabuy';
+  details: {
+    contractTxId: string;
+    tierNumber: number;
+    years: number;
+  };
+  constructor(input: any) {
+    // validate using ajv validator
+    if (!validateAuctionBid(input)) {
+      throw new ContractError(INVALID_INPUT_MESSAGE);
+    }
+
+    const { name, qty, type, details } = input;
+    this.name = name.trim().toLowerCase();
+    this.qty = qty;
+    this.type = type ?? 'lease';
+    this.details = {
+      contractTxId: details.contractTxId,
+      years:
+        this.type === 'lease'
+          ? details.years ?? 1
+          : DEFAULT_PERMABUY_EXPIRATION,
+      tierNumber:
+        this.type === 'lease' ? details.tierNumber ?? 1 : DEFAULT_PERMABUY_TIER, // the top tier
+    };
+  }
+}
+
 // Signals an approval for a proposed foundation action
 export const submitAuctionBid = async (
   state: IOState,
-  { caller, input: submitBidInput }: PstAction,
+  { caller, input }: PstAction,
 ): Promise<ContractResult> => {
-  // TODO: add a parser here to validate the input (e.g. zod or class-transformer/class-validator)
-  const { auctions, fees, records, tiers, settings, balances, vaults } = state;
+  const { auctions = {}, fees, records, tiers, settings, balances, vaults } = state;
 
-  const { name, qty, type, details } = submitBidInput as SubmitBidPayload;
-
-  // validate name
-  if (!name) {
-    throw ContractError('Name is required.');
-  }
-
-  // validate type 
-  if (!type || !auctionTypes.includes(type)) {
-    throw ContractError('Invalid auction type.');
-  }
-
-  // validate at least a contract id was provided
-  if (!details?.contractTxId) {
-    throw ContractError('Contract transaction id is required.');
-  }
-
-  const formattedName = name.trim().toLowerCase();
+  // does validation on constructor
+  const {
+    name,
+    qty: submittedBid,
+    type,
+    details: bidDetails,
+  } = new AuctionBid(input);
 
   // already an owned name
-  if (Object.keys(records).includes(formattedName)) {
+  if (Object.keys(records).includes(name)) {
     throw ContractError(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
   }
 
   // get the current auction settings, create one of it doesn't exist yet
-  const currentAuctionSettings: AuctionSettings = settings.auctions.history.find(
-    (a) => a.id === settings.auctions.current,
-  );
+  const currentAuctionSettings: AuctionSettings =
+    settings.auctions.history.find((a) => a.id === settings.auctions.current);
 
-  if(!currentAuctionSettings){
+  if (!currentAuctionSettings) {
     throw Error('No auctions settings found.');
   }
 
   // validate we have tiers
-  const currentTiers = tiers?.current
+  const currentTiers = tiers?.current;
   const tierHistory = tiers?.history;
 
-  if(!currentTiers || !tierHistory.length){
+  if (!currentTiers || !tierHistory.length) {
     throw Error('No tiers found.');
   }
-
-  const bidDetails: AuctionBidDetails = {
-    tierNumber: DEFAULT_PERMABUY_TIER,
-    years: DEFAULT_PERMABUY_EXPIRATION,
-    ...details,
-  };
 
   // all the things we need to handle an auction bid
   const currentBlockHeight = +SmartWeave.block.height;
   const { decayInterval, decayRate, auctionDuration } = currentAuctionSettings;
-  const walletVaults: TokenVault[] = vaults[caller] ?? [];
 
   // calculate the standard registration fee
-  const serviceTier: ServiceTier = tierHistory.find(
-    (t) => t.id === currentTiers[bidDetails.tierNumber],
+  const serviceTier = tierHistory.find(
+    (t: ServiceTier) => t.id === currentTiers[bidDetails.tierNumber - 1],
   );
   const registrationFee =
     type === 'lease'
-      ? calculateTotalRegistrationFee(
-          formattedName,
-          fees,
-          serviceTier,
-          bidDetails.years,
-        )
-      : calculatePermabuyFee(formattedName, fees, settings.permabuy.multiplier);
+      ? calculateTotalRegistrationFee(name, fees, serviceTier, bidDetails.years)
+      : calculatePermabuyFee(name, fees, settings.permabuy.multiplier);
 
   // current auction in the state, validate the bid and update state
-  if (Object.keys(auctions).includes(formattedName)) {
-    const existingAuction: Auction = state.auctions[formattedName];
-    const { startHeight, initialPrice, floorPrice, initiator } =
-      existingAuction;
-
+  if (Object.keys(auctions).includes(name)) {
+    const existingAuction = auctions[name];
+    const { startHeight, initialPrice, floorPrice, vault } = existingAuction;
     const auctionEndHeight = startHeight + auctionDuration;
     const endTimestamp =
-      existingAuction.type === 'lease'
-        ? +SmartWeave.block.height + SECONDS_IN_A_YEAR * bidDetails.years
-        : DEFAULT_PERMABUY_EXPIRATION;
-    const tierNumber = existingAuction.details.tierNumber;
+      +SmartWeave.block.height + SECONDS_IN_A_YEAR * bidDetails.years; // 0 for permabuy
+    const tier = currentTiers[existingAuction.details.tierNumber - 1];
+    const type = existingAuction.type;
     if (
       startHeight > currentBlockHeight ||
       currentBlockHeight > auctionEndHeight
@@ -120,35 +122,24 @@ export const submitAuctionBid = async (
        * We can update the state if a bid was placed after an auction has ended.
        *
        * To do so we need to:
-       * 1. Remove the vault from the initiator
-       * 2. Update the records to reflect their new name
+       * 1. Update the records to reflect their new name
+       * 2. Delete the auction object
        * 3. Return an error to the second bidder, telling them they did not win the bid.
        */
 
-      // find the vault for this transaction and remove it
-      let vaultRemoved = false;
-      const updatedVaults = walletVaults
-        .map((vault) => {
-          if (!vaultRemoved && vault.balance === existingAuction.floorPrice) {
-            vaultRemoved = true;
-            return null;
-          }
-          return vault;
-        })
-        .filter((v) => !!v);
-      if (!vaultRemoved) {
-        // so no vault was found for the winning user. What do we do?
-        throw Error('The auction has already been won.');
-      }
-      vaults[caller] = updatedVaults;
+      records[name] = {
+        contractTxId: existingAuction.details.contractTxId,
+        tier,
+        endTimestamp,
+        type,
+      };
 
       // delete the auction
-      delete auctions[formattedName];
+      delete auctions[name];
       // update the state
       state.auctions = auctions;
       state.records = records;
       state.balances = balances;
-      state.vaults = vaults;
       throw Error('The auction has already been won.');
     }
 
@@ -162,19 +153,19 @@ export const submitAuctionBid = async (
       decayInterval,
     });
 
-    if (qty < requiredMinimumBid) {
+    if (submittedBid && submittedBid < requiredMinimumBid) {
       throw Error(
-        `The bid (${qty} IO) is less than the current required minimum bid of ${requiredMinimumBid} IO.`,
+        `The bid (${submittedBid} IO) is less than the current required minimum bid of ${requiredMinimumBid} IO.`,
       );
     }
 
+    // the bid is the minimum of what was submitted and what is actually needed
+    const finalBid = submittedBid
+      ? Math.min(submittedBid, requiredMinimumBid)
+      : requiredMinimumBid;
+
     // throw an error if the wallet doesn't have the balance for the bid
-    const validBalance = walletHasSufficientBalance(
-      balances,
-      caller,
-      requiredMinimumBid,
-    );
-    if (!validBalance) {
+    if (!walletHasSufficientBalance(balances, caller, finalBid)) {
       throw Error(DEFAULT_INVALID_QTY_MESSAGE);
     }
 
@@ -188,74 +179,61 @@ export const submitAuctionBid = async (
      */
 
     // the bid has been won, update the records
-    records[formattedName] = {
+    records[name] = {
       contractTxId: bidDetails.contractTxId,
-      type: existingAuction.type,
-      endTimestamp: endTimestamp,
-      tier: currentTiers[tierNumber],
+      endTimestamp,
+      tier,
+      type,
     };
 
-    // decrement the balance
-    balances[caller] -= requiredMinimumBid;
-
-    // return the vault balance to the initiator, nothing required to do with balances
-    const initiatorVaults = vaults[initiator];
-    const updatedInitiatorVaults = removeVaultFromWallet(
-      initiatorVaults,
-      existingAuction.floorPrice,
-    );
-    vaults[caller] = updatedInitiatorVaults;
+    // return the vaulted balance back to the initiator
+    const { wallet: initiator, qty } = vault;
+    balances[initiator] += qty;
+    // decrement the vaulted balance from the user
+    balances[caller] -= finalBid;
 
     // delete the auction
-    delete auctions[formattedName];
-    state.vaults = vaults;
+    delete auctions[name];
     state.auctions = auctions;
     state.records = records;
+    state.balances = balances;
     return { state };
   }
 
   // no current auction, create one and vault the balance from the user
-  if (!Object.keys(auctions).includes(formattedName)) {
+  if (!Object.keys(auctions).includes(name)) {
     const {
-      id: auctionSettingsID,
+      id: auctionSettingsId,
       floorPriceMultiplier,
       startPriceMultiplier,
     } = currentAuctionSettings;
-    const floorPrice = Math.max(qty, registrationFee * floorPriceMultiplier);
+    const calculatedFloor = registrationFee * floorPriceMultiplier;
+    const floorPrice = submittedBid
+      ? Math.max(submittedBid, calculatedFloor)
+      : calculatedFloor;
     const initialPrice = registrationFee * startPriceMultiplier;
 
     // throw an error on invalid balance
-    const validBalance = walletHasSufficientBalance(
-      balances,
-      caller,
-      floorPrice,
-    );
-    if (!validBalance) {
+    if (!walletHasSufficientBalance(balances, caller, floorPrice)) {
       throw Error(DEFAULT_INVALID_QTY_MESSAGE);
     }
 
-    // vault the users balance for the auction, remove the floor price from their current balance
-    const auctionVault: TokenVault = {
-      balance: floorPrice,
-      start: currentBlockHeight,
-      end: currentBlockHeight + auctionDuration, // TODO: we could set this to 0, or the end of the auction
-    };
-    walletVaults.push(auctionVault);
-    vaults[caller] = walletVaults;
-    balances[caller] -= floorPrice;
-
     // create the initial auction bid
     const initialAuctionBid = {
-      auctionSettingsID,
+      auctionSettingsId,
       floorPrice,
       initialPrice,
-      initiator: caller,
       details: bidDetails,
       // TODO: potentially increment by 1?
       startHeight: currentBlockHeight,
       type,
+      vault: {
+        wallet: caller,
+        qty: floorPrice,
+      },
     };
-    auctions[formattedName] = initialAuctionBid;
+    auctions[name] = initialAuctionBid;
+    balances[caller] -= floorPrice;
 
     // update the state to include the auction, notice not records have been updated
     state.auctions = auctions;
@@ -266,50 +244,10 @@ export const submitAuctionBid = async (
 };
 
 
-export function calculateMinimumAuctionBid({
-  startHeight,
-  initialPrice,
-  floorPrice,
-  currentBlockHeight,
-  decayInterval,
-  decayRate,
-}: {
-  startHeight: number,
-  initialPrice: number,
-  floorPrice: number,
-  currentBlockHeight: number,
-  decayInterval: number,
-  decayRate: number
-}): number {
-  const blockIntervalsPassed = Math.floor(
-    (currentBlockHeight - startHeight) / decayInterval,
-  );
-  const dutchAuctionBid =
-    initialPrice * Math.pow(decayRate, blockIntervalsPassed);
-  const minimumBid = Math.max(dutchAuctionBid, floorPrice);
-  return minimumBid;
-}
-
 export function walletHasSufficientBalance(
   balances: { [x: string]: number },
   wallet: string,
   qty: number,
 ): boolean {
   return balances[wallet] && balances[wallet] >= qty;
-}
-
-export function removeVaultFromWallet(
-  vaults: TokenVault[],
-  qty: number,
-): TokenVault[] {
-  let removedVault = false;
-  return vaults.reduce((updatedVaults: TokenVault[], vault: TokenVault) => {
-    // only removes the first occurrence of a vault matching the quantity specified
-    if (!removedVault && vault.balance === qty) {
-      removedVault = true;
-      return updatedVaults;
-    }
-    updatedVaults.push(vault);
-    return updatedVaults;
-  }, []);
 }

@@ -44,6 +44,30 @@ export function calculatePermabuyFee(
   return fees[name.length.toString()] * multiplier;
 }
 
+export function calculateMinimumAuctionBid({
+  startHeight,
+  initialPrice,
+  floorPrice,
+  currentBlockHeight,
+  decayInterval,
+  decayRate,
+}: {
+  startHeight: number;
+  initialPrice: number;
+  floorPrice: number;
+  currentBlockHeight: number;
+  decayInterval: number;
+  decayRate: number;
+}): number {
+  const blockIntervalsPassed = Math.floor(
+    (currentBlockHeight - startHeight) / decayInterval,
+  );
+  const dutchAuctionBid =
+    initialPrice * Math.pow(decayRate, blockIntervalsPassed);
+  const minimumBid = Math.max(dutchAuctionBid, floorPrice);
+  return minimumBid;
+}
+
 // check if a string is a valid fully qualified domain name
 export function isValidFQDN(fqdn: string) {
   const fqdnRegex = /^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{1,6}$/;
