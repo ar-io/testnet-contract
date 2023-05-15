@@ -4,15 +4,17 @@ const Ajv = require('ajv');
 const standaloneCode = require('ajv/dist/standalone').default;
 const { build } = require('esbuild');
 const replace = require('replace-in-file');
-const { buyRecordSchema } = require('./schemas');
+const { auctionBidSchema, buyRecordSchema } = require('./schemas');
+
 // build our validation source code
 const ajv = new Ajv({
-  schemas: [buyRecordSchema],
+  schemas: [auctionBidSchema, buyRecordSchema],
   code: { source: true, esm: true },
 });
 
 const moduleCode = standaloneCode(ajv, {
   validateBuyRecord: '#/definitions/buyRecord',
+  validateAuctionBid: '#/definitions/auctionBid',
 });
 
 // Now you can write the module code to file
