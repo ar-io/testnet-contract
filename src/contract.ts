@@ -39,47 +39,47 @@ export async function handle(
 
   switch (input.function as IOContractFunctions) {
     case 'transfer':
-      return await transferTokens(state, action);
+      return transferTokens(state, action);
     case 'buyRecord':
-      return await buyRecord(state, action);
+      return buyRecord(state, action);
     case 'extendRecord':
-      return await extendRecord(state, action);
+      return extendRecord(state, action);
     case 'evolve':
-      return await evolve(state, action);
+      return evolve(state, action);
     case 'balance':
-      return await balance(state, action);
+      return balance(state, action);
     case 'record':
-      return await getRecord(state, action);
+      return getRecord(state, action);
     case 'tier':
-      return await getTier(state, action);
+      return getTier(state, action);
     case 'activeTiers':
-      return await getActiveTiers(state);
+      return getActiveTiers(state);
     case 'gateway':
-      return await getGateway(state, action);
+      return getGateway(state, action);
     case 'gatewayTotalStake':
-      return await getGatewayTotalStake(state, action);
+      return getGatewayTotalStake(state, action);
     case 'gatewayRegistry':
-      return await getGatewayRegistry(state);
+      return getGatewayRegistry(state);
     case 'rankedGatewayRegistry':
-      return await getRankedGatewayRegistry(state);
+      return getRankedGatewayRegistry(state);
     case 'upgradeTier':
-      return await upgradeTier(state, action);
+      return upgradeTier(state, action);
     case 'joinNetwork':
-      return await joinNetwork(state, action);
+      return joinNetwork(state, action);
     case 'initiateLeave':
-      return await initiateLeave(state, action);
+      return initiateLeave(state, action);
     case 'finalizeLeave':
-      return await finalizeLeave(state, action);
+      return finalizeLeave(state, action);
     case 'increaseOperatorStake':
-      return await increaseOperatorStake(state, action);
+      return increaseOperatorStake(state, action);
     case 'initiateOperatorStakeDecrease':
-      return await initiateOperatorStakeDecrease(state, action);
+      return initiateOperatorStakeDecrease(state, action);
     case 'finalizeOperatorStakeDecrease':
-      return await finalizeOperatorStakeDecrease(state, action);
+      return finalizeOperatorStakeDecrease(state, action);
     case 'updateGatewaySettings':
-      return await updateGatewaySettings(state, action);
+      return updateGatewaySettings(state, action);
     case 'foundationAction':
-      return await foundationAction(state, action);
+      return foundationAction(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognized: "${input.function}"`,
