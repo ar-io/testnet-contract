@@ -195,13 +195,6 @@ export type PstAction = {
   caller: string;
 };
 
-export type ArNSNamePurchase = {
-  name: string;
-  years: number;
-  tierNumber?: number;
-  contractTxId: string;
-};
-
 export type DelayedEvolveInput = {
   contractSrcTxId: string; // The source code that this contract will evolve to
   evolveHeight?: number; // The height at which this evolution action takes effect
@@ -225,7 +218,7 @@ export type ServiceTier = {
   settings: ServiceTierSettings;
 };
 
-export type ActiveTier = { tierNumber: number; tierId: string };
+export type ActiveTier = { id: string; idx?: number };
 
 // any tier settings offered
 export type ServiceTierSettings = {
@@ -236,13 +229,8 @@ export type PstFunctions = 'balance' | 'transfer' | 'evolve';
 
 export type PDNSFunctions =
   | 'buyRecord'
-  | 'removeRecord'
   | 'extendRecord'
-  | 'addANTSourceCodeTx'
-  | 'removeANTSourceCodeTx'
   | 'setName'
-  | 'setActiveTier'
-  | 'createNewTier'
   | 'tier'
   | 'activeTiers'
   | 'upgradeTier'
