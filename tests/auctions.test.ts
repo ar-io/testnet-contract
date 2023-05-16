@@ -182,7 +182,7 @@ describe('Auctions', () => {
             prevState = (await contract.readState()).cachedValue
               .state as IOState;
             contract.connect(nonContractOwner);
-            console.log(prevState)
+            console.log(prevState);
           });
 
           it('should create the initial auction object', async () => {

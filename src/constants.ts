@@ -112,7 +112,8 @@ export const DEFAULT_FEE_STRUCTURE = {
   '31': 100,
   '32': 50,
 };
-export const DEFAULT_AUCTION_SETTINGS_ID = '3IkWJ-0HdwuATDhBXuJRm0bWspXOOkRjxTm-5R2xRbw';
+export const DEFAULT_AUCTION_SETTINGS_ID =
+  '3IkWJ-0HdwuATDhBXuJRm0bWspXOOkRjxTm-5R2xRbw';
 export const DEFAULT_AUCTION_SETTINGS: {
   current: string;
   history: AuctionSettings[];
