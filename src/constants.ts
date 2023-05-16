@@ -46,7 +46,7 @@ export const DEFAULT_INVALID_QTY_MESSAGE =
 export const DEFAULT_INVALID_TIER_MESSAGE = 'Invalid tier.';
 export const DEFAULT_INVALID_ID_TIER_MESSAGE =
   'Invalid tier ID. Must be present in state before it can be used as a current tier.';
-export const DEFAULT_INVALID_YEARS_MESSAGE = `Invalid number of years. Must be an integer and less than ${MAX_YEARS}`;
+export const DEFAULT_INVALID_YEARS_MESSAGE = `Invalid number of years. Must be an integer and less than or equal to ${MAX_YEARS}`;
 export const DEFAULT_CURRENT_TIERS = [
   'a27dbfe4-6992-4276-91fb-5b97ae8c3ffa',
   '93685bbb-8246-4e7e-bef8-d2e7e6c5d44a',

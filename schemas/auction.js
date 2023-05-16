@@ -8,7 +8,7 @@ const auctionBidSchema = {
     },
     name: {
       type: 'string',
-      pattern: '^(?!-)[a-zA-Z0-9-]{1,32}$',
+      pattern: '^([a-zA-Z0-9][a-zA-Z0-9-]{0,30}[a-zA-Z0-9]|[a-zA-Z0-9]{1})$',
     },
     qty: {
       type: 'number',
@@ -20,17 +20,15 @@ const auctionBidSchema = {
       properties: {
         contractTxId: {
           type: 'string',
-          pattern: '^([a-zA-Z0-9-_]{43})$',
+          pattern: '^[a-zA-Z0-9-]{43}$',
         },
         years: {
           type: 'integer',
-          minimum: 1, // TODO: these validations should pull from state
-          maximum: 3, // TODO: these validations should pull from state
+          minimum: 1,
         },
-        tierNumber: {
-          type: 'integer',
-          minimum: 1, // TODO: these validations should pull from state
-          maximum: 3, // TODO: these validations should pull from state
+        tier: {
+            type: 'string',
+            pattern: '^[a-zA-Z0-9-]{43}$',
         },
       },
       required: ['contractTxId'],

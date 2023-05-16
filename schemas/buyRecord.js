@@ -8,7 +8,9 @@ const buyRecordSchema = {
     },
     name: {
       type: 'string',
-      pattern: '^(?!-)[a-zA-Z0-9-]{1,32}$',
+      // TODO: add 
+      pattern: '^([a-zA-Z0-9][a-zA-Z0-9-]{0,30}[a-zA-Z0-9]|[a-zA-Z0-9]{1})$',
+
     },
     contractTxId: {
       type: 'string',
@@ -17,7 +19,6 @@ const buyRecordSchema = {
     years: {
       type: 'integer',
       minimum: 1, // TODO: these validations should pull from state
-      maximum: 3, // TODO: these validations should pull from state
     },
     tier: {
       type: 'string',

@@ -1,6 +1,7 @@
 import {
   DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE,
   DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
+  DEFAULT_INVALID_YEARS_MESSAGE,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
   DEFAULT_TIERS,
   INVALID_INPUT_MESSAGE,
@@ -67,10 +68,8 @@ export const buyRecord = (
   }
 
   // Additional check if it includes a valid number of years (TODO: this may be set in contract settings)
-  if (years > MAX_YEARS || years <= 0) {
-    throw new ContractError(
-      'Invalid value for "years". Must be an integer greater than zero and less than the max years',
-    );
+  if (years > MAX_YEARS) {
+    throw new ContractError(DEFAULT_INVALID_YEARS_MESSAGE);
   }
 
   // list of all active tier ID's
