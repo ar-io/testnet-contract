@@ -124,9 +124,9 @@ export const DEFAULT_AUCTION_SETTINGS: {
       id: DEFAULT_AUCTION_SETTINGS_ID,
       floorPriceMultiplier: 2,
       startPriceMultiplier: 200,
-      decayInterval: 60, // decrement every 60 blocks - approx every 2 horus
-      decayRate: 0.075, // 10% decay
-      auctionDuration: 5040, // approx 7 days,
+      decayInterval: 60, // decrement every 60 blocks - approx every 2 hours
+      decayRate: 0.05, // 5% decay
+      auctionDuration: 5040, // approx 7 days long
     },
   ],
 };
