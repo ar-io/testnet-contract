@@ -1,3 +1,5 @@
+import { AuctionSettings } from "./types";
+
 export const MAX_DELEGATES = 1000; // the maximum amount of delegates that can be added to a single gateway
 export const MAX_YEARS = 3; // the maximum amount of years an arns name could be leased for
 export const MAX_NAME_LENGTH = 32; // the maximum length of an arns name
@@ -108,3 +110,12 @@ export const DEFAULT_FEE_STRUCTURE = {
   '31': 100,
   '32': 50,
 };
+export const DEFAULT_AUCTION_SETTINGS_ID = 'default-auction-settings'
+export const DEFAULT_AUCTION_SETTINGS: AuctionSettings = {
+  id: DEFAULT_AUCTION_SETTINGS_ID,
+  floorPriceMultiplier: 10,
+  startPriceMultiplier: 1000,
+  decayInterval: 20, // decrement every 20 blocks
+  decayRate: 0.05, // 5% decay
+  duration: 5040, // approx 7 days,
+}

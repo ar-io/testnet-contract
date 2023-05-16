@@ -36,6 +36,14 @@ export function calculateAnnualRenewalFee(
   return (nameAnnualRegistrationFee + tierAnnualFee) * years;
 }
 
+export function calculatePermabuyFee(
+  name: string,
+  fees: Fees,
+  multiplier: number
+) {
+  return fees[name.length.toString()] * multiplier;
+}
+
 // check if a string is a valid fully qualified domain name
 export function isValidFQDN(fqdn: string) {
   const fqdnRegex = /^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{1,6}$/;
