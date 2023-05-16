@@ -134,7 +134,9 @@ export const foundationAction = async (
       case 'setActiveTier':
         // the tier must exist in the history before it can be set as an active tier
         if (
-          !state.tiers.history.map(t => t.id).includes((value as ActiveTier).id)
+          !state.tiers.history
+            .map((t) => t.id)
+            .includes((value as ActiveTier).id)
         ) {
           throw new ContractError(DEFAULT_INVALID_TIER_MESSAGE);
         }
@@ -259,7 +261,8 @@ export const foundationAction = async (
       case 'setActiveTier':
         // eslint-disable-next-line
         const activeTier = value as ActiveTier;
-        state.tiers.current[activeTier.idx ?? state.tiers.current.length - 1] = activeTier.id;
+        state.tiers.current[activeTier.idx ?? state.tiers.current.length - 1] =
+          activeTier.id;
         break;
       case 'delayedEvolve':
         // there is no action taken as the evolve method must be run

@@ -497,7 +497,7 @@ describe('FoundationAction', () => {
         const note = 'Setting active tier';
         const value: ActiveTier = {
           id: newTierId,
-          idx: 2
+          idx: 2,
         };
         const writeInteraction = await contract.writeInteraction({
           function: 'foundationAction',

@@ -218,7 +218,7 @@ export type ServiceTier = {
   settings: ServiceTierSettings;
 };
 
-export type ActiveTier = { id: string, idx?: number };
+export type ActiveTier = { id: string; idx?: number };
 
 // any tier settings offered
 export type ServiceTierSettings = {
