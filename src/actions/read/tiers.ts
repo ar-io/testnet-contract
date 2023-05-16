@@ -4,35 +4,22 @@ declare const ContractError;
 
 export const getTier = async (
   state: IOState,
-  { input: { tierNumber } }: PstAction,
+  { input: { id } }: PstAction,
 ): Promise<ContractResult & any> => {
-  const tiers = state.tiers;
-  const currentTiers = tiers.current;
-  const validTiers = tiers.history;
-
-  if (
-    !Number.isInteger(tierNumber) ||
-    !Object.keys(currentTiers)
-      .map((k) => +k)
-      .includes(tierNumber)
-  ) {
-    throw new ContractError(
-      `Invalid tier selected. Available options ${Object.keys(currentTiers)}`,
-    );
-  }
+  const { tiers: { history: allTiers }} = state;
 
   // the tier object requested
-  const selectedTier: ServiceTier = validTiers.find(
-    (t) => t.id === currentTiers[tierNumber],
+  const tierDetails: ServiceTier = allTiers.find(
+    (t) => t.id === id,
   );
 
-  if (!selectedTier) {
+  if (!tierDetails) {
     throw new ContractError('Tier was not published to state. Try again.');
   }
 
   return {
     result: {
-      ...selectedTier,
+      ...tierDetails,
     },
   };
 };
@@ -40,11 +27,10 @@ export const getTier = async (
 export const getActiveTiers = async (
   state: IOState,
 ): Promise<ContractResult & any> => {
-  const tiers = state.tiers;
-  const current = tiers.current;
-  const allTiers = tiers.history;
+  const { tiers: { current: currentTiers, history: allTiers }} = state;
 
-  const activeTiers = Object.entries(current).map(([tier, id]) => {
+
+  const activeTiers = currentTiers.map(([tier, id]) => {
     const tierObj = allTiers.find((t) => t.id === id);
     return {
       tier,

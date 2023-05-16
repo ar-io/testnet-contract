@@ -37,9 +37,7 @@ export const upgradeTier = async (
   }
 
   // get the current tier
-  const currentNameTier =
-    allTiers.find((t) => t.id === records[name].tier) ??
-    DEFAULT_TIERS.history[0];
+  const currentNameTier = allTiers.find((t) => t.id === records[name].tier)
 
   // Check if it includes a valid tier number
   const allowedTierNumbers = [...Array.from(DEFAULT_CURRENT_TIERS).keys()].map(

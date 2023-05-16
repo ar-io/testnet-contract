@@ -132,20 +132,11 @@ export const foundationAction = async (
         (value as ServiceTier).id = SmartWeave.transaction.id;
         break;
       case 'setActiveTier':
-        // check that the tier number is valid
-        if (
-          !Number.isInteger((value as ActiveTier).tierNumber) ||
-          !ALLOWED_ACTIVE_TIERS.includes((value as ActiveTier).tierNumber)
-        ) {
-          throw new ContractError(DEFAULT_INVALID_TIER_MESSAGE);
-        }
         // the tier must exist in the history before it can be set as an active tier
         if (
-          !state.tiers.history.find(
-            (tier) => tier.id === (value as ActiveTier).tierId,
-          )
+          !state.tiers.history.map(t => t.id).includes((value as ActiveTier).id)
         ) {
-          throw new ContractError(DEFAULT_INVALID_ID_TIER_MESSAGE);
+          throw new ContractError(DEFAULT_INVALID_TIER_MESSAGE);
         }
         break;
       case 'delayedEvolve':
@@ -266,9 +257,9 @@ export const foundationAction = async (
         state.tiers.history.push(value as ServiceTier);
         break;
       case 'setActiveTier':
-        state.tiers.current[(value as ActiveTier).tierNumber] = (
-          value as ActiveTier
-        ).tierId;
+        // eslint-disable-next-line
+        const activeTier = value as ActiveTier;
+        state.tiers.current[activeTier.idx ?? state.tiers.current.length - 1] = activeTier.id;
         break;
       case 'delayedEvolve':
         // there is no action taken as the evolve method must be run
