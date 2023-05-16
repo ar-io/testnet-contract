@@ -27,8 +27,8 @@ const auctionBidSchema = {
           minimum: 1,
         },
         tier: {
-            type: 'string',
-            pattern: '^[a-zA-Z0-9-]{43}$',
+          type: 'string',
+          pattern: '^[a-zA-Z0-9-]{43}$',
         },
       },
       required: ['contractTxId'],
