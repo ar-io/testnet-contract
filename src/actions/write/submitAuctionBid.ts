@@ -269,7 +269,7 @@ export const submitAuctionBid = async (
     } = currentAuctionSettings;
     const calculatedFloor = registrationFee * floorPriceMultiplier;
     const floorPrice = submittedBid
-      ? Math.max(submittedBid, calculatedFloor)
+      ? Math.min(submittedBid, calculatedFloor)
       : calculatedFloor;
     const initialPrice = registrationFee * startPriceMultiplier;
 
