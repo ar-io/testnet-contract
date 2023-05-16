@@ -388,10 +388,9 @@ describe('FoundationAction', () => {
         contract = warp.pst(srcContractId).connect(foundationMember);
         const type = 'setActiveTier';
         const note = 'Setting bad active tier number';
-        const tierNumber = 5;
         const value: ActiveTier = {
-          tierId: newTierId,
-          tierNumber,
+          id: newTierId,
+          idx: 5,
         };
         const { cachedValue } = await contract.readState();
         const state = cachedValue.state as IOState;
@@ -423,8 +422,7 @@ describe('FoundationAction', () => {
         const type = 'setActiveTier';
         const note = 'Setting bad active tier id';
         const value: ActiveTier = {
-          tierId: 'a-bad-tier-id',
-          tierNumber: 4,
+          id: 'a-bad-tier-id',
         };
         const writeInteraction = await contract.writeInteraction({
           function: 'foundationAction',
@@ -497,10 +495,9 @@ describe('FoundationAction', () => {
         const type = 'setActiveTier';
         const id = 7;
         const note = 'Setting active tier';
-        const tierNumber = 2;
         const value: ActiveTier = {
-          tierId: newTierId,
-          tierNumber,
+          id: newTierId,
+          idx: 2,
         };
         const writeInteraction = await contract.writeInteraction({
           function: 'foundationAction',
