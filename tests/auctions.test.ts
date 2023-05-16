@@ -182,6 +182,7 @@ describe('Auctions', () => {
             prevState = (await contract.readState()).cachedValue
               .state as IOState;
             contract.connect(nonContractOwner);
+            console.log(prevState)
           });
 
           it('should create the initial auction object', async () => {
@@ -267,7 +268,7 @@ describe('Auctions', () => {
               // fast forward a few blocks, then construct winning bid
               const auctionSettings: AuctionSettings =
                 DEFAULT_AUCTION_SETTINGS.history[0];
-              await mineBlocks(arweave, 10);
+              await mineBlocks(arweave, 3504);
               const winningBidQty = calculateMinimumAuctionBid({
                 startHeight: auctionObj.startHeight,
                 initialPrice: auctionObj.initialPrice,

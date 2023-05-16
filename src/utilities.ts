@@ -63,8 +63,8 @@ export function calculateMinimumAuctionBid({
     (currentBlockHeight - startHeight) / decayInterval,
   );
   const dutchAuctionBid =
-    initialPrice * Math.pow(decayRate, blockIntervalsPassed);
-  const minimumBid = Math.max(dutchAuctionBid, floorPrice);
+    initialPrice * Math.pow(1 - decayRate, blockIntervalsPassed);
+  const minimumBid = Math.max(floorPrice, dutchAuctionBid);
   return minimumBid;
 }
 

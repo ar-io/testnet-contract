@@ -112,7 +112,7 @@ export const DEFAULT_FEE_STRUCTURE = {
   '31': 100,
   '32': 50,
 };
-export const DEFAULT_AUCTION_SETTINGS_ID = 'default-auction-settings';
+export const DEFAULT_AUCTION_SETTINGS_ID = '3IkWJ-0HdwuATDhBXuJRm0bWspXOOkRjxTm-5R2xRbw';
 export const DEFAULT_AUCTION_SETTINGS: {
   current: string;
   history: AuctionSettings[];
@@ -121,10 +121,10 @@ export const DEFAULT_AUCTION_SETTINGS: {
   history: [
     {
       id: DEFAULT_AUCTION_SETTINGS_ID,
-      floorPriceMultiplier: 10,
-      startPriceMultiplier: 1000,
-      decayInterval: 20, // decrement every 20 blocks
-      decayRate: 0.05, // 5% decay
+      floorPriceMultiplier: 2,
+      startPriceMultiplier: 200,
+      decayInterval: 60, // decrement every 60 blocks - approx every 2 horus
+      decayRate: 0.075, // 10% decay
       auctionDuration: 5040, // approx 7 days,
     },
   ],
