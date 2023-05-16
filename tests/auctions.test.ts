@@ -56,9 +56,7 @@ describe('Auctions', () => {
           async (badName) => {
             const auctionBid = {
               name: badName,
-              details: {
-                contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
-              },
+              contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
               type: 'lease',
             };
             const writeInteraction = await contract.writeInteraction(
@@ -98,9 +96,7 @@ describe('Auctions', () => {
           async (badType) => {
             const auctionBid = {
               name: 'apple',
-              details: {
-                contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
-              },
+              contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
               type: badType,
             };
             const writeInteraction = await contract.writeInteraction(
@@ -140,9 +136,7 @@ describe('Auctions', () => {
           async (badTxId) => {
             const auctionBid = {
               name: 'apple',
-              details: {
-                contractTxId: badTxId,
-              },
+              contractTxId: badTxId,
               type: 'lease',
             };
             const writeInteraction = await contract.writeInteraction(
@@ -174,16 +168,13 @@ describe('Auctions', () => {
           let prevState: IOState;
           const auctionBid = {
             name: 'apple',
-            details: {
-              contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
-            },
+            contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
           };
 
           beforeEach(async () => {
             prevState = (await contract.readState()).cachedValue
               .state as IOState;
             contract.connect(nonContractOwner);
-            console.log(prevState);
           });
 
           it('should create the initial auction object', async () => {
@@ -227,9 +218,7 @@ describe('Auctions', () => {
               const auctionBid = {
                 name: 'apple',
                 qty: 100, // not going to win it
-                details: {
-                  contractTxId: DEFAULT_ANT_CONTRACT_IDS[1],
-                },
+                contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
               };
               // connect using another wallet
               const separateWallet = await getLocalWallet(2);
@@ -281,9 +270,7 @@ describe('Auctions', () => {
               const auctionBid = {
                 name: 'apple',
                 qty: winningBidQty,
-                details: {
-                  contractTxId: DEFAULT_ANT_CONTRACT_IDS[1],
-                },
+                contractTxId: DEFAULT_ANT_CONTRACT_IDS[1],
               };
               // connect using another wallet
               const separateWallet = await getLocalWallet(2);
@@ -320,9 +307,7 @@ describe('Auctions', () => {
           it('should throw an error if the name already exist in records ', async () => {
             const auctionBid = {
               name: 'apple',
-              details: {
-                contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
-              },
+              contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
             };
             // connect using another wallet
             const separateWallet = await getLocalWallet(2);
@@ -352,9 +337,7 @@ describe('Auctions', () => {
           it('should throw an error if a name is reserved that has no expiration', async () => {
             const auctionBid = {
               name: 'www',
-              details: {
-                contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
-              },
+              contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
             };
             const writeInteraction = await contract.writeInteraction({
               function: 'submitAuctionBid',
@@ -374,12 +357,11 @@ describe('Auctions', () => {
               prevState.balances[nonContractOwnerAddress],
             );
           });
+
           it('should throw an error if a name is reserved for a specific wallet without an expiration', async () => {
             const auctionBid = {
               name: 'twitter',
-              details: {
-                contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
-              },
+              contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
             };
             // connect using another wallet
             const separateWallet = await getLocalWallet(2);
@@ -405,12 +387,11 @@ describe('Auctions', () => {
               prevState.balances[separateWalletAddress],
             );
           });
+
           it('should start the auction if the reserved target submits the auction bid', async () => {
             const auctionBid = {
               name: 'twitter',
-              details: {
-                contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
-              },
+              contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
             };
             const writeInteraction = await contract.writeInteraction({
               function: 'submitAuctionBid',

@@ -56,7 +56,7 @@ export type Auction = {
   type: 'lease' | 'permabuy';
   details: {
     contractTxId: string;
-    years: number;
+    years?: number;
     tier: string;
   };
   vault: {

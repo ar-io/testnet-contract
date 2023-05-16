@@ -14,28 +14,12 @@ const auctionBidSchema = {
       type: 'number',
       minimum: 0,
     },
-    details: {
-      $id: '#/definitions/auctionDetails',
-      type: 'object',
-      properties: {
-        contractTxId: {
-          type: 'string',
-          pattern: '^[a-zA-Z0-9-]{43}$',
-        },
-        years: {
-          type: 'integer',
-          minimum: 1,
-        },
-        tier: {
-          type: 'string',
-          pattern: '^[a-zA-Z0-9-]{43}$',
-        },
-      },
-      required: ['contractTxId'],
-      additionalProperties: false,
+    contractTxId: {
+      type: 'string',
+      pattern: '^[a-zA-Z0-9-]{43}$',
     },
   },
-  required: ['name', 'details'],
+  required: ['name', 'contractTxId'],
   additionalProperties: false,
 };
 

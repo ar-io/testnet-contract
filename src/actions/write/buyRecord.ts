@@ -38,8 +38,11 @@ export class BuyRecord {
       tier = defaults.tier,
     } = input;
     this.name = name.trim().toLowerCase();
-    this.contractTxId = contractTxId;
-    this.years = years;
+    (this.contractTxId =
+      contractTxId === RESERVED_ATOMIC_TX_ID
+        ? SmartWeave.transaction.id
+        : contractTxId),
+      (this.years = years);
     this.tier = tier;
   }
 }
@@ -128,12 +131,6 @@ export const buyRecord = (
     );
   }
 
-  // TODO: we may be able to move this to the class
-  const selectedContractTxId =
-    contractTxId === RESERVED_ATOMIC_TX_ID
-      ? SmartWeave.transaction.id
-      : contractTxId;
-
   // Check if the requested name already exists, if not reduce balance and add it
   if (
     records[name] &&
@@ -148,7 +145,7 @@ export const buyRecord = (
   // record can be purchased
   balances[caller] -= totalFee; // reduce callers balance
   records[name] = {
-    contractTxId: selectedContractTxId,
+    contractTxId,
     endTimestamp,
     tier,
     type: 'lease',

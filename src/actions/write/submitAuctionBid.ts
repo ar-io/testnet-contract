@@ -5,6 +5,7 @@ import {
   DEFAULT_PERMABUY_EXPIRATION,
   DEFAULT_PERMABUY_TIER,
   INVALID_INPUT_MESSAGE,
+  RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
@@ -34,7 +35,7 @@ export class AuctionBid {
   details: {
     contractTxId: string;
     tier: string;
-    years: number;
+    years?: number;
   };
   constructor(input: any, tiers) {
     // validate using ajv validator
@@ -42,19 +43,19 @@ export class AuctionBid {
       throw new ContractError(INVALID_INPUT_MESSAGE);
     }
 
-    const { name, qty, type = 'lease', details } = input;
+    const { name, qty, type = 'lease', contractTxId } = input;
     this.name = name.trim().toLowerCase();
     this.qty = qty;
     this.type = type;
     this.details = {
-      contractTxId: details.contractTxId,
-      years:
-        this.type === 'lease'
-          ? details.years ?? 1
-          : DEFAULT_PERMABUY_EXPIRATION,
+      contractTxId:
+        contractTxId === RESERVED_ATOMIC_TX_ID
+          ? SmartWeave.transaction.id
+          : contractTxId,
+      ...(this.type === 'lease' ? { years: 1 } : {}), // default to one for lease, no expiration for permabuy
       tier:
         this.type === 'lease'
-          ? details.tier ?? tiers.current[0]
+          ? tiers.current[0]
           : tiers.current[tiers.current.length - 1], // the top tier
     };
   }
