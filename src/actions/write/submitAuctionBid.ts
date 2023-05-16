@@ -33,10 +33,10 @@ export class AuctionBid {
   type: 'lease' | 'permabuy';
   details: {
     contractTxId: string;
-    tierNumber: number;
+    tier: string;
     years: number;
   };
-  constructor(input: any) {
+  constructor(input: any, tiers) {
     // validate using ajv validator
     if (!validateAuctionBid(input)) {
       throw new ContractError(INVALID_INPUT_MESSAGE);
@@ -52,8 +52,10 @@ export class AuctionBid {
         this.type === 'lease'
           ? details.years ?? 1
           : DEFAULT_PERMABUY_EXPIRATION,
-      tierNumber:
-        this.type === 'lease' ? details.tierNumber ?? 1 : DEFAULT_PERMABUY_TIER, // the top tier
+      tier:
+        this.type === 'lease'
+          ? details.tier ?? tiers.current[0]
+          : tiers.current[tiers.current.length - 1], // the top tier
     };
   }
 }
@@ -78,7 +80,7 @@ export const submitAuctionBid = async (
     qty: submittedBid,
     type,
     details: bidDetails,
-  } = new AuctionBid(input);
+  } = new AuctionBid(input, tiers);
 
   // name already exists on an active lease
   if (records[name]) {
@@ -143,8 +145,7 @@ export const submitAuctionBid = async (
   }
 
   // validate we have tiers
-  const currentTiers = tiers?.current;
-  const tierHistory = tiers?.history;
+  const { current: currentTiers, history: tierHistory } = tiers;
 
   if (!currentTiers || !tierHistory.length) {
     throw Error('No tiers found.');
@@ -156,7 +157,7 @@ export const submitAuctionBid = async (
 
   // calculate the standard registration fee
   const serviceTier = tierHistory.find(
-    (t: ServiceTier) => t.id === currentTiers[bidDetails.tierNumber - 1],
+    (t: ServiceTier) => t.id === bidDetails.tier,
   );
   const registrationFee =
     type === 'lease'
@@ -166,12 +167,17 @@ export const submitAuctionBid = async (
   // current auction in the state, validate the bid and update state
   if (auctions[name]) {
     const existingAuction = auctions[name];
-    const { startHeight, initialPrice, floorPrice, vault } = existingAuction;
+    const {
+      startHeight,
+      initialPrice,
+      floorPrice,
+      vault,
+      type,
+      details: { tier },
+    } = existingAuction;
     const auctionEndHeight = startHeight + auctionDuration;
     const endTimestamp =
       +SmartWeave.block.timestamp + SECONDS_IN_A_YEAR * bidDetails.years; // 0 for permabuy
-    const tier = currentTiers[existingAuction.details.tierNumber - 1];
-    const type = existingAuction.type;
     if (
       startHeight > currentBlockHeight ||
       currentBlockHeight > auctionEndHeight

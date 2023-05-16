@@ -57,7 +57,7 @@ export type Auction = {
   details: {
     contractTxId: string;
     years: number;
-    tierNumber: number;
+    tier: string;
   };
   vault: {
     wallet: string;

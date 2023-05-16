@@ -4,6 +4,7 @@ import {
   DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_AUCTION_SETTINGS,
   DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
+  DEFAULT_TIERS,
   INVALID_INPUT_MESSAGE,
 } from '../src/constants';
 import { Auction, AuctionSettings, IOState } from '../src/types.js';
@@ -204,7 +205,7 @@ describe('Auctions', () => {
                 details: {
                   contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
                   years: 1,
-                  tierNumber: 1,
+                  tier: DEFAULT_TIERS.current[0],
                 },
                 vault: {
                   wallet: nonContractOwnerAddress,
@@ -432,7 +433,7 @@ describe('Auctions', () => {
                 details: {
                   contractTxId: DEFAULT_ANT_CONTRACT_IDS[0],
                   years: 1,
-                  tierNumber: 1,
+                  tier: DEFAULT_TIERS.current[0],
                 },
                 vault: {
                   wallet: nonContractOwnerAddress,
