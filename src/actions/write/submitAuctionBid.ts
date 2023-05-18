@@ -195,8 +195,9 @@ export const submitAuctionBid = async (
       records[name] = {
         contractTxId: existingAuction.details.contractTxId,
         tier,
-        endTimestamp,
         type,
+        // only include timestamp on lease
+        ...(type === 'lease' ? { endTimestamp } : {}),
       };
 
       // delete the auction
@@ -246,9 +247,10 @@ export const submitAuctionBid = async (
     // the bid has been won, update the records
     records[name] = {
       contractTxId: bidDetails.contractTxId,
-      endTimestamp,
       tier,
       type,
+      // only include timestamp on lease
+      ...(type === 'lease' ? { endTimestamp } : {}),
     };
 
     // return the vaulted balance back to the initiator
