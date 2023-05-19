@@ -1,4 +1,7 @@
-import { DEFAULT_ANNUAL_PERCENTAGE_FEE } from './constants';
+import {
+  ANNUAL_PERCENTAGE_FEE,
+  MINIMUM_ALLOWED_NAME_LENGTH,
+} from './constants';
 import { Fees, ServiceTier } from './types';
 
 export function calculateTotalRegistrationFee(
@@ -27,7 +30,7 @@ export function calculateAnnualRenewalFee(
 
   // Annual fee is specific % of initial purchase cost
   const nameAnnualRegistrationFee =
-    initialNamePurchaseFee * DEFAULT_ANNUAL_PERCENTAGE_FEE;
+    initialNamePurchaseFee * ANNUAL_PERCENTAGE_FEE;
 
   // Annual tier fee
   const tierAnnualFee = tier.fee;
@@ -39,9 +42,37 @@ export function calculateAnnualRenewalFee(
 export function calculatePermabuyFee(
   name: string,
   fees: Fees,
-  multiplier: number,
+  tier: ServiceTier,
 ) {
-  return fees[name.length.toString()] * multiplier;
+  const PERMABUY_LEASE_FEE_LENGTH = 10;
+  // calculate the annual fee for the name for default of 10 years
+  const permabuyLeasePrice = calculateAnnualRenewalFee(
+    name,
+    fees,
+    tier,
+    PERMABUY_LEASE_FEE_LENGTH,
+  );
+  // rarity multiplier based on the length of the name (e.g 1.3);
+  // e.g. name is 7 characters - this would be 0
+  // name is 2 characters - this would 8
+  const getMultiplier = (): number => {
+    if (name.length > 25) {
+      return 0.5; // cut the price in half
+    }
+    // names between 5 and 24 characters (inclusive)
+    if (name.length >= MINIMUM_ALLOWED_NAME_LENGTH && name.length < 25) {
+      return 1; // e.g. it's the cost of a 10 year lease
+    }
+    // short names
+    if (name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
+      const shortNameMultiplier = 1 + ((10 - name.length) * 10) / 100;
+      return shortNameMultiplier; // big bucks ballin'
+    }
+    throw Error('You fucked up.');
+  };
+  const rarityMultiplier = getMultiplier();
+  const permabuyFee = permabuyLeasePrice * rarityMultiplier;
+  return permabuyFee;
 }
 
 export function calculateMinimumAuctionBid({

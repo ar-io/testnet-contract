@@ -3,11 +3,11 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts';
 import { IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import {
-  DEFAULT_CONTRACT_SETTINGS,
-  DEFAULT_WALLET_FUND_AMOUNT,
+  CONTRACT_SETTINGS,
   NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
+  WALLET_FUND_AMOUNT,
 } from './utils/constants';
 import {
   getCurrentBlock,
@@ -54,7 +54,7 @@ describe('Network', () => {
         const note =
           'Our gateway is the best test gateway. Contact bob@ar.io for more.';
         const joinGatewayPayload = {
-          qty: DEFAULT_CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
+          qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
           label: 'Test Gateway', // friendly label
           fqdn: 'jest.io',
           port: 3000,
@@ -156,7 +156,7 @@ describe('Network', () => {
 
       it('should initiate operator stake decrease when enough blocks have passed', async () => {
         // mine the appropriate number of blocks
-        await mineBlocks(arweave, DEFAULT_CONTRACT_SETTINGS.minLockLength);
+        await mineBlocks(arweave, CONTRACT_SETTINGS.minLockLength);
         const id = 1; // the vault that is being unlocked
         const writeInteraction = await contract.writeInteraction({
           function: 'initiateOperatorStakeDecrease',
@@ -172,7 +172,7 @@ describe('Network', () => {
           newState.gateways[newGatewayOperatorAddress].vaults[id].end,
         ).toEqual(
           (await getCurrentBlock(arweave)) +
-            DEFAULT_CONTRACT_SETTINGS.operatorStakeWithdrawLength,
+            CONTRACT_SETTINGS.operatorStakeWithdrawLength,
         ); // TO DO, make this more dynamic.  Need to fetch current block height
       });
 
@@ -307,10 +307,7 @@ describe('Network', () => {
     describe('initiate leave', () => {
       it('should initiate leaving the network when the target is a gateway in the network and has joined long enough', async () => {
         // mine the required number of blocks
-        await mineBlocks(
-          arweave,
-          DEFAULT_CONTRACT_SETTINGS.minGatewayJoinLength,
-        );
+        await mineBlocks(arweave, CONTRACT_SETTINGS.minGatewayJoinLength);
         const writeInteraction = await contract.writeInteraction({
           function: 'initiateLeave',
         });
@@ -320,7 +317,7 @@ describe('Network', () => {
         const newState = newCachedValue.state as IOState;
         const expectedEndBlock =
           (await getCurrentBlock(arweave)) +
-          DEFAULT_CONTRACT_SETTINGS.gatewayLeaveLength;
+          CONTRACT_SETTINGS.gatewayLeaveLength;
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
           writeInteraction!.originalTxId,
         );
@@ -483,7 +480,7 @@ describe('Network', () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevBalance =
           prevCachedValue.state.balances[nonGatewayOperatorAddress];
-        const qty = DEFAULT_WALLET_FUND_AMOUNT * 2; // This user should not have this much
+        const qty = WALLET_FUND_AMOUNT * 2; // This user should not have this much
         const label = 'Invalid Gateway'; // friendly label
         const fqdn = 'invalid.io';
         const port = 3000;

@@ -1,13 +1,14 @@
 import {
-  DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
-  DEFAULT_INVALID_QTY_MESSAGE,
-  DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
-  DEFAULT_PERMABUY_EXPIRATION,
-  DEFAULT_PERMABUY_TIER,
+  ARNS_NAME_RESERVED_MESSAGE,
   INVALID_INPUT_MESSAGE,
+  INVALID_QTY_MESSAGE,
+  INVALID_SHORT_NAME,
+  MINIMUM_ALLOWED_NAME_LENGTH,
+  NON_EXPIRED_ARNS_NAME_MESSAGE,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
+  SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../../constants';
 import {
   AuctionSettings,
@@ -53,10 +54,7 @@ export class AuctionBid {
           ? SmartWeave.transaction.id
           : contractTxId,
       ...(this.type === 'lease' ? { years: 1 } : {}), // default to one for lease, no expiration for permabuy
-      tier:
-        this.type === 'lease'
-          ? tiers.current[0]
-          : tiers.current[tiers.current.length - 1], // the top tier
+      tier: tiers.current[0], // default to lowest tier, regardless of permabuy/lease
     };
   }
 }
@@ -90,7 +88,7 @@ export const submitAuctionBid = async (
     /**
      * Three scenarios:
      *
-     * 1. The name is currently in records, but it's lease is expired
+     * 1. The name is currently in records, but it's lease is expired - this means it can be removed from state
      * 2. The name is currently in records, and not expired
      * 3. The name is currently in records and is a permabuy
      * @returns
@@ -101,11 +99,13 @@ export const submitAuctionBid = async (
         endTimestamp &&
         endTimestamp + SECONDS_IN_GRACE_PERIOD <= +SmartWeave.block.timestamp
       ) {
+        // lease has expired, remove from state and it's available for auction
         delete records[name];
         return;
       }
 
-      throw new ContractError(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
+      // throw an error saying the name is already owned
+      throw new ContractError(NON_EXPIRED_ARNS_NAME_MESSAGE);
     };
 
     handleExistingName();
@@ -117,7 +117,7 @@ export const submitAuctionBid = async (
     /**
      * Three scenarios:
      *
-     * 1. name is reserved, regardless of length can be purchased only by target, unless expired
+     * 1. name is reserved, regardless of length can be purchased only by target, unless expired - the reserved name from state, making it available for anyone
      * 2. name is reserved, but only for a certain amount of time
      * 3. name is reserved, with no target and no timestamp (i.e. target and timestamp are empty)
      */
@@ -126,31 +126,50 @@ export const submitAuctionBid = async (
       const reservedExpired =
         reservedEndTimestamp &&
         reservedEndTimestamp <= +SmartWeave.block.timestamp;
+      // TODO: if premium name, do not delete. but the name can buy auction/bought if it's timestamp has expired
       if (reservedByCaller || reservedExpired) {
+        // the reservation has expired - delete from state and make it available for auctions/buying
+        // TODO: only if it has a wallet should it be deleted
         delete reserved[name];
         return;
       }
 
-      throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
+      /**
+       * {
+       *     "microsoft": {
+       *          "endTimestamp": today,
+       *          "premium": true, // if premium name - don't delete from reserved and update the endTimestamp and startTimestamp
+       *     },
+       * }
+       */
+
+      throw new ContractError(ARNS_NAME_RESERVED_MESSAGE);
     };
 
     handleReservedName();
+  } else {
+    // not reserved but it's a short name, it can only be auctioned after the short name auction expiration date has passed
+    const handleShortName = () => {
+      /**
+       * If a name is 1-4 characters, it can only be auctioned and after the set expiration.
+       */
+      if (
+        name.length < MINIMUM_ALLOWED_NAME_LENGTH &&
+        +SmartWeave.block.timestamp < SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP
+      ) {
+        throw new ContractError(INVALID_SHORT_NAME);
+      }
+      return;
+    };
+    handleShortName();
   }
 
   // get the current auction settings, create one of it doesn't exist yet
   const currentAuctionSettings: AuctionSettings =
     settings.auctions.history.find((a) => a.id === settings.auctions.current);
 
-  if (!currentAuctionSettings) {
-    throw Error('No auctions settings found.');
-  }
-
-  // validate we have tiers
-  const { current: currentTiers, history: tierHistory } = tiers;
-
-  if (!currentTiers || !tierHistory.length) {
-    throw Error('No tiers found.');
-  }
+  // get tier history
+  const { history: tierHistory } = tiers;
 
   // all the things we need to handle an auction bid
   const currentBlockHeight = +SmartWeave.block.height;
@@ -163,7 +182,7 @@ export const submitAuctionBid = async (
   const registrationFee =
     type === 'lease'
       ? calculateTotalRegistrationFee(name, fees, serviceTier, bidDetails.years)
-      : calculatePermabuyFee(name, fees, settings.permabuy.multiplier);
+      : calculatePermabuyFee(name, fees, serviceTier);
 
   // current auction in the state, validate the bid and update state
   if (auctions[name]) {
@@ -172,7 +191,7 @@ export const submitAuctionBid = async (
       startHeight,
       initialPrice,
       floorPrice,
-      vault,
+      initiator,
       type,
       details: { tier },
     } = existingAuction;
@@ -232,7 +251,7 @@ export const submitAuctionBid = async (
 
     // throw an error if the wallet doesn't have the balance for the bid
     if (!walletHasSufficientBalance(balances, caller, finalBid)) {
-      throw Error(DEFAULT_INVALID_QTY_MESSAGE);
+      throw Error(INVALID_QTY_MESSAGE);
     }
 
     /**
@@ -254,8 +273,7 @@ export const submitAuctionBid = async (
     };
 
     // return the vaulted balance back to the initiator
-    const { wallet: initiator, qty } = vault;
-    balances[initiator] += qty;
+    balances[initiator] += floorPrice;
     // decrement the vaulted balance from the user
     balances[caller] -= finalBid;
 
@@ -276,33 +294,32 @@ export const submitAuctionBid = async (
       floorPriceMultiplier,
       startPriceMultiplier,
     } = currentAuctionSettings;
+    // floor price multiplier could be a decimal, or whole number (e.g. 0.5 vs 2)
     const calculatedFloor = registrationFee * floorPriceMultiplier;
+    // if someone submits a high floor price, we'll take it
     const floorPrice = submittedBid
-      ? Math.min(submittedBid, calculatedFloor)
+      ? Math.max(submittedBid, calculatedFloor)
       : calculatedFloor;
-    const initialPrice = registrationFee * startPriceMultiplier;
+    // multiply by the floor price, as it could be higher than the calculated floor
+    const initialPrice = floorPrice * startPriceMultiplier;
 
     // throw an error on invalid balance
     if (!walletHasSufficientBalance(balances, caller, floorPrice)) {
-      throw Error(DEFAULT_INVALID_QTY_MESSAGE);
+      throw Error(INVALID_QTY_MESSAGE);
     }
 
     // create the initial auction bid
     const initialAuctionBid = {
       auctionSettingsId,
-      floorPrice,
+      floorPrice, // this is decremented from the initiators wallet
       initialPrice,
       details: bidDetails,
-      // TODO: potentially increment by 1?
-      startHeight: currentBlockHeight,
+      startHeight: currentBlockHeight, // auction starts right away
       type,
-      vault: {
-        wallet: caller,
-        qty: floorPrice,
-      },
+      initiator: caller, // the balance that the floor price is decremented from
     };
-    auctions[name] = initialAuctionBid;
-    balances[caller] -= floorPrice;
+    auctions[name] = initialAuctionBid; // create the auction object
+    balances[caller] -= floorPrice; // decremented based on the floor price
 
     // update the state
     state.auctions = auctions;

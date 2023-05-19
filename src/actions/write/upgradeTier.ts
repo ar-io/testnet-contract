@@ -1,10 +1,10 @@
 import {
-  DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
-  DEFAULT_CURRENT_TIERS,
-  DEFAULT_INVALID_TIER_MESSAGE,
-  DEFAULT_TIERS,
+  ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
+  CURRENT_TIERS,
+  INVALID_TIER_MESSAGE,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
+  TIERS,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
@@ -33,14 +33,14 @@ export const upgradeTier = async (
 
   // check if record exists
   if (!records[name]) {
-    throw new ContractError(DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
+    throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
   }
 
   // get the current tier
   const currentNameTier = allTiers.find((t) => t.id === records[name].tier);
 
   // Check if it includes a valid tier number
-  const allowedTierNumbers = [...Array.from(DEFAULT_CURRENT_TIERS).keys()].map(
+  const allowedTierNumbers = [...Array.from(CURRENT_TIERS).keys()].map(
     (k) => k + 1,
   );
   const currentTierNumber = (currentTiers.indexOf(tierNumber) ?? 0) + 1;
@@ -48,7 +48,7 @@ export const upgradeTier = async (
     !allowedTierNumbers.includes(tierNumber) ||
     tierNumber <= currentTierNumber
   ) {
-    throw new ContractError(DEFAULT_INVALID_TIER_MESSAGE);
+    throw new ContractError(INVALID_TIER_MESSAGE);
   }
 
   // get the tier to upgrade too

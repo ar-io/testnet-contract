@@ -1,8 +1,8 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import {
-  DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
-  DEFAULT_INVALID_YEARS_MESSAGE,
+  ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
+  INVALID_YEARS_MESSAGE,
 } from '../src/constants';
 import { IOState } from '../src/types';
 import { warp } from './setup.jest';
@@ -70,7 +70,7 @@ describe('Extend', () => {
         writeInteraction!.originalTxId,
       );
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
-        DEFAULT_INVALID_YEARS_MESSAGE,
+        INVALID_YEARS_MESSAGE,
       );
       expect(state.records[name].endTimestamp).toEqual(prevExpiration);
     });
@@ -92,7 +92,7 @@ describe('Extend', () => {
         writeInteraction!.originalTxId,
       );
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
-        DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
+        ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
       );
     });
 

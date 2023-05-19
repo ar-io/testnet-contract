@@ -54,14 +54,11 @@ export type Auction = {
   startHeight: number;
   auctionSettingsId: string;
   type: 'lease' | 'permabuy';
+  initiator: string;
   details: {
     contractTxId: string;
     years?: number;
     tier: string;
-  };
-  vault: {
-    wallet: string;
-    qty: number;
   };
 };
 

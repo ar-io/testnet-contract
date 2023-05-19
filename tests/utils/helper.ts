@@ -5,23 +5,23 @@ import path from 'path';
 
 import { Foundation, IOState } from '../../src/types';
 import {
-  DEFAULT_ANT_CONTRACT_IDS,
-  DEFAULT_AUCTION_SETTINGS,
-  DEFAULT_CONTRACT_SETTINGS,
-  DEFAULT_FOUNDATION_ACTION_PERIOD,
-  DEFAULT_INITIAL_STATE,
-  DEFAULT_TIERS,
-  DEFAULT_WALLET_FUND_AMOUNT,
+  ANT_CONTRACT_IDS,
+  AUCTION_SETTINGS,
+  CONTRACT_SETTINGS,
+  FOUNDATION_ACTION_PERIOD,
+  INITIAL_STATE,
   NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
+  TIERS,
+  WALLET_FUND_AMOUNT,
 } from './constants';
 
 // ~~ Write function responsible for adding funds to the generated wallet ~~
 export async function addFunds(
   arweave: Arweave,
   wallet: JWKInterface,
-  amount: number = DEFAULT_WALLET_FUND_AMOUNT,
+  amount: number = WALLET_FUND_AMOUNT,
 ): Promise<boolean> {
   const walletAddress = await arweave.wallets.getAddress(wallet);
   await arweave.api.get(`/mint/${walletAddress}/${amount}`);
@@ -60,7 +60,7 @@ export async function createLocalWallet(
   };
 }
 
-function createFees(count = 32, start = DEFAULT_WALLET_FUND_AMOUNT) {
+function createFees(count = 32, start = WALLET_FUND_AMOUNT) {
   const fees: any = {};
   for (let i = 1; i <= count; i++) {
     // TODO: write a better algo
@@ -75,7 +75,7 @@ function createRecords(tiers: string[], count = 3) {
     const name = `name${i + 1}`;
     const obj = {
       tier: tiers[0],
-      contractTxID: DEFAULT_ANT_CONTRACT_IDS[0],
+      contractTxID: ANT_CONTRACT_IDS[0],
       endTimestamp: new Date('01/01/2025').getTime() / 1000,
     };
     records[name] = obj;
@@ -271,7 +271,7 @@ function createGateways(wallets: string[]) {
 
 function createFoundation(wallets: string[]) {
   const foundation: Foundation = {
-    actionPeriod: DEFAULT_FOUNDATION_ACTION_PERIOD,
+    actionPeriod: FOUNDATION_ACTION_PERIOD,
     minSignatures: 1,
     addresses: [wallets[7]],
     actions: [],
@@ -284,22 +284,22 @@ export async function setupInitialContractState(
   owner: string,
   wallets: string[],
 ): Promise<IOState> {
-  const state: IOState = DEFAULT_INITIAL_STATE as unknown as IOState;
+  const state: IOState = INITIAL_STATE as unknown as IOState;
   // set the tiers
-  state.tiers = DEFAULT_TIERS;
+  state.tiers = TIERS;
 
   // set the fees
   state.fees = createFees();
 
   // create wallets and set balances
   state.balances = wallets.reduce((current: any, wallet) => {
-    current[wallet] = DEFAULT_WALLET_FUND_AMOUNT;
+    current[wallet] = WALLET_FUND_AMOUNT;
     return current;
   }, {});
   // add balance to the owner
   state.balances = {
     ...state.balances,
-    [owner]: DEFAULT_WALLET_FUND_AMOUNT,
+    [owner]: WALLET_FUND_AMOUNT,
   };
 
   // setup auctions
@@ -313,8 +313,8 @@ export async function setupInitialContractState(
 
   // configure the necessary contract settings
   state.settings = {
-    registry: DEFAULT_CONTRACT_SETTINGS,
-    auctions: DEFAULT_AUCTION_SETTINGS,
+    registry: CONTRACT_SETTINGS,
+    auctions: AUCTION_SETTINGS,
     permabuy: {
       multiplier: 100,
     },
