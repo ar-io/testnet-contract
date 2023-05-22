@@ -55,16 +55,15 @@ export type Auction = {
   auctionSettingsId: string;
   type: 'lease' | 'permabuy';
   initiator: string;
-  details: {
-    contractTxId: string;
-    years?: number;
-    tier: string;
-  };
+  contractTxId: string;
+  tier: string;
+  years?: number;
 };
 
 export type AuctionSettings = {
   id: string;
-  floorPriceMultiplier: number;
+  floorPriceMultiplier: number; // if we ever want to drop prices
+  // premiumNameFloorPrice: number; // the floor price for names marked as premium
   startPriceMultiplier: number;
   auctionDuration: number;
   decayRate: number;

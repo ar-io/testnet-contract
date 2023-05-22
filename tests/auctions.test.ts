@@ -9,7 +9,7 @@ import {
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
   TIERS,
 } from '../src/constants';
-import { Auction, AuctionSettings, IOState } from '../src/types.js';
+import { Auction, AuctionSettings, IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import { ANT_CONTRACT_IDS } from './utils/constants';
 import {
@@ -197,11 +197,9 @@ describe('Auctions', () => {
                   auctionSettingsId: AUCTION_SETTINGS.current,
                   startHeight: await getCurrentBlock(arweave),
                   initiator: nonContractOwnerAddress,
-                  details: {
-                    contractTxId: ANT_CONTRACT_IDS[0],
-                    years: 1,
-                    tier: TIERS.current[0],
-                  },
+                  contractTxId: ANT_CONTRACT_IDS[0],
+                  years: 1,
+                  tier: TIERS.current[0],
                 }),
               );
               expect(balances[nonContractOwnerAddress]).toEqual(
@@ -439,11 +437,9 @@ describe('Auctions', () => {
                 auctionSettingsId: AUCTION_SETTINGS.current,
                 startHeight: await getCurrentBlock(arweave),
                 initiator: nonContractOwnerAddress,
-                details: {
-                  contractTxId: ANT_CONTRACT_IDS[0],
-                  years: 1,
-                  tier: TIERS.current[0],
-                },
+                contractTxId: ANT_CONTRACT_IDS[0],
+                years: 1,
+                tier: TIERS.current[0],
               });
               expect(balances[nonContractOwnerAddress]).toEqual(
                 prevState.balances[nonContractOwnerAddress] -
@@ -486,10 +482,8 @@ describe('Auctions', () => {
             auctionSettingsId: AUCTION_SETTINGS.current,
             startHeight: await getCurrentBlock(arweave),
             initiator: nonContractOwnerAddress,
-            details: {
-              contractTxId: ANT_CONTRACT_IDS[0],
-              tier: TIERS.current[0],
-            },
+            contractTxId: ANT_CONTRACT_IDS[0],
+            tier: TIERS.current[0],
           });
           expect(balances[nonContractOwnerAddress]).toEqual(
             prevState.balances[nonContractOwnerAddress] -
@@ -543,6 +537,89 @@ describe('Auctions', () => {
           );
           expect(balances[auctionObj.initiator]).toEqual(
             prevState.balances[auctionObj.initiator] + auctionObj.floorPrice,
+          );
+        });
+      });
+
+      describe('for an eager initiator', () => {
+        let auctionTxId: string;
+        let auctionObj: Auction;
+        let prevState: IOState;
+        const auctionBid = {
+          name: 'tesla',
+          contractTxId: ANT_CONTRACT_IDS[0],
+        };
+
+        beforeEach(async () => {
+          prevState = (await contract.readState()).cachedValue.state as IOState;
+          contract.connect(nonContractOwner);
+        });
+
+        it('should create the initial auction object', async () => {
+          const writeInteraction = await contract.writeInteraction({
+            function: 'submitAuctionBid',
+            ...auctionBid,
+          });
+          expect(writeInteraction?.originalTxId).not.toBe(undefined);
+          const { cachedValue } = await contract.readState();
+          const { auctions, balances } = cachedValue.state as IOState;
+          expect(auctions[auctionBid.name]).not.toBe(undefined);
+          expect(auctions[auctionBid.name]).toEqual({
+            floorPrice: expect.any(Number),
+            initialPrice: expect.any(Number),
+            type: 'lease',
+            auctionSettingsId: AUCTION_SETTINGS.current,
+            startHeight: await getCurrentBlock(arweave),
+            initiator: nonContractOwnerAddress,
+            contractTxId: ANT_CONTRACT_IDS[0],
+            tier: TIERS.current[0],
+            years: 1,
+          });
+          expect(balances[nonContractOwnerAddress]).toEqual(
+            prevState.balances[nonContractOwnerAddress] -
+              auctions[auctionBid.name].floorPrice,
+          );
+          // for the remaining tests
+          auctionObj = auctions[auctionBid.name];
+          auctionTxId = writeInteraction!.originalTxId;
+        });
+
+        it('should update the records when the caller is the initiator, and only withdraw the difference of the current bid to the original floor price that was already withdrawn from the initiator', async () => {
+          // fast forward a few blocks, then construct winning bid
+          const auctionSettings: AuctionSettings = AUCTION_SETTINGS.history[0];
+          await mineBlocks(arweave, 3504);
+          const winningBidQty = calculateMinimumAuctionBid({
+            startHeight: auctionObj.startHeight,
+            initialPrice: auctionObj.initialPrice,
+            floorPrice: auctionObj.floorPrice,
+            currentBlockHeight: await getCurrentBlock(arweave),
+            decayInterval: auctionSettings.decayInterval,
+            decayRate: auctionSettings.decayRate,
+          });
+          const auctionBid = {
+            name: 'tesla',
+            qty: winningBidQty,
+            contractTxId: ANT_CONTRACT_IDS[1],
+          };
+          const writeInteraction = await contract.writeInteraction({
+            function: 'submitAuctionBid',
+            ...auctionBid,
+          });
+          expect(writeInteraction?.originalTxId).not.toBeUndefined();
+          const { cachedValue } = await contract.readState();
+          expect(cachedValue.errorMessages).not.toContain(auctionTxId);
+          const { auctions, records, tiers, balances } =
+            cachedValue.state as IOState;
+          expect(auctions[auctionBid.name]).toBeUndefined();
+          expect(records[auctionBid.name]).toEqual({
+            contractTxId: ANT_CONTRACT_IDS[1],
+            tier: tiers.current[0],
+            type: 'lease',
+            endTimestamp: expect.any(Number),
+          });
+          const floorToBidDifference = winningBidQty - auctionObj.floorPrice;
+          expect(balances[nonContractOwnerAddress]).toEqual(
+            prevState.balances[nonContractOwnerAddress] - floorToBidDifference,
           );
         });
       });

@@ -33,11 +33,9 @@ export class AuctionBid {
   name: string;
   qty?: number;
   type: 'lease' | 'permabuy';
-  details: {
-    contractTxId: string;
-    tier: string;
-    years?: number;
-  };
+  contractTxId: string;
+  tier: string;
+  years?: number;
   constructor(input: any, tiers) {
     // validate using ajv validator
     if (!validateAuctionBid(input)) {
@@ -48,14 +46,14 @@ export class AuctionBid {
     this.name = name.trim().toLowerCase();
     this.qty = qty;
     this.type = type;
-    this.details = {
-      contractTxId:
-        contractTxId === RESERVED_ATOMIC_TX_ID
-          ? SmartWeave.transaction.id
-          : contractTxId,
-      ...(this.type === 'lease' ? { years: 1 } : {}), // default to one for lease, no expiration for permabuy
-      tier: tiers.current[0], // default to lowest tier, regardless of permabuy/lease
-    };
+    this.contractTxId =
+      contractTxId === RESERVED_ATOMIC_TX_ID
+        ? SmartWeave.transaction.id
+        : contractTxId;
+    if (this.type === 'lease') {
+      this.years = 1; // default to one year for lease, don't set for permabuy
+    }
+    this.tier = tiers.current[0]; // default to lowest tier, regardless of permabuy/lease
   }
 }
 
@@ -78,7 +76,9 @@ export const submitAuctionBid = async (
     name,
     qty: submittedBid,
     type,
-    details: bidDetails,
+    contractTxId,
+    years,
+    tier,
   } = new AuctionBid(input, tiers);
 
   // name already exists on an active lease
@@ -176,116 +176,11 @@ export const submitAuctionBid = async (
   const { decayInterval, decayRate, auctionDuration } = currentAuctionSettings;
 
   // calculate the standard registration fee
-  const serviceTier = tierHistory.find(
-    (t: ServiceTier) => t.id === bidDetails.tier,
-  );
+  const serviceTier = tierHistory.find((t: ServiceTier) => t.id === tier);
   const registrationFee =
     type === 'lease'
-      ? calculateTotalRegistrationFee(name, fees, serviceTier, bidDetails.years)
+      ? calculateTotalRegistrationFee(name, fees, serviceTier, years)
       : calculatePermabuyFee(name, fees, serviceTier);
-
-  // current auction in the state, validate the bid and update state
-  if (auctions[name]) {
-    const existingAuction = auctions[name];
-    const {
-      startHeight,
-      initialPrice,
-      floorPrice,
-      initiator,
-      type,
-      details: { tier },
-    } = existingAuction;
-    const auctionEndHeight = startHeight + auctionDuration;
-    const endTimestamp =
-      +SmartWeave.block.timestamp + SECONDS_IN_A_YEAR * bidDetails.years; // 0 for permabuy
-    if (
-      startHeight > currentBlockHeight ||
-      currentBlockHeight > auctionEndHeight
-    ) {
-      /**
-       * We can update the state if a bid was placed after an auction has ended.
-       *
-       * To do so we need to:
-       * 1. Update the records to reflect their new name
-       * 2. Delete the auction object
-       * 3. Return an error to the second bidder, telling them they did not win the bid.
-       */
-
-      records[name] = {
-        contractTxId: existingAuction.details.contractTxId,
-        tier,
-        type,
-        // only include timestamp on lease
-        ...(type === 'lease' ? { endTimestamp } : {}),
-      };
-
-      // delete the auction
-      delete auctions[name];
-      // update the state
-      state.auctions = auctions;
-      state.records = records;
-      state.balances = balances;
-      throw Error('The auction has already been won.');
-    }
-
-    // validate the bid
-    const requiredMinimumBid = calculateMinimumAuctionBid({
-      startHeight,
-      initialPrice,
-      floorPrice,
-      currentBlockHeight,
-      decayRate,
-      decayInterval,
-    });
-
-    if (submittedBid && submittedBid < requiredMinimumBid) {
-      throw Error(
-        `The bid (${submittedBid} IO) is less than the current required minimum bid of ${requiredMinimumBid} IO.`,
-      );
-    }
-
-    // the bid is the minimum of what was submitted and what is actually needed
-    const finalBid = submittedBid
-      ? Math.min(submittedBid, requiredMinimumBid)
-      : requiredMinimumBid;
-
-    // throw an error if the wallet doesn't have the balance for the bid
-    if (!walletHasSufficientBalance(balances, caller, finalBid)) {
-      throw Error(INVALID_QTY_MESSAGE);
-    }
-
-    /**
-     * When a second bidder wins the bid, we can update the state completely to reflect the auction has been won.
-     *
-     * To do so we need to:
-     * 1. Update the records
-     * 2. Return the vault back to the initiator
-     * 3. Decrement the balance of the secret bidder
-     */
-
-    // the bid has been won, update the records
-    records[name] = {
-      contractTxId: bidDetails.contractTxId,
-      tier,
-      type,
-      // only include timestamp on lease
-      ...(type === 'lease' ? { endTimestamp } : {}),
-    };
-
-    // return the vaulted balance back to the initiator
-    balances[initiator] += floorPrice;
-    // decrement the vaulted balance from the user
-    balances[caller] -= finalBid;
-
-    // delete the auction
-    delete auctions[name];
-    // update the state
-    state.auctions = auctions;
-    state.balances = balances;
-    state.records = records;
-    state.reserved = reserved;
-    return { state };
-  }
 
   // no current auction, create one and vault the balance from the user
   if (!auctions[name]) {
@@ -311,16 +206,136 @@ export const submitAuctionBid = async (
     // create the initial auction bid
     const initialAuctionBid = {
       auctionSettingsId,
-      floorPrice, // this is decremented from the initiators wallet
+      floorPrice, // this is decremented from the initiators wallet, and could be higher than the precalculated floor
       initialPrice,
-      details: bidDetails,
+      contractTxId,
       startHeight: currentBlockHeight, // auction starts right away
       type,
+      tier,
       initiator: caller, // the balance that the floor price is decremented from
+      ...(years ? { years } : {}),
     };
     auctions[name] = initialAuctionBid; // create the auction object
     balances[caller] -= floorPrice; // decremented based on the floor price
 
+    // update the state
+    state.auctions = auctions;
+    state.balances = balances;
+    state.records = records;
+    state.reserved = reserved;
+    return { state };
+  }
+
+  // current auction in the state, validate the bid and update state
+  if (auctions[name]) {
+    const existingAuction = auctions[name];
+    const auctionEndHeight = existingAuction.startHeight + auctionDuration;
+    const endTimestamp =
+      +SmartWeave.block.timestamp + SECONDS_IN_A_YEAR * existingAuction.years; // 0 for permabuy
+
+    // calculate the current bid price and compare it to the floor price set by the initiator
+    const currentRequiredMinimumBid = calculateMinimumAuctionBid({
+      startHeight: existingAuction.startHeight,
+      initialPrice: existingAuction.initialPrice,
+      floorPrice: existingAuction.floorPrice,
+      currentBlockHeight,
+      decayRate,
+      decayInterval,
+    });
+    if (
+      existingAuction.startHeight > currentBlockHeight ||
+      currentBlockHeight > auctionEndHeight ||
+      existingAuction.floorPrice >= currentRequiredMinimumBid
+    ) {
+      /**
+       * We can update the state if a bid was placed after an auction has ended, or the initial floor was set to a value higher than the current minimum bid required to win.
+       *
+       * To do so we need to:
+       * 1. Update the records to reflect their new name
+       * 2. Delete the auction object
+       * 3. Return an error to the second bidder, telling them they did not win the bid.
+       */
+
+      records[name] = {
+        contractTxId: existingAuction.contractTxId,
+        tier: existingAuction.tier,
+        type: existingAuction.type,
+        // only include timestamp on lease
+        // something to think about - what if a ticking of state never comes? what do we set endTimestamp to?
+        ...(existingAuction.type === 'lease' ? { endTimestamp } : {}),
+      };
+
+      // delete the auction
+      delete auctions[name];
+      // update the state
+      state.auctions = auctions;
+      state.records = records;
+      state.balances = balances;
+
+      // this ticks the state - but doesn't notify the second bidder...sorry!
+      // better put: the purpose of their interaction was rejected, but the state incremented forwarded
+      return { state };
+      // validate this would break validation
+      // throw Error('The auction has already been won.');
+    }
+
+    // we could throw an error if qty wasn't provided
+    if (submittedBid && submittedBid < currentRequiredMinimumBid) {
+      throw Error(
+        `The bid (${submittedBid} IO) is less than the current required minimum bid of ${currentRequiredMinimumBid} IO.`,
+      );
+    }
+
+    // the bid is the minimum of what was submitted and what is actually needed
+    // allowing the submittedBid to be optional, takes the responsibility of apps having to
+    // dynamically calculate prices all the time
+    let finalBid = submittedBid
+      ? Math.min(submittedBid, currentRequiredMinimumBid)
+      : currentRequiredMinimumBid;
+
+    // we need to consider if the second bidder is the initiator, and only decrement the difference
+    if (caller === existingAuction.initiator) {
+      finalBid -= existingAuction.floorPrice;
+    }
+
+    // throw an error if the wallet doesn't have the balance for the bid
+    if (!walletHasSufficientBalance(balances, caller, finalBid)) {
+      throw Error(INVALID_QTY_MESSAGE);
+    }
+
+    /**
+     * When a second bidder wins the bid, we can update the state completely to reflect the auction has been won.
+     *
+     * To do so we need to:
+     * 1. Update the records
+     * 2. Return the initial floor price back to the initiator
+     * 3. Decrement the balance of the second bidder
+     */
+
+    // the bid has been won, update the records
+    records[name] = {
+      contractTxId: contractTxId, // only update the new contract tx id
+      tier: existingAuction.tier,
+      type: existingAuction.type,
+      // only include timestamp on lease, endTimestamp is easy in this situation since it was a second interaction that won it
+      ...(existingAuction.type === 'lease' ? { endTimestamp } : {}),
+    };
+
+    // decrement the vaulted balance from the second bidder
+    balances[caller] -= finalBid;
+
+    // return the originally revoked balance back to the initiator, assuming the initiator is not the second bidder
+    if (caller !== existingAuction.initiator) {
+      balances[existingAuction.initiator] += existingAuction.floorPrice;
+    }
+    // TODO: add finalBid to protocol balance
+    // also add the existing floor to protocol balance
+    if (caller == existingAuction.initiator) {
+      // add protocol balance of floor price to protocol balance
+    }
+
+    // delete the auction
+    delete auctions[name];
     // update the state
     state.auctions = auctions;
     state.balances = balances;
