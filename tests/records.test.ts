@@ -3,11 +3,12 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts';
 import { IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import {
-  DEFAULT_ANT_CONTRACT_ID,
-  DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE,
-  DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
-  DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
+  ANT_CONTRACT_IDS,
+  ARNS_NAME_RESERVED_MESSAGE,
   INVALID_INPUT_MESSAGE,
+  INVALID_SHORT_NAME,
+  INVALID_YEARS_MESSAGE,
+  NON_EXPIRED_ARNS_NAME_MESSAGE,
 } from './utils/constants';
 import {
   calculateTotalRegistrationFee,
@@ -76,7 +77,7 @@ describe('Records', () => {
       const prevBalance = prevState.balances[nonContractOwnerAddress];
       const namePurchase = {
         name: 'newName',
-        contractTxId: DEFAULT_ANT_CONTRACT_ID,
+        contractTxId: ANT_CONTRACT_IDS[0],
         years: 1,
       };
       const writeInteraction = await contract.writeInteraction(
@@ -108,7 +109,7 @@ describe('Records', () => {
       );
       expect(records[namePurchase.name.toLowerCase()]).toEqual(
         expect.objectContaining({
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          contractTxId: ANT_CONTRACT_IDS[0],
           tier: tiers.current[0],
           endTimestamp: expect.any(Number),
         }),
@@ -124,7 +125,7 @@ describe('Records', () => {
       const prevBalance = prevState.balances[nonContractOwnerAddress];
       const namePurchase = {
         name: 'newName2',
-        contractTxId: DEFAULT_ANT_CONTRACT_ID,
+        contractTxId: ANT_CONTRACT_IDS[0],
       };
       const writeInteraction = await contract.writeInteraction(
         {
@@ -155,7 +156,7 @@ describe('Records', () => {
       );
       expect(records[namePurchase.name!.toLowerCase()]).toEqual(
         expect.objectContaining({
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          contractTxId: ANT_CONTRACT_IDS[0],
           tier: tiers.current[0],
           endTimestamp: expect.any(Number),
         }),
@@ -168,7 +169,7 @@ describe('Records', () => {
     it('should not be able to purchase a name that has not expired', async () => {
       const namePurchase = {
         name: 'newName',
-        contractTxId: DEFAULT_ANT_CONTRACT_ID,
+        contractTxId: ANT_CONTRACT_IDS[0],
         years: 1,
       };
       const writeInteraction = await contract.writeInteraction(
@@ -188,7 +189,7 @@ describe('Records', () => {
         writeInteraction!.originalTxId,
       );
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
-        DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
+        NON_EXPIRED_ARNS_NAME_MESSAGE,
       );
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevState.balances[nonContractOwnerAddress],
@@ -201,6 +202,7 @@ describe('Records', () => {
       '',
       '*&*##$%#',
       '-leading',
+      'trailing-',
       'this-is-a-looong-name-a-verrrryyyyy-loooooong-name-that-is-too-long',
       'test.subdomain.name',
     ])(
@@ -208,7 +210,7 @@ describe('Records', () => {
       async (badName) => {
         const namePurchase = {
           name: badName,
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          contractTxId: ANT_CONTRACT_IDS[0],
           years: 1,
         };
         const writeInteraction = await contract.writeInteraction(
@@ -254,7 +256,7 @@ describe('Records', () => {
       async (badTier) => {
         const namePurchase = {
           name: 'bad-tier',
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          contractTxId: ANT_CONTRACT_IDS[0],
           years: 1,
           tier: badTier,
         };
@@ -319,13 +321,72 @@ describe('Records', () => {
       },
     );
 
-    it.each(['', '1', 'string', '*&*##$%#', 100, 2.3, false, true])(
+    it.each(['', '1', 'string', '*&*##$%#', 0, 2.3, false, true])(
       'should not be able to purchase a name with an invalid number of years: %s',
       async (badYear) => {
         const namePurchase = {
           name: 'good-name',
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          contractTxId: ANT_CONTRACT_IDS[0],
           years: badYear,
+        };
+        const writeInteraction = await contract.writeInteraction(
+          {
+            function: 'buyRecord',
+            ...namePurchase,
+          },
+          {
+            disableBundling: true,
+          },
+        );
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue } = await contract.readState();
+        expect(Object.keys(cachedValue.errorMessages)).toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(
+          cachedValue.errorMessages[writeInteraction!.originalTxId],
+        ).toEqual(INVALID_INPUT_MESSAGE);
+      },
+    );
+
+    it.each([4, 10, 100])(
+      'should not be able to purchase a name with years not within allowed range: %s',
+      async (badYear) => {
+        const namePurchase = {
+          name: 'good-name',
+          contractTxId: ANT_CONTRACT_IDS[0],
+          years: badYear,
+        };
+        const writeInteraction = await contract.writeInteraction(
+          {
+            function: 'buyRecord',
+            ...namePurchase,
+          },
+          {
+            disableBundling: true,
+          },
+        );
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue } = await contract.readState();
+        expect(Object.keys(cachedValue.errorMessages)).toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(
+          cachedValue.errorMessages[writeInteraction!.originalTxId],
+        ).toEqual(INVALID_YEARS_MESSAGE);
+      },
+    );
+
+    it.each(['', '1', 'string', '*&*##$%#', 2.3, false, true])(
+      'should not be able to purchase a name with an invalid tier: %s',
+      async (badTier) => {
+        const namePurchase = {
+          name: 'good-name',
+          contractTxId: ANT_CONTRACT_IDS[0],
+          years: 1,
+          tier: badTier,
         };
         const writeInteraction = await contract.writeInteraction(
           {
@@ -353,9 +414,9 @@ describe('Records', () => {
       async (badTierNumber) => {
         const namePurchase = {
           name: 'good-name',
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          contractTxId: ANT_CONTRACT_IDS[0],
           years: 1,
-          tierNumber: badTierNumber,
+          tier: badTierNumber,
         };
         const writeInteraction = await contract.writeInteraction(
           {
@@ -381,7 +442,7 @@ describe('Records', () => {
     it('should not be able to buy a reserved name when not the reserved target', async () => {
       const reservedNamePurchase1 = {
         name: 'www', // this short name is not owned by anyone and has no expiration
-        contractTxId: DEFAULT_ANT_CONTRACT_ID,
+        contractTxId: ANT_CONTRACT_IDS[0],
         years: 1,
       };
       const writeInteraction = await contract.writeInteraction(
@@ -402,14 +463,14 @@ describe('Records', () => {
       );
       expect(state.reserved[reservedNamePurchase1.name]).not.toBe(undefined);
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
-        DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
+        ARNS_NAME_RESERVED_MESSAGE,
       );
     });
 
     it('should not be able to buy a record when name when is shorter than minimum allowed characters and it is not reserved', async () => {
       const namePurchase = {
         name: 'iam',
-        contractTxId: DEFAULT_ANT_CONTRACT_ID,
+        contractTxId: ANT_CONTRACT_IDS[0],
         years: 1,
       };
       const writeInteraction = await contract.writeInteraction(
@@ -427,7 +488,7 @@ describe('Records', () => {
       const state = cachedValue.state as IOState;
       expect(state.records[namePurchase.name.toLowerCase()]).toEqual(undefined);
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
-        DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE,
+        INVALID_SHORT_NAME,
       );
     });
 
@@ -435,7 +496,7 @@ describe('Records', () => {
       const nonNameOwner = getLocalWallet(2);
       const namePurchase = {
         name: 'twitter',
-        contractTxId: DEFAULT_ANT_CONTRACT_ID,
+        contractTxId: ANT_CONTRACT_IDS[0],
         years: 1,
       };
       await contract.connect(nonNameOwner);
@@ -454,14 +515,14 @@ describe('Records', () => {
       const state = cachedValue.state as IOState;
       expect(state.records[namePurchase.name.toLowerCase()]).toBe(undefined);
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(
-        DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
+        ARNS_NAME_RESERVED_MESSAGE,
       );
     });
 
     it('should not be able to buy reserved name that has no target, but is not expired', async () => {
       const namePurchase = {
         name: 'google',
-        contractTxId: DEFAULT_ANT_CONTRACT_ID,
+        contractTxId: ANT_CONTRACT_IDS[0],
         years: 1,
       };
       const writeInteraction = await contract.writeInteraction(
@@ -479,7 +540,7 @@ describe('Records', () => {
       const state = cachedValue.state as IOState;
       expect(state.records[namePurchase.name.toLowerCase()]).toBe(undefined);
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(
-        DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
+        ARNS_NAME_RESERVED_MESSAGE,
       );
       expect(state.reserved[namePurchase.name.toLowerCase()]).not.toBe(
         undefined,
@@ -490,7 +551,7 @@ describe('Records', () => {
       await contract.connect(nonContractOwner);
       const namePurchase = {
         name: 'twitter',
-        contractTxId: DEFAULT_ANT_CONTRACT_ID,
+        contractTxId: ANT_CONTRACT_IDS[0],
         years: 1,
       };
       const writeInteraction = await contract.writeInteraction(
@@ -509,7 +570,7 @@ describe('Records', () => {
       expect(records[namePurchase.name.toLowerCase()]).not.toBe(undefined);
       expect(records[namePurchase.name.toLowerCase()]).toEqual(
         expect.objectContaining({
-          contractTxId: DEFAULT_ANT_CONTRACT_ID,
+          contractTxId: ANT_CONTRACT_IDS[0],
           tier: tiers.current[0],
           endTimestamp: expect.any(Number),
         }),
