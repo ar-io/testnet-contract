@@ -11,7 +11,7 @@ import { getRecord } from './actions/read/record';
 import { getActiveTiers, getTier } from './actions/read/tiers';
 import { buyRecord } from './actions/write/buyRecord';
 import { evolve } from './actions/write/evolve';
-import { extendRecord } from './actions/write/extendRecord.js';
+import { extendRecord } from './actions/write/extendRecord';
 import { finalizeLeave } from './actions/write/finalizeLeave';
 import { finalizeOperatorStakeDecrease } from './actions/write/finalizeOperatorStakeDecrease';
 import { foundationAction } from './actions/write/foundationAction';
@@ -19,6 +19,7 @@ import { increaseOperatorStake } from './actions/write/increaseOperatorStake';
 import { initiateLeave } from './actions/write/initiateLeave';
 import { initiateOperatorStakeDecrease } from './actions/write/initiateOperatorStakeDecrease';
 import { joinNetwork } from './actions/write/joinNetwork';
+import { submitAuctionBid } from './actions/write/submitAuctionBid';
 import { transferTokens } from './actions/write/transferTokens';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
 import { upgradeTier } from './actions/write/upgradeTier';
@@ -80,6 +81,8 @@ export async function handle(
       return updateGatewaySettings(state, action);
     case 'foundationAction':
       return foundationAction(state, action);
+    case 'submitAuctionBid':
+      return submitAuctionBid(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognized: "${input.function}"`,

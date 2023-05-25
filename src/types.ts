@@ -21,10 +21,8 @@ export type IOState = PstState & {
     // a list of all registered gateways
     [address: string]: Gateway; // each gateway uses its public arweave wallet address to identify it in the gateway registry
   };
-  fees: {
-    // A list of all fees for purchasing ArNS names
-    [nameLength: string]: number;
-  };
+  // A list of all fees for purchasing ArNS names
+  fees: Fees;
   tiers: {
     current: string[];
     history: ServiceTier[];
@@ -40,10 +38,36 @@ export type IOState = PstState & {
     [address: string]: TokenVault[];
     // a wallet can have multiple vaults
   };
+  // auctions
+  auctions: {
+    [name: string]: Auction;
+  };
 };
 
 export type Fees = {
   [nameLength: string]: number;
+};
+
+export type Auction = {
+  initialPrice: number;
+  floorPrice: number;
+  startHeight: number;
+  auctionSettingsId: string;
+  type: 'lease' | 'permabuy';
+  initiator: string;
+  contractTxId: string;
+  tier: string;
+  years?: number;
+};
+
+export type AuctionSettings = {
+  id: string;
+  floorPriceMultiplier: number; // if we ever want to drop prices
+  // premiumNameFloorPrice: number; // the floor price for names marked as premium
+  startPriceMultiplier: number;
+  auctionDuration: number;
+  decayRate: number;
+  decayInterval: number;
 };
 
 export type ContractSettings = {
@@ -57,6 +81,13 @@ export type ContractSettings = {
     gatewayLeaveLength: number; // the amount of blocks that have to elapse before a gateway leaves the network
     delegatedStakeWithdrawLength: number; // the amount of blocks that have to elapse before a delegated stake is returned
     operatorStakeWithdrawLength: number; // the amount of blocks that have to elapse before a gateway operator's stake is returned
+  };
+  auctions: {
+    current: string;
+    history: AuctionSettings[];
+  };
+  permabuy: {
+    multiplier: number;
   };
 };
 
@@ -96,8 +127,9 @@ export type AllowedProtocols = 'http' | 'https';
 
 export type ArNSName = {
   contractTxId: string; // The ANT Contract used to manage this name
-  endTimestamp: number; // At what unix time (seconds since epoch) the lease ends
+  endTimestamp?: number; // At what unix time (seconds since epoch) the lease ends
   tier: string; // The id of the tier selected at time of purchased
+  type: 'lease' | 'permabuy';
 };
 
 export type ReservedName = {
@@ -213,7 +245,7 @@ export type ArNSNameResult = {
 };
 
 export type ServiceTier = {
-  id?: string;
+  id: string;
   fee: number;
   settings: ServiceTierSettings;
 };

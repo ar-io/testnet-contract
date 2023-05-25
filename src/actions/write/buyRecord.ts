@@ -1,14 +1,16 @@
 import {
-  DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE,
-  DEFAULT_ARNS_NAME_RESERVED_MESSAGE,
-  DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE,
-  DEFAULT_TIERS,
+  ARNS_NAME_RESERVED_MESSAGE,
   INVALID_INPUT_MESSAGE,
+  INVALID_SHORT_NAME,
+  INVALID_YEARS_MESSAGE,
   MAX_YEARS,
   MINIMUM_ALLOWED_NAME_LENGTH,
+  NON_EXPIRED_ARNS_NAME_MESSAGE,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
+  SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
+  TIERS,
 } from '../../constants';
 import { ContractResult, IOState, PstAction, ServiceTier } from '../../types';
 import { calculateTotalRegistrationFee } from '../../utilities';
@@ -37,8 +39,11 @@ export class BuyRecord {
       tier = defaults.tier,
     } = input;
     this.name = name.trim().toLowerCase();
-    this.contractTxId = contractTxId;
-    this.years = years;
+    (this.contractTxId =
+      contractTxId === RESERVED_ATOMIC_TX_ID
+        ? SmartWeave.transaction.id
+        : contractTxId),
+      (this.years = years);
     this.tier = tier;
   }
 }
@@ -48,7 +53,7 @@ export const buyRecord = (
   { caller, input }: PstAction,
 ): ContractResult => {
   // get all other relevant state data
-  const { balances, records, reserved, fees, tiers = DEFAULT_TIERS } = state;
+  const { balances, records, reserved, fees, tiers = TIERS } = state;
   const { current: currentTiers, history: allTiers } = tiers;
   const currentBlockTime = +SmartWeave.block.timestamp;
   const buyRecordInput = new BuyRecord(input, {
@@ -67,10 +72,8 @@ export const buyRecord = (
   }
 
   // Additional check if it includes a valid number of years (TODO: this may be set in contract settings)
-  if (years > MAX_YEARS || years <= 0) {
-    throw new ContractError(
-      'Invalid value for "years". Must be an integer greater than zero and less than the max years',
-    );
+  if (years > MAX_YEARS) {
+    throw new ContractError(INVALID_YEARS_MESSAGE);
   }
 
   // list of all active tier ID's
@@ -85,10 +88,6 @@ export const buyRecord = (
 
   // set the end lease period for this based on number of years
   const endTimestamp = currentBlockTime + SECONDS_IN_A_YEAR * years;
-
-  if (!reserved[name] && name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
-    throw new ContractError(DEFAULT_ARNS_NAME_LENGTH_DISALLOWED_MESSAGE);
-  }
 
   if (reserved[name]) {
     const { target, endTimestamp: reservedEndTimestamp } = reserved[name];
@@ -110,10 +109,22 @@ export const buyRecord = (
         return;
       }
 
-      throw new ContractError(DEFAULT_ARNS_NAME_RESERVED_MESSAGE);
+      throw new ContractError(ARNS_NAME_RESERVED_MESSAGE);
     };
 
     handleReservedName();
+  } else {
+    // not reserved but it's a short name, it can only be auctioned after the short name auction expiration date has passed
+    const handleShortName = () => {
+      /**
+       * If a name is 1-4 characters, it can only be auctioned. Don't validate on expiration here.
+       */
+      if (name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
+        throw new ContractError(INVALID_SHORT_NAME);
+      }
+      return;
+    };
+    handleShortName();
   }
   // calculate the total fee (initial registration + annual)
   const totalFee = calculateTotalRegistrationFee(
@@ -129,12 +140,6 @@ export const buyRecord = (
     );
   }
 
-  // TODO: we may be able to move this to the class
-  const selectedContractTxId =
-    contractTxId === RESERVED_ATOMIC_TX_ID
-      ? SmartWeave.transaction.id
-      : contractTxId;
-
   // Check if the requested name already exists, if not reduce balance and add it
   if (
     records[name] &&
@@ -142,16 +147,17 @@ export const buyRecord = (
       +SmartWeave.block.timestamp
   ) {
     // No name created, so make a new one
-    throw new ContractError(DEFAULT_NON_EXPIRED_ARNS_NAME_MESSAGE);
+    throw new ContractError(NON_EXPIRED_ARNS_NAME_MESSAGE);
   }
 
   // TODO: foundation rewards logic
   // record can be purchased
   balances[caller] -= totalFee; // reduce callers balance
   records[name] = {
-    contractTxId: selectedContractTxId,
+    contractTxId,
     endTimestamp,
     tier,
+    type: 'lease',
   };
 
   // update the records object

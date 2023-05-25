@@ -1,10 +1,10 @@
 import {
   ALLOWED_ACTIVE_TIERS,
-  DEFAULT_INVALID_ID_TIER_MESSAGE,
-  DEFAULT_INVALID_TIER_MESSAGE,
   FOUNDATION_ACTION_ACTIVE_STATUS,
   FOUNDATION_ACTION_FAILED_STATUS,
   FOUNDATION_ACTION_PASSED_STATUS,
+  INVALID_ID_TIER_MESSAGE,
+  INVALID_TIER_MESSAGE,
   MAX_ALLOWED_EVOLUTION_DELAY,
   MAX_FOUNDATION_ACTION_PERIOD,
   MAX_NAME_LENGTH,
@@ -138,7 +138,7 @@ export const foundationAction = async (
             .map((t) => t.id)
             .includes((value as ActiveTier).id)
         ) {
-          throw new ContractError(DEFAULT_INVALID_TIER_MESSAGE);
+          throw new ContractError(INVALID_TIER_MESSAGE);
         }
         break;
       case 'delayedEvolve':

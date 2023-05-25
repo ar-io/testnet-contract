@@ -1,10 +1,10 @@
 import {
-  DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
-  DEFAULT_INVALID_YEARS_MESSAGE,
-  DEFAULT_TIERS,
+  ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
+  INVALID_YEARS_MESSAGE,
   MAX_YEARS,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
+  TIERS,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 import { calculateAnnualRenewalFee } from '../../utilities';
@@ -38,12 +38,12 @@ export const extendRecord = async (
 
   // check if record exists
   if (!records[name]) {
-    throw new ContractError(DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
+    throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
   }
 
   // Check if it includes a valid number of years
   if (!Number.isInteger(years) || years > MAX_YEARS) {
-    throw new ContractError(DEFAULT_INVALID_YEARS_MESSAGE);
+    throw new ContractError(INVALID_YEARS_MESSAGE);
   }
 
   /**
@@ -70,8 +70,7 @@ export const extendRecord = async (
   }
 
   const purchasedTier =
-    allTiers.find((t) => t.id === records[name].tier) ??
-    DEFAULT_TIERS.history[0];
+    allTiers.find((t) => t.id === records[name].tier) ?? TIERS.history[0];
 
   // total cost to extend a record for the given tier
   const totalExtensionAnnualFee = calculateAnnualRenewalFee(

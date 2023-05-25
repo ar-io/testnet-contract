@@ -10,12 +10,12 @@ import {
 } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import {
-  DEFAULT_INVALID_TIER_MESSAGE,
-  DEFAULT_MINIMUM_ALLOWED_EVOLUTION_DELAY,
   FOUNDATION_ACTION_ACTIVE_STATUS,
   FOUNDATION_ACTION_FAILED_STATUS,
   FOUNDATION_ACTION_PASSED_STATUS,
   FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS,
+  INVALID_TIER_MESSAGE,
+  MINIMUM_ALLOWED_EVOLUTION_DELAY,
 } from './utils/constants';
 import {
   getCurrentBlock,
@@ -407,7 +407,7 @@ describe('FoundationAction', () => {
         const newState = newCachedValue.state as IOState;
         const errors = newCachedValue.errorMessages;
         expect(errors[writeInteraction!.originalTxId]).toEqual(
-          DEFAULT_INVALID_TIER_MESSAGE,
+          INVALID_TIER_MESSAGE,
         );
         expect(newState.foundation.actions.length).toEqual(
           state.foundation.actions.length,
@@ -436,7 +436,7 @@ describe('FoundationAction', () => {
         const newState = newCachedValue.state as IOState;
         const errors = newCachedValue.errorMessages;
         expect(errors[writeInteraction!.originalTxId]).toEqual(
-          DEFAULT_INVALID_TIER_MESSAGE,
+          INVALID_TIER_MESSAGE,
         );
         expect(newState.foundation.actions.length).toEqual(
           state.foundation.actions.length,
@@ -554,8 +554,7 @@ describe('FoundationAction', () => {
         const value: DelayedEvolveInput = {
           contractSrcTxId: evolveSrcTxId,
           evolveHeight:
-            (await getCurrentBlock(arweave)) +
-            DEFAULT_MINIMUM_ALLOWED_EVOLUTION_DELAY,
+            (await getCurrentBlock(arweave)) + MINIMUM_ALLOWED_EVOLUTION_DELAY,
         };
         const writeInteraction = await contract.writeInteraction({
           function: 'foundationAction',

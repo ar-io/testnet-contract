@@ -1,5 +1,5 @@
 import {
-  DEFAULT_INSUFFICIENT_FUNDS_MESSAGE,
+  INSUFFICIENT_FUNDS_MESSAGE,
   MAX_DELEGATES,
   MAX_GATEWAY_LABEL_LENGTH,
   MAX_NOTE_LENGTH,
@@ -47,7 +47,7 @@ export const joinNetwork = async (
   }
 
   if (balances[caller] < qty) {
-    throw new ContractError(DEFAULT_INSUFFICIENT_FUNDS_MESSAGE);
+    throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
   if (qty < settings.minNetworkJoinStakeAmount) {
