@@ -103,6 +103,8 @@ export const joinNetwork = async (
     }
   }
 
+  // TODO: we need SSL thumbprints stored in the GAR for a given gateway to validate they own the domain
+
   if (caller in gateways) {
     throw new ContractError("This Gateway's wallet is already registered");
   }

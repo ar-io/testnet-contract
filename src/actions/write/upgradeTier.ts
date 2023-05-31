@@ -1,10 +1,8 @@
 import {
   ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
-  CURRENT_TIERS,
   INVALID_TIER_MESSAGE,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
-  TIERS,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
@@ -13,7 +11,7 @@ declare const SmartWeave: any;
 
 export const upgradeTier = async (
   state: IOState,
-  { caller, input: { name, tierNumber } }: PstAction,
+  { caller, input: { name, tier } }: PstAction,
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const records = state.records;
@@ -31,54 +29,47 @@ export const upgradeTier = async (
     throw new ContractError(`Caller balance is not defined!`);
   }
 
+  const selectedName = name.toLowerCase();
+
   // check if record exists
-  if (!records[name]) {
+  if (!records[selectedName]) {
     throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
   }
 
   // get the current tier
-  const currentNameTier = allTiers.find((t) => t.id === records[name].tier);
+  const currentTier = allTiers.find((t) => t.id === records[selectedName].tier);
 
   // Check if it includes a valid tier number
-  const allowedTierNumbers = [...Array.from(CURRENT_TIERS).keys()].map(
-    (k) => k + 1,
-  );
-  const currentTierNumber = (currentTiers.indexOf(tierNumber) ?? 0) + 1;
+  const currentTierIndex = currentTiers.indexOf(currentTier.id) ?? 0;
+  const selectedTierIndex = currentTiers.indexOf(tier);
+
   if (
-    !allowedTierNumbers.includes(tierNumber) ||
-    tierNumber <= currentTierNumber
+    !currentTiers.includes(tier) || 
+    selectedTierIndex < 0 ||
+    selectedTierIndex <= currentTierIndex
   ) {
     throw new ContractError(INVALID_TIER_MESSAGE);
   }
 
-  // get the tier to upgrade too
-  const selectedUpgradeTier = allTiers.find(
-    (t) => t.id === currentTiers[tierNumber],
-  );
+  const selectedTier = allTiers.find(t => t.id === tier);
 
-  if (!selectedUpgradeTier) {
-    throw new ContractError(
-      'The tier associated with the provided tier number does not exist. Try again.',
-    );
-  }
-
-  if (currentNameTier.id === selectedUpgradeTier.id) {
-    throw new ContractError('Cannot upgrade to the same tier.');
+  if(!selectedTier){
+    throw new ContractError('The provided tier does not exist. Try again.')
   }
 
   // check if this is an active lease, if not it cannot be upgraded
-  if (records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD < currentBlockTime) {
+  if (records[selectedName].endTimestamp + SECONDS_IN_GRACE_PERIOD < currentBlockTime) {
     throw new ContractError(
       `This name's lease has expired.  It must be purchased first before being extended.`,
     );
   }
 
   // Determine price of upgrading this tier, prorating based on current time and amount of tiers left
-  const previousTierFee = currentNameTier.fee;
-  const newTierFee = selectedUpgradeTier.fee;
+  const previousTierFee = currentTier.fee;
+  const newTierFee = selectedTier.fee;
   const tierFeeDifference = newTierFee - previousTierFee;
 
-  const amountOfSecondsLeft = records[name].endTimestamp - currentBlockTime;
+  const amountOfSecondsLeft = records[selectedName].endTimestamp - currentBlockTime;
   const amountOfYearsLeft = amountOfSecondsLeft / SECONDS_IN_A_YEAR;
 
   // The price is determined by multiplying the base fee times the number of levels upgraded times the amount of years left
@@ -94,7 +85,7 @@ export const upgradeTier = async (
 
   // reduce balance set the end lease period for this record based on number of years
   balances[caller] -= totalTierFeeUpgrade;
-  records[name].tier = selectedUpgradeTier.id;
+  records[selectedName].tier = selectedTier.id;
 
   state.balances = balances;
   state.records = records;
