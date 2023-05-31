@@ -29,7 +29,6 @@ export class BuyRecord {
   years: number;
   tier: string;
   type: 'lease' | 'permabuy';
-  auction: boolean;
 
   constructor(input: any, defaults: { tier: string }) {
     // validate using ajv validator
@@ -42,7 +41,6 @@ export class BuyRecord {
       years = 1,
       tier = defaults.tier,
       type = 'lease',
-      auction = false,
     } = input;
     this.name = name.trim().toLowerCase();
     (this.contractTxId =
@@ -52,7 +50,6 @@ export class BuyRecord {
       (this.years = years);
     this.tier = tier;
     this.type = type;
-    this.auction = auction;
   }
 }
 
@@ -165,7 +162,7 @@ export const buyRecord = (
     contractTxId,
     tier,
     type,
-    // only include timestamp on lease, endTimestamp is easy in this situation since it was a second interaction that won it
+    // only include timestamp on lease
     ...(type === 'lease' ? { endTimestamp } : {}),
   };
 
