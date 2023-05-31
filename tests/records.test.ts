@@ -13,6 +13,7 @@ import {
   SECONDS_IN_A_YEAR,
 } from './utils/constants';
 import {
+  calculatePermabuyFee,
   calculateTotalRegistrationFee,
   getLocalArNSContractId,
   getLocalWallet,
@@ -49,17 +50,17 @@ describe('Records', () => {
         function: 'record',
         name: 'name1',
       });
-      const expectedTierObj = expect.objectContaining({
+      const expectedTierObj = {
         fee: expect.any(Number),
         id: expect.any(String),
         settings: expect.any(Object),
-      });
-      const expectObjected = expect.objectContaining({
+      };
+      const expectObjected = {
         tier: expectedTierObj,
         name: 'name1',
         endTimestamp: expect.any(Number),
         contractTxID: expect.any(String),
-      });
+      };
       expect(record).not.toBe(undefined);
       expect(record).toEqual(expectObjected);
     });
@@ -73,7 +74,7 @@ describe('Records', () => {
       expect(response?.errorMessage).toEqual('This name does not exist');
     });
 
-    it('should be able to purchase a name', async () => {
+    it('should be able to lease a name for a provided number of years', async () => {
       const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
       const prevBalance = prevState.balances[nonContractOwnerAddress];
@@ -109,19 +110,18 @@ describe('Records', () => {
       expect(Object.keys(cachedValue.errorMessages)).not.toContain(
         writeInteraction!.originalTxId,
       );
-      expect(records[namePurchase.name.toLowerCase()]).toEqual(
-        expect.objectContaining({
-          contractTxId: ANT_CONTRACT_IDS[0],
-          tier: tiers.current[0],
-          endTimestamp: expect.any(Number),
-        }),
-      );
+      expect(records[namePurchase.name.toLowerCase()]).toEqual({
+        contractTxId: ANT_CONTRACT_IDS[0],
+        tier: tiers.current[0],
+        endTimestamp: expect.any(Number),
+        type: 'lease',
+      });
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevBalance - expectedPurchasePrice,
       );
     });
 
-    it('should be able to purchase a name without specifying years or tier', async () => {
+    it('should be able to lease a name without specifying years, tier, or type', async () => {
       const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
       const prevBalance = prevState.balances[nonContractOwnerAddress];
@@ -156,13 +156,57 @@ describe('Records', () => {
       expect(Object.keys(cachedValue.errorMessages)).not.toContain(
         writeInteraction!.originalTxId,
       );
-      expect(records[namePurchase.name.toLowerCase()]).toEqual(
-        expect.objectContaining({
-          contractTxId: ANT_CONTRACT_IDS[0],
-          tier: tiers.current[0],
-          endTimestamp: expect.any(Number),
-        }),
+      expect(records[namePurchase.name.toLowerCase()]).toEqual({
+        contractTxId: ANT_CONTRACT_IDS[0],
+        tier: tiers.current[0],
+        endTimestamp: expect.any(Number),
+        type: 'lease',
+      });
+      expect(balances[nonContractOwnerAddress]).toEqual(
+        prevBalance - expectedPurchasePrice,
       );
+    });
+
+    it('should be able to permabuy name', async () => {
+      const { cachedValue: prevCachedValue } = await contract.readState();
+      const prevState = prevCachedValue.state as IOState;
+      const prevBalance = prevState.balances[nonContractOwnerAddress];
+      const namePurchase = {
+        name: 'permabuy-name',
+        contractTxId: ANT_CONTRACT_IDS[0],
+        type: 'permabuy',
+      };
+      const writeInteraction = await contract.writeInteraction(
+        {
+          function: 'buyRecord',
+          ...namePurchase,
+        },
+        {
+          disableBundling: true,
+        },
+      );
+
+      const purchasedTierId = prevState.tiers.current[0];
+      const purchasedTier = prevState.tiers.history.find(
+        (t) => t.id === purchasedTierId,
+      )!;
+      const expectedPurchasePrice = calculatePermabuyFee(
+        namePurchase.name,
+        prevState.fees,
+        purchasedTier,
+      );
+
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue } = await contract.readState();
+      const { balances, records, tiers } = cachedValue.state as IOState;
+      expect(Object.keys(cachedValue.errorMessages)).not.toContain(
+        writeInteraction!.originalTxId,
+      );
+      expect(records[namePurchase.name.toLowerCase()]).toEqual({
+        contractTxId: ANT_CONTRACT_IDS[0],
+        tier: tiers.current[0],
+        type: 'permabuy',
+      });
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevBalance - expectedPurchasePrice,
       );
@@ -688,13 +732,12 @@ describe('Records', () => {
       const { cachedValue } = await contract.readState();
       const { records, reserved, tiers } = cachedValue.state as IOState;
       expect(records[namePurchase.name.toLowerCase()]).not.toBe(undefined);
-      expect(records[namePurchase.name.toLowerCase()]).toEqual(
-        expect.objectContaining({
-          contractTxId: ANT_CONTRACT_IDS[0],
-          tier: tiers.current[0],
-          endTimestamp: expect.any(Number),
-        }),
-      );
+      expect(records[namePurchase.name.toLowerCase()]).toEqual({
+        contractTxId: ANT_CONTRACT_IDS[0],
+        tier: tiers.current[0],
+        endTimestamp: expect.any(Number),
+        type: 'lease',
+      });
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(
         undefined,
       );

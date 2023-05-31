@@ -9,11 +9,13 @@ import {
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
-  SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
   TIERS,
 } from '../../constants';
 import { ContractResult, IOState, PstAction, ServiceTier } from '../../types';
-import { calculateTotalRegistrationFee } from '../../utilities';
+import {
+  calculatePermabuyFee,
+  calculateTotalRegistrationFee,
+} from '../../utilities';
 // composed by ajv at build
 import { validateBuyRecord } from '../../validations.mjs';
 
@@ -26,6 +28,7 @@ export class BuyRecord {
   contractTxId: string;
   years: number;
   tier: string;
+  type: 'lease' | 'permabuy';
 
   constructor(input: any, defaults: { tier: string }) {
     // validate using ajv validator
@@ -37,6 +40,7 @@ export class BuyRecord {
       contractTxId = RESERVED_ATOMIC_TX_ID,
       years = 1,
       tier = defaults.tier,
+      type = 'lease',
     } = input;
     this.name = name.trim().toLowerCase();
     (this.contractTxId =
@@ -45,6 +49,7 @@ export class BuyRecord {
         : contractTxId),
       (this.years = years);
     this.tier = tier;
+    this.type = type;
   }
 }
 
@@ -59,7 +64,7 @@ export const buyRecord = (
   const buyRecordInput = new BuyRecord(input, {
     tier: tiers.current[0],
   }); // does validation on constructor
-  const { name, contractTxId, years, tier } = buyRecordInput;
+  const { name, contractTxId, years, tier, type } = buyRecordInput;
 
   // Check if the user has enough tokens to purchase the name
   if (
@@ -83,12 +88,6 @@ export const buyRecord = (
     );
   }
 
-  // the tier purchased
-  const purchasedTier: ServiceTier = allTiers.find((t) => t.id === tier);
-
-  // set the end lease period for this based on number of years
-  const endTimestamp = currentBlockTime + SECONDS_IN_A_YEAR * years;
-
   if (reserved[name]) {
     const { target, endTimestamp: reservedEndTimestamp } = reserved[name];
 
@@ -105,6 +104,7 @@ export const buyRecord = (
         reservedEndTimestamp &&
         reservedEndTimestamp <= +SmartWeave.block.timestamp;
       if (reservedByCaller || reservedExpired) {
+        // TODO: only delete if it's not a premium name
         delete reserved[name];
         return;
       }
@@ -126,17 +126,22 @@ export const buyRecord = (
     };
     handleShortName();
   }
-  // calculate the total fee (initial registration + annual)
-  const totalFee = calculateTotalRegistrationFee(
-    name,
-    fees,
-    purchasedTier,
-    years,
-  );
 
-  if (balances[caller] < totalFee) {
+  // the tier purchased
+  const purchasedTier: ServiceTier = allTiers.find((t) => t.id === tier);
+
+  // set the end lease period for this based on number of years if it's a lease
+  const endTimestamp =
+    type === 'lease' ? currentBlockTime + SECONDS_IN_A_YEAR * years : undefined;
+  // calculate the total fee (initial registration + annual)
+  const totalRegistrationFee =
+    type === 'lease'
+      ? calculateTotalRegistrationFee(name, fees, purchasedTier, years)
+      : calculatePermabuyFee(name, fees, purchasedTier);
+
+  if (balances[caller] < totalRegistrationFee) {
     throw new ContractError(
-      `Caller balance not high enough to purchase this name for ${totalFee} token(s)!`,
+      `Caller balance not high enough to purchase this name for ${totalRegistrationFee} token(s)!`,
     );
   }
 
@@ -152,12 +157,13 @@ export const buyRecord = (
 
   // TODO: foundation rewards logic
   // record can be purchased
-  balances[caller] -= totalFee; // reduce callers balance
+  balances[caller] -= totalRegistrationFee; // reduce callers balance
   records[name] = {
     contractTxId,
-    endTimestamp,
     tier,
-    type: 'lease',
+    type,
+    // only include timestamp on lease
+    ...(type === 'lease' ? { endTimestamp } : {}),
   };
 
   // update the records object

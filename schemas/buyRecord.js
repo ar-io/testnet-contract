@@ -22,6 +22,10 @@ const buyRecordSchema = {
       type: 'string',
       pattern: '^[a-zA-Z0-9-]{43}$',
     },
+    type: {
+      type: 'string',
+      pattern: '^(lease|permabuy)$',
+    },
   },
   required: ['name', 'function'],
   additionalProperties: false,

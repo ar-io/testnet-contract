@@ -1,7 +1,6 @@
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import * as fs from 'fs';
-import { mkdir, rm } from 'fs/promises';
 import path from 'path';
 import { LoggerFactory, WarpFactory } from 'warp-contracts';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
@@ -25,14 +24,13 @@ export const warp = WarpFactory.forLocal(1820, arweave).use(new DeployPlugin());
 LoggerFactory.INST.logLevel('none');
 
 // start arlocal
-console.log('Setting up Warp, Arlocal and Arweave clients!');
+console.log('Setting up Warp, Arlocal and Arweave clients!'); // eslint-disable-line
 
 jest.setTimeout(100000);
 beforeAll(async () => {
   await arlocal.start();
 
-  await mkdir(path.join(__dirname, './wallets'));
-  await mkdir(path.join(__dirname, './contract'));
+  createDirectories();
 
   // pull source code
   const contractSrcJs = fs.readFileSync(
@@ -94,11 +92,28 @@ beforeAll(async () => {
   // // mine everything
   await mineBlock(arweave);
 
-  console.log('Successfully setup ArLocal and deployed contract.');
+  console.log('Successfully setup ArLocal and deployed contract.'); // eslint-disable-line
 });
 
 afterAll(async () => {
+  removeDirectories();
   await arlocal.stop();
-  await rm(path.join(__dirname, '/wallets'), { recursive: true });
-  await rm(path.join(__dirname, '/contract'), { recursive: true });
 });
+
+function createDirectories() {
+  ['./wallets', './contract'].forEach((d) => {
+    const dir = path.join(__dirname, d);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir);
+    }
+  });
+}
+
+function removeDirectories() {
+  ['./wallets', './contract'].forEach((d) => {
+    const dir = path.join(__dirname, d);
+    if (fs.existsSync(dir)) {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+}
