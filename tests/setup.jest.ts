@@ -1,7 +1,6 @@
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import * as fs from 'fs';
-import { mkdir, rm } from 'fs/promises';
 import path from 'path';
 import { LoggerFactory, WarpFactory } from 'warp-contracts';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
@@ -31,8 +30,7 @@ jest.setTimeout(100000);
 beforeAll(async () => {
   await arlocal.start();
 
-  await mkdir(path.join(__dirname, './wallets'));
-  await mkdir(path.join(__dirname, './contract'));
+  createDirectories();
 
   // pull source code
   const contractSrcJs = fs.readFileSync(
@@ -98,7 +96,24 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  removeDirectories();
   await arlocal.stop();
-  await rm(path.join(__dirname, '/wallets'), { recursive: true });
-  await rm(path.join(__dirname, '/contract'), { recursive: true });
 });
+
+function createDirectories() {
+  ['./wallets', './contract'].forEach(d => {
+    const dir = path.join(__dirname, d)
+    if(!fs.existsSync(dir)){
+      fs.mkdirSync(dir);
+    }
+  })
+}
+
+function removeDirectories() {
+  ['./wallets', './contract'].forEach(d => {
+    const dir = path.join(__dirname, d)
+    if(fs.existsSync(dir)){
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  })
+}
