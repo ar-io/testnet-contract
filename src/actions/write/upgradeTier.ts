@@ -44,21 +44,24 @@ export const upgradeTier = async (
   const selectedTierIndex = currentTiers.indexOf(tier);
 
   if (
-    !currentTiers.includes(tier) || 
+    !currentTiers.includes(tier) ||
     selectedTierIndex < 0 ||
     selectedTierIndex <= currentTierIndex
   ) {
     throw new ContractError(INVALID_TIER_MESSAGE);
   }
 
-  const selectedTier = allTiers.find(t => t.id === tier);
+  const selectedTier = allTiers.find((t) => t.id === tier);
 
-  if(!selectedTier){
-    throw new ContractError('The provided tier does not exist. Try again.')
+  if (!selectedTier) {
+    throw new ContractError('The provided tier does not exist. Try again.');
   }
 
   // check if this is an active lease, if not it cannot be upgraded
-  if (records[selectedName].endTimestamp + SECONDS_IN_GRACE_PERIOD < currentBlockTime) {
+  if (
+    records[selectedName].endTimestamp + SECONDS_IN_GRACE_PERIOD <
+    currentBlockTime
+  ) {
     throw new ContractError(
       `This name's lease has expired.  It must be purchased first before being extended.`,
     );
@@ -69,7 +72,8 @@ export const upgradeTier = async (
   const newTierFee = selectedTier.fee;
   const tierFeeDifference = newTierFee - previousTierFee;
 
-  const amountOfSecondsLeft = records[selectedName].endTimestamp - currentBlockTime;
+  const amountOfSecondsLeft =
+    records[selectedName].endTimestamp - currentBlockTime;
   const amountOfYearsLeft = amountOfSecondsLeft / SECONDS_IN_A_YEAR;
 
   // The price is determined by multiplying the base fee times the number of levels upgraded times the amount of years left

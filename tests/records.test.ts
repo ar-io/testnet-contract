@@ -10,7 +10,7 @@ import {
   INVALID_TIER_MESSAGE,
   INVALID_YEARS_MESSAGE,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
-  SECONDS_IN_A_YEAR
+  SECONDS_IN_A_YEAR,
 } from './utils/constants';
 import {
   calculateTotalRegistrationFee,
@@ -197,7 +197,9 @@ describe('Records', () => {
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevState.balances[nonContractOwnerAddress],
       );
-      expect(records[namePurchase.name.toLocaleLowerCase()]).toEqual(prevState.records[namePurchase.name.toLowerCase()]);
+      expect(records[namePurchase.name.toLocaleLowerCase()]).toEqual(
+        prevState.records[namePurchase.name.toLowerCase()],
+      );
     });
 
     it('should not be able to upgrade a record tier if the provided tier is less than the current tier', async () => {
@@ -256,13 +258,18 @@ describe('Records', () => {
           disableBundling: true,
         },
       );
-      const currentBlockTimestamp = (await arweave.blocks.getCurrent()).timestamp;
+      const currentBlockTimestamp = (await arweave.blocks.getCurrent())
+        .timestamp;
       // get the current block height timestamp
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       const { records, balances, tiers } = cachedValue.state as IOState;
-      const tierFeeDiff = (tiers.history.find(t => t.id === tiers.current[0])?.fee ?? 0) - (tiers.history.find(t => t.id === tiers.current[2])?.fee ?? 0);
-      const remainingYears = (currentBlockTimestamp - (prevRecord.endTimestamp ?? 0)) / SECONDS_IN_A_YEAR;
+      const tierFeeDiff =
+        (tiers.history.find((t) => t.id === tiers.current[0])?.fee ?? 0) -
+        (tiers.history.find((t) => t.id === tiers.current[2])?.fee ?? 0);
+      const remainingYears =
+        (currentBlockTimestamp - (prevRecord.endTimestamp ?? 0)) /
+        SECONDS_IN_A_YEAR;
       const annualTierFeeDifference = tierFeeDiff * remainingYears;
       expect(Object.keys(cachedValue.errorMessages)).not.toContain(
         writeInteraction!.originalTxId,
@@ -272,11 +279,11 @@ describe('Records', () => {
       );
       expect(records[namePurchase.name.toLowerCase()]).toEqual(
         expect.objectContaining({
-        contractTxId: prevRecord.contractTxId,
-        tier: namePurchase.tier,
-        endTimestamp: prevRecord.endTimestamp,
-      }),
-    );
+          contractTxId: prevRecord.contractTxId,
+          tier: namePurchase.tier,
+          endTimestamp: prevRecord.endTimestamp,
+        }),
+      );
     });
 
     it('should not be able to purchase a name that has not expired', async () => {
