@@ -54,6 +54,7 @@ export async function createLocalWallet(
   const wallet = await arweave.wallets.generate();
   const address = await arweave.wallets.jwkToAddress(wallet);
   await addFunds(arweave, wallet);
+
   return {
     wallet,
     address,
@@ -336,11 +337,15 @@ export async function setupInitialContractState(
     ['www']: {}, // no owner, doesnt expire
     ['google']: {
       endTimestamp: Math.floor(sixMonthsLater.getTime() / 1000),
-    }, // no owner, expires in 6 months
+    }, // no owner, expires in 6 months and premium
     ['twitter']: {
       target: wallets[1],
       endTimestamp: Math.floor(sixMonthsLater.getTime() / 1000),
-    }, // already expired and can be purchased by anyone
+    },
+    // no owner, expires in 6 months but not premium
+    ['ario']: {
+      endTimestamp: Math.floor(sixMonthsLater.getTime() / 1000),
+    },
   };
   return state;
 }
