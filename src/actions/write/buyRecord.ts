@@ -9,6 +9,7 @@ import {
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
+  SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
   TIERS,
 } from '../../constants';
 import { ContractResult, IOState, PstAction, ServiceTier } from '../../types';
@@ -18,6 +19,7 @@ import {
 } from '../../utilities';
 // composed by ajv at build
 import { validateBuyRecord } from '../../validations.mjs';
+import { submitAuctionBid } from './submitAuctionBid.js';
 
 declare const ContractError;
 declare const SmartWeave: any;
@@ -29,6 +31,7 @@ export class BuyRecord {
   years: number;
   tier: string;
   type: 'lease' | 'permabuy';
+  auction: boolean;
 
   constructor(input: any, defaults: { tier: string }) {
     // validate using ajv validator
@@ -41,6 +44,7 @@ export class BuyRecord {
       years = 1,
       tier = defaults.tier,
       type = 'lease',
+      auction = false,
     } = input;
     this.name = name.trim().toLowerCase();
     (this.contractTxId =
@@ -50,13 +54,14 @@ export class BuyRecord {
       (this.years = years);
     this.tier = tier;
     this.type = type;
+    this.auction = auction;
   }
 }
 
-export const buyRecord = (
+export const buyRecord = async (
   state: IOState,
   { caller, input }: PstAction,
-): ContractResult => {
+): Promise<ContractResult> => {
   // get all other relevant state data
   const { balances, records, reserved, fees, tiers = TIERS } = state;
   const { current: currentTiers, history: allTiers } = tiers;
@@ -64,7 +69,18 @@ export const buyRecord = (
   const buyRecordInput = new BuyRecord(input, {
     tier: tiers.current[0],
   }); // does validation on constructor
-  const { name, contractTxId, years, tier, type } = buyRecordInput;
+  const { name, contractTxId, years, tier, type, auction } = buyRecordInput;
+
+  // auction logic if auction flag set
+  if (auction) {
+    const { state: auctionResult } = (await submitAuctionBid(state, {
+      caller,
+      input,
+    })) as { state: IOState };
+    return {
+      state: auctionResult,
+    };
+  }
 
   // Check if the user has enough tokens to purchase the name
   if (
@@ -88,6 +104,9 @@ export const buyRecord = (
     );
   }
 
+  // TODO: do we have a premium multiplier?
+  // price them as a 2 char multiplier
+
   if (reserved[name]) {
     const { target, endTimestamp: reservedEndTimestamp } = reserved[name];
 
@@ -103,23 +122,24 @@ export const buyRecord = (
       const reservedExpired =
         reservedEndTimestamp &&
         reservedEndTimestamp <= +SmartWeave.block.timestamp;
-      if (reservedByCaller || reservedExpired) {
-        // TODO: only delete if it's not a premium name
-        delete reserved[name];
-        return;
+      if (!reservedByCaller && !reservedExpired) {
+        throw new ContractError(ARNS_NAME_RESERVED_MESSAGE);
       }
 
-      throw new ContractError(ARNS_NAME_RESERVED_MESSAGE);
+      delete reserved[name];
+      return;
     };
-
     handleReservedName();
   } else {
     // not reserved but it's a short name, it can only be auctioned after the short name auction expiration date has passed
     const handleShortName = () => {
       /**
-       * If a name is 1-4 characters, it can only be auctioned. Don't validate on expiration here.
+       * If a name is 1-4 characters, it can only be auctioned and after the set expiration.
        */
-      if (name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
+      if (
+        name.length < MINIMUM_ALLOWED_NAME_LENGTH &&
+        +SmartWeave.block.timestamp < SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP
+      ) {
         throw new ContractError(INVALID_SHORT_NAME);
       }
       return;
@@ -151,7 +171,7 @@ export const buyRecord = (
     records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD >
       +SmartWeave.block.timestamp
   ) {
-    // No name created, so make a new one
+    // name is still on active lease during grace period
     throw new ContractError(NON_EXPIRED_ARNS_NAME_MESSAGE);
   }
 

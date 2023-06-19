@@ -126,15 +126,13 @@ export const submitAuctionBid = async (
       const reservedExpired =
         reservedEndTimestamp &&
         reservedEndTimestamp <= +SmartWeave.block.timestamp;
-      // TODO: if premium name, do not delete. but the name can buy auction/bought if it's timestamp has expired
-      if (reservedByCaller || reservedExpired) {
-        // the reservation has expired - delete from state and make it available for auctions/buying
-        // TODO: only if it has a wallet should it be deleted
-        delete reserved[name];
-        return;
+      // the reservation has expired - delete from state and make it available for auctions/buying
+      if (!reservedByCaller && !reservedExpired) {
+        throw new ContractError(ARNS_NAME_RESERVED_MESSAGE);
       }
 
       /**
+       * TODO: we may or may not handle premium names
        * {
        *     "microsoft": {
        *          "endTimestamp": today,
@@ -143,7 +141,8 @@ export const submitAuctionBid = async (
        * }
        */
 
-      throw new ContractError(ARNS_NAME_RESERVED_MESSAGE);
+      delete reserved[name];
+      return;
     };
 
     handleReservedName();
