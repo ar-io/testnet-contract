@@ -58,7 +58,7 @@ export class BuyRecord {
   }
 }
 
-export const buyRecord = async (
+export const buyRecord = (
   state: IOState,
   { caller, input }: PstAction,
 ): Promise<ContractResult> => {
@@ -73,13 +73,10 @@ export const buyRecord = async (
 
   // auction logic if auction flag set
   if (auction) {
-    const { state: auctionResult } = (await submitAuctionBid(state, {
+    return submitAuctionBid(state, {
       caller,
       input,
-    })) as { state: IOState };
-    return {
-      state: auctionResult,
-    };
+    });
   }
 
   // Check if the user has enough tokens to purchase the name
