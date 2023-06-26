@@ -229,6 +229,21 @@ import { keyfile } from './constants';
         endTimestamp: Math.floor(new Date('07/01/2023').getTime() / 1000),
       },
     },
+    settings: {
+        auctions: {
+            current: 'f3ebbf46-a5f4-4f89-86ed-aaae4346db2a',
+            history: [
+                {
+                    id: 'f3ebbf46-a5f4-4f89-86ed-aaae4346db2a',
+                    floorPriceMultiplier: 1, // if we ever want to drop prices
+                    startPriceMultiplier: 200, // multiplier
+                    auctionDuration: 5040, // approximately 1 week
+                    decayRate: 0.02, // decay 2% every interval
+                    decayInterval: 30 // decay every 30 blocks (~1 hour)
+                }
+            ]
+        }
+    }
   };
   // TODO: do some AJV validation the the initial state meets our spec
   // ~~ Deploy contract ~~
@@ -240,15 +255,12 @@ import { keyfile } from './constants';
       evaluationManifest: {
         evaluationOptions: {
           sourceType: SourceType.ARWEAVE, // evaluation is restricted to only L1 arweave transactions (does not load any interactions submitted to warp sequencer)
-          unsafeClient: 'skip',
           internalWrites: true,
           useKVStorage: true, // tells evaluators the key value storage is used for storing contract state
-          maxCallDepth: 3, // maximum allowed of cross contract, calls - we may want to set this to a larger number (e.g. 5) - relevant when evaluting a contract, if this is exceed for an interaction, error will be thrown
           remoteStateSyncEnabled: false, // disallows contract from being evaluated from remote source (r.e. D.R.E) - TODO: this should be validated
-          waitForConfirmation: true, // contract allows interaction to wait for confirmations when interactions are submitted against as a part of evalutation
+          waitForConfirmation: true, // contract allows interaction to wait for confirmations when interactions are submitted against as a part of evaluation
           updateCacheForEachInteraction: true, // required for internal writes - increases performance, but takes memory hit
           maxInteractionEvaluationTimeSeconds: 60, // TODO: we may want to set this, doesn't look like anything by default
-          allowBigInt: false, // big int cannot be serialized to JSON, but with Key/Value store, maybe we set this to true? TODO: determine if we want BigInt
           throwOnInternalWriteError: true,
         },
       },
