@@ -57,10 +57,10 @@ export class AuctionBid {
   }
 }
 
-export const submitAuctionBid = async (
+export const submitAuctionBid = (
   state: IOState,
   { caller, input }: PstAction,
-): Promise<ContractResult> => {
+): ContractResult => {
   const {
     auctions = {},
     fees,
@@ -165,7 +165,7 @@ export const submitAuctionBid = async (
 
   // get the current auction settings, create one of it doesn't exist yet
   const currentAuctionSettings: AuctionSettings =
-    settings.auctions.history.find((a) => a.id === settings.auctions.current);
+    settings.auctions.history.find((a) => a.id === settings.auctions.current)!;
 
   // get tier history
   const { history: tierHistory } = tiers;
@@ -175,10 +175,10 @@ export const submitAuctionBid = async (
   const { decayInterval, decayRate, auctionDuration } = currentAuctionSettings;
 
   // calculate the standard registration fee
-  const serviceTier = tierHistory.find((t: ServiceTier) => t.id === tier);
+  const serviceTier = tierHistory.find((t: ServiceTier) => t.id === tier)!;
   const registrationFee =
     type === 'lease'
-      ? calculateTotalRegistrationFee(name, fees, serviceTier, years)
+      ? calculateTotalRegistrationFee(name, fees, serviceTier, years!)
       : calculatePermabuyFee(name, fees, serviceTier);
 
   // no current auction, create one and vault the balance from the user
@@ -199,7 +199,7 @@ export const submitAuctionBid = async (
 
     // throw an error on invalid balance
     if (!walletHasSufficientBalance(balances, caller, floorPrice)) {
-      throw Error(INVALID_QTY_MESSAGE);
+      throw new ContractError(INVALID_QTY_MESSAGE);
     }
 
     // create the initial auction bid
@@ -230,7 +230,10 @@ export const submitAuctionBid = async (
     const existingAuction = auctions[name];
     const auctionEndHeight = existingAuction.startHeight + auctionDuration;
     const endTimestamp =
-      +SmartWeave.block.timestamp + SECONDS_IN_A_YEAR * existingAuction.years; // 0 for permabuy
+      existingAuction.type === 'lease'
+        ? +SmartWeave.block.timestamp +
+          SECONDS_IN_A_YEAR * existingAuction.years!
+        : undefined;
 
     // calculate the current bid price and compare it to the floor price set by the initiator
     const currentRequiredMinimumBid = calculateMinimumAuctionBid({
@@ -280,7 +283,7 @@ export const submitAuctionBid = async (
 
     // we could throw an error if qty wasn't provided
     if (submittedBid && submittedBid < currentRequiredMinimumBid) {
-      throw Error(
+      throw new ContractError(
         `The bid (${submittedBid} IO) is less than the current required minimum bid of ${currentRequiredMinimumBid} IO.`,
       );
     }
@@ -299,7 +302,7 @@ export const submitAuctionBid = async (
 
     // throw an error if the wallet doesn't have the balance for the bid
     if (!walletHasSufficientBalance(balances, caller, finalBid)) {
-      throw Error(INVALID_QTY_MESSAGE);
+      throw new ContractError(INVALID_QTY_MESSAGE);
     }
 
     /**
@@ -342,4 +345,9 @@ export const submitAuctionBid = async (
     state.reserved = reserved;
     return { state };
   }
+
+  // no auction - just return
+  return {
+    state,
+  };
 };

@@ -304,7 +304,7 @@ describe('Auctions', () => {
               });
             });
 
-            it('should throw an error if the name already exist in records ', async () => {
+            it('should throw an error if the name already exist in records', async () => {
               const auctionBid = {
                 name: 'apple',
                 contractTxId: ANT_CONTRACT_IDS[0],
@@ -526,12 +526,12 @@ describe('Auctions', () => {
           expect(cachedValue.errorMessages).not.toContain(auctionTxId);
           const { auctions, records, tiers, balances } =
             cachedValue.state as IOState;
-          expect(auctions[auctionBid.name]).toBeUndefined();
           expect(records[auctionBid.name]).toEqual({
             contractTxId: ANT_CONTRACT_IDS[1],
             tier: tiers.current[0],
             type: 'permabuy',
           });
+          expect(auctions[auctionBid.name]).toBeUndefined();
           expect(balances[winnerAddress]).toEqual(
             prevState.balances[winnerAddress] - winningBidQty,
           );
