@@ -1,4 +1,4 @@
-import { ContractResult, IOState, PstAction } from '../../types.js';
+import { ContractResult, IOState, PstAction } from '../../types';
 
 // TODO: a temporary helper function while we validate state contract interactions
 export const updateState = (
