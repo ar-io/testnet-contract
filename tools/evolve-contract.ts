@@ -13,7 +13,7 @@ import { keyfile } from './constants';
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID version 1.7
   const arnsRegistryContractTxId =
-    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
+    'Jh3fDY501MbVYmGc2oRhRZtXPA0XCxTxONcSv5MsCgw';
 
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel('error');

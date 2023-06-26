@@ -32,6 +32,7 @@ export class BuyRecord {
   tier: string;
   type: 'lease' | 'permabuy';
   auction: boolean;
+  qty: number;
 
   constructor(input: any, defaults: { tier: string }) {
     // validate using ajv validator
@@ -45,6 +46,7 @@ export class BuyRecord {
       tier = defaults.tier,
       type = 'lease',
       auction = false,
+      qty, // only used when passed to auction handler
     } = input;
     this.name = name.trim().toLowerCase();
     (this.contractTxId =
@@ -55,13 +57,14 @@ export class BuyRecord {
     this.tier = tier;
     this.type = type;
     this.auction = auction;
+    this.qty = qty;
   }
 }
 
 export const buyRecord = (
   state: IOState,
   { caller, input }: PstAction,
-): Promise<ContractResult> => {
+): ContractResult => {
   // get all other relevant state data
   const { balances, records, reserved, fees, tiers = TIERS } = state;
   const { current: currentTiers, history: allTiers } = tiers;
@@ -145,7 +148,7 @@ export const buyRecord = (
   }
 
   // the tier purchased
-  const purchasedTier: ServiceTier = allTiers.find((t) => t.id === tier);
+  const purchasedTier: ServiceTier = allTiers.find((t) => t.id === tier)!;
 
   // set the end lease period for this based on number of years if it's a lease
   const endTimestamp =
@@ -162,14 +165,20 @@ export const buyRecord = (
     );
   }
 
-  // Check if the requested name already exists, if not reduce balance and add it
+  // Check if the requested name exists on a lease and in a grace period
   if (
     records[name] &&
-    records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD >
-      +SmartWeave.block.timestamp
+    records[name].type === 'lease' &&
+    records[name].endTimestamp
   ) {
-    // name is still on active lease during grace period
-    throw new ContractError(NON_EXPIRED_ARNS_NAME_MESSAGE);
+    const { endTimestamp } = records[name];
+    if (
+      endTimestamp &&
+      endTimestamp + SECONDS_IN_GRACE_PERIOD > +SmartWeave.block.timestamp
+    ) {
+      // name is still on active lease during grace period
+      throw new ContractError(NON_EXPIRED_ARNS_NAME_MESSAGE);
+    }
   }
 
   // TODO: foundation rewards logic

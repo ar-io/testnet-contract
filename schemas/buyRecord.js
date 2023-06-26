@@ -16,7 +16,11 @@ const buyRecordSchema = {
     },
     years: {
       type: 'integer',
-      minimum: 1, // TODO: these validations should pull from state
+      minimum: 1,
+    },
+    qty: {
+      type: 'number',
+      minimum: 0,
     },
     tier: {
       type: 'string',
