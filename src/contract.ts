@@ -22,6 +22,7 @@ import { joinNetwork } from './actions/write/joinNetwork';
 import { submitAuctionBid } from './actions/write/submitAuctionBid';
 import { transferTokens } from './actions/write/transferTokens';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
+import { updateState } from './actions/write/updateState';
 import { upgradeTier } from './actions/write/upgradeTier';
 import {
   ContractResult,
@@ -83,6 +84,8 @@ export async function handle(
       return foundationAction(state, action);
     case 'submitAuctionBid':
       return submitAuctionBid(state, action);
+    case 'updateState':
+      return updateState(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognized: "${input.function}"`,

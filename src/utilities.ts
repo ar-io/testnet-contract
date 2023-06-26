@@ -4,6 +4,8 @@ import {
 } from './constants';
 import { Fees, ServiceTier } from './types';
 
+declare const ContractError: any;
+
 export function calculateTotalRegistrationFee(
   name: string,
   fees: Fees,
@@ -56,7 +58,7 @@ export function calculatePermabuyFee(
   // e.g. name is 7 characters - this would be 0
   // name is 2 characters - this would 8
   const getMultiplier = (): number => {
-    if (name.length > 25) {
+    if (name.length >= 25) {
       return 0.5; // cut the price in half
     }
     // names between 5 and 24 characters (inclusive)
@@ -66,9 +68,9 @@ export function calculatePermabuyFee(
     // short names
     if (name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
       const shortNameMultiplier = 1 + ((10 - name.length) * 10) / 100;
-      return shortNameMultiplier; // big bucks ballin'
+      return shortNameMultiplier;
     }
-    throw Error('You fucked up.');
+    throw new ContractError('Unable to compute name multiplier.');
   };
   const rarityMultiplier = getMultiplier();
   const permabuyFee = permabuyLeasePrice * rarityMultiplier;
@@ -116,5 +118,5 @@ export function walletHasSufficientBalance(
   wallet: string,
   qty: number,
 ): boolean {
-  return balances[wallet] && balances[wallet] >= qty;
+  return !!balances[wallet] && balances[wallet] >= qty;
 }
