@@ -138,7 +138,8 @@ export const buyRecord = (
        */
       if (
         name.length < MINIMUM_ALLOWED_NAME_LENGTH &&
-        +SmartWeave.block.timestamp < SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP
+        +SmartWeave.block.timestamp < SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP &&
+        !auction
       ) {
         throw new ContractError(INVALID_SHORT_NAME);
       }

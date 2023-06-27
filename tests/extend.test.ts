@@ -26,7 +26,7 @@ describe('Extend', () => {
     });
 
     it('should not be able to extend a record that is not in its grace period', async () => {
-      const extendYears = 3;
+      const extendYears = MAX_YEARS - 1;
       const name = 'name1';
       const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
@@ -51,7 +51,7 @@ describe('Extend', () => {
     });
 
     it(`should not be able to extend a record for more than ${MAX_YEARS} years`, async () => {
-      const extendYears = 5;
+      const extendYears = MAX_YEARS + 1;
       const name = 'name1';
       const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
@@ -77,7 +77,7 @@ describe('Extend', () => {
 
     it('should not be able to extend a non-existent name ', async () => {
       // advance current timer
-      const extendYears = 1;
+      const extendYears = MAX_YEARS - 1;
       const name = 'non-existent-name';
 
       const writeInteraction = await contract.writeInteraction({

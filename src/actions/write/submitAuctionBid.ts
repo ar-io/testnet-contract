@@ -1,5 +1,6 @@
 import {
   ARNS_NAME_RESERVED_MESSAGE,
+  INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
   INVALID_QTY_MESSAGE,
   INVALID_SHORT_NAME,
@@ -195,18 +196,18 @@ export const submitAuctionBid = (
       ? Math.max(submittedBid, calculatedFloor)
       : calculatedFloor;
     // multiply by the floor price, as it could be higher than the calculated floor
-    const initialPrice = floorPrice * startPriceMultiplier;
+    const startPrice = floorPrice * startPriceMultiplier;
 
     // throw an error on invalid balance
     if (!walletHasSufficientBalance(balances, caller, floorPrice)) {
-      throw new ContractError(INVALID_QTY_MESSAGE);
+      throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
     }
 
     // create the initial auction bid
     const initialAuctionBid = {
       auctionSettingsId,
       floorPrice, // this is decremented from the initiators wallet, and could be higher than the precalculated floor
-      initialPrice,
+      startPrice,
       contractTxId,
       startHeight: currentBlockHeight, // auction starts right away
       type,
@@ -238,7 +239,7 @@ export const submitAuctionBid = (
     // calculate the current bid price and compare it to the floor price set by the initiator
     const currentRequiredMinimumBid = calculateMinimumAuctionBid({
       startHeight: existingAuction.startHeight,
-      initialPrice: existingAuction.initialPrice,
+      startPrice: existingAuction.startPrice,
       floorPrice: existingAuction.floorPrice,
       currentBlockHeight,
       decayRate,
@@ -302,7 +303,7 @@ export const submitAuctionBid = (
 
     // throw an error if the wallet doesn't have the balance for the bid
     if (!walletHasSufficientBalance(balances, caller, finalBid)) {
-      throw new ContractError(INVALID_QTY_MESSAGE);
+      throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
     }
 
     /**

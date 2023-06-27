@@ -49,7 +49,7 @@ export type Fees = {
 };
 
 export type Auction = {
-  initialPrice: number;
+  startPrice: number;
   floorPrice: number;
   startHeight: number;
   auctionSettingsId: string;
@@ -290,4 +290,9 @@ export type IOContractFunctions = FoundationFunctions &
 export type ContractResult =
   | { state: IOState }
   | { result: PstResult }
-  | { result: ArNSNameResult };
+  | { result: ArNSNameResult }
+  | {
+      result: {
+        [x: string | number]: any;
+      };
+    };
