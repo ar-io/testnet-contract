@@ -1,11 +1,5 @@
-import {
-  NON_CONTRACT_OWNER_MESSAGE,
-} from '../../constants';
-import {
-  ContractResult,
-  IOState,
-  PstAction,
-} from '../../types';
+import { NON_CONTRACT_OWNER_MESSAGE } from '../../constants';
+import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;
 
