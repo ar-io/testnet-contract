@@ -230,20 +230,20 @@ import { keyfile } from './constants';
       },
     },
     settings: {
-        auctions: {
-            current: 'f3ebbf46-a5f4-4f89-86ed-aaae4346db2a',
-            history: [
-                {
-                    id: 'f3ebbf46-a5f4-4f89-86ed-aaae4346db2a',
-                    floorPriceMultiplier: 1, // if we ever want to drop prices
-                    startPriceMultiplier: 200, // multiplier
-                    auctionDuration: 5040, // approximately 1 week
-                    decayRate: 0.02, // decay 2% every interval
-                    decayInterval: 30 // decay every 30 blocks (~1 hour)
-                }
-            ]
-        }
-    }
+      auctions: {
+        current: 'f3ebbf46-a5f4-4f89-86ed-aaae4346db2a',
+        history: [
+          {
+            id: 'f3ebbf46-a5f4-4f89-86ed-aaae4346db2a',
+            floorPriceMultiplier: 1, // if we ever want to drop prices
+            startPriceMultiplier: 200, // multiplier
+            auctionDuration: 5040, // approximately 1 week
+            decayRate: 0.02, // decay 2% every interval
+            decayInterval: 30, // decay every 30 blocks (~1 hour)
+          },
+        ],
+      },
+    },
   };
   // TODO: do some AJV validation the the initial state meets our spec
   // ~~ Deploy contract ~~

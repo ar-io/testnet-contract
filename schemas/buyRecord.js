@@ -30,6 +30,9 @@ const buyRecordSchema = {
       type: 'string',
       pattern: '^(lease|permabuy)$',
     },
+    auction: {
+      type: 'boolean',
+    },
   },
   required: ['name', 'function'],
   additionalProperties: false,
