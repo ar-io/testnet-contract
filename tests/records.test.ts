@@ -9,6 +9,7 @@ import {
   INVALID_SHORT_NAME,
   INVALID_TIER_MESSAGE,
   INVALID_YEARS_MESSAGE,
+  MAX_YEARS,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
   SECONDS_IN_A_YEAR,
 } from './utils/constants';
@@ -514,7 +515,7 @@ describe('Records', () => {
       },
     );
 
-    it.each([4, 10, 100])(
+    it.each([MAX_YEARS + 1, MAX_YEARS + 10, MAX_YEARS + 100])(
       'should not be able to purchase a name with years not within allowed range: %s',
       async (badYear) => {
         const namePurchase = {

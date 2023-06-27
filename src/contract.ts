@@ -1,5 +1,6 @@
 // ~~ Put all the interactions from '../actions/` together to write the final handle function which will be exported
 // from the contract source. ~~
+import { getAuction } from './actions/read/auction';
 import { balance } from './actions/read/balance';
 import {
   getGateway,
@@ -86,6 +87,8 @@ export async function handle(
       return submitAuctionBid(state, action);
     case 'updateState':
       return updateState(state, action);
+    case 'auction':
+      return getAuction(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognized: "${input.function}"`,

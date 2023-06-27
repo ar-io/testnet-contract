@@ -74,7 +74,8 @@ import { keyfile } from './constants';
       evaluationManifest: {
         evaluationOptions: {
           internalWrites: true,
-          throwOnInternalWriteError: true,
+          useKVStorage: true, // tells evaluators the key value storage is used for storing contract state
+          updateCacheForEachInteraction: true, // required for internal writes - increases performance, but takes memory hit
           sourceType: SourceType.ARWEAVE,
         },
       },

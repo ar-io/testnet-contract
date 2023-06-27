@@ -192,7 +192,7 @@ describe('Auctions', () => {
               expect(auctions[auctionBid.name]).toEqual(
                 expect.objectContaining({
                   floorPrice: expect.any(Number),
-                  initialPrice: expect.any(Number),
+                  startPrice: expect.any(Number),
                   type: 'lease',
                   auctionSettingsId: AUCTION_SETTINGS.current,
                   startHeight: await getCurrentBlock(arweave),
@@ -259,7 +259,7 @@ describe('Auctions', () => {
                 await mineBlocks(arweave, 3504);
                 const winningBidQty = calculateMinimumAuctionBid({
                   startHeight: auctionObj.startHeight,
-                  initialPrice: auctionObj.initialPrice,
+                  startPrice: auctionObj.startPrice,
                   floorPrice: auctionObj.floorPrice,
                   currentBlockHeight: await getCurrentBlock(arweave),
                   decayInterval: auctionSettings.decayInterval,
@@ -432,7 +432,7 @@ describe('Auctions', () => {
               );
               expect(auctions[auctionBid.name]).toEqual({
                 floorPrice: expect.any(Number),
-                initialPrice: expect.any(Number),
+                startPrice: expect.any(Number),
                 type: 'lease',
                 auctionSettingsId: AUCTION_SETTINGS.current,
                 startHeight: await getCurrentBlock(arweave),
@@ -477,7 +477,7 @@ describe('Auctions', () => {
           expect(auctions[auctionBid.name]).not.toBe(undefined);
           expect(auctions[auctionBid.name]).toEqual({
             floorPrice: expect.any(Number),
-            initialPrice: expect.any(Number),
+            startPrice: expect.any(Number),
             type: 'permabuy',
             auctionSettingsId: AUCTION_SETTINGS.current,
             startHeight: await getCurrentBlock(arweave),
@@ -500,7 +500,7 @@ describe('Auctions', () => {
           await mineBlocks(arweave, 3504);
           const winningBidQty = calculateMinimumAuctionBid({
             startHeight: auctionObj.startHeight,
-            initialPrice: auctionObj.initialPrice,
+            startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
             currentBlockHeight: await getCurrentBlock(arweave),
             decayInterval: auctionSettings.decayInterval,
@@ -566,7 +566,7 @@ describe('Auctions', () => {
           expect(auctions[auctionBid.name]).not.toBe(undefined);
           expect(auctions[auctionBid.name]).toEqual({
             floorPrice: expect.any(Number),
-            initialPrice: expect.any(Number),
+            startPrice: expect.any(Number),
             type: 'lease',
             auctionSettingsId: AUCTION_SETTINGS.current,
             startHeight: await getCurrentBlock(arweave),
@@ -590,7 +590,7 @@ describe('Auctions', () => {
           await mineBlocks(arweave, 3504);
           const winningBidQty = calculateMinimumAuctionBid({
             startHeight: auctionObj.startHeight,
-            initialPrice: auctionObj.initialPrice,
+            startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
             currentBlockHeight: await getCurrentBlock(arweave),
             decayInterval: auctionSettings.decayInterval,

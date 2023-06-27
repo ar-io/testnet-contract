@@ -16,7 +16,10 @@ import { keyfile } from './constants';
     : await fs.readFileSync(keyfile).toString();
 
   const arnsRegistryContractTxId =
+<<<<<<< HEAD
     process.env.ARNS_CONTRACT_TX_ID ??
+=======
+>>>>>>> 26d7d1a (fix(auctions): update years, change initalPrice to startPrice in auctions, add getAuction function to get auction bids)
     'GfrHPxXyfuxNNdGvzHl_5HFX711jZsG3OE8qmG-UqlY';
 
   // ~~ Initialize `LoggerFactory` ~~

@@ -79,14 +79,14 @@ export function calculatePermabuyFee(
 
 export function calculateMinimumAuctionBid({
   startHeight,
-  initialPrice,
+  startPrice,
   floorPrice,
   currentBlockHeight,
   decayInterval,
   decayRate,
 }: {
   startHeight: number;
-  initialPrice: number;
+  startPrice: number;
   floorPrice: number;
   currentBlockHeight: number;
   decayInterval: number;
@@ -96,8 +96,8 @@ export function calculateMinimumAuctionBid({
     (currentBlockHeight - startHeight) / decayInterval,
   );
   const dutchAuctionBid =
-    initialPrice * Math.pow(1 - decayRate, blockIntervalsPassed);
-  const minimumBid = Math.max(floorPrice, dutchAuctionBid);
+    startPrice * Math.pow(1 - decayRate, blockIntervalsPassed);
+  const minimumBid = Math.ceil(Math.max(floorPrice, dutchAuctionBid));
   return minimumBid;
 }
 
