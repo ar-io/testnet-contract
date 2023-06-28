@@ -4,7 +4,7 @@ const auctionBidSchema = {
   properties: {
     function: {
       type: 'string',
-      const: 'submitAuctionBid',
+      const: '^(submitAuctionBid|buyRecord)',
     },
     name: {
       type: 'string',
@@ -20,7 +20,7 @@ const auctionBidSchema = {
     },
     contractTxId: {
       type: 'string',
-      pattern: '^[a-zA-Z0-9-]{43}$',
+      pattern: '^[a-zA-Z0-9-_]{43}$',
     },
   },
   required: ['name', 'contractTxId'],
