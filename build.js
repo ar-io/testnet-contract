@@ -10,6 +10,7 @@ const { auctionBidSchema, buyRecordSchema } = require('./schemas');
 const ajv = new Ajv({
   schemas: [auctionBidSchema, buyRecordSchema],
   code: { source: true, esm: true },
+  allErrors: true,
 });
 
 const moduleCode = standaloneCode(ajv, {
