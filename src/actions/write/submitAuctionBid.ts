@@ -30,6 +30,7 @@ declare const ContractError;
 declare const SmartWeave: any;
 
 export class AuctionBid {
+  function: 'submitAuctionBid';
   name: string;
   qty?: number;
   type: 'lease' | 'permabuy';
@@ -40,8 +41,12 @@ export class AuctionBid {
     // validate using ajv validator
     if (!validateAuctionBid(input)) {
       throw new ContractError(
-        `${INVALID_INPUT_MESSAGE}: ${(validateAuctionBid as any).errors
-          .map((e) => `${e.instancePath.replace('/', '')} ${e.message}`)
+        `${INVALID_INPUT_MESSAGE} for ${this.function}: ${(validateAuctionBid as any).errors
+          .map((e) => {
+            const key = e.instancePath.replace('/', '');
+            const value = input[key];
+            return `${key} ('${value}') ${e.message}`
+          })
           .join(', ')}`,
       );
     }

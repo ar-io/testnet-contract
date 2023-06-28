@@ -38,8 +38,12 @@ export class BuyRecord {
     // validate using ajv validator
     if (!validateBuyRecord(input)) {
       throw new ContractError(
-        `${INVALID_INPUT_MESSAGE}: ${(validateBuyRecord as any).errors
-          .map((e) => `${e.instancePath.replace('/', '')} ${e.message}`)
+        `${INVALID_INPUT_MESSAGE} for ${this.function}: ${(validateBuyRecord as any).errors
+          .map((e) => {
+            const key = e.instancePath.replace('/', '');
+            const value = input[key];
+            return `${key} ('${value}') ${e.message}`
+          })
           .join(', ')}`,
       );
     }
