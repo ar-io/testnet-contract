@@ -24,7 +24,7 @@ const auctionBidSchema = {
     },
   },
   required: ['name', 'contractTxId'],
-  additionalProperties: false,
+  additionalProperties: true,
 };
 
 module.exports = {

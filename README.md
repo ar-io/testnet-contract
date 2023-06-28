@@ -23,7 +23,7 @@ yarn test
 To test a specific suite
 
 ```shell
-yarn test -t='Records'
+yarn jest test FILENAME
 ```
 
 ### Tools
