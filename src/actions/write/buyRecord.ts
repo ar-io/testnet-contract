@@ -19,7 +19,7 @@ import {
 } from '../../utilities';
 // composed by ajv at build
 import { validateBuyRecord } from '../../validations.mjs';
-import { submitAuctionBid } from './submitAuctionBid.js';
+import { submitAuctionBid } from './submitAuctionBid';
 
 declare const ContractError;
 declare const SmartWeave: any;
