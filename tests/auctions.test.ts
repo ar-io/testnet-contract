@@ -78,7 +78,7 @@ describe('Auctions', () => {
             );
             expect(
               cachedValue.errorMessages[writeInteraction!.originalTxId],
-            ).toEqual(INVALID_INPUT_MESSAGE);
+            ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
           },
         );
 
@@ -118,7 +118,7 @@ describe('Auctions', () => {
             );
             expect(
               cachedValue.errorMessages[writeInteraction!.originalTxId],
-            ).toEqual(INVALID_INPUT_MESSAGE);
+            ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
           },
         );
 
@@ -158,7 +158,7 @@ describe('Auctions', () => {
             );
             expect(
               cachedValue.errorMessages[writeInteraction!.originalTxId],
-            ).toEqual(INVALID_INPUT_MESSAGE);
+            ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
           },
         );
       });
