@@ -37,7 +37,11 @@ export class BuyRecord {
   constructor(input: any, defaults: { tier: string }) {
     // validate using ajv validator
     if (!validateBuyRecord(input)) {
-      throw new ContractError(INVALID_INPUT_MESSAGE);
+      throw new ContractError(
+        `${INVALID_INPUT_MESSAGE}: ${(validateBuyRecord as any).errors
+          .map((e) => `${e.instancePath.replace('/', '')} ${e.message}`)
+          .join(', ')}`,
+      );
     }
     const {
       name,

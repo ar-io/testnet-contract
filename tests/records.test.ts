@@ -5,13 +5,13 @@ import { arweave, warp } from './setup.jest';
 import {
   ANT_CONTRACT_IDS,
   ARNS_NAME_RESERVED_MESSAGE,
-  INVALID_INPUT_MESSAGE,
   INVALID_SHORT_NAME,
-  INVALID_TIER_MESSAGE,
+  INVALID_INPUT_MESSAGE,
   INVALID_YEARS_MESSAGE,
   MAX_YEARS,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
   SECONDS_IN_A_YEAR,
+  INVALID_TIER_MESSAGE,
 } from './utils/constants';
 import {
   calculatePermabuyFee,
@@ -237,7 +237,7 @@ describe('Records', () => {
         writeInteraction!.originalTxId,
       );
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
-        INVALID_TIER_MESSAGE,
+        expect.stringContaining(INVALID_TIER_MESSAGE),
       );
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevState.balances[nonContractOwnerAddress],
@@ -272,7 +272,7 @@ describe('Records', () => {
         writeInteraction!.originalTxId,
       );
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
-        INVALID_TIER_MESSAGE,
+        expect.stringContaining(INVALID_TIER_MESSAGE),
       );
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevState.balances[nonContractOwnerAddress],
@@ -396,7 +396,7 @@ describe('Records', () => {
         );
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(INVALID_INPUT_MESSAGE);
+        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
         expect(balances[nonContractOwnerAddress]).toEqual(
           prevState.balances[nonContractOwnerAddress],
         );
@@ -442,7 +442,7 @@ describe('Records', () => {
         );
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(INVALID_INPUT_MESSAGE);
+        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
       },
     );
 
@@ -482,7 +482,7 @@ describe('Records', () => {
         );
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(INVALID_INPUT_MESSAGE);
+        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
       },
     );
 
@@ -511,7 +511,7 @@ describe('Records', () => {
         );
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(INVALID_INPUT_MESSAGE);
+        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
       },
     );
 
@@ -570,7 +570,7 @@ describe('Records', () => {
         );
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(INVALID_INPUT_MESSAGE);
+        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
       },
     );
 
@@ -600,7 +600,7 @@ describe('Records', () => {
         );
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(INVALID_INPUT_MESSAGE);
+        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
       },
     );
 

@@ -2,7 +2,6 @@ import {
   ARNS_NAME_RESERVED_MESSAGE,
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
-  INVALID_QTY_MESSAGE,
   INVALID_SHORT_NAME,
   MINIMUM_ALLOWED_NAME_LENGTH,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
@@ -40,7 +39,11 @@ export class AuctionBid {
   constructor(input: any, tiers) {
     // validate using ajv validator
     if (!validateAuctionBid(input)) {
-      throw new ContractError(INVALID_INPUT_MESSAGE);
+      throw new ContractError(
+        `${INVALID_INPUT_MESSAGE}: ${(validateAuctionBid as any).errors
+          .map((e) => `${e.instancePath.replace('/', '')} ${e.message}`)
+          .join(', ')}`,
+      );
     }
 
     const { name, qty, type = 'lease', contractTxId } = input;
