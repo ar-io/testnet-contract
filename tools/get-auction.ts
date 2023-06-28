@@ -32,7 +32,7 @@ import {
     updateCacheForEachInteraction: true,
   });
 
-  const auctionName = 'test-auction-name'
+  const auctionName = 'test-auction-name';
   const { result } = await contract.viewState({
     function: 'auction',
     name: auctionName,
