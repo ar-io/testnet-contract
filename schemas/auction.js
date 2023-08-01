@@ -22,6 +22,9 @@ const auctionBidSchema = {
       type: 'string',
       pattern: '^(atomic|[a-zA-Z0-9-_]{43})$',
     },
+    auction: {
+      type: 'boolean',
+    },
   },
   required: ['name', 'contractTxId'],
   additionalProperties: false,
