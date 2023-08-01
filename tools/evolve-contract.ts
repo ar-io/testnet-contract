@@ -11,9 +11,13 @@ import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 import { keyfile } from './constants';
 
 (async () => {
-  // This is the mainnet ArNS Registry Smartweave Contract TX ID version 1.7
+  const jwk = process.env.JWK
+    ? process.env.JWK
+    : await fs.readFileSync(keyfile).toString();
+
   const arnsRegistryContractTxId =
-    'Jh3fDY501MbVYmGc2oRhRZtXPA0XCxTxONcSv5MsCgw';
+    process.env.ARNS_CONTRACT_TX_ID ??
+    'GfrHPxXyfuxNNdGvzHl_5HFX711jZsG3OE8qmG-UqlY';
 
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel('error');
@@ -27,9 +31,7 @@ import { keyfile } from './constants';
   ).use(new DeployPlugin());
 
   // Get the key file used
-  const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(keyfile).toString(),
-  );
+  const wallet: JWKInterface = JSON.parse(jwk);
 
   // Read the ArNS Registry Contract
   const contract = warp.pst(arnsRegistryContractTxId);
@@ -55,6 +57,7 @@ import { keyfile } from './constants';
     disableBundling: true,
   });
 
+  // eslint-disable-next-line
   console.log(
     'Finished evolving the ArNS Smartweave Contract %s with interaction %s. New source code is: %s',
     arnsRegistryContractTxId,

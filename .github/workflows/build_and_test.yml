@@ -14,8 +14,23 @@ jobs:
       - run: yarn ${{ matrix.step }}
   build_and_test:
     runs-on: ubuntu-latest
+    needs: [lint]
     steps:
       - uses: actions/checkout@v3
       - run: yarn install
       - run: yarn build
       - run: yarn test
+  evolve:
+    runs-on: ubuntu-latest
+    needs: [build_and_test]
+    if: (github.ref == 'refs/heads/develop')
+    environment: develop
+    steps:
+      - uses: actions/checkout@v3
+      - run: yarn install
+      - run: yarn build
+      - run: yarn evolve
+        # TODO: create tag of evolved contract id
+        env:
+          ARNS_CONTRACT_TX_ID: ${{ vars.ARNS_CONTRACT_TX_ID }}
+          JWK: ${{ secrets.JWK }}
