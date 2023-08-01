@@ -12,7 +12,7 @@ import { getCurrentBlockHeight } from './utilities';
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID
   const arnsRegistryContractTxId =
-    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
+    'GfrHPxXyfuxNNdGvzHl_5HFX711jZsG3OE8qmG-UqlY';
 
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel('fatal');
@@ -21,15 +21,12 @@ import { getCurrentBlockHeight } from './utilities';
   const warp = WarpFactory.forMainnet();
 
   // Get the key file used for the distribution
-  const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(keyfile).toString(),
-  );
+  // const wallet: JWKInterface = JSON.parse(
+  //   await fs.readFileSync(keyfile).toString(),
+  // );
 
   // Read the ArNS Registry Contract
-  const pst = warp.pst(`bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U`);
-  pst.connect(wallet);
-  console.log(
-    `balance`,
-    await pst.currentBalance('QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'),
-  );
+  const pst = warp.pst(arnsRegistryContractTxId);
+  //pst.connect(wallet);
+  console.log(`balance`, await pst.readState());
 })();

@@ -20,7 +20,7 @@ const auctionBidSchema = {
     },
     contractTxId: {
       type: 'string',
-      pattern: '^[a-zA-Z0-9-]{43}$',
+      pattern: '^(atomic|[a-zA-Z0-9-_]{43})$',
     },
   },
   required: ['name', 'contractTxId'],
