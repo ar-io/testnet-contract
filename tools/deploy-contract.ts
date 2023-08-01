@@ -249,5 +249,5 @@ import { keyfile } from './constants';
   ); // disable bundling
 
   // ~~ Log contract id to the console ~~
-  console.log(contractTxId);
+  console.log(contractTxId); // eslint-disable-line no-console
 })();
