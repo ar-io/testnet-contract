@@ -9,7 +9,8 @@
     "format:fix": "prettier . --write",
     "lint:check": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "yarn build && jest tests --runInBand"
+    "test": "yarn build && jest tests --runInBand",
+    "evolve": "yarn ts-node ./tools/evolve-contract.ts"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.16.7",
