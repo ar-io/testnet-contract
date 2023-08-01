@@ -28,8 +28,5 @@ import { getCurrentBlockHeight } from './utilities';
   // Read the ArNS Registry Contract
   const pst = warp.pst(arnsRegistryContractTxId);
   //pst.connect(wallet);
-  console.log(
-    `balance`,
-    await pst.readState(),
-  );
+  console.log(`balance`, await pst.readState());
 })();
