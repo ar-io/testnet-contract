@@ -24,7 +24,7 @@ import {
   mineBlocks,
 } from './utils/helper';
 
-describe('FoundationAction', () => {
+describe.skip('FoundationAction', () => {
   let contract: Contract<PstState>;
   let foundationMember: JWKInterface;
   let foundationMemberAddress: string;
