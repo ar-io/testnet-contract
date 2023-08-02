@@ -9,6 +9,7 @@ import {
   INVALID_SHORT_NAME,
   INVALID_TIER_MESSAGE,
   INVALID_YEARS_MESSAGE,
+  MAX_YEARS,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
   SECONDS_IN_A_YEAR,
 } from './utils/constants';
@@ -236,7 +237,7 @@ describe('Records', () => {
         writeInteraction!.originalTxId,
       );
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
-        INVALID_TIER_MESSAGE,
+        expect.stringContaining(INVALID_TIER_MESSAGE),
       );
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevState.balances[nonContractOwnerAddress],
@@ -271,7 +272,7 @@ describe('Records', () => {
         writeInteraction!.originalTxId,
       );
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
-        INVALID_TIER_MESSAGE,
+        expect.stringContaining(INVALID_TIER_MESSAGE),
       );
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevState.balances[nonContractOwnerAddress],
@@ -395,7 +396,7 @@ describe('Records', () => {
         );
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(INVALID_INPUT_MESSAGE);
+        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
         expect(balances[nonContractOwnerAddress]).toEqual(
           prevState.balances[nonContractOwnerAddress],
         );
@@ -441,7 +442,7 @@ describe('Records', () => {
         );
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(INVALID_INPUT_MESSAGE);
+        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
       },
     );
 
@@ -481,7 +482,7 @@ describe('Records', () => {
         );
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(INVALID_INPUT_MESSAGE);
+        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
       },
     );
 
@@ -510,11 +511,11 @@ describe('Records', () => {
         );
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(INVALID_INPUT_MESSAGE);
+        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
       },
     );
 
-    it.each([4, 10, 100])(
+    it.each([MAX_YEARS + 1, MAX_YEARS + 10, MAX_YEARS + 100])(
       'should not be able to purchase a name with years not within allowed range: %s',
       async (badYear) => {
         const namePurchase = {
@@ -569,7 +570,7 @@ describe('Records', () => {
         );
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(INVALID_INPUT_MESSAGE);
+        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
       },
     );
 
@@ -599,7 +600,7 @@ describe('Records', () => {
         );
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(INVALID_INPUT_MESSAGE);
+        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
       },
     );
 

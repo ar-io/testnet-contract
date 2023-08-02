@@ -19,7 +19,7 @@ import {
 } from '../../utilities';
 // composed by ajv at build
 import { validateBuyRecord } from '../../validations.mjs';
-import { submitAuctionBid } from './submitAuctionBid.js';
+import { submitAuctionBid } from './submitAuctionBid';
 
 declare const ContractError;
 declare const SmartWeave: any;
@@ -37,7 +37,17 @@ export class BuyRecord {
   constructor(input: any, defaults: { tier: string }) {
     // validate using ajv validator
     if (!validateBuyRecord(input)) {
-      throw new ContractError(INVALID_INPUT_MESSAGE);
+      throw new ContractError(
+        `${INVALID_INPUT_MESSAGE} for ${this.function}: ${(
+          validateBuyRecord as any
+        ).errors
+          .map((e) => {
+            const key = e.instancePath.replace('/', '');
+            const value = input[key];
+            return `${key} ('${value}') ${e.message}`;
+          })
+          .join(', ')}`,
+      );
     }
     const {
       name,
@@ -46,7 +56,6 @@ export class BuyRecord {
       tier = defaults.tier,
       type = 'lease',
       auction = false,
-      qty, // only used when passed to auction handler
     } = input;
     this.name = name.trim().toLowerCase();
     (this.contractTxId =
@@ -57,7 +66,6 @@ export class BuyRecord {
     this.tier = tier;
     this.type = type;
     this.auction = auction;
-    this.qty = qty;
   }
 }
 
@@ -138,7 +146,8 @@ export const buyRecord = (
        */
       if (
         name.length < MINIMUM_ALLOWED_NAME_LENGTH &&
-        +SmartWeave.block.timestamp < SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP
+        +SmartWeave.block.timestamp < SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP &&
+        !auction
       ) {
         throw new ContractError(INVALID_SHORT_NAME);
       }

@@ -46,15 +46,13 @@ import { keyfile } from './constants';
   // load state of contract
   const PREVIOUS_ARNS_CONTRACT_TX_ID =
     process.env.ARNS_CONTRACT_TX_ID ??
-    'GfrHPxXyfuxNNdGvzHl_5HFX711jZsG3OE8qmG-UqlY';
+    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
   const {
     cachedValue: { state: existingContractState },
   } = await warp
     .contract(PREVIOUS_ARNS_CONTRACT_TX_ID)
     .setEvaluationOptions({
       internalWrites: true,
-      maxCallDepth: 3,
-      waitForConfirmation: true,
       unsafeClient: 'skip',
       updateCacheForEachInteraction: true,
     })
@@ -64,7 +62,6 @@ import { keyfile } from './constants';
   const forkedState = {
     ...(relevantState as IOState),
   };
-  // TODO: do some AJV validation the the initial state meets our spec
   // ~~ Deploy contract ~~
   const contractTxId = await warp.deploy(
     {
@@ -74,7 +71,6 @@ import { keyfile } from './constants';
       evaluationManifest: {
         evaluationOptions: {
           sourceType: SourceType.ARWEAVE, // evaluation is restricted to only L1 arweave transactions (does not load any interactions submitted to warp sequencer)
-          unsafeClient: 'skip',
           internalWrites: true,
           useKVStorage: true, // tells evaluators the key value storage is used for storing contract state
           updateCacheForEachInteraction: true, // required for internal writes - increases performance, but takes memory hit

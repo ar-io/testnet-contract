@@ -8,7 +8,7 @@ const auctionBidSchema = {
     },
     name: {
       type: 'string',
-      pattern: '^([a-zA-Z0-9][a-zA-Z0-9-]{0,30}[a-zA-Z0-9]{1})$',
+      pattern: '^([a-zA-Z0-9][a-zA-Z0-9-]{0,30}[a-zA-Z0-9]|[a-zA-Z0-9]{1})$',
     },
     qty: {
       type: 'number',
@@ -20,10 +20,7 @@ const auctionBidSchema = {
     },
     contractTxId: {
       type: 'string',
-      pattern: '^(atomic|[a-zA-Z0-9-_]{43})$',
-    },
-    auction: {
-      type: 'boolean',
+      pattern: '^[a-zA-Z0-9-_]{43}$',
     },
   },
   required: ['name', 'contractTxId'],
