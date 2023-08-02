@@ -41,11 +41,13 @@ export class AuctionBid {
     // validate using ajv validator
     if (!validateAuctionBid(input)) {
       throw new ContractError(
-        `${INVALID_INPUT_MESSAGE} for ${this.function}: ${(validateAuctionBid as any).errors
+        `${INVALID_INPUT_MESSAGE} for ${this.function}: ${(
+          validateAuctionBid as any
+        ).errors
           .map((e) => {
             const key = e.instancePath.replace('/', '');
             const value = input[key];
-            return `${key} ('${value}') ${e.message}`
+            return `${key} ('${value}') ${e.message}`;
           })
           .join(', ')}`,
       );

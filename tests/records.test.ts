@@ -5,13 +5,13 @@ import { arweave, warp } from './setup.jest';
 import {
   ANT_CONTRACT_IDS,
   ARNS_NAME_RESERVED_MESSAGE,
-  INVALID_SHORT_NAME,
   INVALID_INPUT_MESSAGE,
+  INVALID_SHORT_NAME,
+  INVALID_TIER_MESSAGE,
   INVALID_YEARS_MESSAGE,
   MAX_YEARS,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
   SECONDS_IN_A_YEAR,
-  INVALID_TIER_MESSAGE,
 } from './utils/constants';
 import {
   calculatePermabuyFee,
