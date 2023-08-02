@@ -9,9 +9,14 @@ import {
 import { keyfile } from './constants';
 
 (async () => {
+  const jwk = process.env.JWK
+    ? process.env.JWK
+    : await fs.readFileSync(keyfile).toString();
+
   // This is the mainnet ArNS Registry Smartweave Contract TX ID version 1.7
-  const arnsRegistryContractTxId =
-    'GfrHPxXyfuxNNdGvzHl_5HFX711jZsG3OE8qmG-UqlY';
+  const contractTxId =
+    process.env.ARNS_CONTRACT_TX_ID ??
+    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
 
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel('error');
@@ -25,34 +30,18 @@ import { keyfile } from './constants';
   );
 
   // Get the key file used
-  const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(keyfile).toString(),
-  );
+  const wallet: JWKInterface = JSON.parse(jwk);
 
   // Read the ArNS Registry Contract
-  const contract = warp.pst(arnsRegistryContractTxId);
+  const contract = warp.pst(contractTxId);
   contract.connect(wallet);
 
   // Create the evolved source code tx
-  const value = await contract.writeInteraction(
+  const writeInteraction = await contract.writeInteraction(
     {
       function: 'updateState',
       state: {
-        settings: {
-          auctions: {
-            current: 'f3ebbf46-a5f4-4f89-86ed-aaae4346db2a',
-            history: [
-              {
-                id: 'f3ebbf46-a5f4-4f89-86ed-aaae4346db2a',
-                floorPriceMultiplier: 1,
-                startPriceMultiplier: 200,
-                auctionDuration: 5040,
-                decayRate: 0.03,
-                decayInterval: 30,
-              },
-            ],
-          },
-        },
+        evolve: '9qewIF2VveKnNeh2_6vwTbC72gQNBnKLRIi5kMU0Ok0',
       },
     },
     {
@@ -60,5 +49,6 @@ import { keyfile } from './constants';
     },
   );
 
-  console.log(value);
+  // eslint-disable-next-line
+  console.log(writeInteraction);
 })();
