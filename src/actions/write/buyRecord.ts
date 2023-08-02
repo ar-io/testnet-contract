@@ -38,11 +38,13 @@ export class BuyRecord {
     // validate using ajv validator
     if (!validateBuyRecord(input)) {
       throw new ContractError(
-        `${INVALID_INPUT_MESSAGE} for ${this.function}: ${(validateBuyRecord as any).errors
+        `${INVALID_INPUT_MESSAGE} for ${this.function}: ${(
+          validateBuyRecord as any
+        ).errors
           .map((e) => {
             const key = e.instancePath.replace('/', '');
             const value = input[key];
-            return `${key} ('${value}') ${e.message}`
+            return `${key} ('${value}') ${e.message}`;
           })
           .join(', ')}`,
       );
@@ -54,7 +56,6 @@ export class BuyRecord {
       tier = defaults.tier,
       type = 'lease',
       auction = false,
-      qty, // only used when passed to auction handler
     } = input;
     this.name = name.trim().toLowerCase();
     (this.contractTxId =
@@ -65,7 +66,6 @@ export class BuyRecord {
     this.tier = tier;
     this.type = type;
     this.auction = auction;
-    this.qty = qty;
   }
 }
 
