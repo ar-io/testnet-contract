@@ -4,7 +4,7 @@ const auctionBidSchema = {
   properties: {
     function: {
       type: 'string',
-      const: 'submitAuctionBid',
+      pattern: '^(submitAuctionBid|buyRecord)$',
     },
     name: {
       type: 'string',
@@ -27,7 +27,7 @@ const auctionBidSchema = {
     },
   },
   required: ['name', 'contractTxId'],
-  additionalProperties: false,
+  additionalProperties: true,
 };
 
 module.exports = {
