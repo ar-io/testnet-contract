@@ -18,10 +18,6 @@ const buyRecordSchema = {
       type: 'integer',
       minimum: 1,
     },
-    qty: {
-      type: 'number',
-      minimum: 0,
-    },
     tier: {
       type: 'string',
       pattern: '^[a-zA-Z0-9-_]{43}$',
