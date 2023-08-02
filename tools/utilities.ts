@@ -36,6 +36,7 @@ export async function retryFetch(reqURL: string): Promise<AxiosResponse<any>> {
   axiosRetry(axiosInstance, {
     retries: maxRetries,
     retryDelay: (retryNumber) => {
+      // eslint-disable-next-line
       console.error(
         `Retry attempt ${retryNumber}/${maxRetries} of request to ${reqURL}`,
       );
