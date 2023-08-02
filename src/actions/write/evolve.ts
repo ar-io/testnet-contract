@@ -6,7 +6,7 @@ declare const ContractError;
 // Updates this contract to new source code
 export const evolve = async (
   state: IOState,
-  { caller, input: value }: PstAction,
+  { caller, input: { value } }: PstAction,
 ): Promise<ContractResult> => {
   const owner = state.owner;
 
