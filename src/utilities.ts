@@ -1,6 +1,7 @@
 import {
   ANNUAL_PERCENTAGE_FEE,
   MINIMUM_ALLOWED_NAME_LENGTH,
+  RARITY_MULTIPLIER_HALVENING,
 } from './constants';
 import { Fees, ServiceTier } from './types';
 
@@ -58,11 +59,11 @@ export function calculatePermabuyFee(
   // e.g. name is 7 characters - this would be 0
   // name is 2 characters - this would 8
   const getMultiplier = (): number => {
-    if (name.length >= 25) {
+    if (name.length >= RARITY_MULTIPLIER_HALVENING) {
       return 0.5; // cut the price in half
     }
     // names between 5 and 24 characters (inclusive)
-    if (name.length >= MINIMUM_ALLOWED_NAME_LENGTH && name.length < 25) {
+    if (name.length >= MINIMUM_ALLOWED_NAME_LENGTH && name.length < RARITY_MULTIPLIER_HALVENING) {
       return 1; // e.g. it's the cost of a 10 year lease
     }
     // short names
