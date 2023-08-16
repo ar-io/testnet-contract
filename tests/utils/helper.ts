@@ -89,7 +89,6 @@ function createGateways(wallets: string[]) {
   const gateways: any = {};
   gateways[wallets[0]] = {
     operatorStake: 50_000,
-    delegatedStake: 301_000,
     start: 1,
     end: 0,
     status: NETWORK_JOIN_STATUS,
@@ -105,36 +104,17 @@ function createGateways(wallets: string[]) {
         end: 0,
       },
     ],
-    delegates: {
-      [wallets[4]]: [
-        {
-          balance: 300_000,
-          end: 5_000,
-          start: 0,
-        },
-      ],
-      [wallets[5]]: [
-        {
-          balance: 1_000,
-          end: 2_500,
-          start: 0,
-        },
-      ],
-    },
     settings: {
       label: 'Arweave Community Gateway', // The friendly name used to label this gateway
       fqdn: 'arweave.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
       port: 443, // The port used by this gateway eg. 443
       protocol: 'https', // The protocol used by this gateway, either http or https
-      openDelegation: false,
-      delegateAllowList: [wallets[4], wallets[5]],
       note: 'The friendliest gateway to the whole permaweb',
     },
   };
 
   gateways[wallets[1]] = {
     operatorStake: 5_000, // this includes the additional vault we add below
-    delegatedStake: 3_100, // this includes the additional delegate we add below
     status: NETWORK_JOIN_STATUS,
     start: 1,
     end: 0,
@@ -145,41 +125,17 @@ function createGateways(wallets: string[]) {
         end: 0,
       },
     ],
-    delegates: {
-      [wallets[5]]: [
-        {
-          balance: 1_000,
-          start: 1,
-          end: 0,
-        },
-        {
-          balance: 100,
-          start: 1,
-          end: 0,
-        },
-      ],
-      [wallets[6]]: [
-        {
-          balance: 2_000,
-          start: 1,
-          end: 0,
-        },
-      ],
-    },
     settings: {
       label: 'Slashme', // The friendly name used to label this gateway
       fqdn: 'slash-this-gateway.io', // the fully qualified domain name this gateway can be reached at. eg arweave.net
       port: 443, // The port used by this gateway eg. 443
       protocol: 'https', // The protocol used by this gateway, either http or https
-      openDelegation: true,
-      delegateAllowList: [],
       note: 'i do bad things',
     },
   };
 
   gateways[wallets[2]] = {
     operatorStake: 500_000, // this includes the additional vault we add below
-    delegatedStake: 0, // this includes the additional delegate we add below
     status: NETWORK_JOIN_STATUS,
     start: 1,
     end: 0,
@@ -205,21 +161,17 @@ function createGateways(wallets: string[]) {
         end: 0,
       },
     ],
-    delegates: {},
     settings: {
       label: 'Delegateme', // The friendly name used to label this gateway
       fqdn: 'delegate.org', // the fully qualified domain name this gateway can be reached at. eg arweave.net
       port: 80, // The port used by this gateway eg. 443
       protocol: 'http', // The protocol used by this gateway, either http or https
-      openDelegation: true,
-      delegateAllowList: [],
       note: '',
     },
   };
 
   gateways[wallets[3]] = {
     operatorStake: 5_000, // this includes the additional vault we add below
-    delegatedStake: 0, // this includes the additional delegate we add below
     status: NETWORK_HIDDEN_STATUS,
     start: 1,
     end: 0,
@@ -230,21 +182,17 @@ function createGateways(wallets: string[]) {
         end: 0,
       },
     ],
-    delegates: {},
     settings: {
       label: 'Wack-gateway', // The friendly name used to label this gateway
       fqdn: 'brokeninfra.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
       port: 12345, // The port used by this gateway eg. 443
       protocol: 'https', // The protocol used by this gateway, either http or https
-      openDelegation: false,
-      delegateAllowList: [],
       note: '',
     },
   };
 
   gateways[wallets[4]] = {
     operatorStake: 10_000, // this includes the additional vault we add below
-    delegatedStake: 0, // this includes the additional delegate we add below
     status: NETWORK_LEAVING_STATUS,
     start: 1,
     end: 4,
@@ -255,14 +203,11 @@ function createGateways(wallets: string[]) {
         end: 0,
       },
     ],
-    delegates: {},
     settings: {
       label: 'See Ya Later', // The friendly name used to label this gateway
       fqdn: 'goodbye.com', // the fully qualified domain name this gateway can be reached at. eg arweave.net
       port: 443, // The port used by this gateway eg. 443
       protocol: 'https', // The protocol used by this gateway, either http or https
-      openDelegation: true,
-      delegateAllowList: [wallets[0]],
       note: 'Leaving the network',
     },
   };

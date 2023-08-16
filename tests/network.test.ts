@@ -50,7 +50,6 @@ describe('Network', () => {
         const fqdn = 'jest.io';
         const port = 3000;
         const protocol = 'http';
-        const openDelegation = true;
         const note =
           'Our gateway is the best test gateway. Contact bob@ar.io for more.';
         const joinGatewayPayload = {
@@ -59,7 +58,6 @@ describe('Network', () => {
           fqdn: 'jest.io',
           port: 3000,
           protocol: 'http',
-          openDelegation: true,
           note: 'Our gateway is the best test gateway. Contact bob@ar.io for more.',
         };
         const writeInteraction = await contract.writeInteraction({
@@ -77,7 +75,6 @@ describe('Network', () => {
         );
         expect(newState.gateways[newGatewayOperatorAddress]).toEqual({
           operatorStake: qty,
-          delegatedStake: 0,
           status: NETWORK_JOIN_STATUS,
           start: 2,
           end: 0,
@@ -88,14 +85,11 @@ describe('Network', () => {
               end: 0, // At what block the lock ends.  0 means no end date.}]
             },
           ],
-          delegates: {},
           settings: {
             label: label,
             fqdn: fqdn,
             port: port,
             protocol: protocol,
-            openDelegation: openDelegation,
-            delegateAllowList: [],
             note: note,
           },
         });
@@ -111,7 +105,7 @@ describe('Network', () => {
         const prevBalance = prevState.balances[newGatewayOperatorAddress];
         const prevGatewayOperatorBalance =
           prevState.gateways[newGatewayOperatorAddress].operatorStake;
-        const qty = prevState.settings.registry.minDelegatedStakeAmount; // must meet the minimum
+        const qty = 50; // no minimum
         const writeInteraction = await contract.writeInteraction({
           function: 'increaseOperatorStake',
           qty,
@@ -240,17 +234,8 @@ describe('Network', () => {
 
     describe('gateway settings', () => {
       it('should modify gateway settings with correct parameters', async () => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
-        const prevState = prevCachedValue.state as IOState;
-        const prevGatewaySettings =
-          prevState.gateways[newGatewayOperatorAddress].settings;
-        const delegateAllowList = [
-          await arweave.wallets.getAddress(await getLocalWallet(6)),
-          await arweave.wallets.getAddress(await getLocalWallet(7)),
-        ];
         const writeInteraction = await contract.writeInteraction({
           function: 'updateGatewaySettings',
-          delegateAllowList,
           status: NETWORK_HIDDEN_STATUS,
         });
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -260,10 +245,6 @@ describe('Network', () => {
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
           writeInteraction!.originalTxId,
         );
-        expect(newGateway.settings).toEqual({
-          ...prevGatewaySettings,
-          delegateAllowList,
-        });
         expect(newGateway.status).toEqual(NETWORK_HIDDEN_STATUS);
       });
 
@@ -276,16 +257,12 @@ describe('Network', () => {
         const fqdn = 'fake_url.com';
         const note = 12345;
         const status = 'leavingNetwork';
-        const openDelegation = 'whatever';
-        const delegateAllowList = ['this aint a wallet'];
         const writeInteraction = await contract.writeInteraction({
           function: 'updateGatewaySettings',
           label,
           port,
           protocol,
           fqdn,
-          openDelegation,
-          delegateAllowList,
           note,
           status,
         });
@@ -356,19 +333,6 @@ describe('Network', () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevState = prevCachedValue.state as IOState;
         const prevGateway = prevState.gateways[newGatewayOperatorAddress];
-        const prevDelegates = prevGateway.delegates;
-        const delegatedBalances: { [x: string]: number } = Object.keys(
-          prevDelegates,
-        ).reduce(
-          (totalDelegations: any, d) => ({
-            ...totalDelegations,
-            [totalDelegations[d]]: Object.values(prevDelegates[d]).reduce(
-              (totalDelegated, x) => totalDelegated + x.balance,
-              0,
-            ),
-          }),
-          {},
-        );
         const vaultedBalance = prevGateway.vaults.reduce(
           (totalVaulted, v) => totalVaulted + v.balance,
           0,
@@ -391,12 +355,6 @@ describe('Network', () => {
         expect(newState.balances[newGatewayOperatorAddress]).toEqual(
           prevState.balances[newGatewayOperatorAddress] + vaultedBalance,
         );
-        // validate balances were returned
-        for (const [delegate, qty] of Object.entries(delegatedBalances)) {
-          expect(newState.balances[delegate]).toEqual(
-            prevState.balances[delegate] + qty,
-          );
-        }
       });
     });
   });
@@ -423,10 +381,8 @@ describe('Network', () => {
         });
         const expectedGatewayObj = expect.objectContaining({
           operatorStake: expect.any(Number),
-          delegatedStake: expect.any(Number),
           status: expect.any(String),
           vaults: expect.any(Array),
-          delegates: expect.any(Object),
           settings: expect.any(Object),
         });
         expect(gateway).not.toBe(undefined);
@@ -452,8 +408,7 @@ describe('Network', () => {
           target: ownerAddress,
         });
         expect(gatewayTotalStake).toEqual(
-          fullState.gateways[ownerAddress].operatorStake +
-            fullState.gateways[ownerAddress].delegatedStake,
+          fullState.gateways[ownerAddress].operatorStake
         );
       });
 
@@ -485,7 +440,6 @@ describe('Network', () => {
         const fqdn = 'invalid.io';
         const port = 3000;
         const protocol = 'http';
-        const openDelegation = true;
         const note = 'Invalid gateway';
         const writeInteraction = await contract.writeInteraction({
           function: 'joinNetwork',
@@ -494,7 +448,6 @@ describe('Network', () => {
           fqdn,
           port,
           protocol,
-          openDelegation,
           note,
         });
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
