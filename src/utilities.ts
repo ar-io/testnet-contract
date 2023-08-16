@@ -63,7 +63,10 @@ export function calculatePermabuyFee(
       return 0.5; // cut the price in half
     }
     // names between 5 and 24 characters (inclusive)
-    if (name.length >= MINIMUM_ALLOWED_NAME_LENGTH && name.length < RARITY_MULTIPLIER_HALVENING) {
+    if (
+      name.length >= MINIMUM_ALLOWED_NAME_LENGTH &&
+      name.length < RARITY_MULTIPLIER_HALVENING
+    ) {
       return 1; // e.g. it's the cost of a 10 year lease
     }
     // short names
