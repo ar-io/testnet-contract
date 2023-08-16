@@ -21,8 +21,6 @@ export const updateGatewaySettings = async (
     fqdn,
     port,
     protocol,
-    openDelegation,
-    delegateAllowList,
     note,
     status,
   } = input as any;
@@ -78,30 +76,6 @@ export const updateGatewaySettings = async (
     } else {
       gateways[caller].settings.note = note;
     }
-  }
-
-  if (openDelegation !== undefined) {
-    if (typeof openDelegation !== 'boolean') {
-      throw new ContractError('Open Delegation must be true or false.');
-    } else {
-      gateways[caller].settings.openDelegation = openDelegation;
-    }
-  }
-
-  if (delegateAllowList) {
-    if (!Array.isArray(delegateAllowList)) {
-      throw new ContractError(
-        'Delegate allow list must contain an array of valid Arweave addresses.',
-      );
-    }
-    for (let i = 0; i < delegateAllowList.length; i += 1) {
-      if (!isValidArweaveBase64URL(delegateAllowList[i])) {
-        throw new ContractError(
-          `${delegateAllowList[i]} is an invalid Arweave address. Delegate allow list must contain valid arweave addresses.`,
-        );
-      }
-    }
-    gateways[caller].settings.delegateAllowList = delegateAllowList;
   }
 
   if (status) {

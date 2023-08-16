@@ -11,7 +11,6 @@ export const increaseOperatorStake = async (
 ): Promise<ContractResult> => {
   const balances = state.balances;
   const gateways = state.gateways;
-  const settings = state.settings.registry;
 
   // TODO: object type validation
   const { qty } = input as any;
@@ -42,12 +41,6 @@ export const increaseOperatorStake = async (
   if (balances[caller] < qty) {
     throw new ContractError(
       `Caller balance not high enough to stake ${qty} token(s)!`,
-    );
-  }
-
-  if (qty < settings.minDelegatedStakeAmount) {
-    throw new ContractError(
-      `Quantity must be greater than or equal to the minimum delegated stake amount ${settings.minDelegatedStakeAmount}.`,
     );
   }
 

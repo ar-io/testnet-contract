@@ -26,7 +26,7 @@ export const getGatewayTotalStake = async (
     throw new ContractError('This target does not have a registered gateway.');
   }
   const gatewayTotalStake =
-    gateways[target].operatorStake + gateways[target].delegatedStake;
+    gateways[target].operatorStake;
   return {
     result: gatewayTotalStake,
   };
@@ -59,8 +59,8 @@ export const getRankedGatewayRegistry = async (
     .sort((addressA, addressB) => {
       const gatewayA = filteredGateways[addressA];
       const gatewayB = filteredGateways[addressB];
-      const totalStakeA = gatewayA.operatorStake + gatewayA.delegatedStake;
-      const totalStakeB = gatewayB.operatorStake + gatewayB.delegatedStake;
+      const totalStakeA = gatewayA.operatorStake;
+      const totalStakeB = gatewayB.operatorStake;
       return totalStakeB - totalStakeA;
     })
     .forEach((address) => {
