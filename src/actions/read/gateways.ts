@@ -25,8 +25,7 @@ export const getGatewayTotalStake = async (
   if (!(target in gateways)) {
     throw new ContractError('This target does not have a registered gateway.');
   }
-  const gatewayTotalStake =
-    gateways[target].operatorStake;
+  const gatewayTotalStake = gateways[target].operatorStake;
   return {
     result: gatewayTotalStake,
   };

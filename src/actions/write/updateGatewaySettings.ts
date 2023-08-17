@@ -16,14 +16,7 @@ export const updateGatewaySettings = async (
   { caller, input }: PstAction,
 ): Promise<ContractResult> => {
   const gateways = state.gateways;
-  const {
-    label,
-    fqdn,
-    port,
-    protocol,
-    note,
-    status,
-  } = input as any;
+  const { label, fqdn, port, protocol, note, status } = input as any;
 
   // TODO: consistent checks
   if (!(caller in gateways)) {
