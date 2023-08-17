@@ -408,7 +408,7 @@ describe('Network', () => {
           target: ownerAddress,
         });
         expect(gatewayTotalStake).toEqual(
-          fullState.gateways[ownerAddress].operatorStake
+          fullState.gateways[ownerAddress].operatorStake,
         );
       });
 

@@ -21,14 +21,7 @@ export const joinNetwork = async (
   const gateways = state.gateways;
 
   // TODO: object parse validation
-  const {
-    qty,
-    label,
-    fqdn,
-    port,
-    protocol,
-    note,
-  } = input as any;
+  const { qty, label, fqdn, port, protocol, note } = input as any;
 
   if (!Number.isInteger(qty) || qty <= 0) {
     throw new ContractError('Invalid value for "qty". Must be an integer');
