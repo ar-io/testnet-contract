@@ -77,11 +77,6 @@ export const increaseUndernames = async (
     );
   }
 
-  if (state.balances[caller] < undernameCost) {
-    throw new ContractError(
-      `Caller balance is insufficient to increase undername count by ${qty} for ${name}.`,
-    );
-  }
   state.records[name].undernames += qty;
   state.balances[caller] -= undernameCost;
 
