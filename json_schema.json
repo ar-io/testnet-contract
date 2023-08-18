@@ -15,9 +15,24 @@
         "properties": {
           "tier": { "type": "string", "format": "uuid" },
           "contractTxID": { "type": "string", "format": "uuid" },
-          "endTimestamp": { "type": "integer" }
+          "endTimestamp": { "type": "integer" },
+          "startTimestamp": { "type": "integer" }
         },
-        "required": ["tier", "contractTxID", "endTimestamp"],
+        "required": ["tier", "contractTxID", "startTimestamp"],
+        "additionalProperties": false
+      }
+    },
+    "auctions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "tier": { "type": "string", "format": "uuid" },
+          "contractTxID": { "type": "string", "format": "uuid" },
+          "endTimestamp": { "type": "integer" },
+          "startTimestamp": { "type": "integer" }
+        },
+        "required": ["tier", "contractTxID", "startTimestamp"],
         "additionalProperties": false
       }
     },

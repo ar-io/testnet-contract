@@ -197,6 +197,7 @@ export const buyRecord = (
     contractTxId,
     tier,
     type,
+    startTimestamp: +SmartWeave.block.timestamp,
     // only include timestamp on lease
     ...(type === 'lease' ? { endTimestamp } : {}),
   };
