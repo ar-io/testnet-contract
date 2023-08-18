@@ -62,6 +62,7 @@ describe('Records', () => {
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
         contractTxID: expect.any(String),
+        undernames: expect.any(Number),
       };
       expect(record).not.toBe(undefined);
       expect(record).toEqual(expectObjected);
