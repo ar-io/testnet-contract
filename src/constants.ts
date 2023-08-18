@@ -1,7 +1,7 @@
 import { AuctionSettings } from './types';
 
 export const MAX_YEARS = 5; // the maximum amount of years an arns name could be leased for
-export const MAX_NAME_LENGTH = 32; // the maximum length of an arns name
+export const MAX_NAME_LENGTH = 51; // the maximum length of an arns name
 export const MAX_NOTE_LENGTH = 256; // the maximum size of a note field
 export const MAX_GATEWAY_LABEL_LENGTH = 16; // the maximum size of a label field
 export const MAX_PORT_NUMBER = 65535; // the default end port of tcp/udp port numbers
@@ -22,6 +22,7 @@ export const MAX_ALLOWED_EVOLUTION_DELAY = 720 * 30;
 export const MINIMUM_ALLOWED_EVOLUTION_DELAY = 3; // 3 blocks for testing purposes, but should be 720 * 7; // 720 blocks per day times 7 days
 export const MINIMUM_ALLOWED_NAME_LENGTH = 5; // names less than 5 characters are reserved for auction
 export const UNDERNAMES_COUNT = 10;
+export const RARITY_MULTIPLIER_HALVENING = 25;
 export const ALLOWED_ACTIVE_TIERS = [1, 2, 3];
 export const ANNUAL_PERCENTAGE_FEE = 0.1; // 10% of cost of name
 export const UNDERNAME_REGISTRATION_IO_FEE = 1; // 1 IO token per undername
@@ -109,6 +110,25 @@ export const FEE_STRUCTURE = {
   '30': 125,
   '31': 100,
   '32': 50,
+  '33': 50,
+  '34': 50,
+  '35': 50,
+  '36': 50,
+  '37': 50,
+  '38': 50,
+  '39': 50,
+  '40': 50,
+  '41': 50,
+  '42': 50,
+  '43': 50,
+  '44': 50,
+  '45': 50,
+  '46': 50,
+  '47': 50,
+  '48': 50,
+  '49': 50,
+  '50': 50,
+  '51': 50,
 };
 export const AUCTION_SETTINGS_ID =
   '3IkWJ-0HdwuATDhBXuJRm0bWspXOOkRjxTm-5R2xRbw';
