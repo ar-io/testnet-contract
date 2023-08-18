@@ -59,7 +59,11 @@ export const increaseUndernames = async (
 
   // Check if the user has enough tokens to increase the undername count
   if (!walletHasSufficientBalance(balances, caller, undernameCost)) {
-    throw new ContractError(`${INSUFFICIENT_FUNDS_MESSAGE}: caller has ${balances[caller].toLocaleString()} but needs to have ${undernameCost.toLocaleString()} to pay for this undername increase of ${qty} for ${name}.`);
+    throw new ContractError(
+      `${INSUFFICIENT_FUNDS_MESSAGE}: caller has ${balances[
+        caller
+      ].toLocaleString()} but needs to have ${undernameCost.toLocaleString()} to pay for this undername increase of ${qty} for ${name}.`,
+    );
   }
 
   // check if record exists
