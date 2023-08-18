@@ -60,6 +60,7 @@ describe('Records', () => {
         tier: expectedTierObj,
         name: 'name1',
         endTimestamp: expect.any(Number),
+        startTimestamp: expect.any(Number),
         contractTxID: expect.any(String),
       };
       expect(record).not.toBe(undefined);
@@ -115,6 +116,7 @@ describe('Records', () => {
         contractTxId: ANT_CONTRACT_IDS[0],
         tier: tiers.current[0],
         endTimestamp: expect.any(Number),
+        startTimestamp: expect.any(Number),
         type: 'lease',
       });
       expect(balances[nonContractOwnerAddress]).toEqual(
@@ -161,6 +163,7 @@ describe('Records', () => {
         contractTxId: ANT_CONTRACT_IDS[0],
         tier: tiers.current[0],
         endTimestamp: expect.any(Number),
+        startTimestamp: expect.any(Number),
         type: 'lease',
       });
       expect(balances[nonContractOwnerAddress]).toEqual(
@@ -737,6 +740,7 @@ describe('Records', () => {
         contractTxId: ANT_CONTRACT_IDS[0],
         tier: tiers.current[0],
         endTimestamp: expect.any(Number),
+        startTimestamp: expect.any(Number),
         type: 'lease',
       });
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(

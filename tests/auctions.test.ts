@@ -289,6 +289,7 @@ describe('Auctions', () => {
                 expect(records[auctionBid.name]).toEqual({
                   contractTxId: ANT_CONTRACT_IDS[1],
                   endTimestamp: expect.any(Number),
+                  startTimestamp: expect.any(Number),
                   tier: tiers.current[0],
                   type: 'lease',
                 });
@@ -616,6 +617,7 @@ describe('Auctions', () => {
             tier: tiers.current[0],
             type: 'lease',
             endTimestamp: expect.any(Number),
+            startTimestamp: expect.any(Number),
           });
           const floorToBidDifference = winningBidQty - auctionObj.floorPrice;
           expect(balances[nonContractOwnerAddress]).toEqual(
