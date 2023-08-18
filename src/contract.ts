@@ -25,6 +25,7 @@ import { transferTokens } from './actions/write/transferTokens';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
 import { updateState } from './actions/write/updateState';
 import { upgradeTier } from './actions/write/upgradeTier';
+import { increaseUndernames } from './actions/write/increaseUndernames';
 import {
   ContractResult,
   IOContractFunctions,
@@ -47,6 +48,8 @@ export async function handle(
       return buyRecord(state, action);
     case 'extendRecord':
       return extendRecord(state, action);
+    case 'increaseUndernames':
+      return increaseUndernames(state, action);
     case 'evolve':
       return evolve(state, action);
     case 'balance':

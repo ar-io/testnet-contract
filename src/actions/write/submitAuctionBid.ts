@@ -9,6 +9,7 @@ import {
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
+  UNDERNAMES_COUNT,
 } from '../../constants';
 import {
   AuctionSettings,
@@ -275,6 +276,7 @@ export const submitAuctionBid = (
         type: existingAuction.type,
         startTimestamp: +SmartWeave.block.timestamp,
         // only include timestamp on lease
+        undernames: UNDERNAMES_COUNT,
         // something to think about - what if a ticking of state never comes? what do we set endTimestamp to?
         ...(existingAuction.type === 'lease' ? { endTimestamp } : {}),
       };
@@ -332,6 +334,7 @@ export const submitAuctionBid = (
       tier: existingAuction.tier,
       type: existingAuction.type,
       startTimestamp: +SmartWeave.block.timestamp, // overwrite initial start timestamp
+      undernames: UNDERNAMES_COUNT,
       // only include timestamp on lease, endTimestamp is easy in this situation since it was a second interaction that won it
       ...(existingAuction.type === 'lease' ? { endTimestamp } : {}),
     };

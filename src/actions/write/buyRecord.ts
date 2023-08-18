@@ -11,6 +11,7 @@ import {
   SECONDS_IN_GRACE_PERIOD,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
   TIERS,
+  UNDERNAMES_COUNT,
 } from '../../constants';
 import { ContractResult, IOState, PstAction, ServiceTier } from '../../types';
 import {
@@ -198,6 +199,7 @@ export const buyRecord = (
     tier,
     type,
     startTimestamp: +SmartWeave.block.timestamp,
+    undernames: UNDERNAMES_COUNT,
     // only include timestamp on lease
     ...(type === 'lease' ? { endTimestamp } : {}),
   };
