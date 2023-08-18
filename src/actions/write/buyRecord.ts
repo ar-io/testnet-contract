@@ -1,5 +1,6 @@
 import {
   ARNS_NAME_RESERVED_MESSAGE,
+  DEFAULT_UNDERNAME_COUNT,
   INVALID_INPUT_MESSAGE,
   INVALID_SHORT_NAME,
   INVALID_YEARS_MESSAGE,
@@ -11,7 +12,6 @@ import {
   SECONDS_IN_GRACE_PERIOD,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
   TIERS,
-  UNDERNAMES_COUNT,
 } from '../../constants';
 import { ContractResult, IOState, PstAction, ServiceTier } from '../../types';
 import {
@@ -166,8 +166,19 @@ export const buyRecord = (
   // calculate the total fee (initial registration + annual)
   const totalRegistrationFee =
     type === 'lease'
-      ? calculateTotalRegistrationFee(name, fees, purchasedTier, years)
-      : calculatePermabuyFee(name, fees, purchasedTier);
+      ? calculateTotalRegistrationFee(
+          name,
+          fees,
+          purchasedTier,
+          years,
+          +SmartWeave.block.timestamp,
+        )
+      : calculatePermabuyFee(
+          name,
+          fees,
+          purchasedTier,
+          +SmartWeave.block.timestamp,
+        );
 
   if (balances[caller] < totalRegistrationFee) {
     throw new ContractError(
@@ -199,7 +210,7 @@ export const buyRecord = (
     tier,
     type,
     startTimestamp: +SmartWeave.block.timestamp,
-    undernames: UNDERNAMES_COUNT,
+    undernames: DEFAULT_UNDERNAME_COUNT,
     // only include timestamp on lease
     ...(type === 'lease' ? { endTimestamp } : {}),
   };
