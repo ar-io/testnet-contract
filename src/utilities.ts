@@ -1,7 +1,10 @@
 import {
   ANNUAL_PERCENTAGE_FEE,
   MINIMUM_ALLOWED_NAME_LENGTH,
+  PERMABUY_LEASE_FEE_LENGTH,
   RARITY_MULTIPLIER_HALVENING,
+  SECONDS_IN_A_YEAR,
+  UNDERNAME_REGISTRATION_IO_FEE,
 } from './constants';
 import { Fees, ServiceTier } from './types';
 
@@ -47,7 +50,7 @@ export function calculatePermabuyFee(
   fees: Fees,
   tier: ServiceTier,
 ) {
-  const PERMABUY_LEASE_FEE_LENGTH = 10;
+  
   // calculate the annual fee for the name for default of 10 years
   const permabuyLeasePrice = calculateAnnualRenewalFee(
     name,
@@ -123,4 +126,21 @@ export function walletHasSufficientBalance(
   qty: number,
 ): boolean {
   return !!balances[wallet] && balances[wallet] >= qty;
+}
+
+export function calculateProRatedUndernameCost(
+  qty: number,
+  currentTimestamp: number,
+  type: 'lease' | 'permabuy',
+  endTimestamp?: number,
+) {
+  if (type === 'lease' && endTimestamp) {
+    const costPerSecond = UNDERNAME_REGISTRATION_IO_FEE / SECONDS_IN_A_YEAR;
+    const timeDifferenceInSeconds = endTimestamp - currentTimestamp;
+    const proratedLeaseCost = costPerSecond * timeDifferenceInSeconds;
+    return qty * proratedLeaseCost;
+  } else if (type === 'permabuy') {
+    return qty * PERMABUY_LEASE_FEE_LENGTH;
+  }
+
 }

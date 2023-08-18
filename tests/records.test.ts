@@ -117,6 +117,7 @@ describe('Records', () => {
         tier: tiers.current[0],
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
+        undernames: expect.any(Number),
         type: 'lease',
       });
       expect(balances[nonContractOwnerAddress]).toEqual(
@@ -164,6 +165,7 @@ describe('Records', () => {
         tier: tiers.current[0],
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
+        undernames: expect.any(Number),
         type: 'lease',
       });
       expect(balances[nonContractOwnerAddress]).toEqual(
@@ -211,6 +213,7 @@ describe('Records', () => {
         tier: tiers.current[0],
         type: 'permabuy',
         startTimestamp: expect.any(Number),
+        undernames: expect.any(Number),
       });
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevBalance - expectedPurchasePrice,
@@ -742,6 +745,7 @@ describe('Records', () => {
         tier: tiers.current[0],
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
+        undernames: expect.any(Number),
         type: 'lease',
       });
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(
