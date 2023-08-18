@@ -531,6 +531,7 @@ describe('Auctions', () => {
             contractTxId: ANT_CONTRACT_IDS[1],
             tier: tiers.current[0],
             type: 'permabuy',
+            startTimestamp: expect.any(Number),
           });
           expect(auctions[auctionBid.name]).toBeUndefined();
           expect(balances[winnerAddress]).toEqual(

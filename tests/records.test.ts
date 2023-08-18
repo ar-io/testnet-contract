@@ -210,6 +210,7 @@ describe('Records', () => {
         contractTxId: ANT_CONTRACT_IDS[0],
         tier: tiers.current[0],
         type: 'permabuy',
+        startTimestamp: expect.any(Number),
       });
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevBalance - expectedPurchasePrice,
