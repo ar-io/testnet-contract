@@ -17,6 +17,7 @@ import { finalizeLeave } from './actions/write/finalizeLeave';
 import { finalizeOperatorStakeDecrease } from './actions/write/finalizeOperatorStakeDecrease';
 import { foundationAction } from './actions/write/foundationAction';
 import { increaseOperatorStake } from './actions/write/increaseOperatorStake';
+import { increaseUndernames } from './actions/write/increaseUndernames';
 import { initiateLeave } from './actions/write/initiateLeave';
 import { initiateOperatorStakeDecrease } from './actions/write/initiateOperatorStakeDecrease';
 import { joinNetwork } from './actions/write/joinNetwork';
@@ -25,7 +26,6 @@ import { transferTokens } from './actions/write/transferTokens';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
 import { updateState } from './actions/write/updateState';
 import { upgradeTier } from './actions/write/upgradeTier';
-import { increaseUndernames } from './actions/write/increaseUndernames';
 import {
   ContractResult,
   IOContractFunctions,

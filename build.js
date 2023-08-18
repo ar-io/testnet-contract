@@ -4,7 +4,11 @@ const Ajv = require('ajv');
 const standaloneCode = require('ajv/dist/standalone').default;
 const { build } = require('esbuild');
 const replace = require('replace-in-file');
-const { auctionBidSchema, buyRecordSchema, increaseUndernamesSchema } = require('./schemas');
+const {
+  auctionBidSchema,
+  buyRecordSchema,
+  increaseUndernamesSchema,
+} = require('./schemas');
 
 // build our validation source code
 const ajv = new Ajv({

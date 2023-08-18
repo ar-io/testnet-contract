@@ -124,7 +124,9 @@ describe('undernames', () => {
       });
 
       describe('with valid input', () => {
-        it.each([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 1000, 10000, 100000, 1000000])(
+        it.each([
+          1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 1000, 10000, 100000, 1000000,
+        ])(
           'should successfully increase undernames with valid quantity provided: : %s',
           async (goodQty) => {
             const undernameInput = {
@@ -144,42 +146,41 @@ describe('undernames', () => {
             expect(writeInteraction?.originalTxId).not.toBe(undefined);
             const { cachedValue } = await contract.readState();
             if (cachedValue.errorMessages) {
-                console.log(cachedValue.errorMessages)
+              console.log(cachedValue.errorMessages);
             }
             expect(Object.keys(cachedValue.errorMessages)).not.toContain(
               writeInteraction!.originalTxId,
             );
 
-            
             // Add any additional expectations for successful execution here
           },
         );
 
-        it.each(["name1", "name2", "name3"])(
-            'should successfully increase undernames with valid name provided: : %s',
-            async (validName) => {
-              const undernameInput = {
-                name: validName,
-                qty: 1,
-              };
-              const writeInteraction = await contract.writeInteraction(
-                {
-                  function: 'increaseUndernames',
-                  ...undernameInput,
-                },
-                {
-                  disableBundling: true,
-                },
-              );
-  
-              expect(writeInteraction?.originalTxId).not.toBe(undefined);
-              const { cachedValue } = await contract.readState();
-              expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-                writeInteraction!.originalTxId,
-              );
-              // Add any additional expectations for successful execution here
-            },
-          );
+        it.each(['name1', 'name2', 'name3'])(
+          'should successfully increase undernames with valid name provided: : %s',
+          async (validName) => {
+            const undernameInput = {
+              name: validName,
+              qty: 1,
+            };
+            const writeInteraction = await contract.writeInteraction(
+              {
+                function: 'increaseUndernames',
+                ...undernameInput,
+              },
+              {
+                disableBundling: true,
+              },
+            );
+
+            expect(writeInteraction?.originalTxId).not.toBe(undefined);
+            const { cachedValue } = await contract.readState();
+            expect(Object.keys(cachedValue.errorMessages)).not.toContain(
+              writeInteraction!.originalTxId,
+            );
+            // Add any additional expectations for successful execution here
+          },
+        );
       });
     });
   });

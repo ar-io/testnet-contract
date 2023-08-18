@@ -621,7 +621,7 @@ describe('Auctions', () => {
             type: 'lease',
             endTimestamp: expect.any(Number),
             startTimestamp: expect.any(Number),
-            undernames:expect.any(Number)
+            undernames: expect.any(Number),
           });
           const floorToBidDifference = winningBidQty - auctionObj.floorPrice;
           expect(balances[nonContractOwnerAddress]).toEqual(

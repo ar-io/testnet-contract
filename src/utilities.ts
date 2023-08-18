@@ -50,7 +50,6 @@ export function calculatePermabuyFee(
   fees: Fees,
   tier: ServiceTier,
 ) {
-  
   // calculate the annual fee for the name for default of 10 years
   const permabuyLeasePrice = calculateAnnualRenewalFee(
     name,
@@ -142,5 +141,4 @@ export function calculateProRatedUndernameCost(
   } else if (type === 'permabuy') {
     return qty * PERMABUY_LEASE_FEE_LENGTH;
   }
-
 }
