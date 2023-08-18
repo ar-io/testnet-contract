@@ -78,7 +78,7 @@ function createRecords(tiers: string[], count = 3) {
       tier: tiers[0],
       contractTxID: ANT_CONTRACT_IDS[0],
       endTimestamp: new Date('01/01/2025').getTime() / 1000,
-      startTimestamp: Date.now()
+      startTimestamp: Date.now(),
     };
     records[name] = obj;
   }
