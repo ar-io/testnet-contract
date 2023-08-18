@@ -13,6 +13,7 @@ import {
   NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
+  SECONDS_IN_A_YEAR,
   TIERS,
   WALLET_FUND_AMOUNT,
 } from './constants';
@@ -78,7 +79,7 @@ function createRecords(tiers: string[], count = 3) {
       tier: tiers[0],
       contractTxID: ANT_CONTRACT_IDS[0],
       endTimestamp: new Date('01/01/2025').getTime() / 1000,
-      startTimestamp: Date.now(),
+      startTimestamp: (Date.now() / 1000) - SECONDS_IN_A_YEAR,
     };
     records[name] = obj;
   }

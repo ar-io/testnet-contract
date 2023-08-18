@@ -133,12 +133,9 @@ export function calculateProRatedUndernameCost(
   type: 'lease' | 'permabuy',
   endTimestamp?: number,
 ) {
-  if (type === 'lease' && endTimestamp) {
-    const costPerSecond = UNDERNAME_REGISTRATION_IO_FEE / SECONDS_IN_A_YEAR;
-    const timeDifferenceInSeconds = endTimestamp - currentTimestamp;
-    const proratedLeaseCost = costPerSecond * timeDifferenceInSeconds;
-    return qty * proratedLeaseCost;
-  } else if (type === 'permabuy') {
-    return qty * PERMABUY_LEASE_FEE_LENGTH;
-  }
+ const fullCost = type === 'lease' ? UNDERNAME_REGISTRATION_IO_FEE * qty : PERMABUY_LEASE_FEE_LENGTH * qty;
+ const proRatedCost = type === 'lease' ? (fullCost / SECONDS_IN_A_YEAR) * (endTimestamp - currentTimestamp) : fullCost;
+ return proRatedCost;
+ 
 }
+

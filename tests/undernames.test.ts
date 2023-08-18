@@ -145,9 +145,7 @@ describe('undernames', () => {
 
             expect(writeInteraction?.originalTxId).not.toBe(undefined);
             const { cachedValue } = await contract.readState();
-            if (cachedValue.errorMessages) {
-              console.log(cachedValue.errorMessages);
-            }
+
             expect(Object.keys(cachedValue.errorMessages)).not.toContain(
               writeInteraction!.originalTxId,
             );
