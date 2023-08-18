@@ -1,5 +1,6 @@
 import {
   ANNUAL_PERCENTAGE_FEE,
+  DEFAULT_UNDERNAME_COUNT,
   MINIMUM_ALLOWED_NAME_LENGTH,
   PERMABUY_LEASE_FEE_LENGTH,
   RARITY_MULTIPLIER_HALVENING,
@@ -15,13 +16,22 @@ export function calculateTotalRegistrationFee(
   fees: Fees,
   tier: ServiceTier,
   years: number,
+  currentTimestamp: number, // block timestamp
 ) {
   // Initial cost to register a name
   const initialNamePurchaseFee = fees[name.length.toString()];
 
   // total cost to purchase name and tier
   return (
-    initialNamePurchaseFee + calculateAnnualRenewalFee(name, fees, tier, years)
+    initialNamePurchaseFee +
+    calculateAnnualRenewalFee(
+      name,
+      fees,
+      tier,
+      years,
+      DEFAULT_UNDERNAME_COUNT,
+      currentTimestamp + SECONDS_IN_A_YEAR * years,
+    )
   );
 }
 
@@ -30,6 +40,8 @@ export function calculateAnnualRenewalFee(
   fees: Fees,
   tier: ServiceTier,
   years: number,
+  undernames: number,
+  endTimestamp: number,
 ) {
   // Determine annual registration price of name
   const initialNamePurchaseFee = fees[name.length.toString()];
@@ -42,13 +54,35 @@ export function calculateAnnualRenewalFee(
   const tierAnnualFee = tier.fee;
 
   // Total annual costs (registration fee + tier fee)
-  return (nameAnnualRegistrationFee + tierAnnualFee) * years;
+  const totalAnnualRenewalCost =
+    (nameAnnualRegistrationFee + tierAnnualFee) * years;
+
+  const extensionEndTimestamp = endTimestamp + years * SECONDS_IN_A_YEAR;
+  // Do not charge for undernames if there are less or equal than the default
+  const undernameCount =
+    undernames > DEFAULT_UNDERNAME_COUNT
+      ? undernames - DEFAULT_UNDERNAME_COUNT
+      : undernames;
+
+  const totalCost =
+    undernameCount === DEFAULT_UNDERNAME_COUNT
+      ? totalAnnualRenewalCost
+      : totalAnnualRenewalCost +
+        calculateProRatedUndernameCost(
+          undernameCount,
+          endTimestamp,
+          'lease',
+          extensionEndTimestamp,
+        );
+
+  return totalCost;
 }
 
 export function calculatePermabuyFee(
   name: string,
   fees: Fees,
   tier: ServiceTier,
+  currentTimestamp: number,
 ) {
   // calculate the annual fee for the name for default of 10 years
   const permabuyLeasePrice = calculateAnnualRenewalFee(
@@ -56,6 +90,8 @@ export function calculatePermabuyFee(
     fees,
     tier,
     PERMABUY_LEASE_FEE_LENGTH,
+    DEFAULT_UNDERNAME_COUNT,
+    currentTimestamp + SECONDS_IN_A_YEAR * PERMABUY_LEASE_FEE_LENGTH,
   );
   // rarity multiplier based on the length of the name (e.g 1.3);
   // e.g. name is 7 characters - this would be 0

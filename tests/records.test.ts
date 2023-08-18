@@ -99,11 +99,13 @@ describe('Records', () => {
       const purchasedTier = prevState.tiers.history.find(
         (t) => t.id === purchasedTierId,
       )!;
+      const currentBlock = await arweave.blocks.getCurrent();
       const expectedPurchasePrice = calculateTotalRegistrationFee(
         namePurchase.name,
         prevState.fees,
         purchasedTier,
         namePurchase.years,
+        currentBlock.timestamp,
       );
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -147,11 +149,13 @@ describe('Records', () => {
       const purchasedTier = prevState.tiers.history.find(
         (t) => t.id === purchasedTierId,
       )!;
+      const currentBlock = await arweave.blocks.getCurrent();
       const expectedPurchasePrice = calculateTotalRegistrationFee(
         namePurchase.name!,
         prevState.fees,
         purchasedTier,
         1,
+        currentBlock.timestamp,
       );
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -196,10 +200,12 @@ describe('Records', () => {
       const purchasedTier = prevState.tiers.history.find(
         (t) => t.id === purchasedTierId,
       )!;
+      const currentBlock = await arweave.blocks.getCurrent();
       const expectedPurchasePrice = calculatePermabuyFee(
         namePurchase.name,
         prevState.fees,
         purchasedTier,
+        currentBlock.timestamp,
       );
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
