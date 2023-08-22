@@ -169,7 +169,7 @@ describe('undernames', () => {
             );
             expect(
               cachedValue.errorMessages[writeInteraction!.originalTxId],
-            ).toEqual(expect.stringContaining(MAX_UNDERNAME_MESSAGE));
+            ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
             expect(cachedValue.state.records[arnsName].undernames).toEqual(
               initialUndernameCount,
             );

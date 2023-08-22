@@ -5,6 +5,7 @@ import { arweave, warp } from './setup.jest';
 import {
   ANT_CONTRACT_IDS,
   ARNS_NAME_RESERVED_MESSAGE,
+  DEFAULT_UNDERNAME_COUNT,
   INVALID_INPUT_MESSAGE,
   INVALID_SHORT_NAME,
   INVALID_TIER_MESSAGE,
@@ -62,7 +63,7 @@ describe('Records', () => {
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
         contractTxID: expect.any(String),
-        undernames: expect.any(Number),
+        undernames: DEFAULT_UNDERNAME_COUNT,
       };
       expect(record).not.toBe(undefined);
       expect(record).toEqual(expectObjected);
@@ -120,7 +121,7 @@ describe('Records', () => {
         tier: tiers.current[0],
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
-        undernames: expect.any(Number),
+        undernames: DEFAULT_UNDERNAME_COUNT,
         type: 'lease',
       });
       expect(balances[nonContractOwnerAddress]).toEqual(
@@ -170,7 +171,7 @@ describe('Records', () => {
         tier: tiers.current[0],
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
-        undernames: expect.any(Number),
+        undernames: DEFAULT_UNDERNAME_COUNT,
         type: 'lease',
       });
       expect(balances[nonContractOwnerAddress]).toEqual(
@@ -220,7 +221,7 @@ describe('Records', () => {
         tier: tiers.current[0],
         type: 'permabuy',
         startTimestamp: expect.any(Number),
-        undernames: expect.any(Number),
+        undernames: DEFAULT_UNDERNAME_COUNT,
       });
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevBalance - expectedPurchasePrice,
@@ -752,7 +753,7 @@ describe('Records', () => {
         tier: tiers.current[0],
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
-        undernames: expect.any(Number),
+        undernames: DEFAULT_UNDERNAME_COUNT,
         type: 'lease',
       });
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(
