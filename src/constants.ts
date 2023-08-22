@@ -1,7 +1,8 @@
 import { AuctionSettings } from './types';
 
 export const MAX_YEARS = 5; // the maximum amount of years an arns name could be leased for
-export const MAX_NAME_LENGTH = 51; // the maximum length of an arns name
+export const NAMESPACE_LENGTH = 62; // browser domains are max 63 characters between periods, but we need to leave 1 character for the underscore seperator between the undernames and arns name
+export const MAX_NAME_LENGTH = 51; // the maximum length of an arns name - gateway sandbox domains are 52 characters, so to prevent overlap we stop 1 character short, where the 52nd character would be an underscore (which sandbox domains do not use) to prevent overlap
 export const MAX_NOTE_LENGTH = 256; // the maximum size of a note field
 export const MAX_GATEWAY_LABEL_LENGTH = 16; // the maximum size of a label field
 export const MAX_PORT_NUMBER = 65535; // the default end port of tcp/udp port numbers

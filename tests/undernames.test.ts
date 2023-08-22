@@ -1,8 +1,10 @@
-import { Contract, JWKInterface, PstState } from 'warp-contracts';
+import { Contract, JWKInterface } from 'warp-contracts';
 
 import {
   ARNS_NAME_RESERVED_MESSAGE,
   AUCTION_SETTINGS,
+  DEFAULT_UNDERNAME_COUNT,
+  INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
   MINIMUM_ALLOWED_NAME_LENGTH,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
@@ -14,6 +16,7 @@ import { arweave, warp } from './setup.jest';
 import { ANT_CONTRACT_IDS } from './utils/constants';
 import {
   calculateMinimumAuctionBid,
+  calculateUndernamePermutations,
   getCurrentBlock,
   getLocalArNSContractId,
   getLocalWallet,
@@ -21,7 +24,7 @@ import {
 } from './utils/helper';
 
 describe('undernames', () => {
-  let contract: Contract<PstState>;
+  let contract: Contract<IOState>;
   let srcContractId: string;
 
   beforeAll(async () => {
@@ -34,7 +37,9 @@ describe('undernames', () => {
 
     beforeAll(async () => {
       nonContractOwner = getLocalWallet(1);
-      contract = warp.pst(srcContractId).connect(nonContractOwner);
+      contract = warp
+        .contract<IOState>(srcContractId)
+        .connect(nonContractOwner);
       nonContractOwnerAddress = await arweave.wallets.getAddress(
         nonContractOwner,
       );
@@ -59,6 +64,10 @@ describe('undernames', () => {
               name: badName,
               qty: 1,
             };
+            const { cachedValue: initialCachedValue } =
+              await contract.readState();
+            const initialUndernameCount =
+              initialCachedValue.state.records?.[badName as string]?.undernames;
             const writeInteraction = await contract.writeInteraction(
               {
                 function: 'increaseUndernames',
@@ -77,9 +86,12 @@ describe('undernames', () => {
             expect(
               cachedValue.errorMessages[writeInteraction!.originalTxId],
             ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
+            expect(
+              cachedValue.state.records[badName as string]?.undernames,
+            ).toEqual(initialUndernameCount);
           },
         );
-
+        const arnsName = 'name1';
         it.each([
           '',
           '*&*##$%#',
@@ -98,9 +110,13 @@ describe('undernames', () => {
           'should throw an error when an invalid quantity is provided: %s',
           async (badQty) => {
             const undernameInput = {
-              name: 'apple',
+              name: arnsName,
               qty: badQty,
             };
+            const { cachedValue: initialCachedValue } =
+              await contract.readState();
+            const initialUndernameCount =
+              initialCachedValue.state.records[arnsName].undernames;
             const writeInteraction = await contract.writeInteraction(
               {
                 function: 'increaseUndernames',
@@ -119,20 +135,69 @@ describe('undernames', () => {
             expect(
               cachedValue.errorMessages[writeInteraction!.originalTxId],
             ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
+            expect(cachedValue.state.records[arnsName].undernames).toEqual(
+              initialUndernameCount,
+            );
+          },
+        );
+
+        it.each([
+          calculateUndernamePermutations(arnsName) + 1,
+          calculateUndernamePermutations(arnsName) +
+            DEFAULT_UNDERNAME_COUNT +
+            1,
+          calculateUndernamePermutations(arnsName) + 100,
+        ])(
+          'should throw an error when an invalid quantity is provided: %s',
+          async (badQty) => {
+            const undernameInput = {
+              name: arnsName,
+              qty: badQty,
+            };
+            const { cachedValue: initialCachedValue } =
+              await contract.readState();
+            const initialUndernameCount =
+              initialCachedValue.state.records[arnsName].undernames;
+            const writeInteraction = await contract.writeInteraction(
+              {
+                function: 'increaseUndernames',
+                ...undernameInput,
+              },
+              {
+                disableBundling: true,
+              },
+            );
+
+            expect(writeInteraction?.originalTxId).not.toBe(undefined);
+            const { cachedValue } = await contract.readState();
+            expect(Object.keys(cachedValue.errorMessages)).toContain(
+              writeInteraction!.originalTxId,
+            );
+            expect(
+              cachedValue.errorMessages[writeInteraction!.originalTxId],
+            ).toEqual(expect.stringContaining(INSUFFICIENT_FUNDS_MESSAGE));
+            expect(cachedValue.state.records[arnsName].undernames).toEqual(
+              initialUndernameCount,
+            );
           },
         );
       });
 
       describe('with valid input', () => {
+        const arnsName = 'name1';
         it.each([
           1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 1000, 10000, 100000, 1000000,
         ])(
           'should successfully increase undernames with valid quantity provided: : %s',
           async (goodQty) => {
             const undernameInput = {
-              name: 'name1',
+              name: arnsName,
               qty: goodQty,
             };
+            const { cachedValue: initialCachedValue } =
+              await contract.readState();
+            const initialUndernameCount =
+              initialCachedValue.state.records[arnsName].undernames;
             const writeInteraction = await contract.writeInteraction(
               {
                 function: 'increaseUndernames',
@@ -148,6 +213,9 @@ describe('undernames', () => {
 
             expect(Object.keys(cachedValue.errorMessages)).not.toContain(
               writeInteraction!.originalTxId,
+            );
+            expect(cachedValue.state.records[arnsName].undernames).toEqual(
+              initialUndernameCount + goodQty,
             );
 
             // Add any additional expectations for successful execution here
@@ -161,6 +229,10 @@ describe('undernames', () => {
               name: validName,
               qty: 1,
             };
+            const { cachedValue: initialCachedValue } =
+              await contract.readState();
+            const initialUndernameCount =
+              initialCachedValue.state.records[validName].undernames;
             const writeInteraction = await contract.writeInteraction(
               {
                 function: 'increaseUndernames',
@@ -175,6 +247,9 @@ describe('undernames', () => {
             const { cachedValue } = await contract.readState();
             expect(Object.keys(cachedValue.errorMessages)).not.toContain(
               writeInteraction!.originalTxId,
+            );
+            expect(cachedValue.state.records[validName].undernames).toEqual(
+              initialUndernameCount + 1,
             );
             // Add any additional expectations for successful execution here
           },
