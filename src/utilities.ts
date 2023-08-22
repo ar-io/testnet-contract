@@ -1,7 +1,12 @@
 import {
   ANNUAL_PERCENTAGE_FEE,
+  DEFAULT_UNDERNAME_COUNT,
   MINIMUM_ALLOWED_NAME_LENGTH,
+  NAMESPACE_LENGTH,
+  PERMABUY_LEASE_FEE_LENGTH,
   RARITY_MULTIPLIER_HALVENING,
+  SECONDS_IN_A_YEAR,
+  UNDERNAME_REGISTRATION_IO_FEE,
 } from './constants';
 import { Fees, ServiceTier } from './types';
 
@@ -12,13 +17,22 @@ export function calculateTotalRegistrationFee(
   fees: Fees,
   tier: ServiceTier,
   years: number,
+  currentTimestamp: number, // block timestamp
 ) {
   // Initial cost to register a name
   const initialNamePurchaseFee = fees[name.length.toString()];
 
   // total cost to purchase name and tier
   return (
-    initialNamePurchaseFee + calculateAnnualRenewalFee(name, fees, tier, years)
+    initialNamePurchaseFee +
+    calculateAnnualRenewalFee(
+      name,
+      fees,
+      tier,
+      years,
+      DEFAULT_UNDERNAME_COUNT,
+      currentTimestamp + SECONDS_IN_A_YEAR * years,
+    )
   );
 }
 
@@ -27,6 +41,8 @@ export function calculateAnnualRenewalFee(
   fees: Fees,
   tier: ServiceTier,
   years: number,
+  undernames: number,
+  endTimestamp: number,
 ) {
   // Determine annual registration price of name
   const initialNamePurchaseFee = fees[name.length.toString()];
@@ -39,21 +55,44 @@ export function calculateAnnualRenewalFee(
   const tierAnnualFee = tier.fee;
 
   // Total annual costs (registration fee + tier fee)
-  return (nameAnnualRegistrationFee + tierAnnualFee) * years;
+  const totalAnnualRenewalCost =
+    (nameAnnualRegistrationFee + tierAnnualFee) * years;
+
+  const extensionEndTimestamp = endTimestamp + years * SECONDS_IN_A_YEAR;
+  // Do not charge for undernames if there are less or equal than the default
+  const undernameCount =
+    undernames > DEFAULT_UNDERNAME_COUNT
+      ? undernames - DEFAULT_UNDERNAME_COUNT
+      : undernames;
+
+  const totalCost =
+    undernameCount === DEFAULT_UNDERNAME_COUNT
+      ? totalAnnualRenewalCost
+      : totalAnnualRenewalCost +
+        calculateProRatedUndernameCost(
+          undernameCount,
+          endTimestamp,
+          'lease',
+          extensionEndTimestamp,
+        );
+
+  return totalCost;
 }
 
 export function calculatePermabuyFee(
   name: string,
   fees: Fees,
   tier: ServiceTier,
+  currentTimestamp: number,
 ) {
-  const PERMABUY_LEASE_FEE_LENGTH = 10;
   // calculate the annual fee for the name for default of 10 years
   const permabuyLeasePrice = calculateAnnualRenewalFee(
     name,
     fees,
     tier,
     PERMABUY_LEASE_FEE_LENGTH,
+    DEFAULT_UNDERNAME_COUNT,
+    currentTimestamp + SECONDS_IN_A_YEAR * PERMABUY_LEASE_FEE_LENGTH,
   );
   // rarity multiplier based on the length of the name (e.g 1.3);
   // e.g. name is 7 characters - this would be 0
@@ -123,4 +162,44 @@ export function walletHasSufficientBalance(
   qty: number,
 ): boolean {
   return !!balances[wallet] && balances[wallet] >= qty;
+}
+
+// TODO: update after dynamic pricing?
+export function calculateProRatedUndernameCost(
+  qty: number,
+  currentTimestamp: number,
+  type: 'lease' | 'permabuy',
+  endTimestamp?: number,
+) {
+  const fullCost =
+    type === 'lease'
+      ? UNDERNAME_REGISTRATION_IO_FEE * qty
+      : PERMABUY_LEASE_FEE_LENGTH * qty;
+  const proRatedCost =
+    type === 'lease'
+      ? (fullCost / SECONDS_IN_A_YEAR) * (endTimestamp - currentTimestamp)
+      : fullCost;
+  return proRatedCost;
+}
+
+export function calculateUndernamePermutations(domain: string): number {
+  const numberOfPossibleCharacters = 38; // 26 letters + 10 numbers + - (dash) + _ (underscore)
+  const numberOfAllowedStartingAndEndingCharacters = 36; // 26 letters + 10 numbers
+  const nameSpaceLength = NAMESPACE_LENGTH - domain.length; // should be between 11 and 61
+  let numberOfPossibleUndernames = 0;
+
+  for (
+    let undernameLength = 1;
+    undernameLength <= nameSpaceLength;
+    undernameLength++
+  ) {
+    if (undernameLength === 1 || undernameLength === nameSpaceLength) {
+      numberOfPossibleUndernames +=
+        numberOfAllowedStartingAndEndingCharacters ** undernameLength;
+    } else {
+      numberOfPossibleUndernames +=
+        numberOfPossibleCharacters ** undernameLength;
+    }
+  }
+  return numberOfPossibleUndernames;
 }

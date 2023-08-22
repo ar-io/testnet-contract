@@ -7,7 +7,10 @@ import {
   TIERS,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
-import { calculateAnnualRenewalFee } from '../../utilities';
+import {
+  calculateAnnualRenewalFee,
+  walletHasSufficientBalance,
+} from '../../utilities';
 
 declare const ContractError;
 declare const SmartWeave: any;
@@ -78,9 +81,11 @@ export const extendRecord = async (
     fees,
     purchasedTier,
     years,
+    state.records[name].undernames,
+    state.records[name]?.endTimestamp,
   );
 
-  if (balances[caller] < totalExtensionAnnualFee) {
+  if (!walletHasSufficientBalance(balances, caller, totalExtensionAnnualFee)) {
     throw new ContractError(
       `Caller balance not high enough to extend this name lease for ${totalExtensionAnnualFee} token(s) for ${years}!`,
     );

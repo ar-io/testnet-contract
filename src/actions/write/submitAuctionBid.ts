@@ -1,5 +1,6 @@
 import {
   ARNS_NAME_RESERVED_MESSAGE,
+  DEFAULT_UNDERNAME_COUNT,
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
   INVALID_SHORT_NAME,
@@ -189,8 +190,19 @@ export const submitAuctionBid = (
   const serviceTier = tierHistory.find((t: ServiceTier) => t.id === tier)!;
   const registrationFee =
     type === 'lease'
-      ? calculateTotalRegistrationFee(name, fees, serviceTier, years!)
-      : calculatePermabuyFee(name, fees, serviceTier);
+      ? calculateTotalRegistrationFee(
+          name,
+          fees,
+          serviceTier,
+          years!,
+          +SmartWeave.block.timestamp,
+        )
+      : calculatePermabuyFee(
+          name,
+          fees,
+          serviceTier,
+          +SmartWeave.block.timestamp,
+        );
 
   // no current auction, create one and vault the balance from the user
   if (!auctions[name]) {
@@ -275,6 +287,7 @@ export const submitAuctionBid = (
         type: existingAuction.type,
         startTimestamp: +SmartWeave.block.timestamp,
         // only include timestamp on lease
+        undernames: DEFAULT_UNDERNAME_COUNT,
         // something to think about - what if a ticking of state never comes? what do we set endTimestamp to?
         ...(existingAuction.type === 'lease' ? { endTimestamp } : {}),
       };
@@ -332,6 +345,7 @@ export const submitAuctionBid = (
       tier: existingAuction.tier,
       type: existingAuction.type,
       startTimestamp: +SmartWeave.block.timestamp, // overwrite initial start timestamp
+      undernames: DEFAULT_UNDERNAME_COUNT,
       // only include timestamp on lease, endTimestamp is easy in this situation since it was a second interaction that won it
       ...(existingAuction.type === 'lease' ? { endTimestamp } : {}),
     };

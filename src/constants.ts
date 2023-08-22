@@ -2,7 +2,8 @@ import { AuctionSettings } from './types';
 
 export const MAX_DELEGATES = 1000; // the maximum amount of delegates that can be added to a single gateway
 export const MAX_YEARS = 5; // the maximum amount of years an arns name could be leased for
-export const MAX_NAME_LENGTH = 51; // the maximum length of an arns name
+export const NAMESPACE_LENGTH = 62; // browser domains are max 63 characters between periods, but we need to leave 1 character for the underscore seperator between the undernames and arns name
+export const MAX_NAME_LENGTH = 51; // the maximum length of an arns name - gateway sandbox domains are 52 characters, so to prevent overlap we stop 1 character short, where the 52nd character would be an underscore (which sandbox domains do not use) to prevent overlap
 export const MAX_NOTE_LENGTH = 256; // the maximum size of a note field
 export const MAX_GATEWAY_LABEL_LENGTH = 16; // the maximum size of a label field
 export const MAX_PORT_NUMBER = 65535; // the default end port of tcp/udp port numbers
@@ -22,10 +23,12 @@ export const SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP = 1704092400000; // January
 export const MAX_ALLOWED_EVOLUTION_DELAY = 720 * 30;
 export const MINIMUM_ALLOWED_EVOLUTION_DELAY = 3; // 3 blocks for testing purposes, but should be 720 * 7; // 720 blocks per day times 7 days
 export const MINIMUM_ALLOWED_NAME_LENGTH = 5; // names less than 5 characters are reserved for auction
-export const UNDERNAMES_COUNT = 10;
 export const RARITY_MULTIPLIER_HALVENING = 25;
+export const PERMABUY_LEASE_FEE_LENGTH = 10;
 export const ALLOWED_ACTIVE_TIERS = [1, 2, 3];
 export const ANNUAL_PERCENTAGE_FEE = 0.1; // 10% of cost of name
+export const DEFAULT_UNDERNAME_COUNT = 10;
+export const MAX_ALLOWED_UNDERNAMES = 10_000; // when modifying these, update the undernames schema
 export const UNDERNAME_REGISTRATION_IO_FEE = 1; // 1 IO token per undername
 export const NON_CONTRACT_OWNER_MESSAGE = `Caller is not the owner of the ArNS!`;
 export const INVALID_ARNS_NAME_MESSAGE = 'Invalid ArNS Record Name';
@@ -47,6 +50,7 @@ export const INVALID_ID_TIER_MESSAGE =
   'Invalid tier ID. Must be present in state before it can be used as a current tier.';
 export const INVALID_YEARS_MESSAGE = `Invalid number of years. Must be an integer and less than or equal to ${MAX_YEARS}`;
 export const INVALID_SHORT_NAME = `Name is less than ${MINIMUM_ALLOWED_NAME_LENGTH} characters. It will be available for auction after ${SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP}.`;
+export const MAX_UNDERNAME_MESSAGE = `Name has reached undername limit of ${MAX_ALLOWED_UNDERNAMES}`;
 export const CURRENT_TIERS = [
   'a27dbfe4-6992-4276-91fb-5b97ae8c3ffa',
   '93685bbb-8246-4e7e-bef8-d2e7e6c5d44a',

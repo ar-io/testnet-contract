@@ -8,11 +8,13 @@ import {
   ANT_CONTRACT_IDS,
   AUCTION_SETTINGS,
   CONTRACT_SETTINGS,
+  DEFAULT_UNDERNAME_COUNT,
   FOUNDATION_ACTION_PERIOD,
   INITIAL_STATE,
   NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
+  SECONDS_IN_A_YEAR,
   TIERS,
   WALLET_FUND_AMOUNT,
 } from './constants';
@@ -78,7 +80,8 @@ function createRecords(tiers: string[], count = 3) {
       tier: tiers[0],
       contractTxID: ANT_CONTRACT_IDS[0],
       endTimestamp: new Date('01/01/2025').getTime() / 1000,
-      startTimestamp: Date.now(),
+      startTimestamp: Date.now() / 1000 - SECONDS_IN_A_YEAR,
+      undernames: DEFAULT_UNDERNAME_COUNT,
     };
     records[name] = obj;
   }
