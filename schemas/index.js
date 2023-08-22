@@ -1,8 +1,8 @@
 const { buyRecordSchema } = require('./buyRecord');
 const { auctionBidSchema } = require('./auction');
-const { increaseUndernamesSchema } = require('./undernames');
+const { increaseUndernameCountSchema } = require('./undernames');
 module.exports = {
   auctionBidSchema,
   buyRecordSchema,
-  increaseUndernamesSchema,
+  increaseUndernameCountSchema,
 };

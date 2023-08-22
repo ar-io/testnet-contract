@@ -28,6 +28,7 @@ export const PERMABUY_LEASE_FEE_LENGTH = 10;
 export const ALLOWED_ACTIVE_TIERS = [1, 2, 3];
 export const ANNUAL_PERCENTAGE_FEE = 0.1; // 10% of cost of name
 export const DEFAULT_UNDERNAME_COUNT = 10;
+export const MAX_ALLOWED_UNDERNAMES = 10_000;
 export const UNDERNAME_REGISTRATION_IO_FEE = 1; // 1 IO token per undername
 export const NON_CONTRACT_OWNER_MESSAGE = `Caller is not the owner of the ArNS!`;
 export const INVALID_ARNS_NAME_MESSAGE = 'Invalid ArNS Record Name';
@@ -49,6 +50,7 @@ export const INVALID_ID_TIER_MESSAGE =
   'Invalid tier ID. Must be present in state before it can be used as a current tier.';
 export const INVALID_YEARS_MESSAGE = `Invalid number of years. Must be an integer and less than or equal to ${MAX_YEARS}`;
 export const INVALID_SHORT_NAME = `Name is less than ${MINIMUM_ALLOWED_NAME_LENGTH} characters. It will be available for auction after ${SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP}.`;
+export const MAX_UNDERNAME_MESSAGE = `Name has reached undername limit of ${MAX_ALLOWED_UNDERNAMES}`;
 export const CURRENT_TIERS = [
   'a27dbfe4-6992-4276-91fb-5b97ae8c3ffa',
   '93685bbb-8246-4e7e-bef8-d2e7e6c5d44a',

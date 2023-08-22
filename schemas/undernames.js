@@ -1,10 +1,10 @@
-const increaseUndernamesSchema = {
-  $id: '#/definitions/increaseUndernames',
+const increaseUndernameCountSchema = {
+  $id: '#/definitions/increaseUndernameCount',
   type: 'object',
   properties: {
     function: {
       type: 'string',
-      const: 'increaseUndernames',
+      const: 'increaseUndernameCount',
     },
     name: {
       type: 'string',
@@ -20,5 +20,5 @@ const increaseUndernamesSchema = {
 };
 
 module.exports = {
-  increaseUndernamesSchema,
+  increaseUndernameCountSchema,
 };

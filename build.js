@@ -7,12 +7,12 @@ const replace = require('replace-in-file');
 const {
   auctionBidSchema,
   buyRecordSchema,
-  increaseUndernamesSchema,
+  increaseUndernameCountSchema,
 } = require('./schemas');
 
 // build our validation source code
 const ajv = new Ajv({
-  schemas: [auctionBidSchema, buyRecordSchema, increaseUndernamesSchema],
+  schemas: [auctionBidSchema, buyRecordSchema, increaseUndernameCountSchema],
   code: { source: true, esm: true },
   allErrors: true,
 });
@@ -20,7 +20,7 @@ const ajv = new Ajv({
 const moduleCode = standaloneCode(ajv, {
   validateBuyRecord: '#/definitions/buyRecord',
   validateAuctionBid: '#/definitions/auctionBid',
-  validateIncreaseUndernames: '#/definitions/increaseUndernames',
+  validateIncreaseUndernameCount: '#/definitions/increaseUndernameCount',
 });
 
 // Now you can write the module code to file

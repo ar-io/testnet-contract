@@ -165,9 +165,6 @@ export function walletHasSufficientBalance(
 }
 
 // TODO: update after dynamic pricing?
-/**
- *
- */
 export function calculateProRatedUndernameCost(
   qty: number,
   currentTimestamp: number,

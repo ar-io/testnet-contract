@@ -1,26 +1,18 @@
 import { Contract, JWKInterface } from 'warp-contracts';
 
 import {
-  ARNS_NAME_RESERVED_MESSAGE,
-  AUCTION_SETTINGS,
   DEFAULT_UNDERNAME_COUNT,
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
-  MINIMUM_ALLOWED_NAME_LENGTH,
-  NON_EXPIRED_ARNS_NAME_MESSAGE,
-  SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
-  TIERS,
+  MAX_ALLOWED_UNDERNAMES,
+  MAX_UNDERNAME_MESSAGE,
 } from '../src/constants';
-import { Auction, AuctionSettings, IOState } from '../src/types';
+import { IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
-import { ANT_CONTRACT_IDS } from './utils/constants';
 import {
-  calculateMinimumAuctionBid,
   calculateUndernamePermutations,
-  getCurrentBlock,
   getLocalArNSContractId,
   getLocalWallet,
-  mineBlocks,
 } from './utils/helper';
 
 describe('undernames', () => {
@@ -70,7 +62,7 @@ describe('undernames', () => {
               initialCachedValue.state.records?.[badName as string]?.undernames;
             const writeInteraction = await contract.writeInteraction(
               {
-                function: 'increaseUndernames',
+                function: 'increaseUndernameCount',
                 ...undernameInput,
               },
               {
@@ -119,7 +111,7 @@ describe('undernames', () => {
               initialCachedValue.state.records[arnsName].undernames;
             const writeInteraction = await contract.writeInteraction(
               {
-                function: 'increaseUndernames',
+                function: 'increaseUndernameCount',
                 ...undernameInput,
               },
               {
@@ -147,8 +139,10 @@ describe('undernames', () => {
             DEFAULT_UNDERNAME_COUNT +
             1,
           calculateUndernamePermutations(arnsName) + 100,
+          MAX_ALLOWED_UNDERNAMES,
+          MAX_ALLOWED_UNDERNAMES + 1,
         ])(
-          'should throw an error when an invalid quantity is provided: %s',
+          'should throw an error when a quantity over the max allowed undernames is provided: %s',
           async (badQty) => {
             const undernameInput = {
               name: arnsName,
@@ -160,7 +154,7 @@ describe('undernames', () => {
               initialCachedValue.state.records[arnsName].undernames;
             const writeInteraction = await contract.writeInteraction(
               {
-                function: 'increaseUndernames',
+                function: 'increaseUndernameCount',
                 ...undernameInput,
               },
               {
@@ -175,7 +169,7 @@ describe('undernames', () => {
             );
             expect(
               cachedValue.errorMessages[writeInteraction!.originalTxId],
-            ).toEqual(expect.stringContaining(INSUFFICIENT_FUNDS_MESSAGE));
+            ).toEqual(expect.stringContaining(MAX_UNDERNAME_MESSAGE));
             expect(cachedValue.state.records[arnsName].undernames).toEqual(
               initialUndernameCount,
             );
@@ -186,7 +180,19 @@ describe('undernames', () => {
       describe('with valid input', () => {
         const arnsName = 'name1';
         it.each([
-          1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 1000, 10000, 100000, 1000000,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          100,
+          1000,
+          MAX_ALLOWED_UNDERNAMES - DEFAULT_UNDERNAME_COUNT - 1165, // 1165 is the sum of the previous undername tests
         ])(
           'should successfully increase undernames with valid quantity provided: : %s',
           async (goodQty) => {
@@ -200,7 +206,7 @@ describe('undernames', () => {
               initialCachedValue.state.records[arnsName].undernames;
             const writeInteraction = await contract.writeInteraction(
               {
-                function: 'increaseUndernames',
+                function: 'increaseUndernameCount',
                 ...undernameInput,
               },
               {
@@ -235,7 +241,7 @@ describe('undernames', () => {
               initialCachedValue.state.records[validName].undernames;
             const writeInteraction = await contract.writeInteraction(
               {
-                function: 'increaseUndernames',
+                function: 'increaseUndernameCount',
                 ...undernameInput,
               },
               {

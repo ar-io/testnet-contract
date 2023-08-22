@@ -2,30 +2,31 @@ import {
   ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
+  MAX_ALLOWED_UNDERNAMES,
+  MAX_UNDERNAME_MESSAGE,
   SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 import {
   calculateProRatedUndernameCost,
-  calculateUndernamePermutations,
   walletHasSufficientBalance,
 } from '../../utilities';
-import { validateIncreaseUndernames } from '../../validations.mjs';
+import { validateIncreaseUndernameCount } from '../../validations.mjs';
 
 declare const ContractError;
 declare const SmartWeave: any;
 
-export class IncreaseUndernames {
-  function = 'increaseUndernames';
+export class IncreaseUndernameCount {
+  function = 'increaseUndernameCount';
   name: string;
   qty: number;
 
   constructor(input: any) {
     // validate using ajv validator
-    if (!validateIncreaseUndernames(input)) {
+    if (!validateIncreaseUndernameCount(input)) {
       throw new ContractError(
         `${INVALID_INPUT_MESSAGE} for ${this.function}: ${(
-          validateIncreaseUndernames as any
+          validateIncreaseUndernameCount as any
         ).errors
           .map((e) => {
             const key = e.instancePath.replace('/', '');
@@ -41,11 +42,11 @@ export class IncreaseUndernames {
   }
 }
 // Increases the lease time for an existing record
-export const increaseUndernames = async (
+export const increaseUndernameCount = async (
   state: IOState,
   { caller, input }: PstAction,
 ): Promise<ContractResult> => {
-  const { name, qty } = new IncreaseUndernames(input);
+  const { name, qty } = new IncreaseUndernameCount(input);
 
   const { balances } = state;
 
@@ -58,19 +59,15 @@ export const increaseUndernames = async (
     record?.endTimestamp,
   );
 
+  if (qty + record.undernames > MAX_ALLOWED_UNDERNAMES) {
+    throw new ContractError(MAX_UNDERNAME_MESSAGE);
+  }
   // Check if the user has enough tokens to increase the undername count
   if (!walletHasSufficientBalance(balances, caller, undernameCost)) {
     throw new ContractError(
       `${INSUFFICIENT_FUNDS_MESSAGE}: caller has ${balances[
         caller
       ].toLocaleString()} but needs to have ${undernameCost.toLocaleString()} to pay for this undername increase of ${qty} for ${name}.`,
-    );
-  }
-  // if qty is over the maximum amount of undernames that are supported for that name in the namespace, throw an error.
-  // note that this may but a physical impossibility due to tokens in existence, but it's a good sanity check.
-  if (qty > calculateUndernamePermutations(name) - record.undernames) {
-    throw new ContractError(
-      `You cannot increase the undername count for ${name} by ${qty} because it would exceed the maximum number of undernames for ${name}.`,
     );
   }
   // check if record exists
