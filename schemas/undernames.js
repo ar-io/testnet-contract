@@ -1,3 +1,5 @@
+const { MAX_ALLOWED_UNDERNAMES, DEFAULT_UNDERNAME_COUNT } = require("../src/constants");
+
 const increaseUndernameCountSchema = {
   $id: '#/definitions/increaseUndernameCount',
   type: 'object',
@@ -13,6 +15,7 @@ const increaseUndernameCountSchema = {
     qty: {
       type: 'number',
       minimum: 1,
+      maximum: MAX_ALLOWED_UNDERNAMES - DEFAULT_UNDERNAME_COUNT
     },
   },
   required: ['name', 'qty'],
