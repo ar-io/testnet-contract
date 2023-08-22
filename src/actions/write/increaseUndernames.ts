@@ -7,6 +7,7 @@ import {
 import { ContractResult, IOState, PstAction } from '../../types';
 import {
   calculateProRatedUndernameCost,
+  calculateUndernamePermutations,
   walletHasSufficientBalance,
 } from '../../utilities';
 import { validateIncreaseUndernames } from '../../validations.mjs';
@@ -65,7 +66,13 @@ export const increaseUndernames = async (
       ].toLocaleString()} but needs to have ${undernameCost.toLocaleString()} to pay for this undername increase of ${qty} for ${name}.`,
     );
   }
-
+  // if qty is over the maximum amount of undernames that are supported for that name in the namespace, throw an error.
+  // note that this may but a physical impossibility due to tokens in existence, but it's a good sanity check.
+  if (qty > calculateUndernamePermutations(name) - record.undernames) {
+    throw new ContractError(
+      `You cannot increase the undername count for ${name} by ${qty} because it would exceed the maximum number of undernames for ${name}.`,
+    );
+  }
   // check if record exists
   if (!record) {
     throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
@@ -76,7 +83,7 @@ export const increaseUndernames = async (
       `This name has expired and must renewed before its undername support can be extended.`,
     );
   }
-
+  // TODO: move cost to protocol balance
   state.records[name].undernames += qty;
   state.balances[caller] -= undernameCost;
 

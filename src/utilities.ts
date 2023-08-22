@@ -2,6 +2,7 @@ import {
   ANNUAL_PERCENTAGE_FEE,
   DEFAULT_UNDERNAME_COUNT,
   MINIMUM_ALLOWED_NAME_LENGTH,
+  NAMESPACE_LENGTH,
   PERMABUY_LEASE_FEE_LENGTH,
   RARITY_MULTIPLIER_HALVENING,
   SECONDS_IN_A_YEAR,
@@ -163,6 +164,10 @@ export function walletHasSufficientBalance(
   return !!balances[wallet] && balances[wallet] >= qty;
 }
 
+// TODO: update after dynamic pricing?
+/**
+ *
+ */
 export function calculateProRatedUndernameCost(
   qty: number,
   currentTimestamp: number,
@@ -178,4 +183,26 @@ export function calculateProRatedUndernameCost(
       ? (fullCost / SECONDS_IN_A_YEAR) * (endTimestamp - currentTimestamp)
       : fullCost;
   return proRatedCost;
+}
+
+export function calculateUndernamePermutations(domain: string): number {
+  const numberOfPossibleCharacters = 38; // 26 letters + 10 numbers + - (dash) + _ (underscore)
+  const numberOfAllowedStartingAndEndingCharacters = 36; // 26 letters + 10 numbers
+  const nameSpaceLength = NAMESPACE_LENGTH - domain.length; // should be between 11 and 61
+  let numberOfPossibleUndernames = 0;
+
+  for (
+    let undernameLength = 1;
+    undernameLength <= nameSpaceLength;
+    undernameLength++
+  ) {
+    if (undernameLength === 1 || undernameLength === nameSpaceLength) {
+      numberOfPossibleUndernames +=
+        numberOfAllowedStartingAndEndingCharacters ** undernameLength;
+    } else {
+      numberOfPossibleUndernames +=
+        numberOfPossibleCharacters ** undernameLength;
+    }
+  }
+  return numberOfPossibleUndernames;
 }
