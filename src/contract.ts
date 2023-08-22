@@ -17,7 +17,7 @@ import { finalizeLeave } from './actions/write/finalizeLeave';
 import { finalizeOperatorStakeDecrease } from './actions/write/finalizeOperatorStakeDecrease';
 import { foundationAction } from './actions/write/foundationAction';
 import { increaseOperatorStake } from './actions/write/increaseOperatorStake';
-import { increaseUndernames } from './actions/write/increaseUndernames';
+import { increaseUndernameCount } from './actions/write/increaseUndernameCount';
 import { initiateLeave } from './actions/write/initiateLeave';
 import { initiateOperatorStakeDecrease } from './actions/write/initiateOperatorStakeDecrease';
 import { joinNetwork } from './actions/write/joinNetwork';
@@ -48,8 +48,8 @@ export async function handle(
       return buyRecord(state, action);
     case 'extendRecord':
       return extendRecord(state, action);
-    case 'increaseUndernames':
-      return increaseUndernames(state, action);
+    case 'increaseUndernameCount':
+      return increaseUndernameCount(state, action);
     case 'evolve':
       return evolve(state, action);
     case 'balance':
