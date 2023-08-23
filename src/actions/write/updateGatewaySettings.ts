@@ -15,7 +15,9 @@ export const updateGatewaySettings = async (
   state: IOState,
   { caller, input }: PstAction,
 ): Promise<ContractResult> => {
-  const gateways = state.gateways;
+  const { gateways = {} } = state;
+
+  // TODO: add object parsing validation
   const { label, fqdn, port, protocol, note, status } = input as any;
 
   // TODO: consistent checks

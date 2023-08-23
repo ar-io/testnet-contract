@@ -9,9 +9,8 @@ export const initiateOperatorStakeDecrease = async (
   state: IOState,
   { caller, input }: PstAction,
 ): Promise<ContractResult> => {
-  const settings = state.settings.registry;
-  const gateways = state.gateways;
-
+  const { settings, gateways = {} } = state;
+  const { registry: registrySettings } = settings;
   // TODO: object parse validation
   const { id } = input as any;
 
@@ -31,7 +30,7 @@ export const initiateOperatorStakeDecrease = async (
 
   if (
     gateways[caller].operatorStake - gateways[caller].vaults[id].balance <
-    settings.minNetworkJoinStakeAmount
+    registrySettings.minNetworkJoinStakeAmount
   ) {
     throw new ContractError(
       'Not enough operator stake to maintain the minimum',
@@ -39,7 +38,7 @@ export const initiateOperatorStakeDecrease = async (
   }
 
   if (
-    gateways[caller].vaults[id].start + settings.minLockLength >
+    gateways[caller].vaults[id].start + registrySettings.minLockLength >
     +SmartWeave.block.height
   ) {
     throw new ContractError('This vault has not been locked long enough');
@@ -49,7 +48,7 @@ export const initiateOperatorStakeDecrease = async (
     // Unstake a single gateway vault that is active
     // Begin unstake process
     gateways[caller].vaults[id].end =
-      +SmartWeave.block.height + settings.operatorStakeWithdrawLength;
+      +SmartWeave.block.height + registrySettings.operatorStakeWithdrawLength;
   } else {
     throw new ContractError(
       `This vault is already being unlocked at ${gateways[caller].vaults[id].end}`,

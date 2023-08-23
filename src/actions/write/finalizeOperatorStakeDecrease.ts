@@ -8,8 +8,7 @@ export const finalizeOperatorStakeDecrease = async (
   state: IOState,
   { caller, input: { target = caller } }: PstAction,
 ): Promise<ContractResult> => {
-  const gateways = state.gateways;
-  const balances = state.balances;
+  const { gateways = {}, balances } = state;
 
   if (!(target in gateways)) {
     throw new ContractError("This Gateway's wallet is not registered");
