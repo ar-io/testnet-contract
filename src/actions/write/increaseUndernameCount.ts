@@ -47,21 +47,29 @@ export const increaseUndernameCount = async (
   { caller, input }: PstAction,
 ): Promise<ContractResult> => {
   const { name, qty } = new IncreaseUndernameCount(input);
+  const { balances, records } = state;
+  const record = records[name];
 
-  const { balances } = state;
+  // check if record exists
+  if (!record) {
+    throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
+  }
 
-  const record = state.records[name];
+  const { undernames = 10, type, endTimestamp } = record;
   const currentBlockTime = +SmartWeave.block.timestamp;
   const undernameCost = calculateProRatedUndernameCost(
     qty,
     currentBlockTime,
-    record.type,
-    record?.endTimestamp,
+    type,
+    endTimestamp,
   );
 
-  if (qty + record.undernames > MAX_ALLOWED_UNDERNAMES) {
+  // the new total qty
+  const incrementedUndernames = undernames + qty;
+  if (incrementedUndernames > MAX_ALLOWED_UNDERNAMES) {
     throw new ContractError(MAX_UNDERNAME_MESSAGE);
   }
+
   // Check if the user has enough tokens to increase the undername count
   if (!walletHasSufficientBalance(balances, caller, undernameCost)) {
     throw new ContractError(
@@ -70,18 +78,15 @@ export const increaseUndernameCount = async (
       ].toLocaleString()} but needs to have ${undernameCost.toLocaleString()} to pay for this undername increase of ${qty} for ${name}.`,
     );
   }
-  // check if record exists
-  if (!record) {
-    throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
-  }
+
   // This name's lease has expired and cannot be extended
-  if (record.endTimestamp + SECONDS_IN_GRACE_PERIOD <= currentBlockTime) {
+  if (endTimestamp + SECONDS_IN_GRACE_PERIOD <= currentBlockTime) {
     throw new ContractError(
       `This name has expired and must renewed before its undername support can be extended.`,
     );
   }
   // TODO: move cost to protocol balance
-  state.records[name].undernames += qty;
+  state.records[name].undernames = incrementedUndernames;
   state.balances[caller] -= undernameCost;
 
   return { state };

@@ -33,15 +33,22 @@ import { keyfile } from './constants';
   const wallet: JWKInterface = JSON.parse(jwk);
 
   // Read the ArNS Registry Contract
-  const contract = warp.pst(contractTxId);
+  const contract = warp.pst(contractTxId).setEvaluationOptions({
+    internalWrites: true,
+    unsafeClient: 'skip',
+    updateCacheForEachInteraction: true,
+  });
   contract.connect(wallet);
+
+  const { cachedValue } = await contract.readState();
+  const { records: prevRecords } = cachedValue.state;
 
   // Create the evolved source code tx
   const writeInteraction = await contract.writeInteraction(
     {
-      function: 'updateState',
+      function: 'increaseUndernameCount',
       state: {
-        evolve: '9qewIF2VveKnNeh2_6vwTbC72gQNBnKLRIi5kMU0Ok0',
+        gateways: {},
       },
     },
     {
