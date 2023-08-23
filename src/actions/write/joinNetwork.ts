@@ -16,9 +16,8 @@ export const joinNetwork = async (
   state: IOState,
   { caller, input }: PstAction,
 ): Promise<ContractResult> => {
-  const balances = state.balances;
-  const settings = state.settings.registry;
-  const gateways = state.gateways;
+  const { balances, gateways = {}, settings } = state;
+  const { registry: registrySettings } = settings;
 
   // TODO: object parse validation
   const { qty, label, fqdn, port, protocol, note } = input as any;
@@ -40,9 +39,9 @@ export const joinNetwork = async (
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  if (qty < settings.minNetworkJoinStakeAmount) {
+  if (qty < registrySettings.minNetworkJoinStakeAmount) {
     throw new ContractError(
-      `Quantity must be greater than or equal to the minimum network join stake amount ${settings.minNetworkJoinStakeAmount}.`,
+      `Quantity must be greater than or equal to the minimum network join stake amount ${registrySettings.minNetworkJoinStakeAmount}.`,
     );
   }
 

@@ -9,8 +9,7 @@ export const increaseOperatorStake = async (
   state: IOState,
   { caller, input }: PstAction,
 ): Promise<ContractResult> => {
-  const balances = state.balances;
-  const gateways = state.gateways;
+  const { gateways = {}, balances } = state;
 
   // TODO: object type validation
   const { qty } = input as any;
