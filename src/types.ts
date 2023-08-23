@@ -76,10 +76,8 @@ export type ContractSettings = {
     minLockLength: number; // the minimum amount of blocks tokens can be locked in a community vault
     maxLockLength: number; // the maximum amount of blocks tokens can be locked in a community vault
     minNetworkJoinStakeAmount: number; // the minimum amount of tokens needed to stake to join the ar.io network as a gateway
-    minDelegatedStakeAmount: number; // the minimum amount of tokens needed to delegate stake to an ar.io network gateway
     minGatewayJoinLength: number; // the minimum amount of blocks a gateway can be joined to the ar.io network
     gatewayLeaveLength: number; // the amount of blocks that have to elapse before a gateway leaves the network
-    delegatedStakeWithdrawLength: number; // the amount of blocks that have to elapse before a delegated stake is returned
     operatorStakeWithdrawLength: number; // the amount of blocks that have to elapse before a gateway operator's stake is returned
   };
   auctions: {
@@ -100,15 +98,10 @@ export type GatewayStatus = typeof gatewayStatus[number];
 
 export type Gateway = {
   operatorStake: number; // the total stake of this gateway's operator.
-  delegatedStake: number; // the total stake of this gateway's delegates.
   start: number; // At what block the gateway joined the network.
   end: number; // At what block the gateway can leave the network.  0 means no end date.
   status: GatewayStatus; // hidden represents not leaving, but not participating
   vaults: TokenVault[]; // the locked tokens staked by this gateway operator
-  delegates: {
-    // The delegates that have staked tokens with this gateway
-    [address: string]: TokenVault[];
-  };
   settings: GatewaySettings;
 };
 
@@ -118,8 +111,6 @@ export type GatewaySettings = {
   fqdn: string; // the fully qualified domain name this gateway can be reached at. eg arweave.net
   port: number; // The port used by this gateway eg. 443
   protocol: AllowedProtocols; // The protocol used by this gateway, either http or https
-  openDelegation: boolean; // If true, community token holders can delegate stake to this gateway
-  delegateAllowList: string[]; // A list of allowed arweave wallets that can act as delegates, if empty then anyone can delegate their tokens to this gateway
   note?: string; // An additional note (256 character max) the gateway operator can set to indicate things like maintenance or other operational updates.
 };
 

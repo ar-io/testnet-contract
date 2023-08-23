@@ -1,13 +1,12 @@
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
-  MAX_DELEGATES,
   MAX_GATEWAY_LABEL_LENGTH,
   MAX_NOTE_LENGTH,
   MAX_PORT_NUMBER,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
-import { isValidArweaveBase64URL, isValidFQDN } from '../../utilities';
+import { isValidFQDN } from '../../utilities';
 
 declare const ContractError;
 declare const SmartWeave: any;
@@ -17,21 +16,11 @@ export const joinNetwork = async (
   state: IOState,
   { caller, input }: PstAction,
 ): Promise<ContractResult> => {
-  const balances = state.balances;
-  const settings = state.settings.registry;
-  const gateways = state.gateways;
+  const { balances, gateways = {}, settings } = state;
+  const { registry: registrySettings } = settings;
 
   // TODO: object parse validation
-  const {
-    qty,
-    label,
-    fqdn,
-    port,
-    protocol,
-    openDelegation = false,
-    delegateAllowList = [],
-    note,
-  } = input as any;
+  const { qty, label, fqdn, port, protocol, note } = input as any;
 
   if (!Number.isInteger(qty) || qty <= 0) {
     throw new ContractError('Invalid value for "qty". Must be an integer');
@@ -50,9 +39,9 @@ export const joinNetwork = async (
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  if (qty < settings.minNetworkJoinStakeAmount) {
+  if (qty < registrySettings.minNetworkJoinStakeAmount) {
     throw new ContractError(
-      `Quantity must be greater than or equal to the minimum network join stake amount ${settings.minNetworkJoinStakeAmount}.`,
+      `Quantity must be greater than or equal to the minimum network join stake amount ${registrySettings.minNetworkJoinStakeAmount}.`,
     );
   }
 
@@ -81,30 +70,6 @@ export const joinNetwork = async (
     throw new ContractError('Invalid note.');
   }
 
-  if (typeof openDelegation !== 'boolean') {
-    throw new ContractError('Open Delegation must be true or false.');
-  }
-
-  if (!Array.isArray(delegateAllowList)) {
-    throw new ContractError(
-      'Delegate allow list must contain an array of valid Arweave addresses.',
-    );
-  }
-
-  if (delegateAllowList.length > MAX_DELEGATES) {
-    throw ContractError('Invalid number of delegates.');
-  }
-
-  for (let i = 0; i < delegateAllowList.length; i += 1) {
-    if (!isValidArweaveBase64URL(delegateAllowList[i])) {
-      throw new ContractError(
-        `${delegateAllowList[i]} is an invalid Arweave address. Delegate allow list must contain valid arweave addresses.`,
-      );
-    }
-  }
-
-  // TODO: we need SSL thumbprints stored in the GAR for a given gateway to validate they own the domain
-
   if (caller in gateways) {
     throw new ContractError("This Gateway's wallet is already registered");
   }
@@ -113,7 +78,6 @@ export const joinNetwork = async (
   state.balances[caller] -= qty;
   state.gateways[caller] = {
     operatorStake: qty,
-    delegatedStake: 0,
     vaults: [
       {
         balance: qty,
@@ -121,14 +85,11 @@ export const joinNetwork = async (
         end: 0,
       },
     ],
-    delegates: {},
     settings: {
       label,
       fqdn,
       port,
       protocol,
-      openDelegation,
-      delegateAllowList,
       note,
     },
     status: NETWORK_JOIN_STATUS,

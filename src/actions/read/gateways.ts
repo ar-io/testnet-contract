@@ -7,7 +7,7 @@ export const getGateway = async (
   state: IOState,
   { input: { target } }: PstAction,
 ): Promise<ContractResult & any> => {
-  const gateways = state.gateways;
+  const { gateways = {} } = state;
   if (!(target in gateways)) {
     throw new ContractError('This target does not have a registered gateway.');
   }
@@ -21,12 +21,11 @@ export const getGatewayTotalStake = async (
   state: IOState,
   { input: { target } }: PstAction,
 ): Promise<ContractResult & any> => {
-  const gateways = state.gateways;
+  const { gateways = {} } = state;
   if (!(target in gateways)) {
     throw new ContractError('This target does not have a registered gateway.');
   }
-  const gatewayTotalStake =
-    gateways[target].operatorStake + gateways[target].delegatedStake;
+  const gatewayTotalStake = gateways[target].operatorStake;
   return {
     result: gatewayTotalStake,
   };
@@ -35,7 +34,7 @@ export const getGatewayTotalStake = async (
 export const getGatewayRegistry = async (
   state: IOState,
 ): Promise<ContractResult & any> => {
-  const gateways = state.gateways;
+  const { gateways = {} } = state;
   return {
     result: gateways,
   };
@@ -44,7 +43,7 @@ export const getGatewayRegistry = async (
 export const getRankedGatewayRegistry = async (
   state: IOState,
 ): Promise<ContractResult & any> => {
-  const gateways = state.gateways;
+  const { gateways = {} } = state;
   // Filters the gateway registry for active gateways only
   const filteredGateways: { [address: string]: Gateway } = {};
   Object.keys(gateways).forEach((address) => {
@@ -59,8 +58,8 @@ export const getRankedGatewayRegistry = async (
     .sort((addressA, addressB) => {
       const gatewayA = filteredGateways[addressA];
       const gatewayB = filteredGateways[addressB];
-      const totalStakeA = gatewayA.operatorStake + gatewayA.delegatedStake;
-      const totalStakeB = gatewayB.operatorStake + gatewayB.delegatedStake;
+      const totalStakeA = gatewayA.operatorStake;
+      const totalStakeB = gatewayB.operatorStake;
       return totalStakeB - totalStakeA;
     })
     .forEach((address) => {

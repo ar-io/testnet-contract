@@ -18,10 +18,8 @@ export const CONTRACT_SETTINGS = {
   minLockLength: 5,
   maxLockLength: 720 * 365 * 3,
   minNetworkJoinStakeAmount: 5_000,
-  minDelegatedStakeAmount: 100,
   minGatewayJoinLength: 2,
   gatewayLeaveLength: 2,
-  delegatedStakeWithdrawLength: 5,
   operatorStakeWithdrawLength: 5,
 };
 // Also export all our other constants
