@@ -5,6 +5,7 @@ import { arweave, warp } from './setup.jest';
 import {
   ANT_CONTRACT_IDS,
   ARNS_NAME_RESERVED_MESSAGE,
+  DEFAULT_UNDERNAME_COUNT,
   INVALID_INPUT_MESSAGE,
   INVALID_SHORT_NAME,
   INVALID_TIER_MESSAGE,
@@ -62,6 +63,7 @@ describe('Records', () => {
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
         contractTxID: expect.any(String),
+        undernames: DEFAULT_UNDERNAME_COUNT,
       };
       expect(record).not.toBe(undefined);
       expect(record).toEqual(expectObjected);
@@ -99,11 +101,13 @@ describe('Records', () => {
       const purchasedTier = prevState.tiers.history.find(
         (t) => t.id === purchasedTierId,
       )!;
+      const currentBlock = await arweave.blocks.getCurrent();
       const expectedPurchasePrice = calculateTotalRegistrationFee(
         namePurchase.name,
         prevState.fees,
         purchasedTier,
         namePurchase.years,
+        currentBlock.timestamp,
       );
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -117,6 +121,7 @@ describe('Records', () => {
         tier: tiers.current[0],
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
+        undernames: DEFAULT_UNDERNAME_COUNT,
         type: 'lease',
       });
       expect(balances[nonContractOwnerAddress]).toEqual(
@@ -146,11 +151,13 @@ describe('Records', () => {
       const purchasedTier = prevState.tiers.history.find(
         (t) => t.id === purchasedTierId,
       )!;
+      const currentBlock = await arweave.blocks.getCurrent();
       const expectedPurchasePrice = calculateTotalRegistrationFee(
         namePurchase.name!,
         prevState.fees,
         purchasedTier,
         1,
+        currentBlock.timestamp,
       );
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -164,6 +171,7 @@ describe('Records', () => {
         tier: tiers.current[0],
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
+        undernames: DEFAULT_UNDERNAME_COUNT,
         type: 'lease',
       });
       expect(balances[nonContractOwnerAddress]).toEqual(
@@ -194,10 +202,12 @@ describe('Records', () => {
       const purchasedTier = prevState.tiers.history.find(
         (t) => t.id === purchasedTierId,
       )!;
+      const currentBlock = await arweave.blocks.getCurrent();
       const expectedPurchasePrice = calculatePermabuyFee(
         namePurchase.name,
         prevState.fees,
         purchasedTier,
+        currentBlock.timestamp,
       );
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -211,6 +221,7 @@ describe('Records', () => {
         tier: tiers.current[0],
         type: 'permabuy',
         startTimestamp: expect.any(Number),
+        undernames: DEFAULT_UNDERNAME_COUNT,
       });
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevBalance - expectedPurchasePrice,
@@ -742,6 +753,7 @@ describe('Records', () => {
         tier: tiers.current[0],
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
+        undernames: DEFAULT_UNDERNAME_COUNT,
         type: 'lease',
       });
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(

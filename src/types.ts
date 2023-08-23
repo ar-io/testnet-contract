@@ -122,6 +122,7 @@ export type ArNSName = {
   endTimestamp?: number; // At what unix time (seconds since epoch) the lease ends
   tier: string; // The id of the tier selected at time of purchased
   type: 'lease' | 'permabuy';
+  undernames: number;
 };
 
 export type ReservedName = {
