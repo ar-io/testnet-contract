@@ -68,6 +68,8 @@ export const updateGatewaySettings = async (
     } else {
       gateways[caller].settings.properties = properties;
     }
+  } else if (properties === '') {
+    gateways[caller].settings.properties = properties;
   }
 
 
@@ -80,6 +82,8 @@ export const updateGatewaySettings = async (
     } else {
       gateways[caller].settings.note = note;
     }
+  } else if (note === '') {
+    gateways[caller].settings.note = note;
   }
 
   if (status) {
