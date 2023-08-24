@@ -18,7 +18,7 @@ export const updateGatewaySettings = async (
   const { gateways = {} } = state;
 
   // TODO: add object parsing validation
-  const { label, fqdn, port, protocol, note, status } = input as any;
+  const { label, fqdn, port, protocol, properties, note, status } = input as any;
 
   // TODO: consistent checks
   if (!(caller in gateways)) {
@@ -61,6 +61,15 @@ export const updateGatewaySettings = async (
       gateways[caller].settings.fqdn = fqdn;
     }
   }
+
+  if (properties) {
+    if (!isValidArweaveBase64URL(properties)) {
+      throw new ContractError('Invalid property.  Must be a valid Arweave transaction ID.');
+    } else {
+      gateways[caller].settings.properties = properties;
+    }
+  }
+
 
   if (note) {
     if (typeof note !== 'string') {
