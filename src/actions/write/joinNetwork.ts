@@ -67,7 +67,9 @@ export const joinNetwork = async (
   }
 
   if (properties && !isValidArweaveBase64URL(properties)) {
-    throw new ContractError('Invalid property.  Must be a valid Arweave transaction ID.');
+    throw new ContractError(
+      'Invalid property.  Must be a valid Arweave transaction ID.',
+    );
   }
 
   if (note && typeof note !== 'string' && note > MAX_NOTE_LENGTH) {
