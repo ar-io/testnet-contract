@@ -11,6 +11,7 @@ import {
 import { getRecord } from './actions/read/record';
 import { buyRecord } from './actions/write/buyRecord';
 import { evolve } from './actions/write/evolve';
+import { evolveState } from './actions/write/evolveState';
 import { extendRecord } from './actions/write/extendRecord';
 import { finalizeLeave } from './actions/write/finalizeLeave';
 import { finalizeOperatorStakeDecrease } from './actions/write/finalizeOperatorStakeDecrease';
@@ -50,6 +51,9 @@ export async function handle(
       return increaseUndernameCount(state, action);
     case 'evolve':
       return evolve(state, action);
+    // TODO: remove this function
+    case 'evolveState':
+      return evolveState(state, action);
     case 'balance':
       return balance(state, action);
     case 'record':
