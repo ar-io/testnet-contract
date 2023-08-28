@@ -1,4 +1,5 @@
 import {
+  ARNS_NAME_IN_AUCTION_MESSAGE,
   ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_UNDERNAME_COUNT,
   INVALID_INPUT_MESSAGE,
@@ -71,10 +72,9 @@ export const buyRecord = (
   { caller, input }: PstAction,
 ): ContractResult => {
   // get all other relevant state data
-  const { balances, records, reserved, fees } = state;
+  const { balances, records, reserved, fees, auctions } = state;
+  const { name, contractTxId, years, type, auction } = new BuyRecord(input); // does validation on constructor
   const currentBlockTime = +SmartWeave.block.timestamp;
-  const buyRecordInput = new BuyRecord(input); // does validation on constructor
-  const { name, contractTxId, years, type, auction } = buyRecordInput;
 
   // auction logic if auction flag set
   if (auction) {
@@ -82,6 +82,9 @@ export const buyRecord = (
       caller,
       input,
     });
+  } else if (auctions[name]) {
+    // if auction flag not set, but auction exists, throw error
+    throw new ContractError(ARNS_NAME_IN_AUCTION_MESSAGE);
   }
 
   // Check if the user has enough tokens to purchase the name
