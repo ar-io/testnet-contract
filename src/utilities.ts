@@ -8,27 +8,25 @@ import {
   SECONDS_IN_A_YEAR,
   UNDERNAME_REGISTRATION_IO_FEE,
 } from './constants';
-import { Fees, ServiceTier } from './types';
+import { Fees } from './types';
 
 declare const ContractError: any;
 
 export function calculateTotalRegistrationFee(
   name: string,
   fees: Fees,
-  tier: ServiceTier,
   years: number,
   currentTimestamp: number, // block timestamp
-) {
+): number {
   // Initial cost to register a name
   const initialNamePurchaseFee = fees[name.length.toString()];
 
-  // total cost to purchase name and tier
+  // total cost to purchase name
   return (
     initialNamePurchaseFee +
     calculateAnnualRenewalFee(
       name,
       fees,
-      tier,
       years,
       DEFAULT_UNDERNAME_COUNT,
       currentTimestamp + SECONDS_IN_A_YEAR * years,
@@ -39,11 +37,10 @@ export function calculateTotalRegistrationFee(
 export function calculateAnnualRenewalFee(
   name: string,
   fees: Fees,
-  tier: ServiceTier,
   years: number,
   undernames: number,
   endTimestamp: number,
-) {
+): number {
   // Determine annual registration price of name
   const initialNamePurchaseFee = fees[name.length.toString()];
 
@@ -51,12 +48,7 @@ export function calculateAnnualRenewalFee(
   const nameAnnualRegistrationFee =
     initialNamePurchaseFee * ANNUAL_PERCENTAGE_FEE;
 
-  // Annual tier fee
-  const tierAnnualFee = tier.fee;
-
-  // Total annual costs (registration fee + tier fee)
-  const totalAnnualRenewalCost =
-    (nameAnnualRegistrationFee + tierAnnualFee) * years;
+  const totalAnnualRenewalCost = nameAnnualRegistrationFee * years;
 
   const extensionEndTimestamp = endTimestamp + years * SECONDS_IN_A_YEAR;
   // Do not charge for undernames if there are less or equal than the default
@@ -82,14 +74,12 @@ export function calculateAnnualRenewalFee(
 export function calculatePermabuyFee(
   name: string,
   fees: Fees,
-  tier: ServiceTier,
   currentTimestamp: number,
-) {
+): number {
   // calculate the annual fee for the name for default of 10 years
   const permabuyLeasePrice = calculateAnnualRenewalFee(
     name,
     fees,
-    tier,
     PERMABUY_LEASE_FEE_LENGTH,
     DEFAULT_UNDERNAME_COUNT,
     currentTimestamp + SECONDS_IN_A_YEAR * PERMABUY_LEASE_FEE_LENGTH,
@@ -145,13 +135,13 @@ export function calculateMinimumAuctionBid({
 }
 
 // check if a string is a valid fully qualified domain name
-export function isValidFQDN(fqdn: string) {
+export function isValidFQDN(fqdn: string): boolean {
   const fqdnRegex = /^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{1,6}$/;
   return fqdnRegex.test(fqdn);
 }
 
 // check if it is a valid arweave base64url for a wallet public address, transaction id or smartweave contract
-export function isValidArweaveBase64URL(base64URL: string) {
+export function isValidArweaveBase64URL(base64URL: string): boolean {
   const base64URLRegex = new RegExp('^[a-zA-Z0-9_-]{43}$');
   return base64URLRegex.test(base64URL);
 }
@@ -170,7 +160,7 @@ export function calculateProRatedUndernameCost(
   currentTimestamp: number,
   type: 'lease' | 'permabuy',
   endTimestamp?: number,
-) {
+): number {
   const fullCost =
     type === 'lease'
       ? UNDERNAME_REGISTRATION_IO_FEE * qty

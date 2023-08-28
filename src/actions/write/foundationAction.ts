@@ -1,10 +1,7 @@
 import {
-  ALLOWED_ACTIVE_TIERS,
   FOUNDATION_ACTION_ACTIVE_STATUS,
   FOUNDATION_ACTION_FAILED_STATUS,
   FOUNDATION_ACTION_PASSED_STATUS,
-  INVALID_ID_TIER_MESSAGE,
-  INVALID_TIER_MESSAGE,
   MAX_ALLOWED_EVOLUTION_DELAY,
   MAX_FOUNDATION_ACTION_PERIOD,
   MAX_NAME_LENGTH,
@@ -12,14 +9,12 @@ import {
   MINIMUM_ALLOWED_EVOLUTION_DELAY,
 } from '../../constants';
 import {
-  ActiveTier,
   ContractResult,
   DelayedEvolveInput,
   FeesInput,
   FoundationAction,
   IOState,
   PstAction,
-  ServiceTier,
 } from '../../types';
 import { isValidArweaveBase64URL } from '../../utilities';
 
@@ -119,26 +114,6 @@ export const foundationAction = async (
           throw new ContractError(
             `Invalid amount of fees.  Must be less than ${MAX_NAME_LENGTH}`,
           );
-        }
-        break;
-      case 'createNewTier':
-        if (!Number.isInteger((value as ServiceTier).fee)) {
-          throw new ContractError('Fee must be a valid number.');
-        }
-        if (!Number.isInteger((value as ServiceTier).settings.maxUndernames)) {
-          throw new ContractError('Max undernames must be a valid number.');
-        }
-
-        (value as ServiceTier).id = SmartWeave.transaction.id;
-        break;
-      case 'setActiveTier':
-        // the tier must exist in the history before it can be set as an active tier
-        if (
-          !state.tiers.history
-            .map((t) => t.id)
-            .includes((value as ActiveTier).id)
-        ) {
-          throw new ContractError(INVALID_TIER_MESSAGE);
         }
         break;
       case 'delayedEvolve':
@@ -254,15 +229,6 @@ export const foundationAction = async (
         break;
       case 'setNameFees':
         state.fees = value as FeesInput;
-        break;
-      case 'createNewTier':
-        state.tiers.history.push(value as ServiceTier);
-        break;
-      case 'setActiveTier':
-        // eslint-disable-next-line
-        const activeTier = value as ActiveTier;
-        state.tiers.current[activeTier.idx ?? state.tiers.current.length - 1] =
-          activeTier.id;
         break;
       case 'delayedEvolve':
         // there is no action taken as the evolve method must be run

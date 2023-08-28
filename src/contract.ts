@@ -9,9 +9,9 @@ import {
   getRankedGatewayRegistry,
 } from './actions/read/gateways';
 import { getRecord } from './actions/read/record';
-import { getActiveTiers, getTier } from './actions/read/tiers';
 import { buyRecord } from './actions/write/buyRecord';
 import { evolve } from './actions/write/evolve';
+import { evolveState } from './actions/write/evolveState';
 import { extendRecord } from './actions/write/extendRecord';
 import { finalizeLeave } from './actions/write/finalizeLeave';
 import { finalizeOperatorStakeDecrease } from './actions/write/finalizeOperatorStakeDecrease';
@@ -25,7 +25,6 @@ import { submitAuctionBid } from './actions/write/submitAuctionBid';
 import { transferTokens } from './actions/write/transferTokens';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
 import { updateState } from './actions/write/updateState';
-import { upgradeTier } from './actions/write/upgradeTier';
 import {
   ContractResult,
   IOContractFunctions,
@@ -52,14 +51,13 @@ export async function handle(
       return increaseUndernameCount(state, action);
     case 'evolve':
       return evolve(state, action);
+    // TODO: remove this function
+    case 'evolveState':
+      return evolveState(state, action);
     case 'balance':
       return balance(state, action);
     case 'record':
       return getRecord(state, action);
-    case 'tier':
-      return getTier(state, action);
-    case 'activeTiers':
-      return getActiveTiers(state);
     case 'gateway':
       return getGateway(state, action);
     case 'gatewayTotalStake':
@@ -68,8 +66,6 @@ export async function handle(
       return getGatewayRegistry(state);
     case 'rankedGatewayRegistry':
       return getRankedGatewayRegistry(state);
-    case 'upgradeTier':
-      return upgradeTier(state, action);
     case 'joinNetwork':
       return joinNetwork(state, action);
     case 'initiateLeave':

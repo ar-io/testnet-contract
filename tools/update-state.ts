@@ -6,6 +6,7 @@ import {
   defaultCacheOptions,
 } from 'warp-contracts';
 
+import { IOState } from '../src/types';
 import { keyfile } from './constants';
 
 (async () => {
@@ -41,21 +42,21 @@ import { keyfile } from './constants';
   contract.connect(wallet);
 
   const { cachedValue } = await contract.readState();
-  const { records: prevRecords } = cachedValue.state;
-
-  // Create the evolved source code tx
-  const writeInteraction = await contract.writeInteraction(
-    {
-      function: 'increaseUndernameCount',
-      state: {
-        gateways: {},
-      },
-    },
-    {
-      disableBundling: true,
-    },
-  );
-
-  // eslint-disable-next-line
-  console.log(writeInteraction);
+  const { records: prevRecords } = cachedValue.state as IOState;
+  for (const name in prevRecords) {
+    // Create the evolved source code tx
+    if (!prevRecords[name].undernames) {
+      console.log('Updating record undername count for', name);
+      const writeInteraction = await contract.writeInteraction(
+        {
+          function: 'increaseUndernameCount',
+          qty: 1,
+          name,
+        },
+        {
+          disableBundling: true,
+        },
+      );
+    }
+  }
 })();

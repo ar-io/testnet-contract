@@ -7,7 +7,6 @@ import {
   MINIMUM_ALLOWED_NAME_LENGTH,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
-  TIERS,
 } from '../src/constants';
 import { Auction, AuctionSettings, IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
@@ -199,7 +198,6 @@ describe('Auctions', () => {
                   initiator: nonContractOwnerAddress,
                   contractTxId: ANT_CONTRACT_IDS[0],
                   years: 1,
-                  tier: TIERS.current[0],
                 }),
               );
               expect(balances[nonContractOwnerAddress]).toEqual(
@@ -283,7 +281,7 @@ describe('Auctions', () => {
                 expect(writeInteraction?.originalTxId).not.toBeUndefined();
                 const { cachedValue } = await contract.readState();
                 expect(cachedValue.errorMessages).not.toContain(auctionTxId);
-                const { auctions, records, tiers, balances } =
+                const { auctions, records, balances } =
                   cachedValue.state as IOState;
                 expect(auctions[auctionBid.name]).toBeUndefined();
                 expect(records[auctionBid.name]).toEqual({
@@ -291,7 +289,6 @@ describe('Auctions', () => {
                   endTimestamp: expect.any(Number),
                   startTimestamp: expect.any(Number),
                   undernames: expect.any(Number),
-                  tier: tiers.current[0],
                   type: 'lease',
                 });
                 expect(balances[winnerAddress]).toEqual(
@@ -441,7 +438,6 @@ describe('Auctions', () => {
                 initiator: nonContractOwnerAddress,
                 contractTxId: ANT_CONTRACT_IDS[0],
                 years: 1,
-                tier: TIERS.current[0],
               });
               expect(balances[nonContractOwnerAddress]).toEqual(
                 prevState.balances[nonContractOwnerAddress] -
@@ -485,7 +481,6 @@ describe('Auctions', () => {
             startHeight: await getCurrentBlock(arweave),
             initiator: nonContractOwnerAddress,
             contractTxId: ANT_CONTRACT_IDS[0],
-            tier: TIERS.current[0],
           });
           expect(balances[nonContractOwnerAddress]).toEqual(
             prevState.balances[nonContractOwnerAddress] -
@@ -526,11 +521,9 @@ describe('Auctions', () => {
           expect(writeInteraction?.originalTxId).not.toBeUndefined();
           const { cachedValue } = await contract.readState();
           expect(cachedValue.errorMessages).not.toContain(auctionTxId);
-          const { auctions, records, tiers, balances } =
-            cachedValue.state as IOState;
+          const { auctions, records, balances } = cachedValue.state as IOState;
           expect(records[auctionBid.name]).toEqual({
             contractTxId: ANT_CONTRACT_IDS[1],
-            tier: tiers.current[0],
             type: 'permabuy',
             startTimestamp: expect.any(Number),
             undernames: expect.any(Number),
@@ -576,7 +569,6 @@ describe('Auctions', () => {
             startHeight: await getCurrentBlock(arweave),
             initiator: nonContractOwnerAddress,
             contractTxId: ANT_CONTRACT_IDS[0],
-            tier: TIERS.current[0],
             years: 1,
           });
           expect(balances[nonContractOwnerAddress]).toEqual(
@@ -612,12 +604,10 @@ describe('Auctions', () => {
           expect(writeInteraction?.originalTxId).not.toBeUndefined();
           const { cachedValue } = await contract.readState();
           expect(cachedValue.errorMessages).not.toContain(auctionTxId);
-          const { auctions, records, tiers, balances } =
-            cachedValue.state as IOState;
+          const { auctions, records, balances } = cachedValue.state as IOState;
           expect(auctions[auctionBid.name]).toBeUndefined();
           expect(records[auctionBid.name]).toEqual({
             contractTxId: ANT_CONTRACT_IDS[1],
-            tier: tiers.current[0],
             type: 'lease',
             endTimestamp: expect.any(Number),
             startTimestamp: expect.any(Number),
