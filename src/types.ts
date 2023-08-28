@@ -48,7 +48,9 @@ export type Auction = {
   startPrice: number;
   floorPrice: number;
   startHeight: number;
-  auctionSettingsId: string;
+  endHeight: number;
+  decayRate: number;
+  decayInterval: number;
   type: 'lease' | 'permabuy';
   initiator: string;
   contractTxId: string;
@@ -56,11 +58,10 @@ export type Auction = {
 };
 
 export type AuctionSettings = {
-  id: string;
   floorPriceMultiplier: number; // if we ever want to drop prices
   // premiumNameFloorPrice: number; // the floor price for names marked as premium
   startPriceMultiplier: number;
-  auctionDuration: number;
+  duration: number;
   decayRate: number;
   decayInterval: number;
 };
@@ -74,10 +75,6 @@ export type ContractSettings = {
     minGatewayJoinLength: number; // the minimum amount of blocks a gateway can be joined to the ar.io network
     gatewayLeaveLength: number; // the amount of blocks that have to elapse before a gateway leaves the network
     operatorStakeWithdrawLength: number; // the amount of blocks that have to elapse before a gateway operator's stake is returned
-  };
-  auctions: {
-    current: string;
-    history: AuctionSettings[];
   };
   permabuy: {
     multiplier: number;

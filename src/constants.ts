@@ -1,4 +1,4 @@
-import { AuctionSettings } from './types';
+import { Auction, AuctionSettings } from './types';
 
 export const MAX_YEARS = 5; // the maximum amount of years an arns name could be leased for
 export const NAMESPACE_LENGTH = 62; // browser domains are max 63 characters between periods, but we need to leave 1 character for the underscore seperator between the undernames and arns name
@@ -100,21 +100,10 @@ export const FEE_STRUCTURE = {
   '50': 50,
   '51': 50,
 };
-export const AUCTION_SETTINGS_ID =
-  '3IkWJ-0HdwuATDhBXuJRm0bWspXOOkRjxTm-5R2xRbw';
-export const AUCTION_SETTINGS: {
-  current: string;
-  history: AuctionSettings[];
-} = {
-  current: AUCTION_SETTINGS_ID,
-  history: [
-    {
-      id: AUCTION_SETTINGS_ID,
-      floorPriceMultiplier: 2,
-      startPriceMultiplier: 200,
-      decayInterval: 60, // decrement every 60 blocks - approx every 2 hours
-      decayRate: 0.05, // 5% decay
-      auctionDuration: 5040, // approx 7 days long
-    },
-  ],
+export const AUCTION_SETTINGS: AuctionSettings = {
+  floorPriceMultiplier: 2,
+  startPriceMultiplier: 200,
+  decayInterval: 60, // decrement every 60 blocks - approx every 2 hours
+  decayRate: 0.05, // 5% decay
+  duration: 5040, // approx 7 days long
 };

@@ -1,5 +1,6 @@
 import {
   ARNS_NAME_RESERVED_MESSAGE,
+  AUCTION_SETTINGS,
   DEFAULT_UNDERNAME_COUNT,
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
@@ -11,12 +12,7 @@ import {
   SECONDS_IN_GRACE_PERIOD,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../../constants';
-import {
-  AuctionSettings,
-  ContractResult,
-  IOState,
-  PstAction,
-} from '../../types';
+import { ContractResult, IOState, PstAction } from '../../types';
 import {
   calculateMinimumAuctionBid,
   calculatePermabuyFee,
@@ -70,7 +66,7 @@ export const submitAuctionBid = (
   state: IOState,
   { caller, input }: PstAction,
 ): ContractResult => {
-  const { auctions = {}, fees, records, reserved, settings, balances } = state;
+  const { auctions = {}, fees, records, reserved, balances } = state;
 
   // does validation on constructor
   const {
@@ -163,13 +159,15 @@ export const submitAuctionBid = (
     handleShortName();
   }
 
-  // get the current auction settings, create one of it doesn't exist yet
-  const currentAuctionSettings: AuctionSettings =
-    settings.auctions.history.find((a) => a.id === settings.auctions.current)!;
-
   // all the things we need to handle an auction bid
   const currentBlockHeight = +SmartWeave.block.height;
-  const { decayInterval, decayRate, auctionDuration } = currentAuctionSettings;
+  const {
+    floorPriceMultiplier,
+    startPriceMultiplier,
+    decayInterval,
+    decayRate,
+    duration,
+  } = AUCTION_SETTINGS;
 
   // calculate the standard registration fee
   const registrationFee =
@@ -184,11 +182,6 @@ export const submitAuctionBid = (
 
   // no current auction, create one and vault the balance from the user
   if (!auctions[name]) {
-    const {
-      id: auctionSettingsId,
-      floorPriceMultiplier,
-      startPriceMultiplier,
-    } = currentAuctionSettings;
     // floor price multiplier could be a decimal, or whole number (e.g. 0.5 vs 2)
     const calculatedFloor = registrationFee * floorPriceMultiplier;
     // if someone submits a high floor price, we'll take it
@@ -205,14 +198,17 @@ export const submitAuctionBid = (
 
     // create the initial auction bid
     const initialAuctionBid = {
-      auctionSettingsId,
       floorPrice, // this is decremented from the initiators wallet, and could be higher than the precalculated floor
       startPrice,
       contractTxId,
       startHeight: currentBlockHeight, // auction starts right away
+      endHeight: currentBlockHeight + duration, // auction ends after the duration
       type,
       initiator: caller, // the balance that the floor price is decremented from
       ...(years ? { years } : {}),
+      decayInterval,
+      decayRate,
+      // TODO: ADD PRICES OBJECT
     };
     auctions[name] = initialAuctionBid; // create the auction object
     balances[caller] -= floorPrice; // decremented based on the floor price
