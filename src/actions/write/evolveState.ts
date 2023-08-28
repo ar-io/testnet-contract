@@ -14,17 +14,18 @@ export const evolveState = async (
     throw new ContractError(NON_CONTRACT_OWNER_MESSAGE);
   }
 
-  // evolve records
-  const { records } = state;
-  const newRecords = Object.keys(records).reduce((acc, key) => {
-    acc[key] = {
-      ...records[key],
-      startTimestamp: Date.now(),
-    };
+  // evolve auctions
+  const { records, auctions } = state;
+  const newAuctions = Object.keys(auctions).reduce((acc, key) => {
+    const { tier, ...everythingElse } = auctions[key] as any;
+    // only keep it if the name isn't in records
+    if (!records[key]) {
+      acc[key] = everythingElse;
+    }
     return acc;
   }, {});
 
-  state.records = newRecords;
+  state.auctions = newAuctions;
 
   return { state };
 };
