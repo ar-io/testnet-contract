@@ -17,29 +17,14 @@ export const evolveState = async (
   // evolve records
   const { records } = state;
   const newRecords = Object.keys(records).reduce((acc, key) => {
-    const { tier, undernames, ...everythingElse } = records[key] as any;
     acc[key] = {
-      ...everythingElse,
-      undernames: 10,
+      ...records[key],
+      startTimestamp: Date.now(),
     };
     return acc;
   }, {});
 
   state.records = newRecords;
-
-  // add gateway settings
-  state.settings.registry = {
-    minLockLength: 5,
-    maxLockLength: 720 * 365 * 3,
-    minNetworkJoinStakeAmount: 5_000,
-    minGatewayJoinLength: 2,
-    gatewayLeaveLength: 2,
-    operatorStakeWithdrawLength: 5,
-  };
-
-  // remove tiers
-  const { tiers, ...restOfState } = state as any;
-  state = restOfState;
 
   return { state };
 };
