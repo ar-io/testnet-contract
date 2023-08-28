@@ -31,6 +31,7 @@ export const UNDERNAME_REGISTRATION_IO_FEE = 1; // 1 IO token per undername
 export const NON_CONTRACT_OWNER_MESSAGE = `Caller is not the owner of the ArNS!`;
 export const INVALID_ARNS_NAME_MESSAGE = 'Invalid ArNS Record Name';
 export const ARNS_NAME_RESERVED_MESSAGE = 'Name is reserved.';
+export const ARNS_NAME_IN_AUCTION_MESSAGE = 'Name is currently in auction.';
 export const INVALID_INPUT_MESSAGE = 'Invalid input for interaction';
 export const NON_EXPIRED_ARNS_NAME_MESSAGE =
   'This name already exists in an active lease';
