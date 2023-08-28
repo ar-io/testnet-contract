@@ -13,12 +13,13 @@
       "additionalProperties": {
         "type": "object",
         "properties": {
-          "tier": { "type": "string", "format": "uuid" },
-          "contractTxID": { "type": "string", "format": "uuid" },
+          "contractTxID": { "type": "string" },
           "endTimestamp": { "type": "integer" },
-          "startTimestamp": { "type": "integer" }
+          "startTimestamp": { "type": "integer" },
+          "undernames": { "type": "number", "minimum": 10, "maximum": 10000 },
+          "type": { "type": "string", "enum": ["lease", "permabuy"] }
         },
-        "required": ["tier", "contractTxID", "startTimestamp"],
+        "required": ["contractTxID", "startTimestamp", "undernames"],
         "additionalProperties": false
       }
     },
@@ -27,61 +28,24 @@
       "additionalProperties": {
         "type": "object",
         "properties": {
-          "tier": { "type": "string", "format": "uuid" },
-          "contractTxID": { "type": "string", "format": "uuid" },
+          "contractTxID": { "type": "string" },
           "endTimestamp": { "type": "integer" },
-          "startTimestamp": { "type": "integer" }
+          "startTimestamp": { "type": "integer" },
+          "type": { "type": "string", "enum": ["lease", "permabuy"] }
         },
-        "required": ["tier", "contractTxID", "startTimestamp"],
+        "required": ["contractTxID", "startTimestamp"],
         "additionalProperties": false
       }
     },
     "balances": {
-      "type": "object",
-      "additionalProperties": { "type": "integer" }
+      "type": "object"
     },
     "approvedANTSourceCodeTxs": {
       "type": "array",
       "items": { "type": "string" }
     },
-    "tiers": {
-      "type": "object",
-      "properties": {
-        "current": {
-          "type": "object",
-          "properties": {
-            "1": { "type": "string", "format": "uuid" },
-            "2": { "type": "string", "format": "uuid" },
-            "3": { "type": "string", "format": "uuid" }
-          },
-          "required": ["1", "2", "3"],
-          "additionalProperties": false
-        },
-        "history": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": { "type": "string", "format": "uuid" },
-              "fee": { "type": "integer" },
-              "settings": {
-                "type": "object",
-                "properties": { "maxUndernames": { "type": "integer" } },
-                "required": ["maxUndernames"],
-                "additionalProperties": false
-              }
-            },
-            "required": ["id", "fee", "settings"],
-            "additionalProperties": false
-          }
-        }
-      },
-      "required": ["current", "history"],
-      "additionalProperties": false
-    },
     "fees": {
-      "type": "object",
-      "additionalProperties": { "type": "integer" }
+      "type": "object"
     }
   },
   "required": [
@@ -93,8 +57,8 @@
     "canEvolve",
     "records",
     "balances",
-    "approvedANTSourceCodeTxs",
-    "tiers",
+    "auctions",
+    "gateways",
     "fees"
   ],
   "additionalProperties": false
