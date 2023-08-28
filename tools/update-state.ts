@@ -40,23 +40,13 @@ import { keyfile } from './constants';
     updateCacheForEachInteraction: true,
   });
   contract.connect(wallet);
-
-  const { cachedValue } = await contract.readState();
-  const { records: prevRecords } = cachedValue.state as IOState;
-  for (const name in prevRecords) {
-    // Create the evolved source code tx
-    if (!prevRecords[name].undernames) {
-      console.log('Updating record undername count for', name);
-      const writeInteraction = await contract.writeInteraction(
-        {
-          function: 'increaseUndernameCount',
-          qty: 1,
-          name,
-        },
-        {
-          disableBundling: true,
-        },
-      );
-    }
-  }
+  const writeInteraction = await contract.writeInteraction(
+    {
+      function: 'evolveState',
+    },
+    {
+      disableBundling: true,
+    },
+  );
+  console.log('Write interaction', writeInteraction);
 })();

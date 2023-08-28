@@ -14,19 +14,15 @@ export const getAuction = (
     throw new ContractError(`No live auction exists for ${auction}`);
   }
 
-  const { auctionSettingsId, startHeight, floorPrice, startPrice } = auction;
-  const auctionSettings = settings.auctions.history.find(
-    (a) => a.id === auctionSettingsId,
-  );
-
-  if (!auctionSettings) {
-    throw new ContractError(
-      `Auction settings with id ${auctionSettingsId} does not exist.`,
-    );
-  }
-
-  const { auctionDuration, decayRate, decayInterval } = auctionSettings;
-  const intervalCount = auctionDuration / decayInterval;
+  const {
+    startHeight,
+    endHeight,
+    decayInterval,
+    decayRate,
+    floorPrice,
+    startPrice,
+  } = auction;
+  const intervalCount = (startHeight - endHeight) / decayInterval;
   const prices = {};
   for (let i = 0; i <= intervalCount; i++) {
     const intervalHeight = startHeight + i * decayInterval;

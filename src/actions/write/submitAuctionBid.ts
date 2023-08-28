@@ -224,7 +224,7 @@ export const submitAuctionBid = (
   // current auction in the state, validate the bid and update state
   if (auctions[name]) {
     const existingAuction = auctions[name];
-    const auctionEndHeight = existingAuction.startHeight + auctionDuration;
+    const auctionEndHeight = existingAuction.startHeight + duration;
     const endTimestamp =
       existingAuction.type === 'lease'
         ? +SmartWeave.block.timestamp +
