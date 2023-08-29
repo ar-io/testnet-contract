@@ -112,6 +112,7 @@ function createGateways(wallets: string[]) {
       fqdn: 'arweave.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
       port: 443, // The port used by this gateway eg. 443
       protocol: 'https', // The protocol used by this gateway, either http or https
+      properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
       note: 'The friendliest gateway to the whole permaweb',
     },
   };
@@ -133,6 +134,7 @@ function createGateways(wallets: string[]) {
       fqdn: 'slash-this-gateway.io', // the fully qualified domain name this gateway can be reached at. eg arweave.net
       port: 443, // The port used by this gateway eg. 443
       protocol: 'https', // The protocol used by this gateway, either http or https
+      properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
       note: 'i do bad things',
     },
   };
@@ -169,6 +171,7 @@ function createGateways(wallets: string[]) {
       fqdn: 'delegate.org', // the fully qualified domain name this gateway can be reached at. eg arweave.net
       port: 80, // The port used by this gateway eg. 443
       protocol: 'http', // The protocol used by this gateway, either http or https
+      properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
       note: '',
     },
   };
@@ -190,6 +193,7 @@ function createGateways(wallets: string[]) {
       fqdn: 'brokeninfra.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
       port: 12345, // The port used by this gateway eg. 443
       protocol: 'https', // The protocol used by this gateway, either http or https
+      properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
       note: '',
     },
   };
@@ -211,6 +215,7 @@ function createGateways(wallets: string[]) {
       fqdn: 'goodbye.com', // the fully qualified domain name this gateway can be reached at. eg arweave.net
       port: 443, // The port used by this gateway eg. 443
       protocol: 'https', // The protocol used by this gateway, either http or https
+      properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
       note: 'Leaving the network',
     },
   };

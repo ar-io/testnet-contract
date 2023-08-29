@@ -48,6 +48,7 @@ describe('Network', () => {
         const qty = prevState.settings.registry.minNetworkJoinStakeAmount; // must meet the minimum
         const label = 'Test Gateway'; // friendly label
         const fqdn = 'jest.io';
+        const properties = 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44';
         const port = 3000;
         const protocol = 'http';
         const note =
@@ -58,6 +59,7 @@ describe('Network', () => {
           fqdn: 'jest.io',
           port: 3000,
           protocol: 'http',
+          properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44',
           note: 'Our gateway is the best test gateway. Contact bob@ar.io for more.',
         };
         const writeInteraction = await contract.writeInteraction({
@@ -90,6 +92,7 @@ describe('Network', () => {
             fqdn: fqdn,
             port: port,
             protocol: protocol,
+            properties: properties,
             note: note,
           },
         });
@@ -129,6 +132,34 @@ describe('Network', () => {
         });
       });
 
+      it('should not increase operator stake without correct funds', async () => {
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const prevState = prevCachedValue.state as IOState;
+        const prevBalance = prevState.balances[newGatewayOperatorAddress];
+        const prevGatewayOperatorBalance =
+          prevState.gateways[newGatewayOperatorAddress].operatorStake;
+        const qty = 1_000_000_000_000_000_000_000; // a ridiculous amount of funds that this user doesnt have
+        const writeInteraction = await contract.writeInteraction({
+          function: 'increaseOperatorStake',
+          qty,
+        });
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue: newCachedValue } = await contract.readState();
+        const newState = newCachedValue.state as IOState;
+        expect(Object.keys(newCachedValue.errorMessages)).toContain(
+          writeInteraction!.originalTxId,
+        ); // this interaction should return an error since its not valid
+        expect(newState.balances[newGatewayOperatorAddress]).toEqual(
+          prevBalance,
+        );
+        expect(
+          newState.gateways[newGatewayOperatorAddress].operatorStake,
+        ).toEqual(prevGatewayOperatorBalance);
+        expect(
+          newState.gateways[newGatewayOperatorAddress].vaults.length,
+        ).toEqual(prevState.gateways[newGatewayOperatorAddress].vaults.length); // the vault shou
+      });
+
       it('should not initiate operator stake decrease if the vault has not been locked long enough', async () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevState = prevCachedValue.state as IOState;
@@ -142,7 +173,7 @@ describe('Network', () => {
         const newState = newCachedValue.state as IOState;
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
           writeInteraction!.originalTxId,
-        );
+        ); // this interaction should return an error since its not valid
         expect(newState.gateways[newGatewayOperatorAddress].vaults[id]).toEqual(
           prevState.gateways[newGatewayOperatorAddress].vaults[id],
         );
@@ -234,6 +265,38 @@ describe('Network', () => {
 
     describe('gateway settings', () => {
       it('should modify gateway settings with correct parameters', async () => {
+        const label = 'Updated Label'; // friendly label
+        const port = 80;
+        const protocol = 'http';
+        const fqdn = 'back-to-port-80.com';
+        const properties = 'WRONg6rQ9Py7L8j4CkS8jn818gdXW25Oofg0q2E58ro';
+        const note = '';
+        const writeInteraction = await contract.writeInteraction({
+          function: 'updateGatewaySettings',
+          label,
+          port,
+          protocol,
+          fqdn,
+          properties,
+          note,
+        });
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue: newCachedValue } = await contract.readState();
+        const newState = newCachedValue.state as IOState;
+        expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(newState.gateways[newGatewayOperatorAddress].settings).toEqual({
+          fqdn: fqdn,
+          label: label,
+          note: note,
+          port: port,
+          properties: properties,
+          protocol: protocol,
+        });
+      });
+
+      it('should modify gateway settings with correct status', async () => {
         const writeInteraction = await contract.writeInteraction({
           function: 'updateGatewaySettings',
           status: NETWORK_HIDDEN_STATUS,
@@ -248,6 +311,149 @@ describe('Network', () => {
         expect(newGateway.status).toEqual(NETWORK_HIDDEN_STATUS);
       });
 
+      it('should not modify gateway settings with incorrect status', async () => {
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const prevState = prevCachedValue.state as IOState;
+        const writeInteraction = await contract.writeInteraction({
+          function: 'updateGatewaySettings',
+          status: 'OOPSIE',
+        });
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue: newCachedValue } = await contract.readState();
+        const newState = newCachedValue.state as IOState;
+        expect(Object.keys(newCachedValue.errorMessages)).toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(newState.gateways[newGatewayOperatorAddress].settings).toEqual(
+          prevState.gateways[newGatewayOperatorAddress].settings,
+        );
+      });
+
+      it.each(['SUUUUUUUUUUUUUUUUUUUUUUUUUUPER LONG LABEL!!!!!!!!!', 0, ''])(
+        'should not modify gateway settings with invalid label',
+        async (badLabel) => {
+          const { cachedValue: prevCachedValue } = await contract.readState();
+          const prevState = prevCachedValue.state as IOState;
+          const writeInteraction = await contract.writeInteraction({
+            function: 'updateGatewaySettings',
+            label: badLabel,
+          });
+          expect(writeInteraction?.originalTxId).not.toBe(undefined);
+          const { cachedValue: newCachedValue } = await contract.readState();
+          const newState = newCachedValue.state as IOState;
+          expect(newState.gateways[newGatewayOperatorAddress].settings).toEqual(
+            prevState.gateways[newGatewayOperatorAddress].settings,
+          );
+        },
+      );
+
+      it.each(['', '443', 12345678, 0])(
+        'should not modify gateway settings with invalid port',
+        async (badPort) => {
+          const { cachedValue: prevCachedValue } = await contract.readState();
+          const prevState = prevCachedValue.state as IOState;
+          const writeInteraction = await contract.writeInteraction({
+            function: 'updateGatewaySettings',
+            port: badPort,
+          });
+          expect(writeInteraction?.originalTxId).not.toBe(undefined);
+          const { cachedValue: newCachedValue } = await contract.readState();
+          const newState = newCachedValue.state as IOState;
+          expect(newState.gateways[newGatewayOperatorAddress].settings).toEqual(
+            prevState.gateways[newGatewayOperatorAddress].settings,
+          );
+        },
+      );
+
+      it('should not modify gateway settings with invalid protocol', async () => {
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const prevState = prevCachedValue.state as IOState;
+        const protocol = 'ipfs';
+        const writeInteraction = await contract.writeInteraction({
+          function: 'updateGatewaySettings',
+          protocol,
+        });
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue: newCachedValue } = await contract.readState();
+        const newState = newCachedValue.state as IOState;
+        expect(Object.keys(newCachedValue.errorMessages)).toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(newState.gateways[newGatewayOperatorAddress].settings).toEqual(
+          prevState.gateways[newGatewayOperatorAddress].settings,
+        );
+      });
+
+      it.each([
+        '',
+        '*&*##$%#',
+        '-leading',
+        'trailing-',
+        'bananas.one two three',
+        'this-is-a-looong-name-a-verrrryyyyy-loooooong-name-that-is-too-long',
+        12345,
+      ])(
+        'should not modify gateway settings with invalid fqdn',
+        async (badFQDN) => {
+          const { cachedValue: prevCachedValue } = await contract.readState();
+          const prevState = prevCachedValue.state as IOState;
+          const writeInteraction = await contract.writeInteraction({
+            function: 'updateGatewaySettings',
+            fqdn: badFQDN,
+          });
+          expect(writeInteraction?.originalTxId).not.toBe(undefined);
+          const { cachedValue: newCachedValue } = await contract.readState();
+          const newState = newCachedValue.state as IOState;
+          expect(newState.gateways[newGatewayOperatorAddress].settings).toEqual(
+            prevState.gateways[newGatewayOperatorAddress].settings,
+          );
+        },
+      );
+
+      it.each([
+        'arweave',
+        'nVmehvHGVGJaLC8mrOn6H3N3BWiquXKZ33_z6i2fnK/',
+        12345678,
+        0,
+      ])(
+        'should not modify gateway settings with invalid properties',
+        async (badProperties) => {
+          const { cachedValue: prevCachedValue } = await contract.readState();
+          const prevState = prevCachedValue.state as IOState;
+          const writeInteraction = await contract.writeInteraction({
+            function: 'updateGatewaySettings',
+            properties: badProperties,
+          });
+          expect(writeInteraction?.originalTxId).not.toBe(undefined);
+          const { cachedValue: newCachedValue } = await contract.readState();
+          const newState = newCachedValue.state as IOState;
+          expect(newState.gateways[newGatewayOperatorAddress].settings).toEqual(
+            prevState.gateways[newGatewayOperatorAddress].settings,
+          );
+        },
+      );
+
+      it.each([
+        'This note is way too long.  This note is way too long.  This note is way too long.  This note is way too long.  This note is way too long.  This note is way too long.  This note is way too long.  This note is way too long.  This note is way too long.  This note is way too long.',
+        0,
+      ])(
+        'should not modify gateway settings with invalid note',
+        async (badNote) => {
+          const { cachedValue: prevCachedValue } = await contract.readState();
+          const prevState = prevCachedValue.state as IOState;
+          const writeInteraction = await contract.writeInteraction({
+            function: 'updateGatewaySettings',
+            note: badNote,
+          });
+          expect(writeInteraction?.originalTxId).not.toBe(undefined);
+          const { cachedValue: newCachedValue } = await contract.readState();
+          const newState = newCachedValue.state as IOState;
+          expect(newState.gateways[newGatewayOperatorAddress].settings).toEqual(
+            prevState.gateways[newGatewayOperatorAddress].settings,
+          );
+        },
+      );
+
       it('should not modify gateway settings with invalid parameters', async () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevState = prevCachedValue.state as IOState;
@@ -255,6 +461,7 @@ describe('Network', () => {
         const port = 'string';
         const protocol = 'ipfs';
         const fqdn = 'fake_url.com';
+        const properties = 12345;
         const note = 12345;
         const status = 'leavingNetwork';
         const writeInteraction = await contract.writeInteraction({
@@ -263,6 +470,7 @@ describe('Network', () => {
           port,
           protocol,
           fqdn,
+          properties,
           note,
           status,
         });
@@ -431,7 +639,7 @@ describe('Network', () => {
     });
 
     describe('write interactions', () => {
-      it('should not join the network without correct parameters', async () => {
+      it('should not join the network without right amount of funds', async () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevBalance =
           prevCachedValue.state.balances[nonGatewayOperatorAddress];
@@ -441,6 +649,7 @@ describe('Network', () => {
         const port = 3000;
         const protocol = 'http';
         const note = 'Invalid gateway';
+        const properties = 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44';
         const writeInteraction = await contract.writeInteraction({
           function: 'joinNetwork',
           qty,
@@ -448,6 +657,7 @@ describe('Network', () => {
           fqdn,
           port,
           protocol,
+          properties,
           note,
         });
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -458,6 +668,20 @@ describe('Network', () => {
         );
         expect(newState.balances[nonGatewayOperatorAddress]).toEqual(
           prevBalance,
+        );
+        expect(newState.gateways[nonGatewayOperatorAddress]).toEqual(undefined);
+      });
+
+      it('should not modify gateway settings without already being in GAR', async () => {
+        const writeInteraction = await contract.writeInteraction({
+          function: 'updateGatewaySettings',
+          status: NETWORK_HIDDEN_STATUS,
+        });
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue: newCachedValue } = await contract.readState();
+        const newState = newCachedValue.state as IOState;
+        expect(Object.keys(newCachedValue.errorMessages)).toContain(
+          writeInteraction!.originalTxId,
         );
         expect(newState.gateways[nonGatewayOperatorAddress]).toEqual(undefined);
       });
