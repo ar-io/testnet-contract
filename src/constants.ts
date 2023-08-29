@@ -24,7 +24,6 @@ export const MINIMUM_ALLOWED_EVOLUTION_DELAY = 3; // 3 blocks for testing purpos
 export const MINIMUM_ALLOWED_NAME_LENGTH = 5; // names less than 5 characters are reserved for auction
 export const RARITY_MULTIPLIER_HALVENING = 25;
 export const PERMABUY_LEASE_FEE_LENGTH = 10;
-export const ALLOWED_ACTIVE_TIERS = [1, 2, 3];
 export const ANNUAL_PERCENTAGE_FEE = 0.1; // 10% of cost of name
 export const DEFAULT_UNDERNAME_COUNT = 10;
 export const MAX_ALLOWED_UNDERNAMES = 10_000; // when modifying these, update the undernames schema
@@ -32,6 +31,7 @@ export const UNDERNAME_REGISTRATION_IO_FEE = 1; // 1 IO token per undername
 export const NON_CONTRACT_OWNER_MESSAGE = `Caller is not the owner of the ArNS!`;
 export const INVALID_ARNS_NAME_MESSAGE = 'Invalid ArNS Record Name';
 export const ARNS_NAME_RESERVED_MESSAGE = 'Name is reserved.';
+export const ARNS_NAME_IN_AUCTION_MESSAGE = 'Name is currently in auction.';
 export const INVALID_INPUT_MESSAGE = 'Invalid input for interaction';
 export const NON_EXPIRED_ARNS_NAME_MESSAGE =
   'This name already exists in an active lease';
@@ -44,43 +44,9 @@ export const INSUFFICIENT_FUNDS_MESSAGE =
 export const INVALID_TARGET_MESSAGE = 'Invalid target specified';
 export const INVALID_QTY_MESSAGE =
   'Invalid quantity. Must be an integer and greater than 0.';
-export const INVALID_TIER_MESSAGE = 'Invalid tier.';
-export const INVALID_ID_TIER_MESSAGE =
-  'Invalid tier ID. Must be present in state before it can be used as a current tier.';
 export const INVALID_YEARS_MESSAGE = `Invalid number of years. Must be an integer and less than or equal to ${MAX_YEARS}`;
 export const INVALID_SHORT_NAME = `Name is less than ${MINIMUM_ALLOWED_NAME_LENGTH} characters. It will be available for auction after ${SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP}.`;
 export const MAX_UNDERNAME_MESSAGE = `Name has reached undername limit of ${MAX_ALLOWED_UNDERNAMES}`;
-export const CURRENT_TIERS = [
-  'a27dbfe4-6992-4276-91fb-5b97ae8c3ffa',
-  '93685bbb-8246-4e7e-bef8-d2e7e6c5d44a',
-  'b6c8ee18-2481-4c1b-886c-dbe6b606486a',
-];
-export const TIERS = {
-  current: CURRENT_TIERS,
-  history: [
-    {
-      id: CURRENT_TIERS[0],
-      fee: 100,
-      settings: {
-        maxUndernames: 100,
-      },
-    },
-    {
-      id: CURRENT_TIERS[1],
-      fee: 1000,
-      settings: {
-        maxUndernames: 1000,
-      },
-    },
-    {
-      id: CURRENT_TIERS[2],
-      fee: 10000,
-      settings: {
-        maxUndernames: 10000,
-      },
-    },
-  ],
-};
 export const FEE_STRUCTURE = {
   '1': 4218750000,
   '2': 1406250000,

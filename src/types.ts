@@ -23,10 +23,6 @@ export type IOState = PstState & {
   };
   // A list of all fees for purchasing ArNS names
   fees: Fees;
-  tiers: {
-    current: string[];
-    history: ServiceTier[];
-  };
   settings: ContractSettings; // protocol settings and parameters
   reserved: {
     // A list of all reserved names that are not allowed to be purchased at this time
@@ -56,7 +52,6 @@ export type Auction = {
   type: 'lease' | 'permabuy';
   initiator: string;
   contractTxId: string;
-  tier: string;
   years?: number;
 };
 
@@ -121,7 +116,6 @@ export type ArNSName = {
   contractTxId: string; // The ANT Contract used to manage this name
   startTimestamp: number; // At what unix time (seconds since epoch) the lease starts
   endTimestamp?: number; // At what unix time (seconds since epoch) the lease ends
-  tier: string; // The id of the tier selected at time of purchased
   type: 'lease' | 'permabuy';
   undernames: number;
 };
@@ -156,8 +150,6 @@ export type FoundationActionInput =
   | WalletAddress
   | ValidStringInput
   | FeesInput
-  | ActiveTier
-  | ServiceTier
   | DelayedEvolveInput;
 
 const foundationActionStatus = [
@@ -174,8 +166,6 @@ export type FoundationActionType =
   | 'addAddress'
   | 'removeAddress'
   | 'setNameFees'
-  | 'createNewTier'
-  | 'setActiveTier'
   | 'delayedEvolve';
 
 export type TokenVault = {
@@ -235,32 +225,11 @@ export type ArNSNameResult = {
   name: string;
   contractTxId: string; // The ANT Contract used to manage this name
   endTimestamp: number; // At what unix time (seconds since epoch) the lease ends
-  tier: ServiceTier; // Maps to the service tier
-};
-
-export type ServiceTier = {
-  id: string;
-  fee: number;
-  settings: ServiceTierSettings;
-};
-
-export type ActiveTier = { id: string; idx?: number };
-
-// any tier settings offered
-export type ServiceTierSettings = {
-  maxUndernames: number;
 };
 
 export type PstFunctions = 'balance' | 'transfer' | 'evolve';
 
-export type PDNSFunctions =
-  | 'buyRecord'
-  | 'extendRecord'
-  | 'setName'
-  | 'tier'
-  | 'activeTiers'
-  | 'upgradeTier'
-  | 'record';
+export type PDNSFunctions = 'buyRecord' | 'extendRecord' | 'setName' | 'record';
 
 export type GARFunctions =
   | 'joinNetwork'

@@ -8,11 +8,9 @@ import {
   DEFAULT_UNDERNAME_COUNT,
   INVALID_INPUT_MESSAGE,
   INVALID_SHORT_NAME,
-  INVALID_TIER_MESSAGE,
   INVALID_YEARS_MESSAGE,
   MAX_YEARS,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
-  SECONDS_IN_A_YEAR,
 } from './utils/constants';
 import {
   calculatePermabuyFee,
@@ -52,18 +50,13 @@ describe('Records', () => {
         function: 'record',
         name: 'name1',
       });
-      const expectedTierObj = {
-        fee: expect.any(Number),
-        id: expect.any(String),
-        settings: expect.any(Object),
-      };
       const expectObjected = {
-        tier: expectedTierObj,
         name: 'name1',
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
         contractTxID: expect.any(String),
         undernames: DEFAULT_UNDERNAME_COUNT,
+        type: 'lease',
       };
       expect(record).not.toBe(undefined);
       expect(record).toEqual(expectObjected);
@@ -97,28 +90,22 @@ describe('Records', () => {
         },
       );
 
-      const purchasedTierId = prevState.tiers.current[0];
-      const purchasedTier = prevState.tiers.history.find(
-        (t) => t.id === purchasedTierId,
-      )!;
       const currentBlock = await arweave.blocks.getCurrent();
       const expectedPurchasePrice = calculateTotalRegistrationFee(
         namePurchase.name,
         prevState.fees,
-        purchasedTier,
         namePurchase.years,
         currentBlock.timestamp,
       );
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      const { balances, records, tiers } = cachedValue.state as IOState;
+      const { balances, records } = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).not.toContain(
         writeInteraction!.originalTxId,
       );
       expect(records[namePurchase.name.toLowerCase()]).toEqual({
         contractTxId: ANT_CONTRACT_IDS[0],
-        tier: tiers.current[0],
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
         undernames: DEFAULT_UNDERNAME_COUNT,
@@ -129,7 +116,7 @@ describe('Records', () => {
       );
     });
 
-    it('should be able to lease a name without specifying years, tier, or type', async () => {
+    it('should be able to lease a name without specifying years and type', async () => {
       const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
       const prevBalance = prevState.balances[nonContractOwnerAddress];
@@ -147,28 +134,22 @@ describe('Records', () => {
         },
       );
 
-      const purchasedTierId = prevState.tiers.current[0];
-      const purchasedTier = prevState.tiers.history.find(
-        (t) => t.id === purchasedTierId,
-      )!;
       const currentBlock = await arweave.blocks.getCurrent();
       const expectedPurchasePrice = calculateTotalRegistrationFee(
         namePurchase.name!,
         prevState.fees,
-        purchasedTier,
         1,
         currentBlock.timestamp,
       );
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      const { balances, records, tiers } = cachedValue.state as IOState;
+      const { balances, records } = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).not.toContain(
         writeInteraction!.originalTxId,
       );
       expect(records[namePurchase.name.toLowerCase()]).toEqual({
         contractTxId: ANT_CONTRACT_IDS[0],
-        tier: tiers.current[0],
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
         undernames: DEFAULT_UNDERNAME_COUNT,
@@ -198,151 +179,27 @@ describe('Records', () => {
         },
       );
 
-      const purchasedTierId = prevState.tiers.current[0];
-      const purchasedTier = prevState.tiers.history.find(
-        (t) => t.id === purchasedTierId,
-      )!;
       const currentBlock = await arweave.blocks.getCurrent();
       const expectedPurchasePrice = calculatePermabuyFee(
         namePurchase.name,
         prevState.fees,
-        purchasedTier,
         currentBlock.timestamp,
       );
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      const { balances, records, tiers } = cachedValue.state as IOState;
+      const { balances, records } = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).not.toContain(
         writeInteraction!.originalTxId,
       );
       expect(records[namePurchase.name.toLowerCase()]).toEqual({
         contractTxId: ANT_CONTRACT_IDS[0],
-        tier: tiers.current[0],
         type: 'permabuy',
         startTimestamp: expect.any(Number),
         undernames: DEFAULT_UNDERNAME_COUNT,
       });
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevBalance - expectedPurchasePrice,
-      );
-    });
-
-    it('should not be able to upgrade a record tier with an invalid tier provided', async () => {
-      const { cachedValue: prevCachedValue } = await contract.readState();
-      const prevState = prevCachedValue.state as IOState;
-      const namePurchase = {
-        name: 'newName2',
-        tier: 'invalid-tier',
-      };
-      const writeInteraction = await contract.writeInteraction(
-        {
-          function: 'upgradeTier',
-          ...namePurchase,
-        },
-        {
-          disableBundling: true,
-        },
-      );
-
-      expect(writeInteraction?.originalTxId).not.toBe(undefined);
-      const { cachedValue } = await contract.readState();
-      const { records, balances } = cachedValue.state as IOState;
-      expect(Object.keys(cachedValue.errorMessages)).toContain(
-        writeInteraction!.originalTxId,
-      );
-      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
-        expect.stringContaining(INVALID_TIER_MESSAGE),
-      );
-      expect(balances[nonContractOwnerAddress]).toEqual(
-        prevState.balances[nonContractOwnerAddress],
-      );
-      expect(records[namePurchase.name.toLocaleLowerCase()]).toEqual(
-        prevState.records[namePurchase.name.toLowerCase()],
-      );
-    });
-
-    it('should not be able to upgrade a record tier if the provided tier is less than the current tier', async () => {
-      const { cachedValue: prevCachedValue } = await contract.readState();
-      const prevState = prevCachedValue.state as IOState;
-      const prevRecord = prevState.records['newname2'];
-      const namePurchase = {
-        name: 'newName2',
-        tier: prevRecord.tier,
-      };
-      const writeInteraction = await contract.writeInteraction(
-        {
-          function: 'upgradeTier',
-          ...namePurchase,
-        },
-        {
-          disableBundling: true,
-        },
-      );
-
-      expect(writeInteraction?.originalTxId).not.toBe(undefined);
-      const { cachedValue } = await contract.readState();
-      const { records, balances } = cachedValue.state as IOState;
-      expect(Object.keys(cachedValue.errorMessages)).toContain(
-        writeInteraction!.originalTxId,
-      );
-      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
-        expect.stringContaining(INVALID_TIER_MESSAGE),
-      );
-      expect(balances[nonContractOwnerAddress]).toEqual(
-        prevState.balances[nonContractOwnerAddress],
-      );
-      expect(records[namePurchase.name.toLowerCase()]).toEqual(
-        expect.objectContaining({
-          contractTxId: prevRecord.contractTxId,
-          tier: namePurchase.tier,
-          endTimestamp: prevRecord.endTimestamp,
-        }),
-      );
-    });
-
-    it('should be able to upgrade a record tier if the provided tier is valid and greater than the current tier', async () => {
-      const { cachedValue: prevCachedValue } = await contract.readState();
-      const prevState = prevCachedValue.state as IOState;
-      const prevRecord = prevState.records['newname2'];
-      const namePurchase = {
-        name: 'newName2',
-        tier: prevState.tiers.current[2],
-      };
-      const writeInteraction = await contract.writeInteraction(
-        {
-          function: 'upgradeTier',
-          ...namePurchase,
-        },
-        {
-          disableBundling: true,
-        },
-      );
-      const currentBlockTimestamp = (await arweave.blocks.getCurrent())
-        .timestamp;
-      // get the current block height timestamp
-      expect(writeInteraction?.originalTxId).not.toBe(undefined);
-      const { cachedValue } = await contract.readState();
-      const { records, balances, tiers } = cachedValue.state as IOState;
-      const tierFeeDiff =
-        (tiers.history.find((t) => t.id === tiers.current[0])?.fee ?? 0) -
-        (tiers.history.find((t) => t.id === tiers.current[2])?.fee ?? 0);
-      const remainingYears =
-        (currentBlockTimestamp - (prevRecord.endTimestamp ?? 0)) /
-        SECONDS_IN_A_YEAR;
-      const annualTierFeeDifference = tierFeeDiff * remainingYears;
-      expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-        writeInteraction!.originalTxId,
-      );
-      expect(balances[nonContractOwnerAddress]).toEqual(
-        prevState.balances[nonContractOwnerAddress] - annualTierFeeDifference,
-      );
-      expect(records[namePurchase.name.toLowerCase()]).toEqual(
-        expect.objectContaining({
-          contractTxId: prevRecord.contractTxId,
-          tier: namePurchase.tier,
-          endTimestamp: prevRecord.endTimestamp,
-        }),
       );
     });
 
@@ -416,48 +273,6 @@ describe('Records', () => {
           prevState.balances[nonContractOwnerAddress],
         );
         expect(records).toEqual(prevState.records);
-      },
-    );
-
-    it.each([
-      // TODO: add other known invalid names
-      '',
-      '*&*##$%#',
-      '-leading',
-      'this-is-a-looong-name-a-verrrryyyyy-loooooong-name-that-is-too-long',
-      'test.subdomain.name',
-      false,
-      true,
-      0,
-      1,
-      3.54,
-    ])(
-      'should not be able to purchase an invalid tier: %s',
-      async (badTier) => {
-        const namePurchase = {
-          name: 'bad-tier',
-          contractTxId: ANT_CONTRACT_IDS[0],
-          years: 1,
-          tier: badTier,
-        };
-        const writeInteraction = await contract.writeInteraction(
-          {
-            function: 'buyRecord',
-            ...namePurchase,
-          },
-          {
-            disableBundling: true,
-          },
-        );
-
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
-        const { cachedValue } = await contract.readState();
-        expect(Object.keys(cachedValue.errorMessages)).toContain(
-          writeInteraction!.originalTxId,
-        );
-        expect(
-          cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
       },
     );
 
@@ -556,66 +371,6 @@ describe('Records', () => {
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
         ).toEqual(INVALID_YEARS_MESSAGE);
-      },
-    );
-
-    it.each(['', '1', 'string', '*&*##$%#', 2.3, false, true])(
-      'should not be able to purchase a name with an invalid tier: %s',
-      async (badTier) => {
-        const namePurchase = {
-          name: 'good-name',
-          contractTxId: ANT_CONTRACT_IDS[0],
-          years: 1,
-          tier: badTier,
-        };
-        const writeInteraction = await contract.writeInteraction(
-          {
-            function: 'buyRecord',
-            ...namePurchase,
-          },
-          {
-            disableBundling: true,
-          },
-        );
-
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
-        const { cachedValue } = await contract.readState();
-        expect(Object.keys(cachedValue.errorMessages)).toContain(
-          writeInteraction!.originalTxId,
-        );
-        expect(
-          cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
-      },
-    );
-
-    it.each(['', '1', 'string', '*&*##$%#', 100, 2.3, false, true])(
-      'should not be able to purchase a name with an invalid tier number: %s',
-      async (badTierNumber) => {
-        const namePurchase = {
-          name: 'good-name',
-          contractTxId: ANT_CONTRACT_IDS[0],
-          years: 1,
-          tier: badTierNumber,
-        };
-        const writeInteraction = await contract.writeInteraction(
-          {
-            function: 'buyRecord',
-            ...namePurchase,
-          },
-          {
-            disableBundling: true,
-          },
-        );
-
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
-        const { cachedValue } = await contract.readState();
-        expect(Object.keys(cachedValue.errorMessages)).toContain(
-          writeInteraction!.originalTxId,
-        );
-        expect(
-          cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
       },
     );
 
@@ -746,11 +501,10 @@ describe('Records', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      const { records, reserved, tiers } = cachedValue.state as IOState;
+      const { records, reserved } = cachedValue.state as IOState;
       expect(records[namePurchase.name.toLowerCase()]).not.toBe(undefined);
       expect(records[namePurchase.name.toLowerCase()]).toEqual({
         contractTxId: ANT_CONTRACT_IDS[0],
-        tier: tiers.current[0],
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
         undernames: DEFAULT_UNDERNAME_COUNT,

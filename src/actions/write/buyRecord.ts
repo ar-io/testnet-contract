@@ -1,4 +1,5 @@
 import {
+  ARNS_NAME_IN_AUCTION_MESSAGE,
   ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_UNDERNAME_COUNT,
   INVALID_INPUT_MESSAGE,
@@ -11,9 +12,8 @@ import {
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
-  TIERS,
 } from '../../constants';
-import { ContractResult, IOState, PstAction, ServiceTier } from '../../types';
+import { ContractResult, IOState, PstAction } from '../../types';
 import {
   calculatePermabuyFee,
   calculateTotalRegistrationFee,
@@ -30,12 +30,11 @@ export class BuyRecord {
   name: string;
   contractTxId: string;
   years: number;
-  tier: string;
   type: 'lease' | 'permabuy';
   auction: boolean;
   qty: number;
 
-  constructor(input: any, defaults: { tier: string }) {
+  constructor(input: any) {
     // validate using ajv validator
     if (!validateBuyRecord(input)) {
       throw new ContractError(
@@ -54,7 +53,6 @@ export class BuyRecord {
       name,
       contractTxId = RESERVED_ATOMIC_TX_ID,
       years = 1,
-      tier = defaults.tier,
       type = 'lease',
       auction = false,
     } = input;
@@ -64,7 +62,6 @@ export class BuyRecord {
         ? SmartWeave.transaction.id
         : contractTxId),
       (this.years = years);
-    this.tier = tier;
     this.type = type;
     this.auction = auction;
   }
@@ -75,13 +72,9 @@ export const buyRecord = (
   { caller, input }: PstAction,
 ): ContractResult => {
   // get all other relevant state data
-  const { balances, records, reserved, fees, tiers = TIERS } = state;
-  const { current: currentTiers, history: allTiers } = tiers;
+  const { balances, records, reserved, fees, auctions } = state;
+  const { name, contractTxId, years, type, auction } = new BuyRecord(input); // does validation on constructor
   const currentBlockTime = +SmartWeave.block.timestamp;
-  const buyRecordInput = new BuyRecord(input, {
-    tier: tiers.current[0],
-  }); // does validation on constructor
-  const { name, contractTxId, years, tier, type, auction } = buyRecordInput;
 
   // auction logic if auction flag set
   if (auction) {
@@ -89,6 +82,9 @@ export const buyRecord = (
       caller,
       input,
     });
+  } else if (auctions[name]) {
+    // if auction flag not set, but auction exists, throw error
+    throw new ContractError(ARNS_NAME_IN_AUCTION_MESSAGE);
   }
 
   // Check if the user has enough tokens to purchase the name
@@ -104,13 +100,6 @@ export const buyRecord = (
   // Additional check if it includes a valid number of years (TODO: this may be set in contract settings)
   if (years > MAX_YEARS) {
     throw new ContractError(INVALID_YEARS_MESSAGE);
-  }
-
-  // list of all active tier ID's
-  if (!currentTiers.includes(tier)) {
-    throw new ContractError(
-      `Invalid value for "tier". Must be one of: ${currentTiers.join(',')}`,
-    );
   }
 
   // TODO: do we have a premium multiplier?
@@ -157,9 +146,6 @@ export const buyRecord = (
     handleShortName();
   }
 
-  // the tier purchased
-  const purchasedTier: ServiceTier = allTiers.find((t) => t.id === tier)!;
-
   // set the end lease period for this based on number of years if it's a lease
   const endTimestamp =
     type === 'lease' ? currentBlockTime + SECONDS_IN_A_YEAR * years : undefined;
@@ -169,16 +155,10 @@ export const buyRecord = (
       ? calculateTotalRegistrationFee(
           name,
           fees,
-          purchasedTier,
           years,
           +SmartWeave.block.timestamp,
         )
-      : calculatePermabuyFee(
-          name,
-          fees,
-          purchasedTier,
-          +SmartWeave.block.timestamp,
-        );
+      : calculatePermabuyFee(name, fees, +SmartWeave.block.timestamp);
 
   if (balances[caller] < totalRegistrationFee) {
     throw new ContractError(
@@ -207,7 +187,6 @@ export const buyRecord = (
   balances[caller] -= totalRegistrationFee; // reduce callers balance
   records[name] = {
     contractTxId,
-    tier,
     type,
     startTimestamp: +SmartWeave.block.timestamp,
     undernames: DEFAULT_UNDERNAME_COUNT,

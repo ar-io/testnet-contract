@@ -2,19 +2,13 @@ import * as fs from 'fs';
 import path from 'path';
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
-import {
-  ActiveTier,
-  DelayedEvolveInput,
-  IOState,
-  ServiceTier,
-} from '../src/types';
+import { DelayedEvolveInput, IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import {
   FOUNDATION_ACTION_ACTIVE_STATUS,
   FOUNDATION_ACTION_FAILED_STATUS,
   FOUNDATION_ACTION_PASSED_STATUS,
   FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS,
-  INVALID_TIER_MESSAGE,
   MINIMUM_ALLOWED_EVOLUTION_DELAY,
 } from './utils/constants';
 import {
@@ -31,12 +25,6 @@ describe.skip('FoundationAction', () => {
   let srcContractId: string;
   let fees: { [x: string]: number };
   let newLocalSourceCodeJS: any;
-  const newTier: Omit<ServiceTier, 'id'> = {
-    fee: 100,
-    settings: {
-      maxUndernames: 100,
-    },
-  };
 
   beforeAll(async () => {
     srcContractId = getLocalArNSContractId();
@@ -51,7 +39,6 @@ describe.skip('FoundationAction', () => {
     let newFoundationMemberAddress1: string;
     let removedMember: JWKInterface;
     let removedMemberAddress: string;
-    let newTierId: string;
 
     beforeAll(async () => {
       foundationMember = getLocalWallet(7);
@@ -377,164 +364,6 @@ describe.skip('FoundationAction', () => {
           ...fees,
           '32': 5,
         });
-      });
-    });
-
-    describe('setting tiers', () => {
-      let newTierActionId: string;
-      let activeTierActionId: string;
-
-      it('should not able to set active tier to an invalid tier number', async () => {
-        contract = warp.pst(srcContractId).connect(foundationMember);
-        const type = 'setActiveTier';
-        const note = 'Setting bad active tier number';
-        const value: ActiveTier = {
-          id: newTierId,
-          idx: 5,
-        };
-        const { cachedValue } = await contract.readState();
-        const state = cachedValue.state as IOState;
-        const originalTierId = state.tiers.current[2];
-        const writeInteraction = await contract.writeInteraction({
-          function: 'foundationAction',
-          type,
-          note,
-          value,
-        });
-
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
-        const { cachedValue: newCachedValue } = await contract.readState();
-        const newState = newCachedValue.state as IOState;
-        const errors = newCachedValue.errorMessages;
-        expect(errors[writeInteraction!.originalTxId]).toEqual(
-          INVALID_TIER_MESSAGE,
-        );
-        expect(newState.foundation.actions.length).toEqual(
-          state.foundation.actions.length,
-        );
-        expect(newState.tiers.current[2]).toEqual(originalTierId);
-      });
-
-      it('should not able to set active tier to an invalid tier id', async () => {
-        contract = warp.pst(srcContractId).connect(foundationMember);
-        const { cachedValue } = await contract.readState();
-        const state = cachedValue.state as IOState;
-        const type = 'setActiveTier';
-        const note = 'Setting bad active tier id';
-        const value: ActiveTier = {
-          id: 'a-bad-tier-id',
-        };
-        const writeInteraction = await contract.writeInteraction({
-          function: 'foundationAction',
-          type,
-          note,
-          value,
-        });
-
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
-        const { cachedValue: newCachedValue } = await contract.readState();
-        const newState = newCachedValue.state as IOState;
-        const errors = newCachedValue.errorMessages;
-        expect(errors[writeInteraction!.originalTxId]).toEqual(
-          INVALID_TIER_MESSAGE,
-        );
-        expect(newState.foundation.actions.length).toEqual(
-          state.foundation.actions.length,
-        );
-      });
-
-      it('should initiate create new tier', async () => {
-        contract = warp.pst(srcContractId).connect(foundationMember);
-        const type = 'createNewTier';
-        const id = 6;
-        const note = 'Creating new tier';
-        const writeInteraction = await contract.writeInteraction({
-          function: 'foundationAction',
-          type,
-          note,
-          value: newTier,
-        });
-        const start = await getCurrentBlock(arweave);
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
-        newTierActionId = writeInteraction!.originalTxId;
-        const { cachedValue: newCachedValue } = await contract.readState();
-        const newState = newCachedValue.state as IOState;
-        expect(newState.foundation.actions[id]).toEqual({
-          id: newTierActionId,
-          note,
-          signed: [foundationMemberAddress],
-          startHeight: start,
-          status: FOUNDATION_ACTION_ACTIVE_STATUS,
-          type,
-          value: expect.any(Object),
-        });
-        newTierId = writeInteraction!.originalTxId;
-      });
-
-      it('should approve and complete create new tier', async () => {
-        contract = warp.pst(srcContractId).connect(newFoundationMember1);
-        const index = 6;
-        const writeInteraction = await contract.writeInteraction({
-          function: 'foundationAction',
-          id: newTierActionId,
-        });
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
-        const { cachedValue: newCachedValue } = await contract.readState();
-        const newState = newCachedValue.state as IOState;
-        expect(newState.foundation.actions[index].status).toEqual(
-          FOUNDATION_ACTION_PASSED_STATUS,
-        );
-        expect(newState.tiers.history[3]).toEqual({
-          id: newTierId,
-          ...newTier,
-        });
-      });
-
-      it('should initiate set active tier', async () => {
-        contract = warp.pst(srcContractId).connect(foundationMember);
-        const type = 'setActiveTier';
-        const id = 7;
-        const note = 'Setting active tier';
-        const value: ActiveTier = {
-          id: newTierId,
-          idx: 2,
-        };
-        const writeInteraction = await contract.writeInteraction({
-          function: 'foundationAction',
-          type,
-          note,
-          value,
-        });
-        const start = await getCurrentBlock(arweave);
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
-        activeTierActionId = writeInteraction!.originalTxId;
-        const { cachedValue: newCachedValue } = await contract.readState();
-        const newState = newCachedValue.state as IOState;
-        expect(newState.foundation.actions[id]).toEqual({
-          id: activeTierActionId,
-          note,
-          signed: [foundationMemberAddress],
-          startHeight: start,
-          status: FOUNDATION_ACTION_ACTIVE_STATUS,
-          type,
-          value: expect.any(Object),
-        });
-      });
-
-      it('should approve and complete set active tier', async () => {
-        contract = warp.pst(srcContractId).connect(newFoundationMember1);
-        const index = 7;
-        const writeInteraction = await contract.writeInteraction({
-          function: 'foundationAction',
-          id: activeTierActionId,
-        });
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
-        const { cachedValue: newCachedValue } = await contract.readState();
-        const newState = newCachedValue.state as IOState;
-        expect(newState.foundation.actions[index].status).toEqual(
-          FOUNDATION_ACTION_PASSED_STATUS,
-        );
-        expect(newState.tiers.current[2]).toEqual(newTierId);
       });
     });
 

@@ -16,7 +16,6 @@ import {
   ContractResult,
   IOState,
   PstAction,
-  ServiceTier,
 } from '../../types';
 import {
   calculateMinimumAuctionBid,
@@ -36,9 +35,8 @@ export class AuctionBid {
   qty?: number;
   type: 'lease' | 'permabuy';
   contractTxId: string;
-  tier: string;
   years?: number;
-  constructor(input: any, tiers) {
+  constructor(input: any) {
     // validate using ajv validator
     if (!validateAuctionBid(input)) {
       throw new ContractError(
@@ -65,7 +63,6 @@ export class AuctionBid {
     if (this.type === 'lease') {
       this.years = 1; // default to one year for lease, don't set for permabuy
     }
-    this.tier = tiers.current[0]; // default to lowest tier, regardless of permabuy/lease
   }
 }
 
@@ -73,15 +70,7 @@ export const submitAuctionBid = (
   state: IOState,
   { caller, input }: PstAction,
 ): ContractResult => {
-  const {
-    auctions = {},
-    fees,
-    records,
-    reserved,
-    tiers,
-    settings,
-    balances,
-  } = state;
+  const { auctions = {}, fees, records, reserved, settings, balances } = state;
 
   // does validation on constructor
   const {
@@ -90,8 +79,7 @@ export const submitAuctionBid = (
     type,
     contractTxId,
     years,
-    tier,
-  } = new AuctionBid(input, tiers);
+  } = new AuctionBid(input);
 
   // name already exists on an active lease
   if (records[name]) {
@@ -179,30 +167,20 @@ export const submitAuctionBid = (
   const currentAuctionSettings: AuctionSettings =
     settings.auctions.history.find((a) => a.id === settings.auctions.current)!;
 
-  // get tier history
-  const { history: tierHistory } = tiers;
-
   // all the things we need to handle an auction bid
   const currentBlockHeight = +SmartWeave.block.height;
   const { decayInterval, decayRate, auctionDuration } = currentAuctionSettings;
 
   // calculate the standard registration fee
-  const serviceTier = tierHistory.find((t: ServiceTier) => t.id === tier)!;
   const registrationFee =
     type === 'lease'
       ? calculateTotalRegistrationFee(
           name,
           fees,
-          serviceTier,
           years!,
           +SmartWeave.block.timestamp,
         )
-      : calculatePermabuyFee(
-          name,
-          fees,
-          serviceTier,
-          +SmartWeave.block.timestamp,
-        );
+      : calculatePermabuyFee(name, fees, +SmartWeave.block.timestamp);
 
   // no current auction, create one and vault the balance from the user
   if (!auctions[name]) {
@@ -233,7 +211,6 @@ export const submitAuctionBid = (
       contractTxId,
       startHeight: currentBlockHeight, // auction starts right away
       type,
-      tier,
       initiator: caller, // the balance that the floor price is decremented from
       ...(years ? { years } : {}),
     };
@@ -283,7 +260,6 @@ export const submitAuctionBid = (
 
       records[name] = {
         contractTxId: existingAuction.contractTxId,
-        tier: existingAuction.tier,
         type: existingAuction.type,
         startTimestamp: +SmartWeave.block.timestamp,
         // only include timestamp on lease
@@ -342,7 +318,6 @@ export const submitAuctionBid = (
     // the bid has been won, update the records
     records[name] = {
       contractTxId: contractTxId, // only update the new contract tx id
-      tier: existingAuction.tier,
       type: existingAuction.type,
       startTimestamp: +SmartWeave.block.timestamp, // overwrite initial start timestamp
       undernames: DEFAULT_UNDERNAME_COUNT,

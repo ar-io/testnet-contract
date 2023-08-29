@@ -15,7 +15,6 @@ import {
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
   SECONDS_IN_A_YEAR,
-  TIERS,
   WALLET_FUND_AMOUNT,
 } from './constants';
 
@@ -72,16 +71,16 @@ function createFees(count = 32, start = WALLET_FUND_AMOUNT) {
   return fees;
 }
 
-function createRecords(tiers: string[], count = 3) {
+function createRecords(count = 3) {
   const records: any = {};
   for (let i = 0; i < count; i++) {
     const name = `name${i + 1}`;
     const obj = {
-      tier: tiers[0],
       contractTxID: ANT_CONTRACT_IDS[0],
       endTimestamp: new Date('01/01/2025').getTime() / 1000,
       startTimestamp: Date.now() / 1000 - SECONDS_IN_A_YEAR,
       undernames: DEFAULT_UNDERNAME_COUNT,
+      type: 'lease',
     };
     records[name] = obj;
   }
@@ -240,8 +239,6 @@ export async function setupInitialContractState(
   wallets: string[],
 ): Promise<IOState> {
   const state: IOState = INITIAL_STATE as unknown as IOState;
-  // set the tiers
-  state.tiers = TIERS;
 
   // set the fees
   state.fees = createFees();
@@ -261,7 +258,7 @@ export async function setupInitialContractState(
   state.auctions = {};
 
   // create some records
-  state.records = createRecords(state.tiers.current);
+  state.records = createRecords();
 
   // set the owner to the first wallet
   state.owner = owner;

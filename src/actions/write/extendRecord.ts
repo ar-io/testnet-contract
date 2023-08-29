@@ -4,7 +4,6 @@ import {
   MAX_YEARS,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
-  TIERS,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 import {
@@ -20,14 +19,14 @@ export const extendRecord = async (
   state: IOState,
   { caller, input }: PstAction,
 ): Promise<ContractResult> => {
-  const balances = state.balances;
-  const records = state.records;
+  const { balances, records, fees } = state;
   const currentBlockTime = +SmartWeave.block.timestamp;
-  const allTiers = state.tiers.history;
-  const fees = state.fees;
 
   // TODO: object parse validation
   const { name, years } = input as any;
+
+  // get the record
+  const record = records[name];
 
   // Check if the user has enough tokens to purchase the name
   if (
@@ -40,7 +39,7 @@ export const extendRecord = async (
   }
 
   // check if record exists
-  if (!records[name]) {
+  if (!record) {
     throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
   }
 
@@ -72,17 +71,13 @@ export const extendRecord = async (
     );
   }
 
-  const purchasedTier =
-    allTiers.find((t) => t.id === records[name].tier) ?? TIERS.history[0];
-
-  // total cost to extend a record for the given tier
+  // total cost to extend a record
   const totalExtensionAnnualFee = calculateAnnualRenewalFee(
     name,
     fees,
-    purchasedTier,
     years,
-    state.records[name].undernames,
-    state.records[name]?.endTimestamp,
+    record.undernames,
+    record.endTimestamp,
   );
 
   if (!walletHasSufficientBalance(balances, caller, totalExtensionAnnualFee)) {
@@ -93,7 +88,7 @@ export const extendRecord = async (
 
   // reduce balance set the end lease period for this record based on number of years
   balances[caller] -= totalExtensionAnnualFee; // reduce callers balance
-  records[name].endTimestamp += SECONDS_IN_A_YEAR * years; // set the new extended timestamp
-
+  state.balances[caller] -= totalExtensionAnnualFee; // reduce callers balance
+  state.records[name].endTimestamp += SECONDS_IN_A_YEAR * years; // set the new extended timestamp
   return { state };
 };

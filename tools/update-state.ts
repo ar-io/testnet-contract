@@ -6,6 +6,7 @@ import {
   defaultCacheOptions,
 } from 'warp-contracts';
 
+import { IOState } from '../src/types';
 import { keyfile } from './constants';
 
 (async () => {
@@ -33,22 +34,29 @@ import { keyfile } from './constants';
   const wallet: JWKInterface = JSON.parse(jwk);
 
   // Read the ArNS Registry Contract
-  const contract = warp.pst(contractTxId);
+  const contract = warp.pst(contractTxId).setEvaluationOptions({
+    internalWrites: true,
+    unsafeClient: 'skip',
+    updateCacheForEachInteraction: true,
+  });
   contract.connect(wallet);
 
-  // Create the evolved source code tx
-  const writeInteraction = await contract.writeInteraction(
-    {
-      function: 'updateState',
-      state: {
-        evolve: '9qewIF2VveKnNeh2_6vwTbC72gQNBnKLRIi5kMU0Ok0',
-      },
-    },
-    {
-      disableBundling: true,
-    },
-  );
-
-  // eslint-disable-next-line
-  console.log(writeInteraction);
+  const { cachedValue } = await contract.readState();
+  const { records: prevRecords } = cachedValue.state as IOState;
+  for (const name in prevRecords) {
+    // Create the evolved source code tx
+    if (!prevRecords[name].undernames) {
+      console.log('Updating record undername count for', name);
+      const writeInteraction = await contract.writeInteraction(
+        {
+          function: 'increaseUndernameCount',
+          qty: 1,
+          name,
+        },
+        {
+          disableBundling: true,
+        },
+      );
+    }
+  }
 })();
