@@ -75,7 +75,7 @@ export const updateGatewaySettings = async (
     gateways[caller].settings.properties = properties;
   }
 
-  if (note) {
+  if (note || note === '') {
     if (typeof note !== 'string') {
       throw new ContractError('Note format not recognized.');
     }
@@ -84,8 +84,6 @@ export const updateGatewaySettings = async (
     } else {
       gateways[caller].settings.note = note;
     }
-  } else if (note === '') {
-    gateways[caller].settings.note = note;
   }
 
   if (status) {
