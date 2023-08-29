@@ -6,7 +6,7 @@ import {
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
-import { isValidFQDN } from '../../utilities';
+import { isValidArweaveBase64URL, isValidFQDN } from '../../utilities';
 
 declare const ContractError;
 declare const SmartWeave: any;
@@ -20,7 +20,7 @@ export const joinNetwork = async (
   const { registry: registrySettings } = settings;
 
   // TODO: object parse validation
-  const { qty, label, fqdn, port, protocol, note } = input as any;
+  const { qty, label, fqdn, port, protocol, properties, note } = input as any;
 
   if (!Number.isInteger(qty) || qty <= 0) {
     throw new ContractError('Invalid value for "qty". Must be an integer');
@@ -66,6 +66,12 @@ export const joinNetwork = async (
     );
   }
 
+  if (properties && !isValidArweaveBase64URL(properties)) {
+    throw new ContractError(
+      'Invalid property.  Must be a valid Arweave transaction ID.',
+    );
+  }
+
   if (note && typeof note !== 'string' && note > MAX_NOTE_LENGTH) {
     throw new ContractError('Invalid note.');
   }
@@ -90,6 +96,7 @@ export const joinNetwork = async (
       fqdn,
       port,
       protocol,
+      properties,
       note,
     },
     status: NETWORK_JOIN_STATUS,

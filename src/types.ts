@@ -18,7 +18,7 @@ export type IOState = PstState & {
     [name: string]: ArNSName;
   };
   gateways: {
-    // a list of all registered gateways
+    // a registry of all gateways
     [address: string]: Gateway; // each gateway uses its public arweave wallet address to identify it in the gateway registry
   };
   // A list of all fees for purchasing ArNS names
@@ -66,7 +66,7 @@ export type AuctionSettings = {
 };
 
 export type ContractSettings = {
-  // these settings can be modified via on-chain governance
+  // these settings control the various capabilities in the contract
   registry: {
     minLockLength: number; // the minimum amount of blocks tokens can be locked in a community vault
     maxLockLength: number; // the maximum amount of blocks tokens can be locked in a community vault
@@ -106,6 +106,7 @@ export type GatewaySettings = {
   fqdn: string; // the fully qualified domain name this gateway can be reached at. eg arweave.net
   port: number; // The port used by this gateway eg. 443
   protocol: AllowedProtocols; // The protocol used by this gateway, either http or https
+  properties?: string; // An Arweave transaction ID containing additional properties of this gateway
   note?: string; // An additional note (256 character max) the gateway operator can set to indicate things like maintenance or other operational updates.
 };
 
