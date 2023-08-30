@@ -14,18 +14,7 @@ export const evolveState = async (
     throw new ContractError(NON_CONTRACT_OWNER_MESSAGE);
   }
 
-  // evolve auctions
-  const { records, auctions } = state;
-  const newAuctions = Object.keys(auctions).reduce((acc, key) => {
-    const { tier, ...everythingElse } = auctions[key] as any;
-    // only keep it if the name isn't in records
-    if (!records[key]) {
-      acc[key] = everythingElse;
-    }
-    return acc;
-  }, {});
-
-  state.auctions = newAuctions;
+  // TODO: this is a helper function to backfill state. Update this code and invoke the method with the new source contract to use.
 
   return { state };
 };

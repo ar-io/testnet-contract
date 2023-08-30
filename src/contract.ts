@@ -24,7 +24,6 @@ import { joinNetwork } from './actions/write/joinNetwork';
 import { submitAuctionBid } from './actions/write/submitAuctionBid';
 import { transferTokens } from './actions/write/transferTokens';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
-import { updateState } from './actions/write/updateState';
 import {
   ContractResult,
   IOContractFunctions,
@@ -51,7 +50,6 @@ export async function handle(
       return increaseUndernameCount(state, action);
     case 'evolve':
       return evolve(state, action);
-    // TODO: remove this function
     case 'evolveState':
       return evolveState(state, action);
     case 'balance':
@@ -84,8 +82,6 @@ export async function handle(
       return foundationAction(state, action);
     case 'submitAuctionBid':
       return submitAuctionBid(state, action);
-    case 'updateState':
-      return updateState(state, action);
     case 'auction':
       return getAuction(state, action);
     default:
