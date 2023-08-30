@@ -54,7 +54,7 @@ import { keyfile } from './constants';
 
   // Read the ANT Registry Contract
   console.log(
-    'Transforming %s tokens from %s to %s',
+    'Transferring %s tokens from %s to %s',
     qty,
     walletAddress,
     target,
