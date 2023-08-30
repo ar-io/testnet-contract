@@ -1,6 +1,7 @@
 import { ContractResult, IOState, PstAction } from '../../types';
 import { calculateMinimumAuctionBid } from '../../utilities';
 
+declare const SmartWeave: any;
 declare const ContractError;
 
 export const getAuction = (
@@ -25,6 +26,12 @@ export const getAuction = (
     );
   }
 
+  const expirationHeight = startHeight + auctionSettings.auctionDuration;
+
+  if (expirationHeight < +SmartWeave.block.height) {
+    throw new ContractError('Auction is expired!');
+  }
+
   const { auctionDuration, decayRate, decayInterval } = auctionSettings;
   const intervalCount = auctionDuration / decayInterval;
   const prices = {};
@@ -41,11 +48,18 @@ export const getAuction = (
     prices[intervalHeight] = price;
   }
 
+  const { auctionSettingsId: _, ...auctionWithoutSettingsId } = auction;
+
   return {
     result: {
       auction: {
-        ...auction,
-        minimumBids: prices,
+        ...auctionWithoutSettingsId,
+        endHeight: expirationHeight,
+        settings: {
+          id: auctionSettingsId,
+          ...auctionSettings,
+        },
+        prices,
       },
     },
   };
