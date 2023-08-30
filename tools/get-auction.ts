@@ -1,14 +1,20 @@
 import Arweave from 'arweave';
+import * as fs from 'fs';
 import {
   LoggerFactory,
   WarpFactory,
   defaultCacheOptions,
 } from 'warp-contracts';
 
-(async () => {
-  const contractId = 'GfrHPxXyfuxNNdGvzHl_5HFX711jZsG3OE8qmG-UqlY';
+import { keyfile } from './constants';
 
-  LoggerFactory.INST.logLevel('error');
+/* eslint-disable no-console */
+(async () => {
+  // load state of contract
+  const arnsContractTxId =
+    process.env.ARNS_CONTRACT_TX_ID ??
+    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
+
   const arweave = new Arweave({
     host: 'ar-io.dev',
     port: 443,
@@ -26,7 +32,7 @@ import {
   );
 
   // Read the ArNS Registry Contract
-  const contract = warp.pst(contractId).setEvaluationOptions({
+  const contract = warp.pst(arnsContractTxId).setEvaluationOptions({
     internalWrites: true,
     waitForConfirmation: true,
     updateCacheForEachInteraction: true,

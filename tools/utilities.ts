@@ -29,19 +29,3 @@ export function getTotalSupply(state: any) {
   }
   return totalSupply;
 }
-
-export async function retryFetch(reqURL: string): Promise<AxiosResponse<any>> {
-  const axiosInstance = axios.create();
-  const maxRetries = 10;
-  axiosRetry(axiosInstance, {
-    retries: maxRetries,
-    retryDelay: (retryNumber) => {
-      // eslint-disable-next-line
-      console.error(
-        `Retry attempt ${retryNumber}/${maxRetries} of request to ${reqURL}`,
-      );
-      return exponentialDelay(retryNumber);
-    },
-  });
-  return await axiosInstance.get(reqURL);
-}

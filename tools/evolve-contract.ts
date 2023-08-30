@@ -10,14 +10,19 @@ import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 import { keyfile } from './constants';
 
+/* eslint-disable no-console */
 (async () => {
-  const jwk = process.env.JWK
-    ? process.env.JWK
-    : await fs.readFileSync(keyfile).toString();
+  // load local wallet
+  const wallet: JWKInterface = JSON.parse(
+    process.env.JWK
+      ? process.env.JWK
+      : await fs.readFileSync(keyfile).toString(),
+  );
 
-  const arnsRegistryContractTxId =
+  // load state of contract
+  const arnsContractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
-    'GfrHPxXyfuxNNdGvzHl_5HFX711jZsG3OE8qmG-UqlY';
+    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
 
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel('error');
@@ -30,11 +35,8 @@ import { keyfile } from './constants';
     true,
   ).use(new DeployPlugin());
 
-  // Get the key file used
-  const wallet: JWKInterface = JSON.parse(jwk);
-
   // Read the ArNS Registry Contract
-  const contract = warp.pst(arnsRegistryContractTxId);
+  const contract = warp.pst(arnsContractTxId);
   contract.connect(wallet);
 
   // ~~ Read contract source and initial state files ~~
@@ -60,7 +62,7 @@ import { keyfile } from './constants';
   // eslint-disable-next-line
   console.log(
     'Finished evolving the ArNS Smartweave Contract %s with interaction %s. New source code is: %s',
-    arnsRegistryContractTxId,
+    arnsContractTxId,
     evolveInteractionTXId?.originalTxId,
     evolveSrcTx,
   );

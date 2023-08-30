@@ -5,21 +5,19 @@ import { WarpFactory, defaultCacheOptions } from 'warp-contracts';
 
 import { keyfile } from './constants';
 
+/* eslint-disable no-console */
 // This script will finalize the operator stake decrease and unlock and return the tokens to the gateway operator
 // The gateway's wallet owner or any other user is authorized to finalize the operator's stake decrease
 (async () => {
-  // add the target wallet address to finalize the operator's stake decrease
-  // target = 'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA'
-
-  // Get the key file used for the distribution
+  // load local wallet
   const wallet: JWKInterface = JSON.parse(
     process.env.JWK
       ? process.env.JWK
       : await fs.readFileSync(keyfile).toString(),
   );
 
-  // gate the contract txId
-  const contractTxId =
+  // load state of contract
+  const arnsContractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
     'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
 
@@ -41,12 +39,11 @@ import { keyfile } from './constants';
   const walletAddress = await arweave.wallets.getAddress(wallet);
 
   // Read the ANT Registry Contract
-  const pst = warp.pst(contractTxId);
+  const pst = warp.pst(arnsContractTxId);
   pst.connect(wallet);
 
   const txId = await pst.writeInteraction({
     function: 'finalizeOperatorStakeDecrease',
-    // target
   });
 
   // eslint-disable-next-line no-console

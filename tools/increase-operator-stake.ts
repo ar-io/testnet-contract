@@ -5,6 +5,7 @@ import { WarpFactory, defaultCacheOptions } from 'warp-contracts';
 
 import { keyfile } from './constants';
 
+/* eslint-disable no-console */
 // This script will stake more tokens to an existing joined gateway
 // Only the gateway's wallet owner is authorized to increase its own stake
 (async () => {
@@ -49,7 +50,6 @@ import { keyfile } from './constants';
     qty,
   });
 
-  // eslint-disable-next-line no-console
   console.log(
     `${walletAddress} successfully submitted gateway stake increase with TX id: ${txId}`,
   );

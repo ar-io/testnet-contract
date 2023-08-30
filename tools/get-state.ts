@@ -1,6 +1,6 @@
-import * as fs from 'fs';
 import { LoggerFactory, WarpFactory } from 'warp-contracts';
 
+/* eslint-disable no-console */
 (async () => {
   // This is the mainnet ArNS Registry Smartweave Contract TX ID
   const contractTxId =
@@ -23,6 +23,5 @@ import { LoggerFactory, WarpFactory } from 'warp-contracts';
     })
     .readState();
 
-  // eslint-disable-next-line no-console
   console.log(JSON.stringify(state, null, 2));
 })();
