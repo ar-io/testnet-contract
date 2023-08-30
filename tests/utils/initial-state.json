@@ -6,10 +6,9 @@
   "evolve": null,
   "records": {},
   "balances": {},
-  "gateways": {},
-  "fees": {},
-  "settings": {},
   "reserved": {},
-  "foundation": {},
-  "vaults": {}
+  "fees": {},
+  "auctions": {},
+  "settings": {},
+  "gateways": {}
 }
