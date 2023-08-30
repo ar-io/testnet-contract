@@ -48,6 +48,7 @@ import { keyfile } from './constants';
     'utf8',
   );
 
+  const walletAddress = await arweave.wallets.jwkToAddress(wallet);
   const {
     cachedValue: { state: existingContractState },
   } = await warp
@@ -58,10 +59,13 @@ import { keyfile } from './constants';
       updateCacheForEachInteraction: true,
     })
     .readState();
-  const { approvedANTSourceCodeTxs, evolve, ...relevantState } =
-    existingContractState as any;
+
+  // any state forks we want to do
   const forkedState = {
-    ...(relevantState as IOState),
+    ...(existingContractState as IOState),
+    balances: {
+      [walletAddress]: 1_000_000_000,
+    },
   };
   // ~~ Deploy contract ~~
   const contractTxId = await warp.deploy(
