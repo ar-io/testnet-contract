@@ -8,6 +8,7 @@ import {
 
 import { keyfile } from './constants';
 
+/* eslint-disable no-console */
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // This is the name that will be purchased in the Arweave Name System Registry
@@ -19,9 +20,17 @@ import { keyfile } from './constants';
   // The lease time for purchasing the name
   const years = 1;
 
-  // This is the production ArNS Registry Smartweave Contract TX ID
-  const arnsRegistryContractTxId =
-    'k0yfvCpbusgE7a6JrqFVmoTWWJSQV4Zte3EVoLgd8dw';
+  // load local wallet
+  const wallet = JSON.parse(
+    process.env.JWK
+      ? process.env.JWK
+      : await fs.readFileSync(keyfile).toString(),
+  );
+
+  // load state of contract
+  const arnsContractTxId =
+    process.env.ARNS_CONTRACT_TX_ID ??
+    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
 
   // Initialize `LoggerFactory`
   LoggerFactory.INST.logLevel('error');
@@ -35,13 +44,8 @@ import { keyfile } from './constants';
     true, // use arweave gateway for L1 transactions
   );
 
-  // Get the key file used for the distribution
-  const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(keyfile).toString(),
-  );
-
   // Read the ANT Registry Contract
-  const pst = warp.pst(arnsRegistryContractTxId);
+  const pst = warp.pst(arnsContractTxId);
   pst.connect(wallet);
 
   // check if this name exists in the registry, if not exit the script.

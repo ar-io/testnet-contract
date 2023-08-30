@@ -13,9 +13,16 @@ import { IOState } from '../src/types';
 import { keyfile } from './constants';
 
 (async () => {
-  const jwk = process.env.JWK
-    ? process.env.JWK
-    : await fs.readFileSync(keyfile).toString();
+  const wallet = JSON.parse(
+    process.env.JWK
+      ? process.env.JWK
+      : await fs.readFileSync(keyfile).toString(),
+  );
+
+  // load state of contract
+  const ARNS_CONTRACT_TX_ID =
+    process.env.ARNS_CONTRACT_TX_ID ??
+    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
 
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel('error');
@@ -35,22 +42,16 @@ import { keyfile } from './constants';
     arweave,
   ).use(new DeployPlugin());
 
-  // Get the key file used for the distribution
-  const wallet = JSON.parse(jwk);
   // ~~ Read contract source and initial state files ~~
   const contractSrc = fs.readFileSync(
     path.join(__dirname, '../dist/contract.js'),
     'utf8',
   );
 
-  // load state of contract
-  const PREVIOUS_ARNS_CONTRACT_TX_ID =
-    process.env.ARNS_CONTRACT_TX_ID ??
-    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
   const {
     cachedValue: { state: existingContractState },
   } = await warp
-    .contract(PREVIOUS_ARNS_CONTRACT_TX_ID)
+    .contract(ARNS_CONTRACT_TX_ID)
     .setEvaluationOptions({
       internalWrites: true,
       unsafeClient: 'skip',
