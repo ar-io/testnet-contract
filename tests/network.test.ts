@@ -157,7 +157,7 @@ describe('Network', () => {
         ).toEqual(prevGatewayOperatorBalance);
         expect(
           newState.gateways[newGatewayOperatorAddress].vaults.length,
-        ).toEqual(prevState.gateways[newGatewayOperatorAddress].vaults.length); // the vault shou
+        ).toEqual(prevState.gateways[newGatewayOperatorAddress].vaults.length);
       });
 
       it('should not initiate operator stake decrease if the vault has not been locked long enough', async () => {
