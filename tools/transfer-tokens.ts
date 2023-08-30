@@ -8,8 +8,8 @@ import {
 } from 'warp-contracts';
 
 import { keyfile } from './constants';
-import { deployedContracts } from './deployed-contracts';
 
+/* eslint-disable no-console */
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // The recipient target of the token transfer
@@ -19,8 +19,17 @@ import { deployedContracts } from './deployed-contracts';
   const qty = 500_000_000;
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  // This is the production ArNS Registry Smartweave Contract
-  const arnsRegistryContractTxId = deployedContracts.contractTxId;
+  // Get the key file used for the distribution
+  const wallet: JWKInterface = JSON.parse(
+    process.env.JWK
+      ? process.env.JWK
+      : await fs.readFileSync(keyfile).toString(),
+  );
+
+  // gate the contract txId
+  const arnsContractTxId =
+    process.env.ARNS_CONTRACT_TX_ID ??
+    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
 
   // Initialize Arweave
   const arweave = Arweave.init({
@@ -41,10 +50,6 @@ import { deployedContracts } from './deployed-contracts';
     true,
   );
 
-  // Get the key file used for the distribution
-  const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(keyfile).toString(),
-  );
   const walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
   // Read the ANT Registry Contract
@@ -54,7 +59,7 @@ import { deployedContracts } from './deployed-contracts';
     walletAddress,
     target,
   );
-  const pst = warp.pst(arnsRegistryContractTxId);
+  const pst = warp.pst(arnsContractTxId);
   pst.connect(wallet);
   await pst.transfer(
     {
