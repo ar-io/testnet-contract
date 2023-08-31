@@ -42,9 +42,14 @@ import { keyfile } from './constants';
   const pst = warp.pst(arnsContractTxId);
   pst.connect(wallet);
 
-  const txId = await pst.writeInteraction({
-    function: 'finalizeOperatorStakeDecrease',
-  });
+  const txId = await pst.writeInteraction(
+    {
+      function: 'finalizeOperatorStakeDecrease',
+    },
+    {
+      disableBundling: true,
+    },
+  );
 
   // eslint-disable-next-line no-console
   console.log(

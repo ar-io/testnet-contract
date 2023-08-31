@@ -42,9 +42,14 @@ import { keyfile } from './constants';
   const pst = warp.pst(arnsContractTxId);
   pst.connect(wallet);
 
-  const txId = await pst.writeInteraction({
-    function: 'finalizeLeave',
-  });
+  const txId = await pst.writeInteraction(
+    {
+      function: 'finalizeLeave',
+    },
+    {
+      disableBundling: true,
+    },
+  );
 
   console.log(
     `${walletAddress} successfully submitted request to finalize leaving the network with TX id: ${txId}`,

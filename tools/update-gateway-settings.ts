@@ -62,15 +62,20 @@ import { keyfile } from './constants';
   pst.connect(wallet);
 
   // Include any settings as needed below
-  const txId = await pst.writeInteraction({
-    function: 'updateGatewaySettings',
-    label,
-    fqdn,
-    // port,
-    // protocol,
-    // properties,
-    // note
-  });
+  const txId = await pst.writeInteraction(
+    {
+      function: 'updateGatewaySettings',
+      label,
+      fqdn,
+      // port,
+      // protocol,
+      // properties,
+      // note
+    },
+    {
+      disableBundling: true,
+    },
+  );
 
   console.log(
     `${walletAddress} successfully updated gateway settings with TX id: ${txId}`,

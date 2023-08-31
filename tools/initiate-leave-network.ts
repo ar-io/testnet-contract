@@ -45,9 +45,14 @@ import { keyfile } from './constants';
   const pst = warp.pst(arnsContractTxId);
   pst.connect(wallet);
 
-  const txId = await pst.writeInteraction({
-    function: 'initiateLeave',
-  });
+  const txId = await pst.writeInteraction(
+    {
+      function: 'initiateLeave',
+    },
+    {
+      disableBundling: true,
+    },
+  );
 
   console.log(
     `${walletAddress} successfully submitted request to initiate leaving the network with TX id: ${txId}`,
