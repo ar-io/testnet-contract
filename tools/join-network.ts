@@ -17,13 +17,13 @@ LoggerFactory.INST.logLevel('error');
 // Only the gateway's wallet owner is authorized to adjust these settings or leave the network in the future
 (async () => {
   // the quantity of tokens to stake.  Must be greater than the minimum
-  const qty = 20_000;
+  const qty = 100_000;
 
   // the friendly label for this gateway
-  const label = 'Permagate';
+  const label = 'Test Gateway';
 
   // the fully qualified domain name for this gateway eg. arweave.net
-  const fqdn = 'permagate.io';
+  const fqdn = 'permanence-testing.org';
 
   // the port used for this gateway eg. 443
   const port = 443;
@@ -35,7 +35,8 @@ LoggerFactory.INST.logLevel('error');
   const properties = 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44';
 
   // an optional, short note to further describe this gateway and its status
-  const note = 'Owned and managed by @dtfiedler - if it breaks, find him.';
+  const note =
+    'Give me feedback about this gateway at my Xwitter @testgatewayguy';
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
