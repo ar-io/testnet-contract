@@ -45,10 +45,15 @@ import { keyfile } from './constants';
   const pst = warp.pst(contractTxId);
   pst.connect(wallet);
 
-  const txId = await pst.writeInteraction({
-    function: 'increaseOperatorStake',
-    qty,
-  });
+  const txId = await pst.writeInteraction(
+    {
+      function: 'increaseOperatorStake',
+      qty,
+    },
+    {
+      disableBundling: true,
+    },
+  );
 
   console.log(
     `${walletAddress} successfully submitted gateway stake increase with TX id: ${txId}`,

@@ -1,9 +1,15 @@
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
-import { WarpFactory, defaultCacheOptions } from 'warp-contracts';
+import {
+  LoggerFactory,
+  WarpFactory,
+  defaultCacheOptions,
+} from 'warp-contracts';
 
 import { keyfile } from './constants';
+
+LoggerFactory.INST.logLevel('error');
 
 /* eslint-disable no-console */
 // This script will join a gateway to the ar.io network, identified by the gateway operator's wallet address
@@ -11,13 +17,13 @@ import { keyfile } from './constants';
 // Only the gateway's wallet owner is authorized to adjust these settings or leave the network in the future
 (async () => {
   // the quantity of tokens to stake.  Must be greater than the minimum
-  const qty = 100_000;
+  const qty = 20_000;
 
   // the friendly label for this gateway
-  const label = 'Test Gateway';
+  const label = 'Permagate';
 
   // the fully qualified domain name for this gateway eg. arweave.net
-  const fqdn = 'permanence-testing.org';
+  const fqdn = 'permagate.io';
 
   // the port used for this gateway eg. 443
   const port = 443;
@@ -29,8 +35,7 @@ import { keyfile } from './constants';
   const properties = 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44';
 
   // an optional, short note to further describe this gateway and its status
-  const note =
-    'Give me feedback about this gateway at my Xwitter @testgatewayguy';
+  const note = 'Owned and managed by @dtfiedler - if it breaks, find him.';
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
@@ -62,21 +67,35 @@ import { keyfile } from './constants';
   const walletAddress = await arweave.wallets.getAddress(wallet);
 
   // Read the ANT Registry Contract
-  const pst = warp.pst(arnsContractTxId);
+  const pst = warp.pst(arnsContractTxId).setEvaluationOptions({
+    internalWrites: true,
+    updateCacheForEachInteraction: true,
+    unsafeClient: 'skip',
+  });
   pst.connect(wallet);
 
-  const txId = await pst.writeInteraction({
-    function: 'joinNetwork',
-    qty,
-    label,
-    fqdn,
-    port,
-    protocol,
-    properties,
-    note,
-  });
+  console.log('Connected to contract with wallet: %s', walletAddress);
+  const txId = await pst.writeInteraction(
+    {
+      function: 'joinNetwork',
+      qty,
+      label,
+      fqdn,
+      port,
+      protocol,
+      properties,
+      note,
+    },
+    {
+      disableBundling: true,
+    },
+  );
 
   console.log(
-    `${walletAddress} successfully submitted request to join the network with TX id: ${txId}`,
+    `${walletAddress} successfully submitted request to join the network with TX id: ${JSON.stringify(
+      txId,
+      null,
+      2,
+    )}`,
   );
 })();

@@ -46,10 +46,15 @@ import { keyfile } from './constants';
   const pst = warp.pst(arnsContractTxId);
   pst.connect(wallet);
 
-  const txId = await pst.writeInteraction({
-    function: 'initiateOperatorStakeDecrease',
-    id,
-  });
+  const txId = await pst.writeInteraction(
+    {
+      function: 'initiateOperatorStakeDecrease',
+      id,
+    },
+    {
+      disableBundling: true,
+    },
+  );
 
   console.log(
     `${walletAddress} successfully submitted request to initiate decreasing gateway stake with TX id: ${txId}`,
