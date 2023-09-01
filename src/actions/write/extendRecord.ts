@@ -4,8 +4,6 @@ import {
   INVALID_INPUT_MESSAGE,
   INVALID_NAME_EXTENSION_TYPE_MESSAGE,
   INVALID_YEARS_MESSAGE,
-  MAX_YEARS,
-  MIN_YEARS,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
@@ -25,7 +23,6 @@ export class ExtendRecord {
   years: number;
 
   constructor(input: any) {
-    // validate using ajv validator
     if (!validateExtendRecord(input)) {
       throw new ContractError(
         `${INVALID_INPUT_MESSAGE} for ${this.function}: ${(
@@ -45,21 +42,23 @@ export class ExtendRecord {
   }
 }
 
-// Increases the lease time for an existing record
+/** Increases the lease time for an existing record
+ * Scenarios:
+ * 1. Name is not yet in grace period (i.e. still active)
+ * 2. Name is expired, but beyond grace period
+ * 3. Name is in grace period and can be extended by anyone
+ * 4. Name is a permanent name and cannot be extended
+ */
+
 export const extendRecord = async (
   state: IOState,
   { caller, input }: PstAction,
 ): Promise<ContractResult> => {
   const { balances, records, fees } = state;
   const currentBlockTime = +SmartWeave.block.timestamp;
-
-  // TODO: object parse validation
   const { name, years } = new ExtendRecord(input);
-
-  // get the record
   const record = records[name];
 
-  // Check if the user has enough tokens to purchase the name
   if (
     !balances[caller] ||
     balances[caller] == undefined ||
@@ -69,23 +68,9 @@ export const extendRecord = async (
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  // check if record exists
   if (!record) {
     throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
   }
-
-  // Check if it includes a valid number of years
-  if (!Number.isInteger(years) || years > MAX_YEARS || years < MIN_YEARS) {
-    throw new ContractError(INVALID_YEARS_MESSAGE);
-  }
-
-  /**
-   * Scenarios:
-   * 1. Name is not yet in grace period (i.e. still active)
-   * 2. Name is expired, but beyond grace period
-   * 3. Name is in grace period and can be extended by anyone
-   * 4. Name is a permanent name and cannot be extended
-   */
 
   if (!record.endTimestamp) {
     throw new ContractError(INVALID_NAME_EXTENSION_TYPE_MESSAGE);
@@ -110,7 +95,6 @@ export const extendRecord = async (
 
   // TODO: implement protocol balance transfer for this charge.
   // reduce balance set the end lease period for this record based on number of years
-  balances[caller] -= totalExtensionAnnualFee; // reduce callers balance
   state.balances[caller] -= totalExtensionAnnualFee; // reduce callers balance
   state.records[name].endTimestamp += SECONDS_IN_A_YEAR * years; // set the new extended timestamp
   return { state };

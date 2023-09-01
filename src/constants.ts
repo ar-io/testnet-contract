@@ -11,10 +11,6 @@ export const MAX_PORT_NUMBER = 65535; // the default end port of tcp/udp port nu
 export const MAX_FOUNDATION_ACTION_PERIOD = 720 * 30; // the maximum amount of time (in blocks) a foundation action could be set to
 export const TX_ID_LENGTH = 43; // the length of an arweave transaction id
 export const SECONDS_IN_GRACE_PERIOD = 1_814_400; // Three weeks, 7 days per week, 24 hours per day, sixty minutes per hour, sixty seconds per minute
-export enum REGISTRATION_TYPES {
-  LEASE = 'lease',
-  BUY = 'permabuy',
-}
 export const RESERVED_ATOMIC_TX_ID = 'atomic';
 export const FOUNDATION_ACTION_ACTIVE_STATUS = 'active';
 export const FOUNDATION_ACTION_FAILED_STATUS = 'failed';
