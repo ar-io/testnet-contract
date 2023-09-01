@@ -21,6 +21,7 @@ import {
   calculateMinimumAuctionBid,
   calculatePermabuyFee,
   calculateTotalRegistrationFee,
+  getInvalidAjvMessage,
   walletHasSufficientBalance,
 } from '../../utilities';
 // composed by ajv at build
@@ -39,17 +40,7 @@ export class AuctionBid {
   constructor(input: any) {
     // validate using ajv validator
     if (!validateAuctionBid(input)) {
-      throw new ContractError(
-        `${INVALID_INPUT_MESSAGE} for ${this.function}: ${(
-          validateAuctionBid as any
-        ).errors
-          .map((e) => {
-            const key = e.instancePath.replace('/', '');
-            const value = input[key];
-            return `${key} ('${value}') ${e.message}`;
-          })
-          .join(', ')}`,
-      );
+      throw new ContractError(getInvalidAjvMessage(validateAuctionBid, input));
     }
 
     const { name, qty, type = 'lease', contractTxId } = input;

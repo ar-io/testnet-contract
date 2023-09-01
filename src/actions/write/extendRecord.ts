@@ -9,6 +9,7 @@ import {
 import { ContractResult, IOState, PstAction } from '../../types';
 import {
   calculateAnnualRenewalFee,
+  getInvalidAjvMessage,
   getMaxLeaseExtension,
   walletHasSufficientBalance,
 } from '../../utilities';
@@ -25,15 +26,7 @@ export class ExtendRecord {
   constructor(input: any) {
     if (!validateExtendRecord(input)) {
       throw new ContractError(
-        `${INVALID_INPUT_MESSAGE} for ${this.function}: ${(
-          validateExtendRecord as any
-        ).errors
-          .map((e) => {
-            const key = e.instancePath.replace('/', '');
-            const value = input[key];
-            return `${key} ('${value}') ${e.message}`;
-          })
-          .join(', ')}`,
+        getInvalidAjvMessage(validateExtendRecord, input),
       );
     }
     const { name, years } = input;
