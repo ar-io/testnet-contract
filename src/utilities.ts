@@ -1,6 +1,7 @@
 import {
   ANNUAL_PERCENTAGE_FEE,
   DEFAULT_UNDERNAME_COUNT,
+  INVALID_INPUT_MESSAGE,
   MAX_YEARS,
   MINIMUM_ALLOWED_NAME_LENGTH,
   NAMESPACE_LENGTH,
@@ -223,4 +224,14 @@ export function getMaxLeaseExtension(
   return (
     MAX_YEARS - getLeaseDurationFromEndTimestamp(currentTimestamp, endTimestamp)
   );
+}
+
+export function getInvalidAjvMessage(validator: any, input: any) {
+  return `${INVALID_INPUT_MESSAGE} for ${this.function}: ${validator.errors
+    .map((e) => {
+      const key = e.instancePath.replace('/', '');
+      const value = input[key];
+      return `${key} ('${value}') ${e.message}`;
+    })
+    .join(', ')}`;
 }

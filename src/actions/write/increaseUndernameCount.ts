@@ -9,6 +9,7 @@ import {
 import { ContractResult, IOState, PstAction } from '../../types';
 import {
   calculateProRatedUndernameCost,
+  getInvalidAjvMessage,
   walletHasSufficientBalance,
 } from '../../utilities';
 import { validateIncreaseUndernameCount } from '../../validations.mjs';
@@ -25,15 +26,7 @@ export class IncreaseUndernameCount {
     // validate using ajv validator
     if (!validateIncreaseUndernameCount(input)) {
       throw new ContractError(
-        `${INVALID_INPUT_MESSAGE} for ${this.function}: ${(
-          validateIncreaseUndernameCount as any
-        ).errors
-          .map((e) => {
-            const key = e.instancePath.replace('/', '');
-            const value = input[key];
-            return `${key} ('${value}') ${e.message}`;
-          })
-          .join(', ')}`,
+        getInvalidAjvMessage(validateIncreaseUndernameCount, input),
       );
     }
     const { name, qty } = input;

@@ -38,28 +38,31 @@ describe('Extend', () => {
       emptyWalletCaller = getLocalWallet(12);
     });
 
+    afterEach(() => {
+      contract.connect(owner);
+    });
+
     it('should not be able to extend a record if the caller has insufficient balance', async () => {
       const extendYears = 1;
       const name = 'name1';
-      const tempContract = warp.pst(srcContractId).connect(emptyWalletCaller);
-      const { cachedValue: prevCachedValue } = await tempContract.readState();
+      const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
       const prevExpiration = prevState.records['name1'].endTimestamp;
-
-      await tempContract.writeInteraction({
+      contract.connect(emptyWalletCaller);
+      await contract.writeInteraction({
         function: 'transfer',
         target: walletAddress,
         qty: WALLET_FUND_AMOUNT,
       });
 
-      const writeInteraction = await tempContract.writeInteraction({
+      const writeInteraction = await contract.writeInteraction({
         function: 'extendRecord',
         name: name,
         years: extendYears,
       });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
-      const { cachedValue } = await tempContract.readState();
+      const { cachedValue } = await contract.readState();
       const state = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).toContain(
         writeInteraction!.originalTxId,
