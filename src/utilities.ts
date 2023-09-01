@@ -1,11 +1,13 @@
 import {
   ANNUAL_PERCENTAGE_FEE,
   DEFAULT_UNDERNAME_COUNT,
+  MAX_YEARS,
   MINIMUM_ALLOWED_NAME_LENGTH,
   NAMESPACE_LENGTH,
   PERMABUY_LEASE_FEE_LENGTH,
   RARITY_MULTIPLIER_HALVENING,
   SECONDS_IN_A_YEAR,
+  SECONDS_IN_GRACE_PERIOD,
   UNDERNAME_REGISTRATION_IO_FEE,
 } from './constants';
 import { Fees } from './types';
@@ -192,4 +194,33 @@ export function calculateUndernamePermutations(domain: string): number {
     }
   }
   return numberOfPossibleUndernames;
+}
+
+export function isNameInGracePeriod(currentTime: number, endTimestamp: number) {
+  return endTimestamp + SECONDS_IN_GRACE_PERIOD >= currentTime;
+}
+
+export function getLeaseDurationFromEndTimestamp(start: number, end: number) {
+  const differenceInYears = Math.ceil((end - start) / SECONDS_IN_A_YEAR);
+  const years = Math.max(1, differenceInYears);
+
+  return years;
+}
+
+export function getMaxLeaseExtension(
+  currentTimestamp: number,
+  endTimestamp: number,
+): number {
+  // if expired return 0 because it cannot be extended and must be re-bought
+  if (currentTimestamp > endTimestamp + SECONDS_IN_GRACE_PERIOD) {
+    return 0;
+  }
+
+  if (isNameInGracePeriod(currentTimestamp, endTimestamp)) {
+    return MAX_YEARS;
+  }
+  // a number between 0 and 5 (MAX_YEARS)
+  return (
+    MAX_YEARS - getLeaseDurationFromEndTimestamp(currentTimestamp, endTimestamp)
+  );
 }

@@ -11,10 +11,13 @@ import {
   DEFAULT_UNDERNAME_COUNT,
   FOUNDATION_ACTION_PERIOD,
   INITIAL_STATE,
+  MAX_YEARS,
   NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
+  REGISTRATION_TYPES,
   SECONDS_IN_A_YEAR,
+  SECONDS_IN_GRACE_PERIOD,
   WALLET_FUND_AMOUNT,
 } from './constants';
 
@@ -71,7 +74,7 @@ function createFees(count = 32, start = WALLET_FUND_AMOUNT) {
   return fees;
 }
 
-function createRecords(count = 3) {
+function createRecords(count = MAX_YEARS) {
   const records: any = {};
   for (let i = 0; i < count; i++) {
     const name = `name${i + 1}`;
@@ -80,9 +83,43 @@ function createRecords(count = 3) {
       endTimestamp: new Date('01/01/2025').getTime() / 1000,
       startTimestamp: Date.now() / 1000 - SECONDS_IN_A_YEAR,
       undernames: DEFAULT_UNDERNAME_COUNT,
-      type: 'lease',
+      type: REGISTRATION_TYPES.LEASE,
     };
     records[name] = obj;
+    // names in grace periods
+    const gracePeriodName = `grace-period-name${i + 1}`;
+    const gracePeriodObj = {
+      contractTxID: ANT_CONTRACT_IDS[0],
+      endTimestamp: Date.now() / 1000,
+      startTimestamp: Date.now() / 1000 - SECONDS_IN_A_YEAR,
+      undernames: DEFAULT_UNDERNAME_COUNT,
+      type: REGISTRATION_TYPES.LEASE,
+    };
+    records[gracePeriodName] = gracePeriodObj;
+    // expired names
+    const expiredName = `expired-name${i + 1}`;
+    const expiredObj = {
+      contractTxID: ANT_CONTRACT_IDS[0],
+      endTimestamp: Date.now() / 1000,
+      startTimestamp:
+        Date.now() / 1000 - (SECONDS_IN_A_YEAR + SECONDS_IN_GRACE_PERIOD + 1),
+      undernames: DEFAULT_UNDERNAME_COUNT,
+      type: REGISTRATION_TYPES.LEASE,
+    };
+    records[expiredName] = expiredObj;
+    // a name for each lease length
+    const leaseLengthName = `lease-length-name${
+      i > 0 ? i : REGISTRATION_TYPES.BUY
+    }`;
+    const leaseLengthObj = {
+      contractTxID: ANT_CONTRACT_IDS[0],
+      endTimestamp:
+        i > 0 ? Date.now() / 1000 + SECONDS_IN_A_YEAR * i - 1 : undefined,
+      startTimestamp: Date.now() / 1000 - 1,
+      undernames: DEFAULT_UNDERNAME_COUNT,
+      type: i > 0 ? REGISTRATION_TYPES.LEASE : REGISTRATION_TYPES.BUY,
+    };
+    records[leaseLengthName] = leaseLengthObj;
   }
   return records;
 }
