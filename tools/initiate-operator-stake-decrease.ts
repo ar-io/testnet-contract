@@ -43,13 +43,22 @@ import { keyfile } from './constants';
   const walletAddress = await arweave.wallets.getAddress(wallet);
 
   // Read the ANT Registry Contract
-  const pst = warp.pst(arnsContractTxId);
+  const pst = warp.pst(arnsContractTxId).setEvaluationOptions({
+    internalWrites: true,
+    updateCacheForEachInteraction: true,
+    unsafeClient: 'skip',
+  });
   pst.connect(wallet);
 
-  const txId = await pst.writeInteraction({
-    function: 'initiateOperatorStakeDecrease',
-    id,
-  });
+  const txId = await pst.writeInteraction(
+    {
+      function: 'initiateOperatorStakeDecrease',
+      id,
+    },
+    {
+      disableBundling: true,
+    },
+  );
 
   console.log(
     `${walletAddress} successfully submitted request to initiate decreasing gateway stake with TX id: ${txId}`,

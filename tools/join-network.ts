@@ -1,9 +1,15 @@
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
-import { WarpFactory, defaultCacheOptions } from 'warp-contracts';
+import {
+  LoggerFactory,
+  WarpFactory,
+  defaultCacheOptions,
+} from 'warp-contracts';
 
 import { keyfile } from './constants';
+
+LoggerFactory.INST.logLevel('error');
 
 /* eslint-disable no-console */
 // This script will join a gateway to the ar.io network, identified by the gateway operator's wallet address
@@ -62,21 +68,35 @@ import { keyfile } from './constants';
   const walletAddress = await arweave.wallets.getAddress(wallet);
 
   // Read the ANT Registry Contract
-  const pst = warp.pst(arnsContractTxId);
+  const pst = warp.pst(arnsContractTxId).setEvaluationOptions({
+    internalWrites: true,
+    updateCacheForEachInteraction: true,
+    unsafeClient: 'skip',
+  });
   pst.connect(wallet);
 
-  const txId = await pst.writeInteraction({
-    function: 'joinNetwork',
-    qty,
-    label,
-    fqdn,
-    port,
-    protocol,
-    properties,
-    note,
-  });
+  console.log('Connected to contract with wallet: %s', walletAddress);
+  const txId = await pst.writeInteraction(
+    {
+      function: 'joinNetwork',
+      qty,
+      label,
+      fqdn,
+      port,
+      protocol,
+      properties,
+      note,
+    },
+    {
+      disableBundling: true,
+    },
+  );
 
   console.log(
-    `${walletAddress} successfully submitted request to join the network with TX id: ${txId}`,
+    `${walletAddress} successfully submitted request to join the network with TX id: ${JSON.stringify(
+      txId,
+      null,
+      2,
+    )}`,
   );
 })();
