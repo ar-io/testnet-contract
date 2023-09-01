@@ -1,17 +1,22 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
+import { IOState } from '../src/types';
+import { arweave, warp } from './setup.jest';
 import {
   ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
   INVALID_NAME_EXTENSION_TYPE_MESSAGE,
+  MAX_YEARS,
   REGISTRATION_TYPES,
   SECONDS_IN_A_YEAR,
-} from '../src/constants';
-import { IOState } from '../src/types';
-import { arweave, warp } from './setup.jest';
-import { MAX_YEARS, WALLET_FUND_AMOUNT } from './utils/constants';
-import { getLocalArNSContractId, getLocalWallet } from './utils/helper';
+  WALLET_FUND_AMOUNT,
+} from './utils/constants';
+import {
+  calculateAnnualRenewalFee,
+  getLocalArNSContractId,
+  getLocalWallet,
+} from './utils/helper';
 
 describe('Extend', () => {
   let contract: Contract<PstState>;
@@ -175,8 +180,17 @@ describe('Extend', () => {
         const name = `grace-period-name${years}`;
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevState = prevCachedValue.state as IOState;
-        const prevEndTimestamp = prevState.records[name].endTimestamp!;
+        const record = prevState.records[name]!;
         const prevBalance = prevState.balances[walletAddress];
+        const fees = prevState.fees;
+        const totalExtensionAnnualFee = calculateAnnualRenewalFee(
+          name,
+          fees,
+          years,
+          record.undernames,
+          record.endTimestamp!,
+        );
+        const expectedBalance = prevBalance - totalExtensionAnnualFee;
 
         const writeInteraction = await contract.writeInteraction({
           function: 'extendRecord',
@@ -191,9 +205,9 @@ describe('Extend', () => {
           writeInteraction!.originalTxId,
         );
         expect(state.records[name].endTimestamp).toEqual(
-          prevEndTimestamp + years * SECONDS_IN_A_YEAR,
+          record.endTimestamp! + years * SECONDS_IN_A_YEAR,
         );
-        expect(state.balances[walletAddress]).not.toEqual(prevBalance);
+        expect(state.balances[walletAddress]).toEqual(expectedBalance);
       },
     );
 
