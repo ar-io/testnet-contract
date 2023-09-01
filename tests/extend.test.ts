@@ -5,13 +5,12 @@ import {
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
   INVALID_NAME_EXTENSION_TYPE_MESSAGE,
-  INVALID_YEARS_MESSAGE,
   REGISTRATION_TYPES,
   SECONDS_IN_A_YEAR,
 } from '../src/constants';
 import { IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
-import { MAX_YEARS } from './utils/constants';
+import { MAX_YEARS, WALLET_FUND_AMOUNT } from './utils/constants';
 import { getLocalArNSContractId, getLocalWallet } from './utils/helper';
 
 describe('Extend', () => {
@@ -25,56 +24,37 @@ describe('Extend', () => {
   describe('contract owner', () => {
     let owner: JWKInterface;
     let walletAddress: string;
+    let emptyWalletCaller: JWKInterface;
 
     beforeAll(async () => {
       owner = getLocalWallet(0);
       walletAddress = await arweave.wallets.getAddress(owner);
       contract = warp.pst(srcContractId).connect(owner);
-    });
-
-    afterEach(async () => {
-      const { cachedValue: cachedValue } = await contract.readState();
-      const state = cachedValue.state as IOState;
-
-      if (state.balances[walletAddress] < 1) {
-        const tempContract = warp.pst(srcContractId).connect(getLocalWallet(1));
-        const tempAddress = await arweave.wallets.getAddress(getLocalWallet(1));
-        const qty = state.balances[tempAddress] / 2;
-        await tempContract.writeInteraction({
-          function: 'transfer',
-          target: walletAddress,
-          qty: qty,
-        });
-      }
+      emptyWalletCaller = getLocalWallet(12);
     });
 
     it('should not be able to extend a record if the caller has insufficient balance', async () => {
       const extendYears = 1;
       const name = 'name1';
-      const { cachedValue: prevCachedValue } = await contract.readState();
+      const tempContract = warp.pst(srcContractId).connect(emptyWalletCaller);
+      const { cachedValue: prevCachedValue } = await tempContract.readState();
       const prevState = prevCachedValue.state as IOState;
       const prevExpiration = prevState.records['name1'].endTimestamp;
-      const prevBalance = prevState.balances[walletAddress];
 
-      // transfer all funds to another wallet
-      const recipientAddress = await arweave.wallets.getAddress(
-        getLocalWallet(1),
-      );
-
-      await contract.writeInteraction({
+      await tempContract.writeInteraction({
         function: 'transfer',
-        target: recipientAddress,
-        qty: prevBalance,
+        target: walletAddress,
+        qty: WALLET_FUND_AMOUNT,
       });
 
-      const writeInteraction = await contract.writeInteraction({
+      const writeInteraction = await tempContract.writeInteraction({
         function: 'extendRecord',
         name: name,
         years: extendYears,
       });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
-      const { cachedValue } = await contract.readState();
+      const { cachedValue } = await tempContract.readState();
       const state = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).toContain(
         writeInteraction!.originalTxId,
