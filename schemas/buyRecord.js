@@ -1,33 +1,21 @@
 const buyRecordSchema = {
-  $id: '#/definitions/buyRecord',
+  $id: 'buyRecord', // Removed '#/definitions/' to align with how you add it to AJV
   type: 'object',
   properties: {
     function: {
       type: 'string',
       const: 'buyRecord',
     },
-    name: {
-      type: 'string',
-      pattern: '^([a-zA-Z0-9][a-zA-Z0-9-]{0,49}[a-zA-Z0-9]|[a-zA-Z0-9]{1})$',
-    },
-    contractTxId: {
-      type: 'string',
-      pattern: '^(atomic|[a-zA-Z0-9-_]{43})$',
-    },
-    years: {
-      type: 'integer',
-      minimum: 1,
-    },
-    type: {
-      type: 'string',
-      pattern: '^(lease|permabuy)$',
-    },
+    name: { $ref: 'common#/$defs/name' }, // Updated $ref
+    contractTxId: { $ref: 'common#/$defs/contractTxId' }, // Updated $ref
+    years: { $ref: 'common#/$defs/years' }, // Updated $ref
+    type: { $ref: 'common#/$defs/type' }, // Updated $ref
     auction: {
       type: 'boolean',
     },
   },
   required: ['name', 'function'],
-  additionalProperties: true, // allows for auction properties to be provided to buy record
+  additionalProperties: true,
 };
 
 module.exports = {

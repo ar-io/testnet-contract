@@ -6,21 +6,12 @@ const auctionBidSchema = {
       type: 'string',
       pattern: '^(submitAuctionBid|buyRecord)$',
     },
-    name: {
-      type: 'string',
-      pattern: '^([a-zA-Z0-9][a-zA-Z0-9-]{0,49}[a-zA-Z0-9]|[a-zA-Z0-9]{1})$',
-    },
+    name: { $ref: 'common#/$defs/name' },
+    type: { $ref: 'common#/$defs/type' },
+    contractTxId: { $ref: 'common#/$defs/contractTxId' },
     qty: {
       type: 'number',
       minimum: 0,
-    },
-    type: {
-      type: 'string',
-      pattern: '^(lease|permabuy)$',
-    },
-    contractTxId: {
-      type: 'string',
-      pattern: '^(atomic|[a-zA-Z0-9-_]{43})$',
     },
   },
   required: ['name', 'contractTxId'],

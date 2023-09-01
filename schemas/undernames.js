@@ -6,10 +6,7 @@ const increaseUndernameCountSchema = {
       type: 'string',
       const: 'increaseUndernameCount',
     },
-    name: {
-      type: 'string',
-      pattern: '^([a-zA-Z0-9][a-zA-Z0-9-]{0,49}[a-zA-Z0-9]|[a-zA-Z0-9]{1})$',
-    },
+    name: { $ref: 'common#/$defs/name' },
     qty: {
       type: 'number',
       minimum: 1,

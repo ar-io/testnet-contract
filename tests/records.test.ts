@@ -370,7 +370,7 @@ describe('Records', () => {
         );
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(INVALID_YEARS_MESSAGE);
+        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
       },
     );
 

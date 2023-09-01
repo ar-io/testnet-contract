@@ -8,19 +8,25 @@ const {
   auctionBidSchema,
   buyRecordSchema,
   increaseUndernameCountSchema,
+  commonDefinitions,
 } = require('./schemas');
 
 // build our validation source code
 const ajv = new Ajv({
-  schemas: [auctionBidSchema, buyRecordSchema, increaseUndernameCountSchema],
   code: { source: true, esm: true },
   allErrors: true,
 });
 
+// Explicitly add common definitions and main schemas
+ajv.addSchema(commonDefinitions, 'common');
+ajv.addSchema(auctionBidSchema, 'auctionBid');
+ajv.addSchema(buyRecordSchema, 'buyRecord');
+ajv.addSchema(increaseUndernameCountSchema, 'increaseUndernameCount');
+
 const moduleCode = standaloneCode(ajv, {
-  validateBuyRecord: '#/definitions/buyRecord',
-  validateAuctionBid: '#/definitions/auctionBid',
-  validateIncreaseUndernameCount: '#/definitions/increaseUndernameCount',
+  validateBuyRecord: 'buyRecord',
+  validateAuctionBid: 'auctionBid',
+  validateIncreaseUndernameCount: 'increaseUndernameCount',
 });
 
 // Now you can write the module code to file
