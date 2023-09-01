@@ -1,6 +1,8 @@
 import { AuctionSettings } from './types';
 
+export const SECONDS_IN_A_YEAR = 31_536_000; // 52 weeks, 7 days per week, 24 hours per day, sixty minutes per hour, sixty seconds per minute
 export const MAX_YEARS = 5; // the maximum amount of years an arns name could be leased for
+export const MIN_YEARS = 1; // the minimum amount of years an arns name could be leased for
 export const NAMESPACE_LENGTH = 62; // browser domains are max 63 characters between periods, but we need to leave 1 character for the underscore seperator between the undernames and arns name
 export const MAX_NAME_LENGTH = 51; // the maximum length of an arns name - gateway sandbox domains are 52 characters, so to prevent overlap we stop 1 character short, where the 52nd character would be an underscore (which sandbox domains do not use) to prevent overlap
 export const MAX_NOTE_LENGTH = 256; // the maximum size of a note field
@@ -8,8 +10,11 @@ export const MAX_GATEWAY_LABEL_LENGTH = 16; // the maximum size of a label field
 export const MAX_PORT_NUMBER = 65535; // the default end port of tcp/udp port numbers
 export const MAX_FOUNDATION_ACTION_PERIOD = 720 * 30; // the maximum amount of time (in blocks) a foundation action could be set to
 export const TX_ID_LENGTH = 43; // the length of an arweave transaction id
-export const SECONDS_IN_A_YEAR = 31_536_000; // 52 weeks, 7 days per week, 24 hours per day, sixty minutes per hour, sixty seconds per minute
 export const SECONDS_IN_GRACE_PERIOD = 1_814_400; // Three weeks, 7 days per week, 24 hours per day, sixty minutes per hour, sixty seconds per minute
+export enum REGISTRATION_TYPES {
+  LEASE = 'lease',
+  BUY = 'permabuy',
+}
 export const RESERVED_ATOMIC_TX_ID = 'atomic';
 export const FOUNDATION_ACTION_ACTIVE_STATUS = 'active';
 export const FOUNDATION_ACTION_FAILED_STATUS = 'failed';
@@ -45,6 +50,7 @@ export const INVALID_TARGET_MESSAGE = 'Invalid target specified';
 export const INVALID_QTY_MESSAGE =
   'Invalid quantity. Must be an integer and greater than 0.';
 export const INVALID_YEARS_MESSAGE = `Invalid number of years. Must be an integer and less than or equal to ${MAX_YEARS}`;
+export const INVALID_NAME_EXTENSION_TYPE_MESSAGE = `This name has been permanently registered and its lease cannot be extended.`;
 export const INVALID_SHORT_NAME = `Name is less than ${MINIMUM_ALLOWED_NAME_LENGTH} characters. It will be available for auction after ${SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP}.`;
 export const MAX_UNDERNAME_MESSAGE = `Name has reached undername limit of ${MAX_ALLOWED_UNDERNAMES}`;
 export const FEE_STRUCTURE = {

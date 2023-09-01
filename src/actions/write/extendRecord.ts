@@ -1,18 +1,49 @@
 import {
   ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
+  INSUFFICIENT_FUNDS_MESSAGE,
+  INVALID_INPUT_MESSAGE,
+  INVALID_NAME_EXTENSION_TYPE_MESSAGE,
   INVALID_YEARS_MESSAGE,
   MAX_YEARS,
+  MIN_YEARS,
   SECONDS_IN_A_YEAR,
-  SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 import {
   calculateAnnualRenewalFee,
+  getMaxLeaseExtension,
   walletHasSufficientBalance,
 } from '../../utilities';
+import { validateExtendRecord } from '../../validations.mjs';
 
 declare const ContractError;
 declare const SmartWeave: any;
+
+export class ExtendRecord {
+  function = 'extendRecord';
+  name: string;
+  years: number;
+
+  constructor(input: any) {
+    // validate using ajv validator
+    if (!validateExtendRecord(input)) {
+      throw new ContractError(
+        `${INVALID_INPUT_MESSAGE} for ${this.function}: ${(
+          validateExtendRecord as any
+        ).errors
+          .map((e) => {
+            const key = e.instancePath.replace('/', '');
+            const value = input[key];
+            return `${key} ('${value}') ${e.message}`;
+          })
+          .join(', ')}`,
+      );
+    }
+    const { name, years } = input;
+    this.name = name.trim().toLowerCase();
+    this.years = years;
+  }
+}
 
 // Increases the lease time for an existing record
 export const extendRecord = async (
@@ -23,7 +54,7 @@ export const extendRecord = async (
   const currentBlockTime = +SmartWeave.block.timestamp;
 
   // TODO: object parse validation
-  const { name, years } = input as any;
+  const { name, years } = new ExtendRecord(input);
 
   // get the record
   const record = records[name];
@@ -35,7 +66,7 @@ export const extendRecord = async (
     balances[caller] == null ||
     isNaN(balances[caller])
   ) {
-    throw new ContractError(`Caller balance is not defined!`);
+    throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
   // check if record exists
@@ -44,7 +75,7 @@ export const extendRecord = async (
   }
 
   // Check if it includes a valid number of years
-  if (!Number.isInteger(years) || years > MAX_YEARS) {
+  if (!Number.isInteger(years) || years > MAX_YEARS || years < MIN_YEARS) {
     throw new ContractError(INVALID_YEARS_MESSAGE);
   }
 
@@ -53,22 +84,15 @@ export const extendRecord = async (
    * 1. Name is not yet in grace period (i.e. still active)
    * 2. Name is expired, but beyond grace period
    * 3. Name is in grace period and can be extended by anyone
+   * 4. Name is a permanent name and cannot be extended
    */
-  if (records[name].endTimestamp > currentBlockTime) {
-    // name is not yet in a grace period
-    throw new ContractError(
-      `This name cannot be extended until the grace period begins.`,
-    );
+
+  if (!record.endTimestamp) {
+    throw new ContractError(INVALID_NAME_EXTENSION_TYPE_MESSAGE);
   }
 
-  if (
-    records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD <=
-    currentBlockTime
-  ) {
-    // This name's lease has expired and cannot be extended
-    throw new ContractError(
-      `This name has expired and must repurchased before it can be extended.`,
-    );
+  if (getMaxLeaseExtension(currentBlockTime, record.endTimestamp) === 0) {
+    throw new ContractError(INVALID_YEARS_MESSAGE);
   }
 
   // total cost to extend a record
@@ -81,11 +105,10 @@ export const extendRecord = async (
   );
 
   if (!walletHasSufficientBalance(balances, caller, totalExtensionAnnualFee)) {
-    throw new ContractError(
-      `Caller balance not high enough to extend this name lease for ${totalExtensionAnnualFee} token(s) for ${years}!`,
-    );
+    throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
+  // TODO: implement protocol balance transfer for this charge.
   // reduce balance set the end lease period for this record based on number of years
   balances[caller] -= totalExtensionAnnualFee; // reduce callers balance
   state.balances[caller] -= totalExtensionAnnualFee; // reduce callers balance
