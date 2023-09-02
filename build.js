@@ -7,6 +7,7 @@ const replace = require('replace-in-file');
 const {
   auctionBidSchema,
   buyRecordSchema,
+  extendRecordSchema,
   increaseUndernameCountSchema,
   commonDefinitions,
 } = require('./schemas');
@@ -21,11 +22,13 @@ const ajv = new Ajv({
 ajv.addSchema(commonDefinitions, 'common');
 ajv.addSchema(auctionBidSchema, 'auctionBid');
 ajv.addSchema(buyRecordSchema, 'buyRecord');
+ajv.addSchema(extendRecordSchema, 'buyRecord');
 ajv.addSchema(increaseUndernameCountSchema, 'increaseUndernameCount');
 
 const moduleCode = standaloneCode(ajv, {
   validateBuyRecord: 'buyRecord',
   validateAuctionBid: 'auctionBid',
+  validateExtendRecord: 'extendRecord',
   validateIncreaseUndernameCount: 'increaseUndernameCount',
 });
 

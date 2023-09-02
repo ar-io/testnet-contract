@@ -1,5 +1,9 @@
 import initialContractState from './initial-state.json';
 
+export enum REGISTRATION_TYPES {
+  LEASE = 'lease',
+  BUY = 'permabuy',
+}
 export const MINIMUM_ALLOWED_EVOLUTION_DELAY = 4; // 4 blocks for testing purposes, but should be 720 * 7; // 720 blocks per day times 7 days
 export const FOUNDATION_ACTION_PERIOD = 1;
 export const FOUNDATION_STARTING_BALANCE = 10_000;

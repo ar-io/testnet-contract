@@ -17,6 +17,7 @@ import { ContractResult, IOState, PstAction } from '../../types';
 import {
   calculatePermabuyFee,
   calculateTotalRegistrationFee,
+  getInvalidAjvMessage,
 } from '../../utilities';
 // composed by ajv at build
 import { validateBuyRecord } from '../../validations.mjs';
@@ -37,17 +38,7 @@ export class BuyRecord {
   constructor(input: any) {
     // validate using ajv validator
     if (!validateBuyRecord(input)) {
-      throw new ContractError(
-        `${INVALID_INPUT_MESSAGE} for ${this.function}: ${(
-          validateBuyRecord as any
-        ).errors
-          .map((e) => {
-            const key = e.instancePath.replace('/', '');
-            const value = input[key];
-            return `${key} ('${value}') ${e.message}`;
-          })
-          .join(', ')}`,
-      );
+      throw new ContractError(getInvalidAjvMessage(validateBuyRecord, input));
     }
     const {
       name,
