@@ -22,7 +22,7 @@ const ajv = new Ajv({
 ajv.addSchema(commonDefinitions, 'common');
 ajv.addSchema(auctionBidSchema, 'auctionBid');
 ajv.addSchema(buyRecordSchema, 'buyRecord');
-ajv.addSchema(extendRecordSchema, 'buyRecord');
+ajv.addSchema(extendRecordSchema, 'extendRecord');
 ajv.addSchema(increaseUndernameCountSchema, 'increaseUndernameCount');
 
 const moduleCode = standaloneCode(ajv, {
