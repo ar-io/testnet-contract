@@ -7,19 +7,26 @@ const replace = require('replace-in-file');
 const {
   auctionBidSchema,
   buyRecordSchema,
+  extendRecordSchema,
   increaseUndernameCountSchema,
 } = require('./schemas');
 
 // build our validation source code
 const ajv = new Ajv({
-  schemas: [auctionBidSchema, buyRecordSchema, increaseUndernameCountSchema],
+  schemas: [
+    auctionBidSchema,
+    buyRecordSchema,
+    extendRecordSchema,
+    increaseUndernameCountSchema,
+  ],
   code: { source: true, esm: true },
   allErrors: true,
 });
 
 const moduleCode = standaloneCode(ajv, {
-  validateBuyRecord: '#/definitions/buyRecord',
   validateAuctionBid: '#/definitions/auctionBid',
+  validateBuyRecord: '#/definitions/buyRecord',
+  validateExtendRecord: '#/definitions/extendRecord',
   validateIncreaseUndernameCount: '#/definitions/increaseUndernameCount',
 });
 
