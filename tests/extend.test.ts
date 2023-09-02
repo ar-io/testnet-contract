@@ -13,6 +13,7 @@ import {
   WALLET_FUND_AMOUNT,
 } from './utils/constants';
 import {
+  addFunds,
   calculateAnnualRenewalFee,
   getLocalArNSContractId,
   getLocalWallet,
@@ -35,7 +36,8 @@ describe('Extend', () => {
       owner = getLocalWallet(0);
       walletAddress = await arweave.wallets.getAddress(owner);
       contract = warp.pst(srcContractId).connect(owner);
-      emptyWalletCaller = getLocalWallet(12);
+      emptyWalletCaller = await arweave.wallets.generate();
+      await addFunds(arweave, emptyWalletCaller);
     });
 
     afterEach(() => {
@@ -49,11 +51,6 @@ describe('Extend', () => {
       const prevState = prevCachedValue.state as IOState;
       const prevExpiration = prevState.records['name1'].endTimestamp;
       contract.connect(emptyWalletCaller);
-      await contract.writeInteraction({
-        function: 'transfer',
-        target: walletAddress,
-        qty: WALLET_FUND_AMOUNT,
-      });
 
       const writeInteraction = await contract.writeInteraction({
         function: 'extendRecord',
