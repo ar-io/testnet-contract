@@ -40,12 +40,13 @@ They can be run using the following example
 The following tools can be used to perform basic ArNS operations such as name purchase, ANT creation, and ANT transfer.
 
 - `buy-arns-name` purchases a new ArNS Name in the registry (if availabile) and adds the reference to the ANT Smartweave Contract ID. Requires the name you wish to purchase, the existing ANT Smartweave Contract ID that will be added to the registry, and the ArNS Registry Smartcontract ID. Can also "atomically" register ArNS names, which includes the generation of a new ANT within the same transaction as the ArNS Name registration.
+- `buy-arns-name-atomic-ant` "Atomically" registers an ArNS name, which includes the generation of a new ANT within the same transaction as the ArNS Name registration.
 - `create-ant` creates a new ANT with arweave data pointer. Requires a short token ticker, a friendly token name, an Arweave Transaction ID as the data pointer, and the ANT Smartweave Contract Source Transaction ID. Please note that only the `@` sub domain will work at this time, and it is hard-coded into the script.
 - `create-ant-and-buy-arns-name` creates a new ANT with arweave data pointer and then registers it in the ArNS Registry. Also this script will not check if the ANT was successfully created and mined before adding to the ArNS Registry. Requires a short token ticker, a friendly token name and an Arweave Transaction ID as the data pointer and the ANT Smartweave Contract Source Transaction ID. Please note that only the `@` sub domain will work at this time, and it is hard-coded into the script.
 - `transfer-ant` transfers a ANT to another wallet. Requires the recipient target to transfer the ANT to, and the ANT Smartweave Contract ID that is to be transfered.
 - `buy-test-arns-name` uses the Redstone Testnet and purchases a new ArNS Name in the registry (if availabile) and adds the reference to the ANT Smartweave Address
 
-### AR.IO Network Operations
+### AR.IO Network
 
 The following tools can be used to perform basic AR.IO Network operations, such as joining and leaving the network, along with managing the onchain settings of a Gateway.
 
