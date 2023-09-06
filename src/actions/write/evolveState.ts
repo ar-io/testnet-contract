@@ -132,6 +132,7 @@ export const evolveState = async (
       ...everythingElse,
       undernames: undernames ?? 100,
       startTimestamp: startTimestamp ?? +SmartWeave.block.timestamp,
+      type: 'lease',
     };
     return acc;
   }, {});
