@@ -21,13 +21,14 @@ export const evolveState = async (
 
   // Modify all balances
   const perUserBalance = 5_000;
-  let totalSupply = 1_000_000_000;
+  state.balances[owner] = 1_000_000_000; //give the token supply to the owner for distribution
   const balances = state.balances;
   Object.keys(balances).forEach((address) => {
-    state.balances[address] = perUserBalance;
-    totalSupply -= perUserBalance;
+    if (address !== owner) {
+      state.balances[address] = perUserBalance;
+      state.balances[owner] -= perUserBalance;
+    }
   });
-  state.balances[owner] = totalSupply; //give the remaining amount to contract owner.
 
   // Update Gateway Address Registry settings
   const registry = {
@@ -129,7 +130,7 @@ export const evolveState = async (
     ] as any;
     acc[key] = {
       ...everythingElse,
-      undernames: undernames ?? 10,
+      undernames: undernames ?? 100,
       startTimestamp: startTimestamp ?? +SmartWeave.block.timestamp,
     };
     return acc;
@@ -138,7 +139,7 @@ export const evolveState = async (
   state.records = newRecords;
 
   // add gateways object
-  state.gateways = {};
+  state.gateways = state.gateways ?? {};
 
   // remove tiers
   const { tiers, ...restOfState } = state as any;
