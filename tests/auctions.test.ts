@@ -580,6 +580,31 @@ describe('Auctions', () => {
           auctionTxId = writeInteraction!.originalTxId;
         });
 
+        it.each([-10, -1, 10, 19, 20, 69])(
+          `should expect the bid amount to not exceed the start price after %s blocks`,
+          async (block) => {
+            // fast forward a few blocks, then construct winning bid
+            const auctionSettings: AuctionSettings =
+              AUCTION_SETTINGS.history[0];
+
+            const winningBidQty = calculateMinimumAuctionBid({
+              startHeight: auctionObj.startHeight,
+              startPrice: auctionObj.startPrice,
+              floorPrice: auctionObj.floorPrice,
+              currentBlockHeight: auctionObj.startHeight + block,
+              decayInterval: auctionSettings.decayInterval,
+              decayRate: auctionSettings.decayRate,
+            });
+            console.log({
+              winningBidQty,
+              start: auctionObj.startPrice,
+              block: block + auctionObj.startHeight,
+            });
+
+            expect(winningBidQty).toBeLessThanOrEqual(auctionObj.startPrice);
+          },
+        );
+
         it('should update the records when the caller is the initiator, and only withdraw the difference of the current bid to the original floor price that was already withdrawn from the initiator', async () => {
           // fast forward a few blocks, then construct winning bid
           const auctionSettings: AuctionSettings = AUCTION_SETTINGS.history[0];
