@@ -103,8 +103,23 @@ export const evolveState = async (
     }
     return acc;
   }, {});
-
   state.auctions = newAuctions;
+
+  // add auctions settings
+  const auctionsSettings = {
+    current: 'f3ebbf46-a5f4-4f89-86ed-aaae4346db2a',
+    history: [
+      {
+        id: 'f3ebbf46-a5f4-4f89-86ed-aaae4346db2a',
+        floorPriceMultiplier: 1,
+        startPriceMultiplier: 50,
+        auctionDuration: 5040,
+        decayRate: 0.0225,
+        decayInterval: 30,
+      },
+    ],
+  };
+  state.settings.auctions = auctionsSettings;
 
   // evolve records
   const newRecords = Object.keys(records).reduce((acc, key) => {
@@ -117,6 +132,9 @@ export const evolveState = async (
   }, {});
 
   state.records = newRecords;
+
+  // add gateways object
+  state.gateways = {};
 
   // remove tiers
   const { tiers, ...restOfState } = state as any;
