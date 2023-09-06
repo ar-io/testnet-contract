@@ -2,6 +2,7 @@ import { NON_CONTRACT_OWNER_MESSAGE } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;
+declare const SmartWeave;
 
 // Updates this contract to new source code
 export const evolveState = async (
@@ -107,10 +108,10 @@ export const evolveState = async (
 
   // add auctions settings
   const auctionsSettings = {
-    current: 'f3ebbf46-a5f4-4f89-86ed-aaae4346db2a',
+    current: SmartWeave.transaction.id,
     history: [
       {
-        id: 'f3ebbf46-a5f4-4f89-86ed-aaae4346db2a',
+        id: SmartWeave.transaction.id,
         floorPriceMultiplier: 1,
         startPriceMultiplier: 50,
         auctionDuration: 5040,
@@ -123,10 +124,13 @@ export const evolveState = async (
 
   // evolve records
   const newRecords = Object.keys(records).reduce((acc, key) => {
-    const { tier, undernames, ...everythingElse } = records[key] as any;
+    const { tier, undernames, startTimestamp, ...everythingElse } = records[
+      key
+    ] as any;
     acc[key] = {
       ...everythingElse,
-      undernames: 10,
+      undernames: undernames ?? 10,
+      startTimestamp: startTimestamp ?? +SmartWeave.block.timestamp,
     };
     return acc;
   }, {});
