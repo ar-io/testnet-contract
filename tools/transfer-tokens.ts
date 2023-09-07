@@ -20,9 +20,7 @@ import { keyfile } from './constants';
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   // Get the key file used for the distribution
-  const wallet: JWKInterface = JSON.parse(
-    fs.readFileSync(keyfile).toString(),
-  );
+  const wallet: JWKInterface = JSON.parse(fs.readFileSync(keyfile).toString());
 
   // gate the contract txId
   const arnsContractTxId =

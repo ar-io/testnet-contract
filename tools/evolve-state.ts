@@ -18,9 +18,7 @@ import { keyfile } from './constants';
 
   // load local wallet
   const wallet: JWKInterface = JSON.parse(
-    process.env.JWK
-      ? process.env.JWK
-      : fs.readFileSync(keyfile).toString(),
+    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
   );
 
   LoggerFactory.INST.logLevel('error');

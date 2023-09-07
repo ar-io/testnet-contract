@@ -173,7 +173,7 @@ export const buyRecord = (
     }
   }
 
-  // TODO: replace with protocol balance - 
+  // TODO: replace with protocol balance -
   balances[caller] -= totalRegistrationFee;
   balances[owner] += totalRegistrationFee;
 
