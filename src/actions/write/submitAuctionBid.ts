@@ -2,7 +2,6 @@ import {
   ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_UNDERNAME_COUNT,
   INSUFFICIENT_FUNDS_MESSAGE,
-  INVALID_INPUT_MESSAGE,
   INVALID_SHORT_NAME,
   MINIMUM_ALLOWED_NAME_LENGTH,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
@@ -25,12 +24,12 @@ import {
   walletHasSufficientBalance,
 } from '../../utilities';
 // composed by ajv at build
-import { validateAuctionBid } from '../../validations.mjs';
+import { validateSubmitAuctionBid } from '../../validations.mjs';
 
 declare const ContractError;
 declare const SmartWeave: any;
 
-export class AuctionBid {
+export class SubmitAuctionBid {
   function: 'submitAuctionBid';
   name: string;
   qty?: number;
@@ -39,8 +38,10 @@ export class AuctionBid {
   years?: number;
   constructor(input: any) {
     // validate using ajv validator
-    if (!validateAuctionBid(input)) {
-      throw new ContractError(getInvalidAjvMessage(validateAuctionBid, input));
+    if (!validateSubmitAuctionBid(input)) {
+      throw new ContractError(
+        getInvalidAjvMessage(validateSubmitAuctionBid, input),
+      );
     }
 
     const { name, qty, type = 'lease', contractTxId } = input;
@@ -70,7 +71,7 @@ export const submitAuctionBid = (
     type,
     contractTxId,
     years,
-  } = new AuctionBid(input);
+  } = new SubmitAuctionBid(input);
 
   // name already exists on an active lease
   if (records[name]) {

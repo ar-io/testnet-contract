@@ -4,30 +4,24 @@ const Ajv = require('ajv');
 const standaloneCode = require('ajv/dist/standalone').default;
 const { build } = require('esbuild');
 const replace = require('replace-in-file');
-const {
-  auctionBidSchema,
-  buyRecordSchema,
-  extendRecordSchema,
-  increaseUndernameCountSchema,
-} = require('./schemas');
+const schemas = require('./schemas');
+const { startCase } = require('lodash');
 
 // build our validation source code
 const ajv = new Ajv({
-  schemas: [
-    auctionBidSchema,
-    buyRecordSchema,
-    extendRecordSchema,
-    increaseUndernameCountSchema,
-  ],
+  schemas: Object.values(schemas), // use all exported schemas
   code: { source: true, esm: true },
   allErrors: true,
 });
 
+const definitions = Object.values(schemas).reduce((acc, schema) => {
+  const schemaName = schema['$id']?.split('/').pop();
+  acc['validate' + startCase(schemaName).split(' ').join('')] = schema.$id;
+  return acc;
+}, {}); // generate a map of validation functions to schema ids
+
 const moduleCode = standaloneCode(ajv, {
-  validateAuctionBid: '#/definitions/auctionBid',
-  validateBuyRecord: '#/definitions/buyRecord',
-  validateExtendRecord: '#/definitions/extendRecord',
-  validateIncreaseUndernameCount: '#/definitions/increaseUndernameCount',
+  ...definitions, // add or override as needed
 });
 
 // Now you can write the module code to file

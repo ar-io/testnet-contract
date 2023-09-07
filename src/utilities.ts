@@ -11,7 +11,14 @@ import {
   SECONDS_IN_GRACE_PERIOD,
   UNDERNAME_REGISTRATION_IO_FEE,
 } from './constants';
-import { Fees } from './types';
+import {
+  Auction,
+  AuctionGeneratorProps,
+  AuctionParameters,
+  AuctionPermutations,
+  AuctionSettings,
+  Fees,
+} from './types';
 
 declare const ContractError: any;
 
@@ -235,4 +242,86 @@ export function getInvalidAjvMessage(validator: any, input: any) {
       return `${key} ('${value}') ${e.message}`;
     })
     .join(', ')}`;
+}
+
+export function generateAuctionPermutations(
+  props: AuctionGeneratorProps,
+): AuctionPermutations {
+  const auctions = {};
+  for (let i = 0; i <= MAX_YEARS; i++) {
+    auctions[i] = generateAuction({
+      ...props,
+      years: i ?? undefined, // 0 = permabuy-
+    });
+  }
+
+  return auctions as AuctionPermutations;
+}
+
+export function generateAuction(props: AuctionGeneratorProps): Auction {
+  // calculate the auctions prices for each year (leases) and for permabuy
+
+  const { name, blockHeight, blockTime, fees, auctionSettings, caller, years } =
+    props;
+
+  const { floorPriceMultiplier, startPriceMultiplier, id } = auctionSettings;
+
+  const registrationFee = years
+    ? calculateTotalRegistrationFee(name, fees, years!, blockTime)
+    : calculatePermabuyFee(name, fees, blockTime);
+
+  const floorPrice = registrationFee * floorPriceMultiplier;
+  // multiply by the floor price, as it could be higher than the calculated floor
+  const startPrice = floorPrice * startPriceMultiplier;
+
+  const auction: AuctionParameters = {
+    auctionSettingsId: id,
+    floorPrice, // this is decremented from the initiators wallet, and could be higher than the precalculated floor
+    startPrice,
+    contractTxId: '',
+    startHeight: blockHeight, // auction starts right away
+    type: years ? 'lease' : 'permabuy',
+    initiator: caller, // the balance that the floor price is decremented from
+    ...(years ? { years } : {}),
+  };
+
+  const prices = generatePricesForAuction({
+    ...auction,
+    ...auctionSettings,
+  });
+
+  return {
+    ...auction,
+    ...auctionSettings,
+    isExpired: false,
+    isLive: false,
+    minimumAuctionBid: startPrice,
+    prices,
+  };
+}
+
+export function generatePricesForAuction(
+  props: AuctionParameters & AuctionSettings,
+): {
+  [X: string]: number;
+} {
+  const { startHeight, floorPrice, decayInterval, auctionDuration } = props;
+
+  const expiredHieght = startHeight + auctionDuration;
+  let currentHeight = startHeight;
+  const newPrices: { [X: string]: number } = {};
+  while (currentHeight < expiredHieght) {
+    const blockPrice = calculateMinimumAuctionBid({
+      ...props,
+      currentBlockHeight: currentHeight,
+    });
+    if (blockPrice <= floorPrice) {
+      break;
+    }
+    newPrices[currentHeight] = blockPrice;
+    currentHeight = currentHeight + decayInterval;
+  }
+
+  newPrices[expiredHieght] = floorPrice;
+  return newPrices;
 }
