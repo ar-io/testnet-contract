@@ -63,7 +63,7 @@ export const buyRecord = (
   { caller, input }: PstAction,
 ): ContractResult => {
   // get all other relevant state data
-  const { balances, records, reserved, fees, auctions } = state;
+  const { balances, records, reserved, fees, auctions, owner } = state;
   const { name, contractTxId, years, type, auction } = new BuyRecord(input); // does validation on constructor
   const currentBlockTime = +SmartWeave.block.timestamp;
 
@@ -173,9 +173,10 @@ export const buyRecord = (
     }
   }
 
-  // TODO: foundation rewards logic
-  // record can be purchased
-  balances[caller] -= totalRegistrationFee; // reduce callers balance
+  // TODO: replace with protocol balance - 
+  balances[caller] -= totalRegistrationFee;
+  balances[owner] += totalRegistrationFee;
+
   records[name] = {
     contractTxId,
     type,
@@ -189,5 +190,7 @@ export const buyRecord = (
   state.records = records;
   state.reserved = reserved;
   state.balances = balances;
+
+  // T
   return { state };
 };
