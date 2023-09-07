@@ -41,9 +41,9 @@ The following tools can be used to perform basic ArNS operations such as name pu
 - `buy-arns-name-atomic-ant` "Atomically" registers an ArNS name, which includes the generation of a new ANT within the same transaction as the ArNS Name registration.
   pointer and the ANT Smartweave Contract Source Transaction ID. Please note that only the `@` sub domain will work at this time, and it is hard-coded into the script.
 
-      ```shell
-      yarn ts-node tools/buy-arns-name-atomic-ant.ts
-      ```
+  ```shell
+  yarn ts-node tools/buy-arns-name-atomic-ant.ts
+  ```
 
 ### AR.IO Testnet Network
 
@@ -70,7 +70,7 @@ The following tools can be used to perform basic AR.IO Network operations, such 
 - `initiate-operator-stake-decrease` - initiate a stake decrease for an existing registered Gateway
 
   ```shell
-  yarn ts-node tools/increase-operator-stake.ts
+  yarn ts-node tools/initiate-operator-stake-decrease.ts
   ```
 
 - `finalize-operator-stake-decrease` - after stake withdraw period, this completes the operator stake decrease and returns the specific amount back to the operator.

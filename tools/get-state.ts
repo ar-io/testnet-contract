@@ -5,7 +5,7 @@ import { LoggerFactory, WarpFactory } from 'warp-contracts';
   // This is the mainnet ArNS Registry Smartweave Contract TX ID
   const contractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
-    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
+    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel('fatal');
@@ -15,13 +15,7 @@ import { LoggerFactory, WarpFactory } from 'warp-contracts';
 
   // Read the ArNS Registry Contract
   const pst = warp.pst(contractTxId);
-  const state = await pst
-    .setEvaluationOptions({
-      internalWrites: true,
-      updateCacheForEachInteraction: true,
-      unsafeClient: 'skip',
-    })
-    .readState();
+  const state = await pst.readState();
 
   console.log(JSON.stringify(state, null, 2));
 })();

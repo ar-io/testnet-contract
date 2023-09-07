@@ -48,11 +48,11 @@ LoggerFactory.INST.logLevel('error');
   // gate the contract txId
   const arnsContractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
-    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
+    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // Initialize Arweave
   const arweave = Arweave.init({
-    host: 'arweave.net',
+    host: 'ar-io.dev',
     port: 443,
     protocol: 'https',
   });
@@ -68,12 +68,7 @@ LoggerFactory.INST.logLevel('error');
   const walletAddress = await arweave.wallets.getAddress(wallet);
 
   // Read the ANT Registry Contract
-  const pst = warp.pst(arnsContractTxId).setEvaluationOptions({
-    internalWrites: true,
-    updateCacheForEachInteraction: true,
-    unsafeClient: 'skip',
-  });
-  pst.connect(wallet);
+  const pst = warp.pst(arnsContractTxId).connect(wallet);
 
   console.log('Connected to contract with wallet: %s', walletAddress);
   const txId = await pst.writeInteraction(
