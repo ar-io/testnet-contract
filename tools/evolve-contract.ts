@@ -10,6 +10,9 @@ import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 import { keyfile } from './constants';
 
+// ~~ Initialize `LoggerFactory` ~~
+LoggerFactory.INST.logLevel('none');
+
 /* eslint-disable no-console */
 (async () => {
   // load local wallet
@@ -21,9 +24,6 @@ import { keyfile } from './constants';
   const arnsContractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
     'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
-
-  // ~~ Initialize `LoggerFactory` ~~
-  LoggerFactory.INST.logLevel('error');
 
   // ~~ Initialize SmartWeave ~~
   const warp = WarpFactory.forMainnet(
@@ -54,6 +54,7 @@ import { keyfile } from './constants';
     return 0;
   }
 
+  // eslint-disable-next-line
   const evolveInteractionTXId = await contract.writeInteraction(
     { function: 'evolve', value: evolveSrcTxId },
     {
@@ -62,5 +63,5 @@ import { keyfile } from './constants';
   );
 
   // DO NOT CHANGE THIS - it's used by github actions
-  console.log(evolveInteractionTXId?.originalTxId);
+  console.log(evolveSrcTxId);
 })();
