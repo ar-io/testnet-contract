@@ -77,9 +77,8 @@ describe('undernames', () => {
             cachedValue.errorMessages[writeInteraction!.originalTxId],
           ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
           expect(cachedValue.state).toEqual(prevState);
-        })
-
-        
+        },
+      );
 
       it.each([
         '',
@@ -102,8 +101,9 @@ describe('undernames', () => {
             name: arnsName,
             qty: badQty,
           };
-          const { cachedValue: { state: prevState } } =
-            await contract.readState();
+          const {
+            cachedValue: { state: prevState },
+          } = await contract.readState();
           const writeInteraction = await contract.writeInteraction(
             {
               function: 'increaseUndernameCount',
@@ -139,8 +139,9 @@ describe('undernames', () => {
             name: arnsName,
             qty: badQty,
           };
-          const { cachedValue: { state: prevState } } =
-            await contract.readState();
+          const {
+            cachedValue: { state: prevState },
+          } = await contract.readState();
           const writeInteraction = await contract.writeInteraction(
             {
               function: 'increaseUndernameCount',
@@ -188,10 +189,10 @@ describe('undernames', () => {
             name: arnsName,
             qty: goodQty,
           };
-          const { cachedValue: { state: prevState } } =
-            await contract.readState();
-          const initialUndernameCount =
-            prevState.records[arnsName].undernames;
+          const {
+            cachedValue: { state: prevState },
+          } = await contract.readState();
+          const initialUndernameCount = prevState.records[arnsName].undernames;
           const writeInteraction = await contract.writeInteraction(
             {
               function: 'increaseUndernameCount',
@@ -222,10 +223,10 @@ describe('undernames', () => {
             name: validName,
             qty: 1,
           };
-          const { cachedValue: { state: prevState} } =
-            await contract.readState();
-          const initialUndernameCount =
-            prevState.records[validName].undernames;
+          const {
+            cachedValue: { state: prevState },
+          } = await contract.readState();
+          const initialUndernameCount = prevState.records[validName].undernames;
           const writeInteraction = await contract.writeInteraction(
             {
               function: 'increaseUndernameCount',
