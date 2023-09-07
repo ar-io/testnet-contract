@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        step: ['format:check', 'lint:check', "build", "test"]
+        step: ['format:check', 'lint:check', 'build', 'test']
     steps:
       - uses: actions/checkout@v3
       - run: yarn install
