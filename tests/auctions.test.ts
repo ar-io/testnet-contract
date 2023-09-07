@@ -595,11 +595,6 @@ describe('Auctions', () => {
               decayInterval: auctionSettings.decayInterval,
               decayRate: auctionSettings.decayRate,
             });
-            console.log({
-              winningBidQty,
-              start: auctionObj.startPrice,
-              block: block + auctionObj.startHeight,
-            });
 
             expect(winningBidQty).toBeLessThanOrEqual(auctionObj.startPrice);
           },

@@ -1,5 +1,5 @@
 {
-  "name": "arns-pilot",
+  "name": "@ar-io/arns-pilot",
   "version": "0.1.6",
   "private": true,
   "scripts": {
@@ -13,7 +13,6 @@
     "evolve": "yarn ts-node ./tools/evolve-contract.ts"
   },
   "devDependencies": {
-    "@babel/preset-typescript": "^7.16.7",
     "@trivago/prettier-plugin-sort-imports": "^4.0.0",
     "@types/jest": "^27.4.0",
     "@types/node": "^18.15.7",
@@ -24,16 +23,12 @@
     "arweave": "^1.13.7",
     "axios": "^0.26.0",
     "axios-retry": "^3.2.4",
-    "babel-jest": "^27.5.0",
-    "copyfiles": "^2.4.0",
-    "core-js": "^3.6.5",
     "esbuild": "^0.17.12",
     "eslint": "^6.7.2",
     "eslint-plugin-jest-formatting": "^3.1.0",
     "eslint-plugin-prettier": "^3.3.1",
     "jest": "^27.4.3",
     "jsonschema": "^1.4.1",
-    "node-sass": "^6.0.0",
     "prettier": "^2.2.1",
     "replace-in-file": "^6.2.0",
     "ts-jest": "^27.1.3",
