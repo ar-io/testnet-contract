@@ -23,7 +23,6 @@ import { keyfile } from './constants';
   const arnsContractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
     'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
-  // 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
 
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel('error');
@@ -41,23 +40,22 @@ import { keyfile } from './constants';
   contract.connect(wallet);
 
   // ~~ Read contract source and initial state files ~~
-  // const newLocalSourceCodeJS = fs.readFileSync(
-  //   path.join(__dirname, '../dist/contract.js'),
-  //   'utf8',
-  // );
+  const newLocalSourceCodeJS = fs.readFileSync(
+    path.join(__dirname, '../dist/contract.js'),
+    'utf8',
+  );
 
-  // // Create the evolved source code tx
-  // const evolveSrcTx = await warp.createSource(
-  //   { src: newLocalSourceCodeJS },
-  //   wallet,
-  //   true,
-  // );
-  // const evolveSrcTxId = await warp.saveSource(evolveSrcTx, true);
-  // if (evolveSrcTxId === null) {
-  //   return 0;
-  // }
+  // Create the evolved source code tx
+  const evolveSrcTx = await warp.createSource(
+    { src: newLocalSourceCodeJS },
+    wallet,
+    true,
+  );
+  const evolveSrcTxId = await warp.saveSource(evolveSrcTx, true);
+  if (evolveSrcTxId === null) {
+    return 0;
+  }
 
-  const evolveSrcTxId = 'Ox793JlQpxdg16X4tWf_8jP32sD1Qk9TXXJjELDgZ_c';
   const evolveInteractionTXId = await contract.writeInteraction(
     { function: 'evolve', value: evolveSrcTxId },
     {
@@ -65,7 +63,6 @@ import { keyfile } from './constants';
     },
   );
 
-  // eslint-disable-next-line
   console.log(
     'Finished evolving the ArNS Smartweave Contract %s with interaction %s. New source code is: %s',
     arnsContractTxId,
