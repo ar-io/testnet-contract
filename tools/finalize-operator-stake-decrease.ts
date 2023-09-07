@@ -11,9 +11,7 @@ import { keyfile } from './constants';
 (async () => {
   // load local wallet
   const wallet: JWKInterface = JSON.parse(
-    process.env.JWK
-      ? process.env.JWK
-      : fs.readFileSync(keyfile).toString(),
+    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
   );
 
   // load state of contract

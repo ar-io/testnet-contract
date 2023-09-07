@@ -60,7 +60,15 @@ export const submitAuctionBid = (
   state: IOState,
   { caller, input }: PstAction,
 ): ContractResult => {
-  const { auctions = {}, fees, records, reserved, settings, balances, owner } = state;
+  const {
+    auctions = {},
+    fees,
+    records,
+    reserved,
+    settings,
+    balances,
+    owner,
+  } = state;
 
   // does validation on constructor
   const {
@@ -314,7 +322,6 @@ export const submitAuctionBid = (
     };
 
     // decrement the vaulted balance from the second bidder
-
 
     // return the originally revoked balance back to the initiator, assuming the initiator is not the second bidder
     if (caller !== existingAuction.initiator) {

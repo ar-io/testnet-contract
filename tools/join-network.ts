@@ -35,14 +35,11 @@ LoggerFactory.INST.logLevel('error');
   const properties = 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44';
 
   // an optional, short note to further describe this gateway and its status
-  const note =
-    'Owned and operated by DTF.';
+  const note = 'Owned and operated by DTF.';
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
-    process.env.JWK
-      ? process.env.JWK
-      : fs.readFileSync(keyfile).toString(),
+    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
   );
 
   // gate the contract txId

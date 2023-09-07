@@ -30,9 +30,7 @@ import { keyfile } from './constants';
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
-    process.env.JWK
-      ? process.env.JWK
-      : fs.readFileSync(keyfile).toString(),
+    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
   );
 
   // gate the contract txId
