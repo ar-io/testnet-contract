@@ -2,7 +2,6 @@ import {
   ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_UNDERNAME_COUNT,
   INSUFFICIENT_FUNDS_MESSAGE,
-  INVALID_INPUT_MESSAGE,
   INVALID_SHORT_NAME,
   MINIMUM_ALLOWED_NAME_LENGTH,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
@@ -61,7 +60,7 @@ export const submitAuctionBid = (
   state: IOState,
   { caller, input }: PstAction,
 ): ContractResult => {
-  const { auctions = {}, fees, records, reserved, settings, balances } = state;
+  const { auctions = {}, fees, records, reserved, settings, balances, owner } = state;
 
   // does validation on constructor
   const {
@@ -269,8 +268,6 @@ export const submitAuctionBid = (
       // this ticks the state - but doesn't notify the second bidder...sorry!
       // better put: the purpose of their interaction was rejected, but the state incremented forwarded
       return { state };
-      // validate this would break validation
-      // throw Error('The auction has already been won.');
     }
 
     // we could throw an error if qty wasn't provided
@@ -317,17 +314,21 @@ export const submitAuctionBid = (
     };
 
     // decrement the vaulted balance from the second bidder
-    balances[caller] -= finalBid;
+
 
     // return the originally revoked balance back to the initiator, assuming the initiator is not the second bidder
     if (caller !== existingAuction.initiator) {
       balances[existingAuction.initiator] += existingAuction.floorPrice;
     }
-    // TODO: add finalBid to protocol balance
-    // also add the existing floor to protocol balance
-    if (caller == existingAuction.initiator) {
-      // add protocol balance of floor price to protocol balance
+
+    // return the original floor price back to the owner
+    if (caller === existingAuction.initiator) {
+      balances[caller] += existingAuction.floorPrice;
     }
+
+    // decrement the final bids and move to owner wallet
+    balances[caller] -= finalBid;
+    balances[owner] += finalBid;
 
     // delete the auction
     delete auctions[name];
