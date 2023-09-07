@@ -64,5 +64,5 @@ import { keyfile } from './constants';
   );
 
   // DO NOT CHANGE THIS - it's used by github actions
-  console.log(evolveInteractionTXId?.originalTxId)
+  console.log(evolveInteractionTXId?.originalTxId);
 })();
