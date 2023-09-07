@@ -15,6 +15,12 @@ jobs:
         step: ['format:check', 'lint:check', 'build', 'test']
     steps:
       - uses: actions/checkout@v3
+      - id: node_version
+        run: echo ::set-output name=NODE_VERSION::$(cat .nvmrc |cut -c2-8)
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ needs.node_version.outputs.NODE_VERSION }}
+          cache: "yarn"
       - run: yarn install
       - run: yarn ${{ matrix.step }}
   evolve:
