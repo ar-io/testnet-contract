@@ -3,13 +3,12 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import path from 'path';
 
-import { Foundation, IOState } from '../../src/types';
+import { IOState } from '../../src/types';
 import {
   ANT_CONTRACT_IDS,
   AUCTION_SETTINGS,
   CONTRACT_SETTINGS,
   DEFAULT_UNDERNAME_COUNT,
-  FOUNDATION_ACTION_PERIOD,
   INITIAL_STATE,
   MAX_YEARS,
   NETWORK_HIDDEN_STATUS,
@@ -260,17 +259,6 @@ function createGateways(wallets: string[]) {
   return gateways;
 }
 
-function createFoundation(wallets: string[]) {
-  const foundation: Foundation = {
-    actionPeriod: FOUNDATION_ACTION_PERIOD,
-    minSignatures: 1,
-    addresses: [wallets[7]],
-    actions: [],
-  };
-
-  return foundation;
-}
-
 export async function setupInitialContractState(
   owner: string,
   wallets: string[],
@@ -305,9 +293,6 @@ export async function setupInitialContractState(
     registry: CONTRACT_SETTINGS,
     auctions: AUCTION_SETTINGS,
   };
-
-  // configure the foundation
-  state.foundation = createFoundation(wallets);
 
   // configure some basic gateways
   state.gateways = createGateways(wallets);

@@ -1,10 +1,6 @@
 import { PstState } from 'warp-contracts';
 
 import {
-  FOUNDATION_ACTION_ACTIVE_STATUS,
-  FOUNDATION_ACTION_FAILED_STATUS,
-  FOUNDATION_ACTION_PASSED_STATUS,
-  FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS,
   NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
@@ -28,7 +24,6 @@ export type IOState = PstState & {
     // A list of all reserved names that are not allowed to be purchased at this time
     [name: string]: ReservedName;
   };
-  foundation: Foundation; // set of foundation wallets and controls used to sign actions to manage the smartweave contract
   vaults: {
     // a list of all vaults that have locked balances
     [address: string]: TokenVault[];
@@ -58,7 +53,6 @@ export type Auction = {
 export type AuctionSettings = {
   id: string;
   floorPriceMultiplier: number; // if we ever want to drop prices
-  // premiumNameFloorPrice: number; // the floor price for names marked as premium
   startPriceMultiplier: number;
   auctionDuration: number;
   decayRate: number;
@@ -86,7 +80,7 @@ const gatewayStatus = [
   NETWORK_HIDDEN_STATUS,
   NETWORK_LEAVING_STATUS,
 ] as const;
-export type GatewayStatus = typeof gatewayStatus[number];
+export type GatewayStatus = (typeof gatewayStatus)[number];
 
 export type Gateway = {
   operatorStake: number; // the total stake of this gateway's operator.
@@ -122,48 +116,7 @@ export type ReservedName = {
   endTimestamp?: number; // At what unix time (seconds since epoch) this reserved name becomes available
 };
 
-export type Foundation = {
-  // The settings and wallets used by the AR.IO Foundation.
-  actionPeriod: number; // the amount of blocks that must pass for all signers to approve a transfer
-  minSignatures: number; // the minimum amount of signatures/approvals needed to move funds, must be less than the amount of total addresses
-  addresses: string[]; // All of the foundation managed wallet addresses
-  actions: FoundationAction[]; // A list of all on-chain actions performed by the foundation
-};
-
-export type FoundationAction = {
-  id: string; // the id number for this action
-  type: FoundationActionType; // the specific kind of action being performed
-  status: FoundationActionStatus; // the latest status of this action
-  startHeight: number; // the block height that this action started at
-  value: FoundationActionInput; // the value for setting a specific configuration
-  note: string; // a description of this foundation action
-  signed: string[]; // a list of the foundation wallets that have signed this action
-};
-
 export type WalletAddress = string;
-export type ValidStringInput = string;
-export type FeesInput = { [nameLength: string]: number };
-export type FoundationActionInput =
-  | WalletAddress
-  | ValidStringInput
-  | FeesInput
-  | DelayedEvolveInput;
-
-const foundationActionStatus = [
-  FOUNDATION_ACTION_ACTIVE_STATUS,
-  FOUNDATION_ACTION_PASSED_STATUS,
-  FOUNDATION_ACTION_FAILED_STATUS,
-  FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS,
-] as const;
-export type FoundationActionStatus = typeof foundationActionStatus[number];
-
-export type FoundationActionType =
-  | 'setMinSignatures'
-  | 'setActionPeriod'
-  | 'addAddress'
-  | 'removeAddress'
-  | 'setNameFees'
-  | 'delayedEvolve';
 
 export type TokenVault = {
   balance: number; // Positive integer, the amount locked
@@ -171,37 +124,11 @@ export type TokenVault = {
   end: number; // At what block the lock ends.  0 means no end date.
 };
 
-export type VaultParamstype = {
+export type VaultParameters = {
   balance: number;
   start: number;
   end: number;
 };
-
-export type Votetype = {
-  status?: VoteStatus;
-  type: VoteType;
-  id?: number;
-  totalWeight?: number;
-  recipient?: string;
-  target?: string;
-  qty?: number;
-  key?: string;
-  value?: number | string;
-  note?: string;
-  yays?: number;
-  nays?: number;
-  voted?: string[];
-  start?: number;
-  lockLength?: number;
-};
-
-export type VoteStatus = 'active' | 'quorumFailed' | 'passed' | 'failed';
-export type VoteType =
-  | 'mint'
-  | 'mintLocked'
-  | 'burnVault'
-  | 'indicative'
-  | 'set';
 
 export type PstAction = {
   input: any;
@@ -226,7 +153,7 @@ export type ArNSNameResult = {
 
 export type PstFunctions = 'balance' | 'transfer' | 'evolve';
 
-export type PDNSFunctions = 'buyRecord' | 'extendRecord' | 'setName' | 'record';
+export type ArNSFunctions = 'buyRecord' | 'extendRecord' | 'setName' | 'record';
 
 export type GARFunctions =
   | 'joinNetwork'
@@ -240,12 +167,7 @@ export type GARFunctions =
   | 'finalizeOperatorStakeDecrease'
   | 'updateGatewaySettings';
 
-export type FoundationFunctions = 'foundationAction';
-
-export type IOContractFunctions = FoundationFunctions &
-  GARFunctions &
-  PDNSFunctions &
-  PstFunctions;
+export type IOContractFunctions = GARFunctions & ArNSFunctions & PstFunctions;
 
 export type ContractResult =
   | { state: IOState }
