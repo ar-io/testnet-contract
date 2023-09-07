@@ -10,7 +10,7 @@ import {
   // load state of contract
   const arnsContractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
-    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
+    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   LoggerFactory.INST.logLevel('error');
 
@@ -31,11 +31,7 @@ import {
   );
 
   // Read the ArNS Registry Contract
-  const contract = warp.pst(arnsContractTxId).setEvaluationOptions({
-    internalWrites: true,
-    waitForConfirmation: true,
-    updateCacheForEachInteraction: true,
-  });
+  const contract = warp.pst(arnsContractTxId);
 
   const auctionName = 'test-auction-name';
   const { result } = await contract.viewState({
