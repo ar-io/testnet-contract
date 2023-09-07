@@ -15,7 +15,6 @@ import { evolveState } from './actions/write/evolveState';
 import { extendRecord } from './actions/write/extendRecord';
 import { finalizeLeave } from './actions/write/finalizeLeave';
 import { finalizeOperatorStakeDecrease } from './actions/write/finalizeOperatorStakeDecrease';
-import { foundationAction } from './actions/write/foundationAction';
 import { increaseOperatorStake } from './actions/write/increaseOperatorStake';
 import { increaseUndernameCount } from './actions/write/increaseUndernameCount';
 import { initiateLeave } from './actions/write/initiateLeave';
@@ -78,8 +77,6 @@ export async function handle(
       return finalizeOperatorStakeDecrease(state, action);
     case 'updateGatewaySettings':
       return updateGatewaySettings(state, action);
-    case 'foundationAction':
-      return foundationAction(state, action);
     case 'submitAuctionBid':
       return submitAuctionBid(state, action);
     case 'auction':
