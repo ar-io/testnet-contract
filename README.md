@@ -93,14 +93,12 @@ The following tools can be used to perform basic AR.IO Network operations, such 
   yarn ts-node tools/finalize-leave-network.ts
   ```
 
-
-[join-network]:tools/join-network.ts
-[update-gateway-settings]:tools/update-gateway-settings.ts
-[increase-operator-stake]:tools/increase-operator-stake.ts
-[initiate-operator-stake-decrease]:tools/initiate-operator-stake-decrease.ts
-[finalize-operator-stake-decrease]:tools/finalize-operator-stake-decrease.ts
-[initiate-leave-network]:tools/initiate-leave-network.ts
-[finalize-leave-network]:tools/finalize-leave-network.ts
-[buy-arns-name]:tools/buy-arns-name.ts
-[buy-arns-name-atomic-ant]:/tools/buy-arns-name-atomic-ant.ts
-
+[join-network]: tools/join-network.ts
+[update-gateway-settings]: tools/update-gateway-settings.ts
+[increase-operator-stake]: tools/increase-operator-stake.ts
+[initiate-operator-stake-decrease]: tools/initiate-operator-stake-decrease.ts
+[finalize-operator-stake-decrease]: tools/finalize-operator-stake-decrease.ts
+[initiate-leave-network]: tools/initiate-leave-network.ts
+[finalize-leave-network]: tools/finalize-leave-network.ts
+[buy-arns-name]: tools/buy-arns-name.ts
+[buy-arns-name-atomic-ant]: /tools/buy-arns-name-atomic-ant.ts

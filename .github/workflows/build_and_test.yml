@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ needs.node_version.outputs.NODE_VERSION }}
-          cache: "yarn"
+          cache: 'yarn'
       - run: yarn install
       - run: yarn ${{ matrix.step }}
   evolve:

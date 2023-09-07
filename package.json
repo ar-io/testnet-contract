@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "build": "yarn clean && node build.js",
-    "clean": "rimraf ./dist",
-    "format:check": "prettier . --check",
+    "clean": "rimraf [ dist cache ",
+    "format:check": "prettier . --check --cache",
     "format:fix": "prettier . --write",
     "lint:check": "eslint .",
     "lint:fix": "eslint . --fix",
