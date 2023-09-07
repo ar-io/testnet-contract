@@ -85,16 +85,8 @@ export const evolveState = async (
   };
 
   // evolve auctions
-  const { records, auctions } = state;
-  const newAuctions = Object.keys(auctions).reduce((acc, key) => {
-    const { tier, ...everythingElse } = auctions[key] as any;
-    // only keep it if the name isn't in records
-    if (!records[key]) {
-      acc[key] = everythingElse;
-    }
-    return acc;
-  }, {});
-  state.auctions = newAuctions;
+  const { records } = state;
+  state.auctions = {};
 
   // add auctions settings
   const auctionsSettings = {
