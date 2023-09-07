@@ -40,7 +40,7 @@ export const increaseUndernameCount = async (
   { caller, input }: PstAction,
 ): Promise<ContractResult> => {
   const { name, qty } = new IncreaseUndernameCount(input);
-  const { balances, records } = state;
+  const { balances, records, owner } = state;
   const record = records[name];
 
   // check if record exists
@@ -81,6 +81,7 @@ export const increaseUndernameCount = async (
   // TODO: move cost to protocol balance
   state.records[name].undernames = incrementedUndernames;
   state.balances[caller] -= undernameCost;
+  state.balances[owner] += undernameCost;
 
   return { state };
 };

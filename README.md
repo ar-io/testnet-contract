@@ -10,10 +10,10 @@ Clone this repository and install the dependencies.
 
 ## Testing
 
-Tests use arlocal and write files to local disk. Make sure to run `yarn build` before running tests.
+Runs integration tests using arlocal. Note - these test write temporary files to your local disc.
 
 - `yarn tests` - runs full test suite
-- `yarn jest test FILENAME` - runs a specific test file
+- `yarn test -t 'auctions'` - runs tests that match this spec name (e.g. `auctions.test.ts`)
 
 ## Tools
 
