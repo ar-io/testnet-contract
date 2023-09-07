@@ -7,7 +7,7 @@ logs
 coverage
 
 # ajv
-validations.mjs
+src/validations.mjs
 
 # source
 
