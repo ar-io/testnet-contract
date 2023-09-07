@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        step: ['format:check', 'lint:check', "build", "test"]
+        step: ['format:check', 'lint:check', 'build', 'test']
     steps:
       - uses: actions/checkout@v3
       - run: yarn install
@@ -25,8 +25,12 @@ jobs:
       - uses: actions/checkout@v3
       - run: yarn install
       - run: yarn build
-      - run: yarn evolve
-        # TODO: create tag of evolved contract id
+      - run: |
+          SOURCE_CODE_TX_ID=$(yarn evolve)
+          echo "::set-output name=source_code_tx_id::$SOURCE_CODE_TX_ID"
         env:
           ARNS_CONTRACT_TX_ID: ${{ vars.ARNS_CONTRACT_TX_ID }}
           JWK: ${{ secrets.JWK }}
+      - run: |
+          git tag "${{ steps.run_script.outputs.source_code_tx_id }}"
+          git push --tags

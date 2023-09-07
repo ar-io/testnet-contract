@@ -22,7 +22,7 @@ import { keyfile } from './constants';
   // load state of contract
   const arnsContractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
-    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
+    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // ~~ Initialize `LoggerFactory` ~~
   LoggerFactory.INST.logLevel('error');
@@ -55,15 +55,14 @@ import { keyfile } from './constants';
   if (evolveSrcTxId === null) {
     return 0;
   }
-  const evolveInteractionTXId = await contract.evolve(evolveSrcTxId, {
-    disableBundling: true,
-  });
 
-  // eslint-disable-next-line
-  console.log(
-    'Finished evolving the ArNS Smartweave Contract %s with interaction %s. New source code is: %s',
-    arnsContractTxId,
-    evolveInteractionTXId?.originalTxId,
-    evolveSrcTx,
+  const evolveInteractionTXId = await contract.writeInteraction(
+    { function: 'evolve', value: evolveSrcTxId },
+    {
+      disableBundling: true,
+    },
   );
+
+  // DO NOT CHANGE THIS - it's used by github actions
+  console.log(evolveInteractionTXId?.originalTxId);
 })();

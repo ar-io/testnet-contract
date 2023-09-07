@@ -22,11 +22,11 @@ import { keyfile } from './constants';
   // gate the contract txId
   const contractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
-    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
+    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // Initialize Arweave
   const arweave = Arweave.init({
-    host: 'arweave.net',
+    host: 'ar-io.dev',
     port: 443,
     protocol: 'https',
   });
@@ -42,14 +42,9 @@ import { keyfile } from './constants';
   const walletAddress = await arweave.wallets.getAddress(wallet);
 
   // Read the ANT Registry Contract
-  const pst = warp.pst(contractTxId).setEvaluationOptions({
-    internalWrites: true,
-    updateCacheForEachInteraction: true,
-    unsafeClient: 'skip',
-  });
-  pst.connect(wallet);
+  const pst = warp.pst(contractTxId).connect(wallet);
 
-  const txId = await pst.writeInteraction(
+  const writeInteraction = await pst.writeInteraction(
     {
       function: 'increaseOperatorStake',
       qty,
@@ -60,6 +55,6 @@ import { keyfile } from './constants';
   );
 
   console.log(
-    `${walletAddress} successfully submitted gateway stake increase with TX id: ${txId}`,
+    `${walletAddress} successfully submitted gateway stake increase with TX id: ${writeInteraction?.originalTxId}`,
   );
 })();
