@@ -304,9 +304,6 @@ export async function setupInitialContractState(
   state.settings = {
     registry: CONTRACT_SETTINGS,
     auctions: AUCTION_SETTINGS,
-    permabuy: {
-      multiplier: 100,
-    },
   };
 
   // configure the foundation
