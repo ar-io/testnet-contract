@@ -63,10 +63,6 @@ import { keyfile } from './constants';
     },
   );
 
-  console.log(
-    'Finished evolving the ArNS Smartweave Contract %s with interaction %s. New source code is: %s',
-    arnsContractTxId,
-    evolveInteractionTXId?.originalTxId,
-    evolveSrcTxId,
-  );
+  // DO NOT CHANGE THIS - it's used by github actions
+  console.log(evolveInteractionTXId?.originalTxId)
 })();
