@@ -39,7 +39,7 @@ export const evolveState = async (
     gatewayLeaveLength: 720 * 30, // 30 days of blocks
     operatorStakeWithdrawLength: 720 * 30, // 30 days of blocks
   };
-  state.settings.registry = registry;
+  state['settings']['registry'] = registry;
 
   // Update fees and 51 character names
   state.fees = {
@@ -121,7 +121,7 @@ export const evolveState = async (
       },
     ],
   };
-  state.settings.auctions = auctionsSettings;
+  state['settings']['auctions'] = auctionsSettings;
 
   // evolve records
   const newRecords = Object.keys(records).reduce((acc, key) => {
@@ -143,7 +143,7 @@ export const evolveState = async (
   state.gateways = state.gateways ?? {};
 
   // remove tiers
-  const { tiers, ...restOfState } = state as any;
+  const { tiers, ...restOfState } = state as IOState;
   state = restOfState;
 
   return { state };
