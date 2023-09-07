@@ -326,11 +326,9 @@ export const submitAuctionBid = (
     // return the originally revoked balance back to the initiator, assuming the initiator is not the second bidder
     if (caller !== existingAuction.initiator) {
       balances[existingAuction.initiator] += existingAuction.floorPrice;
-    }
-
-    // return the original floor price back to the owner
-    if (caller === existingAuction.initiator) {
-      balances[caller] += existingAuction.floorPrice;
+    } else {
+      // add back the initial floor price to the amount returned to the protocol balances
+      balances[owner] += existingAuction.floorPrice;
     }
 
     // decrement the final bids and move to owner wallet

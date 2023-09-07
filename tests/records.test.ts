@@ -31,9 +31,13 @@ describe('Records', () => {
   describe('any wallet', () => {
     let nonContractOwner: JWKInterface;
     let nonContractOwnerAddress: string;
+    let contractOwnerAddress: string;
+    let contractOwner: JWKInterface;
     let prevState: IOState;
 
     beforeAll(async () => {
+      contractOwner = getLocalWallet(0);
+      contractOwnerAddress = await arweave.wallets.getAddress(contractOwner);
       nonContractOwner = getLocalWallet(1);
       nonContractOwnerAddress = await arweave.wallets.getAddress(
         nonContractOwner,
@@ -114,6 +118,9 @@ describe('Records', () => {
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevBalance - expectedPurchasePrice,
       );
+      expect(balances[contractOwnerAddress]).toEqual(
+        prevState.balances[contractOwnerAddress] + expectedPurchasePrice,
+      );
     });
 
     it('should be able to lease a name without specifying years and type', async () => {
@@ -158,6 +165,9 @@ describe('Records', () => {
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevBalance - expectedPurchasePrice,
       );
+      expect(balances[contractOwnerAddress]).toEqual(
+        prevState.balances[contractOwnerAddress] + expectedPurchasePrice,
+      );
     });
 
     it('should be able to permabuy name', async () => {
@@ -201,6 +211,9 @@ describe('Records', () => {
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevBalance - expectedPurchasePrice,
       );
+      expect(balances[contractOwnerAddress]).toEqual(
+        prevState.balances[contractOwnerAddress] + expectedPurchasePrice,
+      );
     });
 
     it('should not be able to purchase a name that has not expired', async () => {
@@ -221,17 +234,13 @@ describe('Records', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      const { records, balances } = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).toContain(
         writeInteraction!.originalTxId,
       );
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
         NON_EXPIRED_ARNS_NAME_MESSAGE,
       );
-      expect(balances[nonContractOwnerAddress]).toEqual(
-        prevState.balances[nonContractOwnerAddress],
-      );
-      expect(records).toEqual(prevState.records);
+      expect(cachedValue.state).toEqual(prevState);
     });
 
     it.each([
@@ -262,17 +271,13 @@ describe('Records', () => {
 
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue } = await contract.readState();
-        const { balances, records } = cachedValue.state as IOState;
         expect(Object.keys(cachedValue.errorMessages)).toContain(
           writeInteraction!.originalTxId,
         );
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
         ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
-        expect(balances[nonContractOwnerAddress]).toEqual(
-          prevState.balances[nonContractOwnerAddress],
-        );
-        expect(records).toEqual(prevState.records);
+        expect(cachedValue.state).toEqual(prevState);
       },
     );
 
@@ -313,6 +318,7 @@ describe('Records', () => {
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
         ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
+        expect(cachedValue.state).toEqual(prevState);
       },
     );
 
@@ -342,6 +348,7 @@ describe('Records', () => {
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
         ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
+        expect(cachedValue.state).toEqual(prevState);
       },
     );
 
@@ -371,6 +378,7 @@ describe('Records', () => {
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
         ).toEqual(INVALID_YEARS_MESSAGE);
+        expect(cachedValue.state).toEqual(prevState);
       },
     );
 
@@ -392,14 +400,10 @@ describe('Records', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      const state = cachedValue.state as IOState;
-      expect(state.records[reservedNamePurchase1.name.toLowerCase()]).toEqual(
-        undefined,
-      );
-      expect(state.reserved[reservedNamePurchase1.name]).not.toBe(undefined);
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
         ARNS_NAME_RESERVED_MESSAGE,
       );
+      expect(cachedValue.state).toEqual(prevState);
     });
 
     it('should not be able to buy a record when name when is shorter than minimum allowed characters and it is not reserved', async () => {
@@ -420,11 +424,10 @@ describe('Records', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      const state = cachedValue.state as IOState;
-      expect(state.records[namePurchase.name.toLowerCase()]).toEqual(undefined);
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
         INVALID_SHORT_NAME,
       );
+      expect(cachedValue.state).toEqual(prevState);
     });
 
     it('should not be able to buy reserved name when the caller is not the target of the reserved name', async () => {
@@ -447,11 +450,10 @@ describe('Records', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      const state = cachedValue.state as IOState;
-      expect(state.records[namePurchase.name.toLowerCase()]).toBe(undefined);
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(
         ARNS_NAME_RESERVED_MESSAGE,
       );
+      expect(cachedValue.state).toEqual(prevState);
     });
 
     it('should not be able to buy reserved name that has no target, but is not expired', async () => {
@@ -472,14 +474,10 @@ describe('Records', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      const state = cachedValue.state as IOState;
-      expect(state.records[namePurchase.name.toLowerCase()]).toBe(undefined);
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(
         ARNS_NAME_RESERVED_MESSAGE,
       );
-      expect(state.reserved[namePurchase.name.toLowerCase()]).not.toBe(
-        undefined,
-      );
+      expect(cachedValue.state).toEqual(prevState);
     });
 
     it('should be able to buy reserved name if it is the target of the reserved name', async () => {
