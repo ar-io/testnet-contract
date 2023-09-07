@@ -131,7 +131,7 @@ export type VaultParameters = {
 };
 
 export type PstAction = {
-  input: any;
+  input: any; // eslint-disable-line
   caller: string;
 };
 
@@ -153,7 +153,12 @@ export type ArNSNameResult = {
 
 export type PstFunctions = 'balance' | 'transfer' | 'evolve';
 
-export type ArNSFunctions = 'buyRecord' | 'extendRecord' | 'setName' | 'record';
+export type ArNSFunctions =
+  | 'buyRecord'
+  | 'extendRecord'
+  | 'setName'
+  | 'record'
+  | 'submitAuctionBid';
 
 export type GARFunctions =
   | 'joinNetwork'
@@ -175,6 +180,6 @@ export type ContractResult =
   | { result: ArNSNameResult }
   | {
       result: {
-        [x: string | number]: any;
+        [x: string | number]: any; // eslint-disable-line
       };
     };
