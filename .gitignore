@@ -6,15 +6,20 @@ node_modules
 logs
 coverage
 
+# ajv
+src/validations.mjs
+
+# source
+
 # keys
 **key**.json
+wallets
 
 # warp
 cache
 
 # local env files
-.env.local
-.env.*.local
+.env
 
 # Log files
 npm-debug.log*

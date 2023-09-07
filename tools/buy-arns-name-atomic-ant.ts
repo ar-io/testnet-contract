@@ -3,13 +3,12 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import { WarpFactory, defaultCacheOptions } from 'warp-contracts';
 
-import { RESERVED_ATOMIC_TX_ID, keyfile } from '../constants';
+import { keyfile } from './constants';
 
+/* eslint-disable no-console */
 (async () => {
   // the name to buy
   const domainName = 'atomic-ant-10';
-  // arns registry contract
-  const ARNS_REGISTRY_ADDRESS = 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
   // source code tx for ANT (must be in approved list)
   const ANT_SOURCE_CODE_TX_ID = 'PEI1efYrsX08HUwvc6y-h6TSpsNlo2r6_fWL2_GdwhY';
   // pointer for @ ant record
@@ -18,6 +17,16 @@ import { RESERVED_ATOMIC_TX_ID, keyfile } from '../constants';
   const ANT_NAME = 'Atomic ANT';
   // ant ticker
   const ANT_TICKER = 'ANT';
+
+  // load local wallet
+  const wallet: JWKInterface = JSON.parse(
+    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
+  );
+
+  // load state of contract
+  const arnsContractTxId =
+    process.env.ARNS_CONTRACT_TX_ID ??
+    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // Initialize Arweave
   const arweave = Arweave.init({
@@ -33,11 +42,6 @@ import { RESERVED_ATOMIC_TX_ID, keyfile } from '../constants';
     true,
   );
 
-  // Get the key file used for the distribution
-  const wallet: JWKInterface = JSON.parse(
-    await fs.readFileSync(keyfile).toString(),
-  );
-
   // wallet address
   const walletAddress = await arweave.wallets.getAddress(wallet);
 
@@ -48,7 +52,6 @@ import { RESERVED_ATOMIC_TX_ID, keyfile } from '../constants';
     ticker: ANT_TICKER,
     records: {
       '@': {
-        ttlSeconds: 3600,
         transactionId: ANT_PRIMARY_POINTER_TX_ID,
       },
     },
@@ -58,7 +61,7 @@ import { RESERVED_ATOMIC_TX_ID, keyfile } from '../constants';
     controller: walletAddress,
   };
 
-  const { contractTxId, srcTxId } = await warp.deployFromSourceTx(
+  const { contractTxId } = await warp.deployFromSourceTx(
     {
       wallet,
       initState: JSON.stringify(initialState),
@@ -70,16 +73,14 @@ import { RESERVED_ATOMIC_TX_ID, keyfile } from '../constants';
         },
         {
           name: 'Contract',
-          value: ARNS_REGISTRY_ADDRESS,
+          value: arnsContractTxId,
         },
         {
           name: 'Input',
           value: JSON.stringify({
             function: 'buyRecord',
             name: domainName,
-            contractTxId: RESERVED_ATOMIC_TX_ID,
-            years: 1,
-            tier: 1,
+            contractTxId: 'atomic',
           }),
         },
       ],

@@ -7,7 +7,6 @@ export const getRecord = async (
   { input: { name } }: PstAction,
 ): Promise<ContractResult> => {
   const records = state.records;
-  const allTiers = state.tiers.history;
 
   if (typeof name !== 'string') {
     throw new ContractError('Must specify the ArNS Name');
@@ -19,19 +18,10 @@ export const getRecord = async (
   }
 
   const arnsName: ArNSName = records[name];
-  const associatedTier = allTiers.find((t) => t.id === arnsName.tier);
-
-  if (!associatedTier) {
-    throw new ContractError('The name is associated with an invalid tier.');
-  }
-
   return {
     result: {
       name,
       ...arnsName,
-      tier: {
-        ...associatedTier,
-      },
     },
   };
 };

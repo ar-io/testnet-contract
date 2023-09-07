@@ -1,15 +1,14 @@
 {
   "ticker": "ARNS-TEST",
   "name": "Arweave Name System Test",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "owner": "",
   "evolve": null,
   "records": {},
   "balances": {},
-  "approvedANTSourceCodeTxs": [],
-  "tiers": {
-    "current": {},
-    "history": []
-  },
-  "fees": {}
+  "reserved": {},
+  "fees": {},
+  "auctions": {},
+  "settings": {},
+  "gateways": {}
 }

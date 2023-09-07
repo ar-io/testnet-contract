@@ -3,15 +3,11 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts';
 import { IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import {
-  DEFAULT_INSUFFICIENT_FUNDS_MESSAGE,
-  DEFAULT_INVALID_TARGET_MESSAGE,
-  DEFAULT_TRANSFER_QTY,
+  INSUFFICIENT_FUNDS_MESSAGE,
+  INVALID_TARGET_MESSAGE,
+  TRANSFER_QTY,
 } from './utils/constants';
-import {
-  getLocalArNSContractId,
-  getLocalWallet,
-  mineBlock,
-} from './utils/helper';
+import { getLocalArNSContractId, getLocalWallet } from './utils/helper';
 
 describe('Transfers', () => {
   let contract: Contract<PstState>;
@@ -40,10 +36,8 @@ describe('Transfers', () => {
       const writeInteraction = await contract.writeInteraction({
         function: 'transfer',
         target: targetAddress,
-        qty: DEFAULT_TRANSFER_QTY,
+        qty: TRANSFER_QTY,
       });
-
-      await mineBlock(arweave);
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
@@ -52,10 +46,10 @@ describe('Transfers', () => {
         writeInteraction!.originalTxId,
       );
       expect(newState.balances[ownerAddress]).toEqual(
-        prevOwnerBalance - DEFAULT_TRANSFER_QTY,
+        prevOwnerBalance - TRANSFER_QTY,
       );
       expect(newState.balances[targetAddress]).toEqual(
-        prevTargetBalance + DEFAULT_TRANSFER_QTY,
+        prevTargetBalance + TRANSFER_QTY,
       );
     });
 
@@ -70,10 +64,8 @@ describe('Transfers', () => {
       const writeInteraction = await contract.writeInteraction({
         function: 'transfer',
         target: targetAddress,
-        qty: Math.pow(DEFAULT_TRANSFER_QTY, 10),
+        qty: Math.pow(TRANSFER_QTY, 10),
       });
-
-      await mineBlock(arweave);
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
@@ -83,7 +75,7 @@ describe('Transfers', () => {
       );
       expect(
         newCachedValue.errorMessages[writeInteraction!.originalTxId],
-      ).toEqual(DEFAULT_INSUFFICIENT_FUNDS_MESSAGE);
+      ).toEqual(INSUFFICIENT_FUNDS_MESSAGE);
       expect(newState.balances[ownerAddress]).toEqual(prevOwnerBalance);
       expect(newState.balances[targetAddress]).toEqual(prevTargetBalance);
     });
@@ -96,10 +88,8 @@ describe('Transfers', () => {
       const writeInteraction = await contract.writeInteraction({
         function: 'transfer',
         target: ownerAddress,
-        qty: DEFAULT_TRANSFER_QTY,
+        qty: TRANSFER_QTY,
       });
-
-      await mineBlock(arweave);
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
@@ -109,7 +99,7 @@ describe('Transfers', () => {
       );
       expect(
         newCachedValue.errorMessages[writeInteraction!.originalTxId],
-      ).toEqual(DEFAULT_INVALID_TARGET_MESSAGE);
+      ).toEqual(INVALID_TARGET_MESSAGE);
       expect(newState.balances[ownerAddress]).toEqual(prevOwnerBalance);
     });
   });
@@ -133,10 +123,8 @@ describe('Transfers', () => {
       const writeInteraction = await contract.writeInteraction({
         function: 'transfer',
         target: targetAddress,
-        qty: DEFAULT_TRANSFER_QTY,
+        qty: TRANSFER_QTY,
       });
-
-      await mineBlock(arweave);
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
@@ -145,10 +133,10 @@ describe('Transfers', () => {
         writeInteraction!.originalTxId,
       );
       expect(newState.balances[callerAddress]).toEqual(
-        prevOwnerBalance - DEFAULT_TRANSFER_QTY,
+        prevOwnerBalance - TRANSFER_QTY,
       );
       expect(newState.balances[targetAddress]).toEqual(
-        prevTargetBalance + DEFAULT_TRANSFER_QTY,
+        prevTargetBalance + TRANSFER_QTY,
       );
     });
 
@@ -160,10 +148,8 @@ describe('Transfers', () => {
       const writeInteraction = await contract.writeInteraction({
         function: 'transfer',
         target: callerAddress,
-        qty: DEFAULT_TRANSFER_QTY,
+        qty: TRANSFER_QTY,
       });
-
-      await mineBlock(arweave);
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
@@ -173,7 +159,7 @@ describe('Transfers', () => {
       );
       expect(
         newCachedValue.errorMessages[writeInteraction!.originalTxId],
-      ).toEqual(DEFAULT_INVALID_TARGET_MESSAGE);
+      ).toEqual(INVALID_TARGET_MESSAGE);
       expect(newState.balances[callerAddress]).toEqual(prevOwnerBalance);
     });
   });

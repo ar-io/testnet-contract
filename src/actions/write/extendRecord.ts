@@ -1,88 +1,95 @@
 import {
-  DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
-  DEFAULT_INVALID_YEARS_MESSAGE,
-  MAX_YEARS,
+  ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
+  INSUFFICIENT_FUNDS_MESSAGE,
+  INVALID_INPUT_MESSAGE,
+  INVALID_NAME_EXTENSION_TYPE_MESSAGE,
+  INVALID_YEARS_MESSAGE,
   SECONDS_IN_A_YEAR,
-  SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
-import { calculateAnnualRenewalFee } from '../../utilities';
+import {
+  calculateAnnualRenewalFee,
+  getInvalidAjvMessage,
+  getMaxLeaseExtension,
+  walletHasSufficientBalance,
+} from '../../utilities';
+import { validateExtendRecord } from '../../validations.mjs';
 
 declare const ContractError;
 declare const SmartWeave: any;
 
-// Increases the lease time for an existing record
+export class ExtendRecord {
+  function = 'extendRecord';
+  name: string;
+  years: number;
+
+  constructor(input: any) {
+    if (!validateExtendRecord(input)) {
+      throw new ContractError(
+        getInvalidAjvMessage(validateExtendRecord, input),
+      );
+    }
+    const { name, years } = input;
+    this.name = name.trim().toLowerCase();
+    this.years = years;
+  }
+}
+
+/** Increases the lease time for an existing record
+ * Scenarios:
+ * 1. Name is not yet in grace period (i.e. still active)
+ * 2. Name is expired, but beyond grace period
+ * 3. Name is in grace period and can be extended by anyone
+ * 4. Name is a permanent name and cannot be extended
+ */
+
 export const extendRecord = async (
   state: IOState,
-  { caller, input: { name, years } }: PstAction,
+  { caller, input }: PstAction,
 ): Promise<ContractResult> => {
-  const balances = state.balances;
-  const records = state.records;
+  const { balances, records, fees, owner } = state;
   const currentBlockTime = +SmartWeave.block.timestamp;
-  const allTiers = state.tiers.history;
+  const { name, years } = new ExtendRecord(input);
+  const record = records[name];
 
-  // Check if the user has enough tokens to purchase the name
   if (
     !balances[caller] ||
     balances[caller] == undefined ||
     balances[caller] == null ||
     isNaN(balances[caller])
   ) {
-    throw new ContractError(`Caller balance is not defined!`);
+    throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  // check if record exists
-  if (!records[name]) {
-    throw new ContractError(DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
+  if (!record) {
+    throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
   }
 
-  // Check if it includes a valid number of years
-  if (!Number.isInteger(years) || years > MAX_YEARS) {
-    throw new ContractError(DEFAULT_INVALID_YEARS_MESSAGE);
+  if (!record.endTimestamp) {
+    throw new ContractError(INVALID_NAME_EXTENSION_TYPE_MESSAGE);
   }
 
-  /**
-   * Scenarios:
-   * 1. Name is not yet in grace period (i.e. still active)
-   * 2. Name is expired, but beyond grace period
-   * 3. Name is in grace period and can be extended by anyone
-   */
-  if (records[name].endTimestamp > currentBlockTime) {
-    // name is not yet in a grace period
-    throw new ContractError(
-      `This name cannot be extended until the grace period begins.`,
-    );
+  if (getMaxLeaseExtension(currentBlockTime, record.endTimestamp) === 0) {
+    throw new ContractError(INVALID_YEARS_MESSAGE);
   }
 
-  if (
-    records[name].endTimestamp + SECONDS_IN_GRACE_PERIOD <=
-    currentBlockTime
-  ) {
-    // This name's lease has expired and cannot be extended
-    throw new ContractError(
-      `This name has expired and must repurchased before it can be extended.`,
-    );
-  }
-
-  const purchasedTier = allTiers.find((t) => t.id === records[name].tier);
-
-  // total cost to extend a record for the given tier
+  // total cost to extend a record
   const totalExtensionAnnualFee = calculateAnnualRenewalFee(
     name,
-    state,
-    purchasedTier,
+    fees,
     years,
+    record.undernames,
+    record.endTimestamp,
   );
 
-  if (balances[caller] < totalExtensionAnnualFee) {
-    throw new ContractError(
-      `Caller balance not high enough to extend this name lease for ${totalExtensionAnnualFee} token(s) for ${years}!`,
-    );
+  if (!walletHasSufficientBalance(balances, caller, totalExtensionAnnualFee)) {
+    throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  // reduce balance set the end lease period for this record based on number of years
-  balances[caller] -= totalExtensionAnnualFee; // reduce callers balance
-  records[name].endTimestamp += SECONDS_IN_A_YEAR * years; // set the new extended timestamp
+  // TODO: implement protocol balance transfer for this charge.
+  state.balances[caller] -= totalExtensionAnnualFee;
+  state.balances[owner] += totalExtensionAnnualFee;
 
+  state.records[name].endTimestamp += SECONDS_IN_A_YEAR * years;
   return { state };
 };

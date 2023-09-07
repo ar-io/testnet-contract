@@ -1,17 +1,21 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
-import {
-  DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
-  DEFAULT_INVALID_YEARS_MESSAGE,
-  SECONDS_IN_A_YEAR,
-} from '../src/constants';
 import { IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
-import { MAX_YEARS } from './utils/constants';
 import {
+  ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
+  INSUFFICIENT_FUNDS_MESSAGE,
+  INVALID_INPUT_MESSAGE,
+  INVALID_NAME_EXTENSION_TYPE_MESSAGE,
+  MAX_YEARS,
+  REGISTRATION_TYPES,
+  SECONDS_IN_A_YEAR,
+} from './utils/constants';
+import {
+  addFunds,
+  calculateAnnualRenewalFee,
   getLocalArNSContractId,
   getLocalWallet,
-  mineBlock,
 } from './utils/helper';
 
 describe('Extend', () => {
@@ -23,19 +27,34 @@ describe('Extend', () => {
   });
 
   describe('contract owner', () => {
-    let owner: JWKInterface;
+    let nonContractOwner: JWKInterface;
+    let nonContractOwnerAddress: string;
+    let contractOwner: JWKInterface;
+    let contractOwnerAddress: string;
+    let emptyWalletCaller: JWKInterface;
 
     beforeAll(async () => {
-      owner = getLocalWallet(0);
-      contract = warp.pst(srcContractId).connect(owner);
+      contractOwner = getLocalWallet(0);
+      contractOwnerAddress = await arweave.wallets.getAddress(contractOwner);
+      nonContractOwner = getLocalWallet(1);
+      nonContractOwnerAddress = await arweave.wallets.getAddress(
+        nonContractOwner,
+      );
+      contract = warp.pst(srcContractId).connect(nonContractOwner);
+      emptyWalletCaller = await arweave.wallets.generate();
+      await addFunds(arweave, emptyWalletCaller);
     });
 
-    it('should not be able to extend a record that is not in its grace period', async () => {
-      const extendYears = 3;
+    afterEach(() => {
+      contract.connect(nonContractOwner);
+    });
+
+    it('should not be able to extend a record if the caller has insufficient balance', async () => {
+      const extendYears = 1;
       const name = 'name1';
       const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
-      const prevExpiration = prevState.records['name1'].endTimestamp;
+      contract.connect(emptyWalletCaller);
 
       const writeInteraction = await contract.writeInteraction({
         function: 'extendRecord',
@@ -43,26 +62,47 @@ describe('Extend', () => {
         years: extendYears,
       });
 
-      await mineBlock(arweave);
-
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      const state = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).toContain(
         writeInteraction!.originalTxId,
       );
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
-        'This name cannot be extended until the grace period begins.',
+        INSUFFICIENT_FUNDS_MESSAGE,
       );
-      expect(state.records[name].endTimestamp).toEqual(prevExpiration);
+      expect(cachedValue.state).toEqual(prevState);
     });
+
+    it.each([6, '1', 10, Infinity, -Infinity, 0, -1])(
+      'should not be able to extend a record using invalid input %s',
+      async (extendYears) => {
+        const name = 'name1';
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const prevState = prevCachedValue.state as IOState;
+
+        const writeInteraction = await contract.writeInteraction({
+          function: 'extendRecord',
+          name: name,
+          years: extendYears,
+        });
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue } = await contract.readState();
+        expect(Object.keys(cachedValue.errorMessages)).toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(
+          cachedValue.errorMessages[writeInteraction!.originalTxId],
+        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
+        expect(cachedValue.state).toEqual(prevState);
+      },
+    );
 
     it(`should not be able to extend a record for more than ${MAX_YEARS} years`, async () => {
-      const extendYears = 5;
+      const extendYears = MAX_YEARS + 1;
       const name = 'name1';
       const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
-      const prevExpiration = prevState.records['name1'].endTimestamp;
 
       const writeInteraction = await contract.writeInteraction({
         function: 'extendRecord',
@@ -70,23 +110,20 @@ describe('Extend', () => {
         years: extendYears,
       });
 
-      await mineBlock(arweave);
-
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      const state = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).toContain(
         writeInteraction!.originalTxId,
       );
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
-        DEFAULT_INVALID_YEARS_MESSAGE,
+        expect.stringContaining(INVALID_INPUT_MESSAGE),
       );
-      expect(state.records[name].endTimestamp).toEqual(prevExpiration);
+      expect(cachedValue.state).toEqual(prevState);
     });
 
     it('should not be able to extend a non-existent name ', async () => {
       // advance current timer
-      const extendYears = 1;
+      const extendYears = MAX_YEARS - 1;
       const name = 'non-existent-name';
 
       const writeInteraction = await contract.writeInteraction({
@@ -95,7 +132,28 @@ describe('Extend', () => {
         years: extendYears,
       });
 
-      await mineBlock(arweave);
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue } = await contract.readState();
+      expect(Object.keys(cachedValue.errorMessages)).toContain(
+        writeInteraction!.originalTxId,
+      );
+      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
+        ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
+      );
+    });
+
+    it('should not be able to extend a permanent name ', async () => {
+      // advance current timer
+      const extendYears = 1;
+      const name = `lease-length-name${REGISTRATION_TYPES.BUY}`;
+      const { cachedValue: prevCachedValue } = await contract.readState();
+      const prevState = prevCachedValue.state as IOState;
+
+      const writeInteraction = await contract.writeInteraction({
+        function: 'extendRecord',
+        name: name,
+        years: extendYears,
+      });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
@@ -103,10 +161,94 @@ describe('Extend', () => {
         writeInteraction!.originalTxId,
       );
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
-        DEFAULT_ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
+        INVALID_NAME_EXTENSION_TYPE_MESSAGE,
       );
+      expect(cachedValue.state).toEqual(prevState);
     });
 
-    // TODO: mock timers and add a valid name extension
+    // valid name extensions
+    it.each([1, 2, 3, 4, 5])(
+      'should be able to extend name in grace period by %s years ',
+      async (years) => {
+        const name = `grace-period-name${years}`;
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const prevState = prevCachedValue.state as IOState;
+        const record = prevState.records[name]!;
+        const prevBalance = prevState.balances[nonContractOwnerAddress];
+        const fees = prevState.fees;
+        const totalExtensionAnnualFee = calculateAnnualRenewalFee(
+          name,
+          fees,
+          years,
+          record.undernames,
+          record.endTimestamp!,
+        );
+
+        const writeInteraction = await contract.writeInteraction({
+          function: 'extendRecord',
+          name: name,
+          years: years,
+        });
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue } = await contract.readState();
+        const state = cachedValue.state as IOState;
+        expect(Object.keys(cachedValue.errorMessages)).not.toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(state.records[name].endTimestamp).toEqual(
+          record.endTimestamp! + years * SECONDS_IN_A_YEAR,
+        );
+        expect(state.balances[nonContractOwnerAddress]).toEqual(
+          prevBalance - totalExtensionAnnualFee,
+        );
+        expect(state.balances[contractOwnerAddress]).toEqual(
+          prevState.balances[contractOwnerAddress] + totalExtensionAnnualFee,
+        );
+      },
+    );
+
+    it.each([1, 2, 3, 4])(
+      'should be able to extend name not in grace period and not expired by %s years ',
+      async (years) => {
+        const name = `lease-length-name${MAX_YEARS - years}`; // should select the name correctly based on how the helper function generates names
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const prevState = prevCachedValue.state as IOState;
+        const prevEndTimestamp = prevState.records[name].endTimestamp!;
+        const prevBalance = prevState.balances[nonContractOwnerAddress];
+        const record = prevState.records[name]!;
+        const fees = prevState.fees;
+
+        const totalExtensionAnnualFee = calculateAnnualRenewalFee(
+          name,
+          fees,
+          years,
+          record.undernames,
+          record.endTimestamp!,
+        );
+
+        const writeInteraction = await contract.writeInteraction({
+          function: 'extendRecord',
+          name: name,
+          years: years,
+        });
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue } = await contract.readState();
+        const state = cachedValue.state as IOState;
+        expect(Object.keys(cachedValue.errorMessages)).not.toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(state.records[name].endTimestamp).toEqual(
+          prevEndTimestamp + years * SECONDS_IN_A_YEAR,
+        );
+        expect(state.balances[nonContractOwnerAddress]).toEqual(
+          prevBalance - totalExtensionAnnualFee,
+        );
+        expect(state.balances[contractOwnerAddress]).toEqual(
+          prevState.balances[contractOwnerAddress] + totalExtensionAnnualFee,
+        );
+      },
+    );
   });
 });

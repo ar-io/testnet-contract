@@ -2,7 +2,7 @@ import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;
 
-export const getBalance = async (
+export const balance = async (
   state: IOState,
   { input: { target } }: PstAction,
 ): Promise<ContractResult> => {

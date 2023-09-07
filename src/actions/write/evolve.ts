@@ -1,4 +1,4 @@
-import { DEFAULT_NON_CONTRACT_OWNER_MESSAGE } from '../../constants';
+import { NON_CONTRACT_OWNER_MESSAGE } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;
@@ -11,10 +11,8 @@ export const evolve = async (
   const owner = state.owner;
 
   if (caller !== owner) {
-    throw new ContractError(DEFAULT_NON_CONTRACT_OWNER_MESSAGE);
+    throw new ContractError(NON_CONTRACT_OWNER_MESSAGE);
   }
-
-  // TODO: regex on the string
 
   state.evolve = value.toString();
 

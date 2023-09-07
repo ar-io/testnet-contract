@@ -1,6 +1,6 @@
 import {
-  DEFAULT_INSUFFICIENT_FUNDS_MESSAGE,
-  DEFAULT_INVALID_TARGET_MESSAGE,
+  INSUFFICIENT_FUNDS_MESSAGE,
+  INVALID_TARGET_MESSAGE,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
@@ -8,9 +8,13 @@ declare const ContractError;
 
 export const transferTokens = async (
   state: IOState,
-  { caller, input: { target, qty } }: PstAction,
+  { caller, input }: PstAction,
 ): Promise<ContractResult> => {
   const balances = state.balances;
+
+  // todo: do object parsing and validation on
+  const { target, qty } = input as any;
+
   if (!Number.isInteger(qty)) {
     throw new ContractError('Invalid value for "qty". Must be an integer');
   }
@@ -20,7 +24,7 @@ export const transferTokens = async (
   }
 
   if (qty <= 0 || caller === target) {
-    throw new ContractError(DEFAULT_INVALID_TARGET_MESSAGE);
+    throw new ContractError(INVALID_TARGET_MESSAGE);
   }
 
   if (
@@ -33,7 +37,7 @@ export const transferTokens = async (
   }
 
   if (balances[caller] < qty) {
-    throw new ContractError(DEFAULT_INSUFFICIENT_FUNDS_MESSAGE);
+    throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
   // deduct from caller, add to target

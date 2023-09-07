@@ -1,21 +1,26 @@
 name: Build and Test
 
-on: [push]
+on:
+  workflow_dispatch:
+  push:
+    branches-ignore:
+      - main
+      - develop
+    paths:
+      - src/**
+      - schemas/**
 
 jobs:
-  lint:
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        step: ['format:check', 'lint:check']
+        step: ['format:check', 'lint:check', 'build', 'test']
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+          cache: 'yarn'
       - run: yarn install
       - run: yarn ${{ matrix.step }}
-  build_and_test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - run: yarn install
-      - run: yarn build
-      - run: yarn test
