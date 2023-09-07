@@ -79,9 +79,6 @@ export type ContractSettings = {
     current: string;
     history: AuctionSettings[];
   };
-  permabuy: {
-    multiplier: number;
-  };
 };
 
 const gatewayStatus = [

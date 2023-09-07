@@ -30,17 +30,6 @@ export const evolveState = async (
     }
   });
 
-  // Update Gateway Address Registry settings
-  const registry = {
-    minLockLength: 720, // 1 day of blocks
-    maxLockLength: 720 * 365 * 3, // 3 years of blocks
-    minNetworkJoinStakeAmount: 10000,
-    minGatewayJoinLength: 720 * 30, // 30 days of blocks
-    gatewayLeaveLength: 720 * 30, // 30 days of blocks
-    operatorStakeWithdrawLength: 720 * 30, // 30 days of blocks
-  };
-  state['settings']['registry'] = registry;
-
   // Update fees and 51 character names
   state.fees = {
     '1': 5_000_000,
@@ -121,18 +110,32 @@ export const evolveState = async (
       },
     ],
   };
-  state['settings']['auctions'] = auctionsSettings;
+
+  // Update Gateway Address Registry settings
+  const registrySettings = {
+    minLockLength: 720, // 1 day of blocks
+    maxLockLength: 720 * 365 * 3, // 3 years of blocks
+    minNetworkJoinStakeAmount: 10000,
+    minGatewayJoinLength: 720 * 30, // 30 days of blocks
+    gatewayLeaveLength: 720 * 30, // 30 days of blocks
+    operatorStakeWithdrawLength: 720 * 30, // 30 days of blocks
+  };
+
+  // update settings obj
+  state.settings = {
+    auctions: auctionsSettings,
+    registry: registrySettings,
+  };
 
   // evolve records
   const newRecords = Object.keys(records).reduce((acc, key) => {
-    const { tier, undernames, startTimestamp, ...everythingElse } = records[
-      key
-    ] as any;
+    // eslint-disable-next-line
+    const { tier, ...everythingElse } = records[key] as any;
     acc[key] = {
-      ...everythingElse,
-      undernames: undernames ?? 100,
-      startTimestamp: startTimestamp ?? +SmartWeave.block.timestamp,
+      undernames: 100,
+      startTimestamp: +SmartWeave.block.timestamp,
       type: 'lease',
+      ...everythingElse,
     };
     return acc;
   }, {});
@@ -143,7 +146,7 @@ export const evolveState = async (
   state.gateways = state.gateways ?? {};
 
   // remove tiers
-  const { tiers, ...restOfState } = state as IOState;
+  const { tiers, ...restOfState } = state as any; // eslint-disable-line
   state = restOfState;
 
   return { state };
