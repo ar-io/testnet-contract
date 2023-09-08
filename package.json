@@ -5,7 +5,7 @@
   "scripts": {
     "build": "yarn clean && node build.js",
     "clean": "rimraf [ dist cache ]",
-    "format:check": "prettier . --check --cache",
+    "format:check": "prettier . --check",
     "format:fix": "prettier . --write",
     "lint:check": "eslint .",
     "lint:fix": "eslint . --fix",
