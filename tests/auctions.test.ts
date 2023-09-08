@@ -8,7 +8,7 @@ import {
   NON_EXPIRED_ARNS_NAME_MESSAGE,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../src/constants';
-import { Auction, AuctionSettings, IOState } from '../src/types';
+import { AuctionParameters, AuctionSettings, IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import { ANT_CONTRACT_IDS } from './utils/constants';
 import {
@@ -173,7 +173,7 @@ describe('Auctions', () => {
         describe('for a lease', () => {
           describe('for a non-existent auction', () => {
             let auctionTxId: string;
-            let auctionObj: Auction;
+            let auctionObj: AuctionParameters;
             let prevState: IOState;
             const auctionBid = {
               name: 'apple',
@@ -439,7 +439,7 @@ describe('Auctions', () => {
 
       describe('for a permabuy', () => {
         let auctionTxId: string;
-        let auctionObj: Auction;
+        let auctionObj: AuctionParameters;
         let prevState: IOState;
         const auctionBid = {
           name: 'microsoft',
@@ -531,7 +531,7 @@ describe('Auctions', () => {
 
       describe('for an eager initiator', () => {
         let auctionTxId: string;
-        let auctionObj: Auction;
+        let auctionObj: AuctionParameters;
         let prevState: IOState;
         const auctionBid = {
           name: 'tesla',

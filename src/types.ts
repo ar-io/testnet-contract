@@ -31,7 +31,7 @@ export type IOState = PstState & {
   };
   // auctions
   auctions: {
-    [name: string]: Auction;
+    [name: string]: AuctionParameters;
   };
 };
 
@@ -39,7 +39,7 @@ export type Fees = {
   [nameLength: string]: number;
 };
 
-export type Auction = {
+export type AuctionParameters = {
   startPrice: number;
   floorPrice: number;
   startHeight: number;
@@ -183,3 +183,26 @@ export type ContractResult =
         [x: string | number]: any; // eslint-disable-line
       };
     };
+
+export type Auction = AuctionParameters &
+  AuctionSettings & {
+    prices: Record<string | number, number>;
+    minimumAuctionBid: number;
+    isExpired: boolean;
+    isLive: boolean;
+  };
+
+export type AuctionPermutations = {
+  [x: number]: Auction; // leases
+  permabuy: Auction;
+};
+
+export type AuctionGeneratorProps = {
+  name: string;
+  blockHeight: number;
+  blockTime: number;
+  fees: Record<string | number, number>;
+  auctionSettings: AuctionSettings;
+  caller: string;
+  years?: number;
+};

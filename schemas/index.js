@@ -1,11 +1,9 @@
-const { buyRecordSchema } = require('./buyRecord');
-const { auctionBidSchema } = require('./auction');
-const { increaseUndernameCountSchema } = require('./undernames');
-const { extendRecordSchema } = require('./extend');
+const writeSchemas = require('./write');
+const readSchemas = require('./read');
+const contractSchema = require('./contract-state.json');
 
 module.exports = {
-  auctionBidSchema,
-  buyRecordSchema,
-  extendRecordSchema,
-  increaseUndernameCountSchema,
+  ...writeSchemas,
+  ...readSchemas,
+  contractSchema,
 };

@@ -1,5 +1,5 @@
-const auctionBidSchema = {
-  $id: '#/definitions/auctionBid',
+const submitAuctionBidSchema = {
+  $id: '#/definitions/submitAuctionBid',
   type: 'object',
   properties: {
     function: {
@@ -28,5 +28,5 @@ const auctionBidSchema = {
 };
 
 module.exports = {
-  auctionBidSchema,
+  submitAuctionBidSchema,
 };

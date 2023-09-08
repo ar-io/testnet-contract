@@ -24,7 +24,7 @@ import {
   walletHasSufficientBalance,
 } from '../../utilities';
 // composed by ajv at build
-import { validateAuctionBid } from '../../validations.mjs';
+import { validateSubmitAuctionBid } from '../../validations.mjs';
 
 declare const ContractError;
 declare const SmartWeave: any;
@@ -38,8 +38,10 @@ export class AuctionBid {
   years?: number;
   constructor(input: any) {
     // validate using ajv validator
-    if (!validateAuctionBid(input)) {
-      throw new ContractError(getInvalidAjvMessage(validateAuctionBid, input));
+    if (!validateSubmitAuctionBid(input)) {
+      throw new ContractError(
+        getInvalidAjvMessage(validateSubmitAuctionBid, input),
+      );
     }
 
     const { name, qty, type = 'lease', contractTxId } = input;
