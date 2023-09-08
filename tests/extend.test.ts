@@ -15,8 +15,6 @@ import {
 import {
   addFunds,
   calculateAnnualRenewalFee,
-  addFunds,
-  calculateAnnualRenewalFee,
   getLocalArNSContractId,
   getLocalWallet,
 } from './utils/helper';

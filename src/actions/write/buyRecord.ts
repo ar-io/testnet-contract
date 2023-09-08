@@ -101,36 +101,13 @@ export const buyRecord = (
   // Additional check if it includes a valid number of years (TODO: this may be set in contract settings)
   if (years > MAX_YEARS) {
     throw new ContractError(INVALID_YEARS_MESSAGE);
-  // Additional check if it includes a valid number of years (TODO: this may be set in contract settings)
-  if (years > MAX_YEARS) {
-    throw new ContractError(INVALID_YEARS_MESSAGE);
   }
 
   // TODO: do we have a premium multiplier?
   // price them as a 2 char multiplier
-  // TODO: do we have a premium multiplier?
-  // price them as a 2 char multiplier
-
-  if (reserved[name]) {
-    const { target, endTimestamp: reservedEndTimestamp } = reserved[name];
   if (reserved[name]) {
     const { target, endTimestamp: reservedEndTimestamp } = reserved[name];
 
-    /**
-     * Three scenarios:
-     *
-     * 1. name is reserved, regardless of length can be purchased only by target, unless expired
-     * 2. name is reserved, but only for a certain amount of time
-     * 3. name is reserved, with no target and no timestamp (i.e. target and timestamp are empty)
-     */
-    const handleReservedName = () => {
-      const reservedByCaller = target === caller;
-      const reservedExpired =
-        reservedEndTimestamp &&
-        reservedEndTimestamp <= +SmartWeave.block.timestamp;
-      if (!reservedByCaller && !reservedExpired) {
-        throw new ContractError(ARNS_NAME_RESERVED_MESSAGE);
-      }
     /**
      * Three scenarios:
      *
@@ -167,31 +144,8 @@ export const buyRecord = (
       return;
     };
     handleShortName();
-      delete reserved[name];
-      return;
-    };
-    handleReservedName();
-  } else {
-    // not reserved but it's a short name, it can only be auctioned after the short name auction expiration date has passed
-    const handleShortName = () => {
-      /**
-       * If a name is 1-4 characters, it can only be auctioned and after the set expiration.
-       */
-      if (
-        name.length < MINIMUM_ALLOWED_NAME_LENGTH &&
-        +SmartWeave.block.timestamp < SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP &&
-        !auction
-      ) {
-        throw new ContractError(INVALID_SHORT_NAME);
-      }
-      return;
-    };
-    handleShortName();
   }
 
-  // set the end lease period for this based on number of years if it's a lease
-  const endTimestamp =
-    type === 'lease' ? currentBlockTime + SECONDS_IN_A_YEAR * years : undefined;
   // set the end lease period for this based on number of years if it's a lease
   const endTimestamp =
     type === 'lease' ? currentBlockTime + SECONDS_IN_A_YEAR * years : undefined;
@@ -205,37 +159,13 @@ export const buyRecord = (
           +SmartWeave.block.timestamp,
         )
       : calculatePermabuyFee(name, fees, +SmartWeave.block.timestamp);
-  const totalRegistrationFee =
-    type === 'lease'
-      ? calculateTotalRegistrationFee(
-          name,
-          fees,
-          years,
-          +SmartWeave.block.timestamp,
-        )
-      : calculatePermabuyFee(name, fees, +SmartWeave.block.timestamp);
 
   if (balances[caller] < totalRegistrationFee) {
-  if (balances[caller] < totalRegistrationFee) {
     throw new ContractError(
-      `Caller balance not high enough to purchase this name for ${totalRegistrationFee} token(s)!`,
       `Caller balance not high enough to purchase this name for ${totalRegistrationFee} token(s)!`,
     );
   }
 
-  // Check if the requested name exists on a lease and in a grace period
-  if (
-    records[name] &&
-    records[name].type === 'lease' &&
-    records[name].endTimestamp
-  ) {
-    const { endTimestamp } = records[name];
-    if (
-      endTimestamp &&
-      endTimestamp + SECONDS_IN_GRACE_PERIOD > +SmartWeave.block.timestamp
-    ) {
-      // name is still on active lease during grace period
-      throw new ContractError(NON_EXPIRED_ARNS_NAME_MESSAGE);
   // Check if the requested name exists on a lease and in a grace period
   if (
     records[name] &&

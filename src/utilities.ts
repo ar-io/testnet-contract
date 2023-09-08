@@ -234,16 +234,6 @@ export function getMaxLeaseExtension(
   );
 }
 
-export function getInvalidAjvMessage(validator: any, input: any) {
-  return `${INVALID_INPUT_MESSAGE} for ${this.function}: ${validator.errors
-    .map((e) => {
-      const key = e.instancePath.replace('/', '');
-      const value = input[key];
-      return `${key} ('${value}') ${e.message}`;
-    })
-    .join(', ')}`;
-}
-
 export function generateAuctionPermutations(
   props: AuctionGeneratorProps,
 ): AuctionPermutations {
@@ -321,6 +311,8 @@ export function generatePricesForAuction(
     newPrices[currentHeight] = blockPrice;
     currentHeight = currentHeight + decayInterval;
   }
+  return newPrices;
+}
 
 export function getInvalidAjvMessage(validator: any, input: any) {
   return `${INVALID_INPUT_MESSAGE} for ${this.function}: ${validator.errors
