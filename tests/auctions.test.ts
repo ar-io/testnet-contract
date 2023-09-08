@@ -216,6 +216,42 @@ describe('Auctions', () => {
               auctionTxId = writeInteraction!.originalTxId;
             });
 
+            it.each([2, 3, 4, 5])(
+              'should create the initial auction with one year regardless of the provided years of %s years',
+              async (years) => {
+                const naughtyBid = {
+                  name: 'macrohard' + years,
+                  contractTxId: ANT_CONTRACT_IDS[0],
+                  type: 'lease',
+                  years,
+                };
+                const startBlock = (await getCurrentBlock(arweave)) + 1;
+                console.log(startBlock);
+                const writeInteraction = await contract.writeInteraction({
+                  function: 'submitAuctionBid',
+                  ...naughtyBid,
+                });
+                expect(writeInteraction?.originalTxId).not.toBe(undefined);
+                const { cachedValue } = await contract.readState();
+                const { auctions, balances } = cachedValue.state as IOState;
+                expect(auctions[naughtyBid.name]).not.toBe(undefined);
+                expect(auctions[naughtyBid.name]).toEqual({
+                  floorPrice: expect.any(Number),
+                  startPrice: expect.any(Number),
+                  type: 'lease',
+                  auctionSettingsId: AUCTION_SETTINGS.current,
+                  startHeight: startBlock,
+                  initiator: nonContractOwnerAddress,
+                  contractTxId: ANT_CONTRACT_IDS[0],
+                  years: 1,
+                });
+                expect(balances[nonContractOwnerAddress]).toEqual(
+                  prevState.balances[nonContractOwnerAddress] -
+                    auctions[naughtyBid.name].floorPrice,
+                );
+              },
+            );
+
             describe('another bid', () => {
               it('should throw an error when the bid does not meet the minimum required', async () => {
                 const auctionBid = {
@@ -253,7 +289,7 @@ describe('Auctions', () => {
                 // fast forward a few blocks, then construct winning bid
                 const auctionSettings: AuctionSettings =
                   AUCTION_SETTINGS.history[0];
-                await mineBlocks(arweave, 3504);
+                await mineBlocks(arweave, 3504 - 1);
                 const winningBidQty = calculateMinimumAuctionBid({
                   startHeight: auctionObj.startHeight,
                   startPrice: auctionObj.startPrice,

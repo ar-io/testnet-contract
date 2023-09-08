@@ -17,7 +17,7 @@ const buyRecordSchema = {
     years: {
       type: 'integer',
       minimum: 1,
-      maximum: 5
+      maximum: 5,
     },
     type: {
       type: 'string',

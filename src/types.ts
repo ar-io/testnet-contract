@@ -1,3 +1,4 @@
+import { type } from 'os';
 import { PstState } from 'warp-contracts';
 
 import {
@@ -204,4 +205,7 @@ export type AuctionGeneratorProps = {
   auctionSettings: AuctionSettings;
   caller: string;
   years?: number;
+  bid?: number;
+  contractTxId?: string;
+  type?: 'lease' | 'permabuy';
 };

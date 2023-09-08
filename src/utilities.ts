@@ -159,7 +159,7 @@ export function isValidArweaveBase64URL(base64URL: string): boolean {
 }
 
 export function walletHasSufficientBalance(
-  balances: { [x: string]: number },
+  balances: Record<string, number>,
   wallet: string,
   qty: number,
 ): boolean {
@@ -262,8 +262,18 @@ export function generateAuctionPermutations(
 export function generateAuction(props: AuctionGeneratorProps): Auction {
   // calculate the auctions prices for each year (leases) and for permabuy
 
-  const { name, blockHeight, blockTime, fees, auctionSettings, caller, years } =
-    props;
+  const {
+    name,
+    blockHeight,
+    blockTime,
+    fees,
+    auctionSettings,
+    caller,
+    years,
+    bid,
+    contractTxId,
+    type,
+  } = props;
 
   const { floorPriceMultiplier, startPriceMultiplier, id } = auctionSettings;
 
@@ -271,7 +281,8 @@ export function generateAuction(props: AuctionGeneratorProps): Auction {
     ? calculateTotalRegistrationFee(name, fees, years!, blockTime)
     : calculatePermabuyFee(name, fees, blockTime);
 
-  const floorPrice = registrationFee * floorPriceMultiplier;
+  const calculatedFloor = registrationFee * floorPriceMultiplier;
+  const floorPrice = bid ? Math.max(bid, calculatedFloor) : calculatedFloor;
   // multiply by the floor price, as it could be higher than the calculated floor
   const startPrice = floorPrice * startPriceMultiplier;
 
@@ -279,9 +290,9 @@ export function generateAuction(props: AuctionGeneratorProps): Auction {
     auctionSettingsId: id,
     floorPrice, // this is decremented from the initiators wallet, and could be higher than the precalculated floor
     startPrice,
-    contractTxId: '',
+    contractTxId: contractTxId ?? '',
     startHeight: blockHeight, // auction starts right away
-    type: years ? 'lease' : 'permabuy',
+    type: years || (years && type === 'lease') ? 'lease' : 'permabuy',
     initiator: caller, // the balance that the floor price is decremented from
     ...(years ? { years } : {}),
   };
@@ -302,9 +313,7 @@ export function generateAuction(props: AuctionGeneratorProps): Auction {
 
 export function generatePricesForAuction(
   props: AuctionParameters & AuctionSettings,
-): {
-  [X: string]: number;
-} {
+): Record<string, number> {
   const { startHeight, floorPrice, decayInterval, auctionDuration } = props;
 
   const expiredHieght = startHeight + auctionDuration;

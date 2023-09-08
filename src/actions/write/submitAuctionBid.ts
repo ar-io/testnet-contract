@@ -20,6 +20,7 @@ import {
   calculateMinimumAuctionBid,
   calculatePermabuyFee,
   calculateTotalRegistrationFee,
+  generateAuction,
   getInvalidAjvMessage,
   walletHasSufficientBalance,
 } from '../../utilities';
@@ -29,7 +30,7 @@ import { validateSubmitAuctionBid } from '../../validations.mjs';
 declare const ContractError;
 declare const SmartWeave: any;
 
-export class AuctionBid {
+export class SubmitAuctionBid {
   function: 'submitAuctionBid';
   name: string;
   qty?: number;
@@ -72,14 +73,13 @@ export const submitAuctionBid = (
     owner,
   } = state;
 
-  // does validation on constructor
   const {
     name,
     qty: submittedBid,
     type,
     contractTxId,
-    years,
-  } = new AuctionBid(input);
+    years, // not currently used due to us defaulting to one year for leases
+  } = new SubmitAuctionBid(input);
 
   // name already exists on an active lease
   if (records[name]) {
@@ -99,12 +99,10 @@ export const submitAuctionBid = (
         endTimestamp &&
         endTimestamp + SECONDS_IN_GRACE_PERIOD <= +SmartWeave.block.timestamp
       ) {
-        // lease has expired, remove from state and it's available for auction
         delete records[name];
         return;
       }
 
-      // throw an error saying the name is already owned
       throw new ContractError(NON_EXPIRED_ARNS_NAME_MESSAGE);
     };
 
@@ -126,11 +124,13 @@ export const submitAuctionBid = (
       const reservedExpired =
         reservedEndTimestamp &&
         reservedEndTimestamp <= +SmartWeave.block.timestamp;
-      // the reservation has expired - delete from state and make it available for auctions/buying
+
       if (!reservedByCaller && !reservedExpired) {
         throw new ContractError(ARNS_NAME_RESERVED_MESSAGE);
       }
 
+      delete reserved[name];
+      return;
       /**
        * TODO: we may or may not handle premium names
        * {
@@ -140,9 +140,6 @@ export const submitAuctionBid = (
        *     },
        * }
        */
-
-      delete reserved[name];
-      return;
     };
 
     handleReservedName();
@@ -171,51 +168,43 @@ export const submitAuctionBid = (
   const currentBlockHeight = +SmartWeave.block.height;
   const { decayInterval, decayRate, auctionDuration } = currentAuctionSettings;
 
-  // calculate the standard registration fee
-  const registrationFee =
-    type === 'lease'
-      ? calculateTotalRegistrationFee(
-          name,
-          fees,
-          years!,
-          +SmartWeave.block.timestamp,
-        )
-      : calculatePermabuyFee(name, fees, +SmartWeave.block.timestamp);
-
   // no current auction, create one and vault the balance from the user
   if (!auctions[name]) {
     const {
-      id: auctionSettingsId,
+      prices,
+      id,
       floorPriceMultiplier,
       startPriceMultiplier,
-    } = currentAuctionSettings;
-    // floor price multiplier could be a decimal, or whole number (e.g. 0.5 vs 2)
-    const calculatedFloor = registrationFee * floorPriceMultiplier;
-    // if someone submits a high floor price, we'll take it
-    const floorPrice = submittedBid
-      ? Math.max(submittedBid, calculatedFloor)
-      : calculatedFloor;
-    // multiply by the floor price, as it could be higher than the calculated floor
-    const startPrice = floorPrice * startPriceMultiplier;
+      decayInterval,
+      decayRate,
+      isExpired,
+      auctionDuration,
+      minimumAuctionBid,
+      ...initialAuctionBid
+    } = generateAuction({
+      auctionSettings: currentAuctionSettings,
+      fees,
+      name,
+      caller,
+      blockHeight: currentBlockHeight,
+      blockTime: +SmartWeave.block.timestamp,
+      years: type === 'permabuy' ? undefined : 1, // default to 1 year if leasing
+      contractTxId,
+    });
 
     // throw an error on invalid balance
-    if (!walletHasSufficientBalance(balances, caller, floorPrice)) {
+    if (
+      !walletHasSufficientBalance(
+        balances,
+        caller,
+        initialAuctionBid.floorPrice,
+      )
+    ) {
       throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
     }
 
-    // create the initial auction bid
-    const initialAuctionBid = {
-      auctionSettingsId,
-      floorPrice, // this is decremented from the initiators wallet, and could be higher than the precalculated floor
-      startPrice,
-      contractTxId,
-      startHeight: currentBlockHeight, // auction starts right away
-      type,
-      initiator: caller, // the balance that the floor price is decremented from
-      ...(years ? { years } : {}),
-    };
     auctions[name] = initialAuctionBid; // create the auction object
-    balances[caller] -= floorPrice; // decremented based on the floor price
+    balances[caller] -= initialAuctionBid.floorPrice; // decremented based on the floor price
 
     // update the state
     state.auctions = auctions;
