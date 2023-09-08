@@ -226,7 +226,6 @@ describe('Auctions', () => {
                   years,
                 };
                 const startBlock = (await getCurrentBlock(arweave)) + 1;
-                console.log(startBlock);
                 const writeInteraction = await contract.writeInteraction({
                   function: 'submitAuctionBid',
                   ...naughtyBid,
