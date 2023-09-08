@@ -12,19 +12,19 @@ import { keyfile } from './constants';
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // This is the name that will be purchased in the Arweave Name System Registry
-  const nameToBuy = 'a-test-name';
+  const nameToBuy = process.env.ARNS_NAME ?? 'a-test-name';
 
   // This is the ANT Smartweave Contract TX ID that will be added to the registry. It must follow the ArNS ANT Specification
-  const contractTxId = 'gh673M0Koh941OIITVXl9hKabRaYWABQUedZxW-swIA';
+  const contractTxId =
+    process.env.ANT_CONTRACT_TX_ID ??
+    'gh673M0Koh941OIITVXl9hKabRaYWABQUedZxW-swIA';
 
   // The lease time for purchasing the name
   const years = 1;
 
   // load local wallet
   const wallet = JSON.parse(
-    process.env.JWK
-      ? process.env.JWK
-      : await fs.readFileSync(keyfile).toString(),
+    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
   );
 
   // load state of contract

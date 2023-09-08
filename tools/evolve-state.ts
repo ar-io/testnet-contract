@@ -14,13 +14,11 @@ import { keyfile } from './constants';
   // load state of contract
   const arnsContractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
-    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
+    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // load local wallet
   const wallet: JWKInterface = JSON.parse(
-    process.env.JWK
-      ? process.env.JWK
-      : await fs.readFileSync(keyfile).toString(),
+    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
   );
 
   LoggerFactory.INST.logLevel('error');
@@ -41,24 +39,16 @@ import { keyfile } from './constants';
     arweave,
   );
 
-  // Read the ArNS Registry Contract
-  const contract = warp
-    .pst(arnsContractTxId)
-    .setEvaluationOptions({
-      internalWrites: true,
-      updateCacheForEachInteraction: true,
-      unsafeClient: 'skip',
-    })
-    .connect(wallet);
+  // Connect to the ArNS Registry Contract
+  const contract = warp.pst(arnsContractTxId).connect(wallet);
 
-  //
-  const writeInteraction = await contract.dryWrite(
+  const writeInteraction = await contract.writeInteraction(
     {
       function: 'evolveState',
     },
-    // {
-    //   disableBundling: true,
-    // },
+    {
+      disableBundling: true,
+    },
   );
   console.log(JSON.stringify(writeInteraction, null, 2));
 })();

@@ -8,7 +8,7 @@ import {
   NON_EXPIRED_ARNS_NAME_MESSAGE,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../src/constants';
-import { AuctionParameters, AuctionSettings, IOState } from '../src/types';
+import { Auction, AuctionSettings, IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import { ANT_CONTRACT_IDS } from './utils/constants';
 import {
@@ -30,13 +30,17 @@ describe('Auctions', () => {
   describe('any address', () => {
     let nonContractOwner: JWKInterface;
     let nonContractOwnerAddress: string;
+    let contractOwnerAddress: string;
+    let contractOwner;
 
     beforeAll(async () => {
       nonContractOwner = getLocalWallet(1);
+      contractOwner = getLocalWallet(0);
       contract = warp.pst(srcContractId).connect(nonContractOwner);
       nonContractOwnerAddress = await arweave.wallets.getAddress(
         nonContractOwner,
       );
+      contractOwnerAddress = await arweave.wallets.getAddress(contractOwner);
     });
 
     describe('submits an auction bid', () => {
@@ -78,6 +82,7 @@ describe('Auctions', () => {
             expect(
               cachedValue.errorMessages[writeInteraction!.originalTxId],
             ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
+            // TODO: check balances
           },
         );
 
@@ -118,6 +123,7 @@ describe('Auctions', () => {
             expect(
               cachedValue.errorMessages[writeInteraction!.originalTxId],
             ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
+            // TODO: check balances
           },
         );
 
@@ -158,6 +164,7 @@ describe('Auctions', () => {
             expect(
               cachedValue.errorMessages[writeInteraction!.originalTxId],
             ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
+            //  TODO: check balances
           },
         );
       });
@@ -166,7 +173,7 @@ describe('Auctions', () => {
         describe('for a lease', () => {
           describe('for a non-existent auction', () => {
             let auctionTxId: string;
-            let auctionObj: AuctionParameters;
+            let auctionObj: Auction;
             let prevState: IOState;
             const auctionBid = {
               name: 'apple',
@@ -219,9 +226,6 @@ describe('Auctions', () => {
                 // connect using another wallet
                 const separateWallet = await getLocalWallet(2);
                 await contract.connect(separateWallet);
-                const secondAddress = await arweave.wallets.getAddress(
-                  separateWallet,
-                );
                 const writeInteraction = await contract.writeInteraction({
                   function: 'submitAuctionBid',
                   ...auctionBid,
@@ -242,12 +246,7 @@ describe('Auctions', () => {
                   cachedValue.state as IOState;
                 expect(auctions[auctionBid.name]).toEqual(auctionObj);
                 expect(records[auctionBid.name]).toBeUndefined();
-                expect(balances[nonContractOwnerAddress]).toEqual(
-                  prevState.balances[nonContractOwnerAddress],
-                );
-                expect(balances[secondAddress]).toEqual(
-                  prevState.balances[secondAddress],
-                );
+                expect(balances).toEqual(prevState.balances);
               });
 
               it('should update the records object when a winning bid comes in', async () => {
@@ -294,6 +293,9 @@ describe('Auctions', () => {
                 expect(balances[winnerAddress]).toEqual(
                   prevState.balances[winnerAddress] - winningBidQty,
                 );
+                expect(balances[contractOwnerAddress]).toEqual(
+                  prevState.balances[contractOwnerAddress] + winningBidQty,
+                );
                 expect(balances[auctionObj.initiator]).toEqual(
                   prevState.balances[auctionObj.initiator] +
                     auctionObj.floorPrice,
@@ -310,9 +312,6 @@ describe('Auctions', () => {
               };
               // connect using another wallet
               const separateWallet = await getLocalWallet(2);
-              const separateWalletAddress = await arweave.wallets.getAddress(
-                separateWallet,
-              );
               await contract.connect(separateWallet);
               const writeInteraction = await contract.writeInteraction({
                 function: 'submitAuctionBid',
@@ -328,9 +327,7 @@ describe('Auctions', () => {
                 cachedValue.errorMessages[writeInteraction!.originalTxId],
               ).toEqual(NON_EXPIRED_ARNS_NAME_MESSAGE);
               expect(auctions[auctionBid.name]).toBeUndefined();
-              expect(balances[separateWalletAddress]).toEqual(
-                prevState.balances[separateWalletAddress],
-              );
+              expect(balances).toEqual(prevState.balances);
             });
 
             it('should throw an error if a name is reserved that has no expiration', async () => {
@@ -352,9 +349,7 @@ describe('Auctions', () => {
                 cachedValue.errorMessages[writeInteraction!.originalTxId],
               ).toEqual(ARNS_NAME_RESERVED_MESSAGE);
               expect(auctions[auctionBid.name]).toBeUndefined();
-              expect(balances[nonContractOwnerAddress]).toEqual(
-                prevState.balances[nonContractOwnerAddress],
-              );
+              expect(balances).toEqual(prevState.balances);
             });
 
             it('should throw an error if less than the short name minimum length and short name expiration has not passed', async () => {
@@ -378,9 +373,7 @@ describe('Auctions', () => {
                 `Name is less than ${MINIMUM_ALLOWED_NAME_LENGTH} characters. It will be available for auction after ${SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP}.`,
               );
               expect(auctions[auctionBid.name]).toBeUndefined();
-              expect(balances[nonContractOwnerAddress]).toEqual(
-                prevState.balances[nonContractOwnerAddress],
-              );
+              expect(balances).toEqual(prevState.balances);
             });
 
             it('should throw an error if a name is reserved for a specific wallet without an expiration', async () => {
@@ -390,9 +383,6 @@ describe('Auctions', () => {
               };
               // connect using another wallet
               const separateWallet = await getLocalWallet(2);
-              const separateWalletAddress = await arweave.wallets.getAddress(
-                separateWallet,
-              );
               await contract.connect(separateWallet);
               const writeInteraction = await contract.writeInteraction({
                 function: 'submitAuctionBid',
@@ -408,9 +398,7 @@ describe('Auctions', () => {
                 cachedValue.errorMessages[writeInteraction!.originalTxId],
               ).toEqual(ARNS_NAME_RESERVED_MESSAGE);
               expect(auctions[auctionBid.name]).toBeUndefined();
-              expect(balances[separateWalletAddress]).toEqual(
-                prevState.balances[separateWalletAddress],
-              );
+              expect(balances).toEqual(prevState.balances);
             });
 
             it('should start the auction if the reserved target submits the auction bid', async () => {
@@ -451,7 +439,7 @@ describe('Auctions', () => {
 
       describe('for a permabuy', () => {
         let auctionTxId: string;
-        let auctionObj: AuctionParameters;
+        let auctionObj: Auction;
         let prevState: IOState;
         const auctionBid = {
           name: 'microsoft',
@@ -535,12 +523,15 @@ describe('Auctions', () => {
           expect(balances[auctionObj.initiator]).toEqual(
             prevState.balances[auctionObj.initiator] + auctionObj.floorPrice,
           );
+          expect(balances[contractOwnerAddress]).toEqual(
+            prevState.balances[contractOwnerAddress] + winningBidQty,
+          );
         });
       });
 
       describe('for an eager initiator', () => {
         let auctionTxId: string;
-        let auctionObj: AuctionParameters;
+        let auctionObj: Auction;
         let prevState: IOState;
         const auctionBid = {
           name: 'tesla',
@@ -595,11 +586,6 @@ describe('Auctions', () => {
               decayInterval: auctionSettings.decayInterval,
               decayRate: auctionSettings.decayRate,
             });
-            console.log({
-              winningBidQty,
-              start: auctionObj.startPrice,
-              block: block + auctionObj.startHeight,
-            });
 
             expect(winningBidQty).toBeLessThanOrEqual(auctionObj.startPrice);
           },
@@ -641,6 +627,9 @@ describe('Auctions', () => {
           const floorToBidDifference = winningBidQty - auctionObj.floorPrice;
           expect(balances[nonContractOwnerAddress]).toEqual(
             prevState.balances[nonContractOwnerAddress] - floorToBidDifference,
+          );
+          expect(balances[contractOwnerAddress]).toEqual(
+            prevState.balances[contractOwnerAddress] + winningBidQty,
           );
         });
       });

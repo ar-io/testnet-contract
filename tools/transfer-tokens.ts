@@ -13,27 +13,23 @@ import { keyfile } from './constants';
 (async () => {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // The recipient target of the token transfer
-  const target = 'vh-NTHVvlKZqRxc8LyyTNok65yQ55a_PJ1zWLb9G2JI';
+  const target = '1H7WZIWhzwTH9FIcnuMqYkTsoyv1OTfGa_amvuYwrgo';
 
   // The amount of tokens to be transferred
-  const qty = 500_000_000;
+  const qty = 2500000;
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   // Get the key file used for the distribution
-  const wallet: JWKInterface = JSON.parse(
-    process.env.JWK
-      ? process.env.JWK
-      : await fs.readFileSync(keyfile).toString(),
-  );
+  const wallet: JWKInterface = JSON.parse(fs.readFileSync(keyfile).toString());
 
   // gate the contract txId
   const arnsContractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
-    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
+    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // Initialize Arweave
   const arweave = Arweave.init({
-    host: 'arweave.net',
+    host: 'ar-io.dev',
     port: 443,
     protocol: 'https',
   });

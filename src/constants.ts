@@ -1,7 +1,5 @@
 import { AuctionSettings } from './types';
 
-export const ARNS_NAME_PATTERN =
-  '^([a-zA-Z0-9][a-zA-Z0-9-]{0,49}[a-zA-Z0-9]|[a-zA-Z0-9]{1})$';
 export const SECONDS_IN_A_YEAR = 31_536_000; // 52 weeks, 7 days per week, 24 hours per day, sixty minutes per hour, sixty seconds per minute
 export const MAX_YEARS = 5; // the maximum amount of years an arns name could be leased for
 export const MIN_YEARS = 1; // the minimum amount of years an arns name could be leased for
@@ -10,14 +8,9 @@ export const MAX_NAME_LENGTH = 51; // the maximum length of an arns name - gatew
 export const MAX_NOTE_LENGTH = 256; // the maximum size of a note field
 export const MAX_GATEWAY_LABEL_LENGTH = 16; // the maximum size of a label field
 export const MAX_PORT_NUMBER = 65535; // the default end port of tcp/udp port numbers
-export const MAX_FOUNDATION_ACTION_PERIOD = 720 * 30; // the maximum amount of time (in blocks) a foundation action could be set to
 export const TX_ID_LENGTH = 43; // the length of an arweave transaction id
 export const SECONDS_IN_GRACE_PERIOD = 1_814_400; // Three weeks, 7 days per week, 24 hours per day, sixty minutes per hour, sixty seconds per minute
 export const RESERVED_ATOMIC_TX_ID = 'atomic';
-export const FOUNDATION_ACTION_ACTIVE_STATUS = 'active';
-export const FOUNDATION_ACTION_FAILED_STATUS = 'failed';
-export const FOUNDATION_ACTION_PASSED_STATUS = 'passed';
-export const FOUNDATION_DELAYED_EVOLVE_COMPLETED_STATUS = 'evolved';
 export const NETWORK_JOIN_STATUS = 'joined';
 export const NETWORK_LEAVING_STATUS = 'leaving';
 export const NETWORK_HIDDEN_STATUS = 'hidden';
@@ -114,10 +107,10 @@ export const AUCTION_SETTINGS: {
   history: [
     {
       id: AUCTION_SETTINGS_ID,
-      floorPriceMultiplier: 2,
-      startPriceMultiplier: 200,
-      decayInterval: 60, // decrement every 60 blocks - approx every 2 hours
-      decayRate: 0.05, // 5% decay
+      floorPriceMultiplier: 1,
+      startPriceMultiplier: 50,
+      decayInterval: 30, // decrement every 30 blocks - approx every 1 hour
+      decayRate: 0.0225, // 5% decay
       auctionDuration: 5040, // approx 7 days long
     },
   ],

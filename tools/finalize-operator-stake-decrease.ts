@@ -11,19 +11,17 @@ import { keyfile } from './constants';
 (async () => {
   // load local wallet
   const wallet: JWKInterface = JSON.parse(
-    process.env.JWK
-      ? process.env.JWK
-      : await fs.readFileSync(keyfile).toString(),
+    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
   );
 
   // load state of contract
   const arnsContractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
-    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
+    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // Initialize Arweave
   const arweave = Arweave.init({
-    host: 'arweave.net',
+    host: 'ar-io.dev',
     port: 443,
     protocol: 'https',
   });
@@ -39,14 +37,9 @@ import { keyfile } from './constants';
   const walletAddress = await arweave.wallets.getAddress(wallet);
 
   // Read the ANT Registry Contract
-  const pst = warp.pst(arnsContractTxId).setEvaluationOptions({
-    internalWrites: true,
-    updateCacheForEachInteraction: true,
-    unsafeClient: 'skip',
-  });
-  pst.connect(wallet);
+  const pst = warp.pst(arnsContractTxId).connect(wallet);
 
-  const txId = await pst.writeInteraction(
+  const writeInteraction = await pst.writeInteraction(
     {
       function: 'finalizeOperatorStakeDecrease',
     },
@@ -57,6 +50,6 @@ import { keyfile } from './constants';
 
   // eslint-disable-next-line no-console
   console.log(
-    `${walletAddress} successfully submitted request to finalize leaving the network with TX id: ${txId}`,
+    `${walletAddress} successfully submitted request to finalize leaving the network with TX id: ${writeInteraction?.originalTxId}`,
   );
 })();

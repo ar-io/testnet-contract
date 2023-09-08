@@ -15,6 +15,8 @@ import {
 import {
   addFunds,
   calculateAnnualRenewalFee,
+  addFunds,
+  calculateAnnualRenewalFee,
   getLocalArNSContractId,
   getLocalWallet,
 } from './utils/helper';
@@ -28,20 +30,26 @@ describe('Extend', () => {
   });
 
   describe('contract owner', () => {
-    let owner: JWKInterface;
-    let walletAddress: string;
+    let nonContractOwner: JWKInterface;
+    let nonContractOwnerAddress: string;
+    let contractOwner: JWKInterface;
+    let contractOwnerAddress: string;
     let emptyWalletCaller: JWKInterface;
 
     beforeAll(async () => {
-      owner = getLocalWallet(0);
-      walletAddress = await arweave.wallets.getAddress(owner);
-      contract = warp.pst(srcContractId).connect(owner);
+      contractOwner = getLocalWallet(0);
+      contractOwnerAddress = await arweave.wallets.getAddress(contractOwner);
+      nonContractOwner = getLocalWallet(1);
+      nonContractOwnerAddress = await arweave.wallets.getAddress(
+        nonContractOwner,
+      );
+      contract = warp.pst(srcContractId).connect(nonContractOwner);
       emptyWalletCaller = await arweave.wallets.generate();
       await addFunds(arweave, emptyWalletCaller);
     });
 
     afterEach(() => {
-      contract.connect(owner);
+      contract.connect(nonContractOwner);
     });
 
     it('should not be able to extend a record if the caller has insufficient balance', async () => {
@@ -49,7 +57,6 @@ describe('Extend', () => {
       const name = 'name1';
       const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
-      const prevExpiration = prevState.records['name1'].endTimestamp;
       contract.connect(emptyWalletCaller);
 
       const writeInteraction = await contract.writeInteraction({
@@ -60,14 +67,13 @@ describe('Extend', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      const state = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).toContain(
         writeInteraction!.originalTxId,
       );
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
         INSUFFICIENT_FUNDS_MESSAGE,
       );
-      expect(state.records[name].endTimestamp).toEqual(prevExpiration);
+      expect(cachedValue.state).toEqual(prevState);
     });
 
     it.each([6, '1', 10, Infinity, -Infinity, 0, -1])(
@@ -76,8 +82,6 @@ describe('Extend', () => {
         const name = 'name1';
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevState = prevCachedValue.state as IOState;
-        const prevExpiration = prevState.records['name1'].endTimestamp;
-        const prevBalance = prevState.balances[walletAddress];
 
         const writeInteraction = await contract.writeInteraction({
           function: 'extendRecord',
@@ -87,15 +91,13 @@ describe('Extend', () => {
 
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue } = await contract.readState();
-        const state = cachedValue.state as IOState;
         expect(Object.keys(cachedValue.errorMessages)).toContain(
           writeInteraction!.originalTxId,
         );
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
         ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
-        expect(state.records[name].endTimestamp).toEqual(prevExpiration);
-        expect(state.balances[walletAddress]).toEqual(prevBalance);
+        expect(cachedValue.state).toEqual(prevState);
       },
     );
 
@@ -104,7 +106,6 @@ describe('Extend', () => {
       const name = 'name1';
       const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
-      const prevExpiration = prevState.records['name1'].endTimestamp;
 
       const writeInteraction = await contract.writeInteraction({
         function: 'extendRecord',
@@ -114,14 +115,13 @@ describe('Extend', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      const state = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).toContain(
         writeInteraction!.originalTxId,
       );
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
         expect.stringContaining(INVALID_INPUT_MESSAGE),
       );
-      expect(state.records[name].endTimestamp).toEqual(prevExpiration);
+      expect(cachedValue.state).toEqual(prevState);
     });
 
     it('should not be able to extend a non-existent name ', async () => {
@@ -151,8 +151,6 @@ describe('Extend', () => {
       const name = `lease-length-name${REGISTRATION_TYPES.BUY}`;
       const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
-      const prevExpiration = prevState.records[name]?.endTimestamp;
-      const prevBalance = prevState.balances[walletAddress];
 
       const writeInteraction = await contract.writeInteraction({
         function: 'extendRecord',
@@ -162,15 +160,13 @@ describe('Extend', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      const state = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).toContain(
         writeInteraction!.originalTxId,
       );
       expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
         INVALID_NAME_EXTENSION_TYPE_MESSAGE,
       );
-      expect(state.records[name]?.endTimestamp).toEqual(prevExpiration);
-      expect(state.balances[walletAddress]).toEqual(prevBalance);
+      expect(cachedValue.state).toEqual(prevState);
     });
 
     // valid name extensions
@@ -181,7 +177,7 @@ describe('Extend', () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevState = prevCachedValue.state as IOState;
         const record = prevState.records[name]!;
-        const prevBalance = prevState.balances[walletAddress];
+        const prevBalance = prevState.balances[nonContractOwnerAddress];
         const fees = prevState.fees;
         const totalExtensionAnnualFee = calculateAnnualRenewalFee(
           name,
@@ -190,7 +186,6 @@ describe('Extend', () => {
           record.undernames,
           record.endTimestamp!,
         );
-        const expectedBalance = prevBalance - totalExtensionAnnualFee;
 
         const writeInteraction = await contract.writeInteraction({
           function: 'extendRecord',
@@ -207,7 +202,12 @@ describe('Extend', () => {
         expect(state.records[name].endTimestamp).toEqual(
           record.endTimestamp! + years * SECONDS_IN_A_YEAR,
         );
-        expect(state.balances[walletAddress]).toEqual(expectedBalance);
+        expect(state.balances[nonContractOwnerAddress]).toEqual(
+          prevBalance - totalExtensionAnnualFee,
+        );
+        expect(state.balances[contractOwnerAddress]).toEqual(
+          prevState.balances[contractOwnerAddress] + totalExtensionAnnualFee,
+        );
       },
     );
 
@@ -218,7 +218,17 @@ describe('Extend', () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevState = prevCachedValue.state as IOState;
         const prevEndTimestamp = prevState.records[name].endTimestamp!;
-        const prevBalance = prevState.balances[walletAddress];
+        const prevBalance = prevState.balances[nonContractOwnerAddress];
+        const record = prevState.records[name]!;
+        const fees = prevState.fees;
+
+        const totalExtensionAnnualFee = calculateAnnualRenewalFee(
+          name,
+          fees,
+          years,
+          record.undernames,
+          record.endTimestamp!,
+        );
 
         const writeInteraction = await contract.writeInteraction({
           function: 'extendRecord',
@@ -235,7 +245,12 @@ describe('Extend', () => {
         expect(state.records[name].endTimestamp).toEqual(
           prevEndTimestamp + years * SECONDS_IN_A_YEAR,
         );
-        expect(state.balances[walletAddress]).not.toEqual(prevBalance);
+        expect(state.balances[nonContractOwnerAddress]).toEqual(
+          prevBalance - totalExtensionAnnualFee,
+        );
+        expect(state.balances[contractOwnerAddress]).toEqual(
+          prevState.balances[contractOwnerAddress] + totalExtensionAnnualFee,
+        );
       },
     );
   });

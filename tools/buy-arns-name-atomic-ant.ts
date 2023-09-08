@@ -20,15 +20,13 @@ import { keyfile } from './constants';
 
   // load local wallet
   const wallet: JWKInterface = JSON.parse(
-    process.env.JWK
-      ? process.env.JWK
-      : await fs.readFileSync(keyfile).toString(),
+    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
   );
 
   // load state of contract
   const arnsContractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
-    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
+    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // Initialize Arweave
   const arweave = Arweave.init({

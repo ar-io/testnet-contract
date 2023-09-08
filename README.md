@@ -1,51 +1,104 @@
-# Arweave Name Service Registry Pilot
+# AR.IO Network Test SmartWeave Contract
 
 ## Project setup
 
 Clone this repository and install the dependencies.
 
-```shell
-yarn install
-```
+- `nvm use`
+- `yarn install`
+- `yarn build`
 
-### Compiles and minifies for production
+## Testing
 
-```shell
-yarn build
-```
+Runs integration tests using arlocal. Note - these test write temporary files to your local disc.
 
-### Tests contracts with arlocal
+- `yarn tests` - runs full test suite
+- `yarn test -t 'auctions'` - runs tests that match this spec name (e.g. `auctions.test.ts`)
 
-```shell
-yarn test
-```
+## Tools
 
-To test a specific suite
+In order to deploy contracts and use the functions within the AR.IO Network, like Arweave Name System and the Gateway Address Registry, the following tools are available to be used.
 
-```shell
-yarn jest test FILENAME
-```
+Make sure to update the variables at the top of the respective file before running.
 
-### Tools
+You can also modify the script to use `dryWrite` following Warps documentation [here](https://academy.warp.cc/docs/sdk/basic/contract-methods#drywrite).
 
-In order to deploy contracts and use the Arweave Name Service Registry (along with creating Arweave Name Tokens) the following tools are available to be used.
+### Environment Variables
 
-Make sure to update the variables at the top of each tool's `.ts` file, as well as the local wallet file in `constants.ts`
+- `JWK` - the stringified JWK you want to use when writing interactions or deploying contracts
+- `ARNS_CONTRACT_TX_ID` - the IO Testnet contract ID (defaulted to `bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U`)
 
-- `buy-arns-name` purchases a new ArNS Name in the registry (if availabile) and adds the reference to the ANT Smartweave Contract ID. Requires the name you wish to purchase, the existing ANT Smartweave Contract ID that will be added to the registry, and the ArNS Registry Smartcontract ID.
-- `create-ant` creates a new ANT with arweave data pointer. Requires a short token ticker, a friendly token name, an Arweave Transaction ID as the data pointer, and the ANT Smartweave Contract Source Transaction ID. Please note that only the `@` sub domain will work at this time, and it is hard-coded into the script.
-- `create-ant-and-buy-arns-name` creates a new ANT with arweave data pointer and then registers it in the ArNS Registry. Also this script will not check if the ANT was successfully created and mined before adding to the ArNS Registry. Requires a short token ticker, a friendly token name and an Arweave Transaction ID as the data pointer and the ANT Smartweave Contract Source Transaction ID. Please note that only the `@` sub domain will work at this time, and it is hard-coded into the script.
-- `transfer-ant` transfers a ANT to another wallet. Requires the recipient target to transfer the ANT to, and the ANT Smartweave Contract ID that is to be transfered.
-- `transfer-tokens` transfers ArNS tokens to another wallet. Requires the recipient target to transfer the tokens to.
-- `buy-test-arns-name` uses the Redstone Testnet and purchases a new ArNS Name in the registry (if availabile) and adds the reference to the ANT Smartweave Address
-- `deploy-contract` deploys a new ArNS Contract to mainnet
-- `deploy-test-contract` deploys a new ArNS Contract to Redstone Testnet
+You can copy [.env.sample](./env.sample) to `.env` and fill in the values before executing any scripts.
 
-The above scripts must have their variables updated in the script, and can be run like the following example
-`yarn ts-node .\tools\buy-arns-name.ts`
+### Arweave Name System (ArNS)
 
-## TODO
+The following tools can be used to perform basic ArNS operations such as name purchase, ANT creation, and ANT transfer.
 
-- protocol balances
-- auction handling
-- permabuy purchase logic
+- [buy-arns-name] - purchases a new ArNS Name in the registry (if available) and adds the reference to an existing ANT Smartweave Contract ID
+
+  ```shell
+  yarn ts-node tools/buy-arns-name.ts
+  ```
+
+- [buy-arns-name-atomic-ant] - "atomically" registers an ArNS name, which includes the generation of a new ANT within the same transaction as the ArNS Name registration.
+  pointer and the ANT Smartweave Contract Source Transaction ID. Please note that only the `@` sub domain will work at this time, and it is hard-coded into the script.
+
+  ```shell
+  yarn ts-node tools/buy-arns-name-atomic-ant.ts
+  ```
+
+### AR.IO Testnet Network
+
+The following tools can be used to perform basic AR.IO Network operations, such as joining and leaving the network, along with managing the onchain settings of a Gateway.
+
+- [join-network] - takes a Gateway into the ar.io network and adds the Gateway into the Gateway Address Registry. This detail includes the Gateway Operator’s public wallet address, fully qualified domain name, port, protocol, properties and friendly note.
+
+  ```shell
+  yarn ts-node tools/join-network.ts
+  ```
+
+- [update-gateway-settings] - modify the settings of an existing registered Gateway record in the Gateway Address Registry, like the friendly name, fully qualified domain name, port, protocol, status, properties, and note.
+
+  ```shell
+  yarn ts-node tools/update-gateway-settings.ts
+  ```
+
+- [increase-operator-stake] - increase the token amount staked for an existing registered Gateway.
+
+  ```shell
+  yarn ts-node tools/increase-operator-stake.ts
+  ```
+
+- [initiate-operator-stake-decrease] - initiate a stake decrease for an existing registered Gateway
+
+  ```shell
+  yarn ts-node tools/initiate-operator-stake-decrease.ts
+  ```
+
+- [finalize-operator-stake-decrease] - after stake withdraw period, this completes the operator stake decrease and returns the specific amount back to the operator.
+
+  ```shell
+  yarn ts-node tools/finalize-operator-stake-decrease.ts
+  ```
+
+- [initiate-leave-network] - initiate network withdraw period to remove a registered Gateway from the Gateway Address Registry and return all gateway operator stakes.
+
+  ```shell
+  yarn ts-node tools/initiate-leave-network.ts
+  ```
+
+- [finalize-leave-network] - finalize network withdraw period completes, this will finish removing the gateway from the Gateway Address Registry and returns all stakes back to the operator.
+
+  ```shell
+  yarn ts-node tools/finalize-leave-network.ts
+  ```
+
+[join-network]: tools/join-network.ts
+[update-gateway-settings]: tools/update-gateway-settings.ts
+[increase-operator-stake]: tools/increase-operator-stake.ts
+[initiate-operator-stake-decrease]: tools/initiate-operator-stake-decrease.ts
+[finalize-operator-stake-decrease]: tools/finalize-operator-stake-decrease.ts
+[initiate-leave-network]: tools/initiate-leave-network.ts
+[finalize-leave-network]: tools/finalize-leave-network.ts
+[buy-arns-name]: tools/buy-arns-name.ts
+[buy-arns-name-atomic-ant]: /tools/buy-arns-name-atomic-ant.ts

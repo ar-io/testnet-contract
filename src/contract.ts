@@ -1,29 +1,28 @@
 // ~~ Put all the interactions from '../actions/` together to write the final handle function which will be exported
 // from the contract source. ~~
+import { getAuction } from './actions/read/auction';
+import { balance } from './actions/read/balance';
 import {
-  balance,
-  buyRecord,
-  evolve,
-  evolveState,
-  extendRecord,
-  finalizeLeave,
-  finalizeOperatorStakeDecrease,
-  foundationAction,
-  getAuction,
   getGateway,
   getGatewayRegistry,
   getGatewayTotalStake,
   getRankedGatewayRegistry,
-  getRecord,
-  increaseOperatorStake,
-  increaseUndernameCount,
-  initiateLeave,
-  initiateOperatorStakeDecrease,
-  joinNetwork,
-  submitAuctionBid,
-  transferTokens,
-  updateGatewaySettings,
-} from './actions';
+} from './actions/read/gateways';
+import { getRecord } from './actions/read/record';
+import { buyRecord } from './actions/write/buyRecord';
+import { evolve } from './actions/write/evolve';
+import { evolveState } from './actions/write/evolveState';
+import { extendRecord } from './actions/write/extendRecord';
+import { finalizeLeave } from './actions/write/finalizeLeave';
+import { finalizeOperatorStakeDecrease } from './actions/write/finalizeOperatorStakeDecrease';
+import { increaseOperatorStake } from './actions/write/increaseOperatorStake';
+import { increaseUndernameCount } from './actions/write/increaseUndernameCount';
+import { initiateLeave } from './actions/write/initiateLeave';
+import { initiateOperatorStakeDecrease } from './actions/write/initiateOperatorStakeDecrease';
+import { joinNetwork } from './actions/write/joinNetwork';
+import { submitAuctionBid } from './actions/write/submitAuctionBid';
+import { transferTokens } from './actions/write/transferTokens';
+import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
 import {
   ContractResult,
   IOContractFunctions,
@@ -78,11 +77,9 @@ export async function handle(
       return finalizeOperatorStakeDecrease(state, action);
     case 'updateGatewaySettings':
       return updateGatewaySettings(state, action);
-    case 'foundationAction':
-      return foundationAction(state, action);
     case 'submitAuctionBid':
       return submitAuctionBid(state, action);
-    case 'getAuction':
+    case 'auction':
       return getAuction(state, action);
     default:
       throw new ContractError(

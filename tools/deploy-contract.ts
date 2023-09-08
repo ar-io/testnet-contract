@@ -14,9 +14,7 @@ import { keyfile } from './constants';
 
 (async () => {
   const wallet = JSON.parse(
-    process.env.JWK
-      ? process.env.JWK
-      : await fs.readFileSync(keyfile).toString(),
+    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
   );
 
   // load state of contract
@@ -75,12 +73,10 @@ import { keyfile } from './constants';
       src: contractSrc,
       evaluationManifest: {
         evaluationOptions: {
-          sourceType: SourceType.ARWEAVE, // evaluation is restricted to only L1 arweave transactions (does not load any interactions submitted to warp sequencer)
           internalWrites: true,
           useKVStorage: true, // tells evaluators the key value storage is used for storing contract state
           updateCacheForEachInteraction: true, // required for internal writes - increases performance, but takes memory hit
-          maxInteractionEvaluationTimeSeconds: 60, // TODO: we may want to set this, doesn't look like anything by default
-          throwOnInternalWriteError: true,
+          sourceType: SourceType.ARWEAVE,
         },
       },
     },

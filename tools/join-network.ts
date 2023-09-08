@@ -20,10 +20,10 @@ LoggerFactory.INST.logLevel('error');
   const qty = 100_000;
 
   // the friendly label for this gateway
-  const label = 'Test Gateway';
+  const label = 'Permagate';
 
   // the fully qualified domain name for this gateway eg. arweave.net
-  const fqdn = 'permanence-testing.org';
+  const fqdn = 'permagate.io';
 
   // the port used for this gateway eg. 443
   const port = 443;
@@ -35,24 +35,21 @@ LoggerFactory.INST.logLevel('error');
   const properties = 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44';
 
   // an optional, short note to further describe this gateway and its status
-  const note =
-    'Give me feedback about this gateway at my Xwitter @testgatewayguy';
+  const note = 'Owned and operated by DTF.';
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
-    process.env.JWK
-      ? process.env.JWK
-      : await fs.readFileSync(keyfile).toString(),
+    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
   );
 
   // gate the contract txId
   const arnsContractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
-    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
+    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // Initialize Arweave
   const arweave = Arweave.init({
-    host: 'arweave.net',
+    host: 'ar-io.dev',
     port: 443,
     protocol: 'https',
   });
@@ -68,12 +65,7 @@ LoggerFactory.INST.logLevel('error');
   const walletAddress = await arweave.wallets.getAddress(wallet);
 
   // Read the ANT Registry Contract
-  const pst = warp.pst(arnsContractTxId).setEvaluationOptions({
-    internalWrites: true,
-    updateCacheForEachInteraction: true,
-    unsafeClient: 'skip',
-  });
-  pst.connect(wallet);
+  const pst = warp.pst(arnsContractTxId).connect(wallet);
 
   console.log('Connected to contract with wallet: %s', walletAddress);
   const txId = await pst.writeInteraction(

@@ -1,0 +1,44 @@
+name: Evolve Contract
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - src/**
+      - schemas/**
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        step: ['format:check', 'lint:check', 'build', 'test']
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+          cache: 'yarn'
+      - run: yarn install
+      - run: yarn ${{ matrix.step }}
+  evolve:
+    runs-on: ubuntu-latest
+    needs: [build]
+    environment: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v3
+      - run: yarn install
+      - run: yarn build
+      - id: evolve
+        run: |
+          SOURCE_CODE_TX_ID=$(yarn evolve 2>&1 | grep -oE '[a-zA-Z0-9_-]{43}')
+          echo "::set-output name=srcTxId::$SOURCE_CODE_TX_ID"  # Set the output variable for this step
+        env:
+          ARNS_CONTRACT_TX_ID: ${{ vars.ARNS_CONTRACT_TX_ID }}
+          JWK: ${{ secrets.JWK }}
+      - run: |
+          git tag "${{ steps.evolve.outputs.srcTxId }}"
+          git push --tags
