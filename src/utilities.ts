@@ -140,7 +140,7 @@ export function calculateMinimumAuctionBid({
 
 // check if a string is a valid fully qualified domain name
 export function isValidFQDN(fqdn: string): boolean {
-  const fqdnRegex = /^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{1,6}$/;
+  const fqdnRegex = /^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{1,7}$/;
   return fqdnRegex.test(fqdn);
 }
 
