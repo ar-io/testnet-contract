@@ -4,6 +4,7 @@ import {
   INVALID_INPUT_MESSAGE,
   MAX_YEARS,
   MINIMUM_ALLOWED_NAME_LENGTH,
+  MIN_YEARS,
   NAMESPACE_LENGTH,
   PERMABUY_LEASE_FEE_LENGTH,
   RARITY_MULTIPLIER_HALVENING,
@@ -248,7 +249,7 @@ export function generateAuctionPermutations(
   props: AuctionGeneratorProps,
 ): AuctionPermutations {
   const auctions = {};
-  for (let i = 0; i <= MAX_YEARS; i++) {
+  for (let i = 0; i <= MIN_YEARS; i++) {
     auctions[i] = generateAuction({
       ...props,
       years: i ?? undefined, // 0 = permabuy-
@@ -294,7 +295,6 @@ export function generateAuction(props: AuctionGeneratorProps): Auction {
     ...auction,
     ...auctionSettings,
     isExpired: false,
-    isLive: false,
     minimumAuctionBid: startPrice,
     prices,
   };

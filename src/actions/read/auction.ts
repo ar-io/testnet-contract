@@ -105,7 +105,6 @@ export const getAuction = (
           ...auctionSettings,
         },
         prices,
-        isLive: true,
         isExpired: expirationHeight < +SmartWeave.block.height,
       },
     },

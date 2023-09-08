@@ -189,7 +189,6 @@ export type Auction = AuctionParameters &
     prices: Record<string | number, number>;
     minimumAuctionBid: number;
     isExpired: boolean;
-    isLive: boolean;
   };
 
 export type AuctionPermutations = {

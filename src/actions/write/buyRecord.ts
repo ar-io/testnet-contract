@@ -2,7 +2,6 @@ import {
   ARNS_NAME_IN_AUCTION_MESSAGE,
   ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_UNDERNAME_COUNT,
-  INVALID_INPUT_MESSAGE,
   INVALID_SHORT_NAME,
   INVALID_YEARS_MESSAGE,
   MAX_YEARS,
@@ -86,11 +85,6 @@ export const buyRecord = (
     isNaN(balances[caller])
   ) {
     throw new ContractError(`Caller balance is not defined!`);
-  }
-
-  // Additional check if it includes a valid number of years (TODO: this may be set in contract settings)
-  if (years > MAX_YEARS) {
-    throw new ContractError(INVALID_YEARS_MESSAGE);
   }
 
   // TODO: do we have a premium multiplier?
