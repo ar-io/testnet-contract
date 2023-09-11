@@ -1,6 +1,7 @@
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
+import inquirer from 'inquirer';
 import {
   LoggerFactory,
   WarpFactory,
@@ -8,6 +9,7 @@ import {
 } from 'warp-contracts';
 
 import { keyfile } from './constants';
+import questions from './questions';
 
 LoggerFactory.INST.logLevel('error');
 
@@ -16,26 +18,7 @@ LoggerFactory.INST.logLevel('error');
 // A minimum amount of tokens must be staked to join, along with other settings that must be configured
 // Only the gateway's wallet owner is authorized to adjust these settings or leave the network in the future
 (async () => {
-  // the quantity of tokens to stake.  Must be greater than the minimum
-  const qty = 100_000;
-
-  // the friendly label for this gateway
-  const label = 'Permagate';
-
-  // the fully qualified domain name for this gateway eg. arweave.net
-  const fqdn = 'permagate.io';
-
-  // the port used for this gateway eg. 443
-  const port = 443;
-
-  // the application layer protocol used by this gateway eg http or https
-  const protocol = 'https';
-
-  // an optional gateway properties file located at this Arweave transaction id eg.
-  const properties = 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44';
-
-  // an optional, short note to further describe this gateway and its status
-  const note = 'Owned and operated by DTF.';
+  const { qty, label, fqdn, port, protocol, properties, note } = await inquirer.prompt(questions.joinNetwork());
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(

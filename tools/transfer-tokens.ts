@@ -1,6 +1,7 @@
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
+import inquirer from 'inquirer';
 import {
   LoggerFactory,
   WarpFactory,
@@ -8,16 +9,12 @@ import {
 } from 'warp-contracts';
 
 import { keyfile } from './constants';
+import questions from './questions';
 
 /* eslint-disable no-console */
 (async () => {
-  //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  // The recipient target of the token transfer
-  const target = '1H7WZIWhzwTH9FIcnuMqYkTsoyv1OTfGa_amvuYwrgo';
 
-  // The amount of tokens to be transferred
-  const qty = 2500000;
-  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  const {target , qty} = await inquirer.prompt(questions.transferTokens());
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(fs.readFileSync(keyfile).toString());

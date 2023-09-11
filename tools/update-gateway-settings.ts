@@ -2,18 +2,16 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import { WarpFactory, defaultCacheOptions } from 'warp-contracts';
+import inquirer from 'inquirer'
 
 import { keyfile } from './constants';
+import questions from './questions'
 
 /* eslint-disable no-console */
 // This script will update the settings for a gateway that is alreadyjoined to the network
 // Only the gateway's wallet owner is authorized to adjust these settings
 (async () => {
-  // the friendly label for this gateway
-  const label = 'Test Gateway';
-
-  // the fully qualified domain name for this gateway eg. arweave.net
-  const fqdn = 'permanence-testing.org';
+  const { label, fqdn } = await inquirer.prompt(questions.updateGateway());
 
   // uncomment the below settings and update as needed
   // the port used for this gateway eg. 443

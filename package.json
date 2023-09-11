@@ -40,5 +40,8 @@
   },
   "resolutions": {
     "arweave": "1.13.7"
+  },
+  "dependencies": {
+    "inquirer": "^9.2.11"
   }
 }

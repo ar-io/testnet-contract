@@ -2,15 +2,17 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import { WarpFactory, defaultCacheOptions } from 'warp-contracts';
+import inquirer from 'inquirer';
 
 import { keyfile } from './constants';
+import questions from './questions';
 
 /* eslint-disable no-console */
 // This script will stake more tokens to an existing joined gateway
 // Only the gateway's wallet owner is authorized to increase its own stake
 (async () => {
-  // the quantity of tokens to stake
-  const qty = 10_000;
+  
+  const {qty} = await inquirer.prompt(questions.increaseOperatorStake());
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(

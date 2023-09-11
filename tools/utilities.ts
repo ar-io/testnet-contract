@@ -22,6 +22,10 @@ export function isipV4Address(ipV4Address: string) {
   return false;
 }
 
+export function isValidDomainName(domain: string){
+  return /^(?!-)[A-Za-z0-9-]+([\\-\\.]{1}[a-z0-9]+)*\\.[A-Za-z]{2,6}$/.test(domain);
+}
+
 export function getTotalSupply(state: any) {
   let totalSupply = 0;
   for (const key of Object.keys(state.balances)) {
