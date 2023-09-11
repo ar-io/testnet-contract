@@ -26,7 +26,7 @@ LoggerFactory.INST.logLevel('none');
 // start arlocal
 console.log('Setting up Warp, Arlocal and Arweave clients!'); // eslint-disable-line
 
-jest.setTimeout(100000);
+jest.setTimeout(100_000);
 beforeAll(async () => {
   await arlocal.start();
 
@@ -96,8 +96,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  removeDirectories();
+  await removeDirectories();
   await arlocal.stop();
+  await warp.close();
 });
 
 function createDirectories() {
