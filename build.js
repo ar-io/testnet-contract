@@ -5,7 +5,6 @@ const standaloneCode = require('ajv/dist/standalone').default;
 const { build } = require('esbuild');
 const replace = require('replace-in-file');
 const schemas = require('./schemas');
-const { startCase } = require('lodash');
 
 // build our validation source code
 const ajv = new Ajv({
@@ -14,11 +13,22 @@ const ajv = new Ajv({
   allErrors: true,
 });
 
+// need to define our custom validation name variable
+ajv.addKeyword({
+  keyword:'$registry-validationFunctionName',
+  schemaType: 'string'
+});
+
 const definitions = Object.values(schemas).reduce((acc, schema) => {
-  const schemaName = schema['$id']?.split('/').pop();
-  acc['validate' + startCase(schemaName).split(' ').join('')] = schema.$id;
+  const validatorName = schema?.["$registry-validationFunctionName"]
+  if (!validatorName) {
+    return acc;
+  }
+  acc[validatorName] = schema.$id;
   return acc;
 }, {}); // generate a map of validation functions to schema ids
+
+
 
 const moduleCode = standaloneCode(ajv, {
   ...definitions, // add or override as needed

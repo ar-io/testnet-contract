@@ -1,5 +1,6 @@
 const extendRecordSchema = {
   $id: '#/definitions/extendRecord',
+  "$registry-validationFunctionName": "validateExtendRecord",
   type: 'object',
   properties: {
     function: {

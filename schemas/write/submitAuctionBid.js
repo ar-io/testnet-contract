@@ -1,5 +1,6 @@
 const submitAuctionBidSchema = {
   $id: '#/definitions/submitAuctionBid',
+  "$registry-validationFunctionName": "validateSubmitAuctionBid",
   type: 'object',
   properties: {
     function: {

@@ -1,5 +1,6 @@
 const getAuctionSchema = {
   $id: '#/definitions/getAuction',
+  "$registry-validationFunctionName": "validateGetAuction",
   type: 'object',
   properties: {
     function: {
