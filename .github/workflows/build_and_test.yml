@@ -9,6 +9,10 @@ on:
     paths:
       - src/**
       - schemas/**
+  pull_request:
+    paths:
+      - src/**
+      - schemas/**
 
 jobs:
   build:
