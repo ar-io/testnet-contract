@@ -1,6 +1,6 @@
 const buyRecordSchema = {
   $id: '#/definitions/buyRecord',
-  "$registry-validationFunctionName": "validateBuyRecord",
+  '$registry-validationFunctionName': 'validateBuyRecord',
   type: 'object',
   properties: {
     function: {

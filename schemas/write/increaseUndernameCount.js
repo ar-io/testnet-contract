@@ -1,6 +1,6 @@
 const increaseUndernameCountSchema = {
   $id: '#/definitions/increaseUndernameCount',
-  "$registry-validationFunctionName": "validateIncreaseUndernameCount",
+  '$registry-validationFunctionName': 'validateIncreaseUndernameCount',
   type: 'object',
   properties: {
     function: {
