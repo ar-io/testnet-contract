@@ -329,7 +329,11 @@ describe('Network', () => {
         );
       });
 
-      it.each(['SUUUUUUUUUUUUUUUUUUUUUUUUUUPER LONG LABEL!!!!!!!!!', 0, ''])(
+      it.each([
+        'SUUUUUUUUUUUUUUUUUUUUUUUUUUPER LONG LABEL LONGER THAN 64 CHARS!!!!!!!!!',
+        0,
+        '',
+      ])(
         'should not modify gateway settings with invalid label',
         async (badLabel) => {
           const { cachedValue: prevCachedValue } = await contract.readState();
