@@ -41,6 +41,10 @@ export async function getCurrentBlock(arweave: Arweave): Promise<number> {
   return (await arweave.blocks.getCurrent()).height;
 }
 
+export async function getBlockTime(arweave: Arweave): Promise<number> {
+  return (await arweave.blocks.getCurrent()).timestamp;
+}
+
 export async function mineBlocks(
   arweave: Arweave,
   blocks: number,

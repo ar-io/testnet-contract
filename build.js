@@ -11,6 +11,7 @@ const {
   increaseUndernameCountSchema,
   joinNetworkSchema,
   transferTokensSchema,
+  getAuctionSchema,
 } = require('./schemas');
 
 // build our validation source code
@@ -22,6 +23,7 @@ const ajv = new Ajv({
     increaseUndernameCountSchema,
     joinNetworkSchema,
     transferTokensSchema,
+    getAuctionSchema,
   ],
   code: { source: true, esm: true },
   allErrors: true,
@@ -29,6 +31,7 @@ const ajv = new Ajv({
 
 const moduleCode = standaloneCode(ajv, {
   validateAuctionBid: '#/definitions/auctionBid',
+  validateGetAuction: '#/definitions/getAuction',
   validateBuyRecord: '#/definitions/buyRecord',
   validateExtendRecord: '#/definitions/extendRecord',
   validateIncreaseUndernameCount: '#/definitions/increaseUndernameCount',

@@ -79,7 +79,7 @@ export async function handle(
       return updateGatewaySettings(state, action);
     case 'submitAuctionBid':
       return submitAuctionBid(state, action);
-    case 'auction':
+    case 'getAuction':
       return getAuction(state, action);
     default:
       throw new ContractError(

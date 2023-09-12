@@ -8,11 +8,14 @@ import {
   NON_EXPIRED_ARNS_NAME_MESSAGE,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../src/constants';
-import { Auction, AuctionSettings, IOState } from '../src/types';
+import { AuctionParameters, AuctionSettings, IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import { ANT_CONTRACT_IDS } from './utils/constants';
 import {
   calculateMinimumAuctionBid,
+  generateAuction,
+  generateAuctionPermutations,
+  getBlockTime,
   getCurrentBlock,
   getLocalArNSContractId,
   getLocalWallet,
@@ -173,7 +176,7 @@ describe('Auctions', () => {
         describe('for a lease', () => {
           describe('for a non-existent auction', () => {
             let auctionTxId: string;
-            let auctionObj: Auction;
+            let auctionObj: AuctionParameters;
             let prevState: IOState;
             const auctionBid = {
               name: 'apple',
@@ -439,7 +442,7 @@ describe('Auctions', () => {
 
       describe('for a permabuy', () => {
         let auctionTxId: string;
-        let auctionObj: Auction;
+        let auctionObj: AuctionParameters;
         let prevState: IOState;
         const auctionBid = {
           name: 'microsoft',
@@ -531,7 +534,7 @@ describe('Auctions', () => {
 
       describe('for an eager initiator', () => {
         let auctionTxId: string;
-        let auctionObj: Auction;
+        let auctionObj: AuctionParameters;
         let prevState: IOState;
         const auctionBid = {
           name: 'tesla',
@@ -630,6 +633,59 @@ describe('Auctions', () => {
           );
           expect(balances[contractOwnerAddress]).toEqual(
             prevState.balances[contractOwnerAddress] + winningBidQty,
+          );
+        });
+
+        it('should expect to generate auction prices on read function', async () => {
+          const expected = generateAuctionPermutations({
+            name: 'tesla',
+            blockHeight: await getCurrentBlock(arweave),
+            blockTime: await getBlockTime(arweave),
+            fees: prevState.fees,
+            auctionSettings: AUCTION_SETTINGS.history[0],
+            caller: nonContractOwnerAddress,
+          });
+
+          const recieved = await contract.viewState(
+            {
+              function: 'getAuction',
+              name: 'tesla',
+            },
+            undefined,
+            undefined,
+            nonContractOwnerAddress,
+          );
+          expect(recieved.result).toEqual(expected);
+        });
+
+        it('should expect to generate auction correctly', async () => {
+          const auctionBid = {
+            name: 'applesauce',
+            contractTxId: ANT_CONTRACT_IDS[0],
+            type: 'permabuy',
+          };
+
+          const result = await contract.writeInteraction({
+            function: 'submitAuctionBid',
+            ...auctionBid,
+          });
+          expect(result?.originalTxId).not.toBe(undefined);
+          const { cachedValue } = await contract.readState();
+          const { auctions, balances } = cachedValue.state as IOState;
+          expect(auctions[auctionBid.name]).toEqual(
+            expect.objectContaining({
+              floorPrice: expect.any(Number),
+              startPrice: expect.any(Number),
+              type: 'permabuy',
+              auctionSettingsId: AUCTION_SETTINGS.current,
+              startHeight: await getCurrentBlock(arweave),
+              initiator: nonContractOwnerAddress,
+              contractTxId: ANT_CONTRACT_IDS[0],
+            }),
+          );
+          expect(balances[nonContractOwnerAddress]).toEqual(
+            prevState.balances[nonContractOwnerAddress] -
+              auctions['applesauce'].floorPrice,
           );
         });
       });
