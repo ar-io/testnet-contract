@@ -45,7 +45,7 @@ describe('Network', () => {
         const prevBalance =
           prevCachedValue.state.balances[newGatewayOperatorAddress];
         const joinGatewayPayload = {
-          qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
+          qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount + 1, // must meet the minimum
           label: 'Test Gateway', // friendly label
           fqdn: 'jest.io',
           port: 3000,
@@ -327,9 +327,11 @@ describe('Network', () => {
       it('should not initiate operator stake decrease if the vault has not been locked long enough', async () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const id = 1; // the vault that is being unlocked
+        const qty = 50; // no minimum
         const writeInteraction = await contract.writeInteraction({
           function: 'initiateOperatorStakeDecrease',
           id,
+          qty
         });
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
@@ -339,13 +341,15 @@ describe('Network', () => {
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
 
-      it('should initiate operator stake decrease when enough blocks have passed', async () => {
+      it('should initiate operator stake decrease to close a vault when enough blocks have passed', async () => {
         // mine the appropriate number of blocks
         await mineBlocks(arweave, CONTRACT_SETTINGS.minLockLength);
         const id = 1; // the vault that is being unlocked
+        const qty = 50; // no minimum
         const writeInteraction = await contract.writeInteraction({
           function: 'initiateOperatorStakeDecrease',
           id,
+          qty
         });
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
@@ -358,7 +362,28 @@ describe('Network', () => {
         ).toEqual(
           (await getCurrentBlock(arweave)) +
             CONTRACT_SETTINGS.operatorStakeWithdrawLength,
-        ); // TO DO, make this more dynamic.  Need to fetch current block height
+        ); 
+      });
+
+      it('should initiate operator stake decrease to lower a vault vault when enough blocks have passed', async () => {
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const prevState = prevCachedValue.state as IOState;
+        const id = 0; // the vault that is being lowered
+        const qty = CONTRACT_SETTINGS.minNetworkJoinStakeAmount; // This vault should still have enough tokens left
+        const writeInteraction = await contract.writeInteraction({
+          function: 'initiateOperatorStakeDecrease',
+          id,
+          qty
+        });
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue: newCachedValue } = await contract.readState();
+        const newState = newCachedValue.state as IOState;
+        expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(
+          newState.gateways[newGatewayOperatorAddress].vaults[id].balance,
+        ).toEqual(prevState.gateways[newGatewayOperatorAddress].vaults[id].balance - qty); 
       });
 
       it('should not initiate operator stake decrease if it brings the gateway below the minimum', async () => {
@@ -367,6 +392,7 @@ describe('Network', () => {
         const writeInteraction = await contract.writeInteraction({
           function: 'initiateOperatorStakeDecrease',
           id,
+          qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount * 2
         });
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
