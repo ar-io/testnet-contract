@@ -13,7 +13,8 @@ const joinNetworkSchema = {
     fqdn: {
       type: 'string',
       pattern:
-        '^((?!-)[A-Za-z0-9-]{1,63}(?<!-).)+(?!-)[A-Za-z0-9-]{1,63}(?<!-)$', // eslint-disable-line no-useless-escape
+        // prettier-ignore
+        '^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+(?!-)[A-Za-z0-9-]{1,63}(?<!-)$', // eslint-disable-line no-useless-escape
     },
     port: {
       type: 'number',
