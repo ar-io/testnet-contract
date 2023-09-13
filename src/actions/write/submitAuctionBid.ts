@@ -18,7 +18,8 @@ import {
 } from '../../types';
 import {
   calculateMinimumAuctionBid,
-  generateAuction,
+  calculatePermabuyFee,
+  calculateTotalRegistrationFee,
   getInvalidAjvMessage,
   walletHasSufficientBalance,
 } from '../../utilities';
@@ -28,8 +29,7 @@ import { validateAuctionBid } from '../../validations.mjs';
 declare const ContractError;
 declare const SmartWeave: any;
 
-export class SubmitAuctionBid {
-  function: 'submitAuctionBid';
+export class AuctionBid {
   name: string;
   qty?: number;
   type: 'lease' | 'permabuy';
@@ -69,13 +69,14 @@ export const submitAuctionBid = (
     owner,
   } = state;
 
+  // does validation on constructor
   const {
     name,
     qty: submittedBid,
     type,
     contractTxId,
-    years, // not currently used due to us defaulting to one year for leases
-  } = new SubmitAuctionBid(input);
+    years,
+  } = new AuctionBid(input);
 
   // name already exists on an active lease
   if (records[name]) {
@@ -95,10 +96,12 @@ export const submitAuctionBid = (
         endTimestamp &&
         endTimestamp + SECONDS_IN_GRACE_PERIOD <= +SmartWeave.block.timestamp
       ) {
+        // lease has expired, remove from state and it's available for auction
         delete records[name];
         return;
       }
 
+      // throw an error saying the name is already owned
       throw new ContractError(NON_EXPIRED_ARNS_NAME_MESSAGE);
     };
 
@@ -120,28 +123,14 @@ export const submitAuctionBid = (
       const reservedExpired =
         reservedEndTimestamp &&
         reservedEndTimestamp <= +SmartWeave.block.timestamp;
-
+      // the reservation has expired - delete from state and make it available for auctions/buying
       if (!reservedByCaller && !reservedExpired) {
         throw new ContractError(ARNS_NAME_RESERVED_MESSAGE);
       }
 
-<<<<<<< HEAD
       // remove the reserved name from state and continue
       delete reserved[name];
       return;
-=======
-      delete reserved[name];
-      return;
-      /**
-       * TODO: we may or may not handle premium names
-       * {
-       *     "microsoft": {
-       *          "endTimestamp": today,
-       *          "premium": true, // if premium name - don't delete from reserved and update the endTimestamp and startTimestamp
-       *     },
-       * }
-       */
->>>>>>> cc8c5e3 (chore(tests): added tests for read and generate API)
     };
 
     handleReservedName();
@@ -170,7 +159,6 @@ export const submitAuctionBid = (
   const currentBlockHeight = +SmartWeave.block.height;
   const { decayInterval, decayRate, auctionDuration } = currentAuctionSettings;
 
-<<<<<<< HEAD
   // TODO: add pricing demand factor
   // calculate the standard registration fee
   const registrationFee =
@@ -183,45 +171,40 @@ export const submitAuctionBid = (
         )
       : calculatePermabuyFee(name, fees, +SmartWeave.block.timestamp);
 
-=======
->>>>>>> cc8c5e3 (chore(tests): added tests for read and generate API)
   // no current auction, create one and vault the balance from the user
   if (!auctions[name]) {
     const {
-      prices,
-      id,
+      id: auctionSettingsId,
       floorPriceMultiplier,
       startPriceMultiplier,
-      decayInterval,
-      decayRate,
-      isExpired,
-      auctionDuration,
-      minimumAuctionBid,
-      ...initialAuctionBid
-    } = generateAuction({
-      auctionSettings: currentAuctionSettings,
-      fees,
-      name,
-      caller,
-      blockHeight: currentBlockHeight,
-      blockTime: +SmartWeave.block.timestamp,
-      years: type === 'permabuy' ? undefined : 1, // default to 1 year if leasing
-      contractTxId,
-    });
+    } = currentAuctionSettings;
+    // floor price multiplier could be a decimal, or whole number (e.g. 0.5 vs 2)
+    const calculatedFloor = registrationFee * floorPriceMultiplier;
+    // if someone submits a high floor price, we'll take it
+    const floorPrice = submittedBid
+      ? Math.max(submittedBid, calculatedFloor)
+      : calculatedFloor;
+    // multiply by the floor price, as it could be higher than the calculated floor
+    const startPrice = floorPrice * startPriceMultiplier;
 
     // throw an error on invalid balance
-    if (
-      !walletHasSufficientBalance(
-        balances,
-        caller,
-        initialAuctionBid.floorPrice,
-      )
-    ) {
+    if (!walletHasSufficientBalance(balances, caller, floorPrice)) {
       throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
     }
 
+    // create the initial auction bid
+    const initialAuctionBid = {
+      auctionSettingsId,
+      floorPrice, // this is decremented from the initiators wallet, and could be higher than the precalculated floor
+      startPrice,
+      contractTxId,
+      startHeight: currentBlockHeight, // auction starts right away
+      type,
+      initiator: caller, // the balance that the floor price is decremented from
+      ...(years ? { years } : {}),
+    };
     auctions[name] = initialAuctionBid; // create the auction object
-    balances[caller] -= initialAuctionBid.floorPrice; // decremented based on the floor price
+    balances[caller] -= floorPrice; // decremented based on the floor price
 
     // update the state
     state.auctions = auctions;

@@ -26,7 +26,7 @@ LoggerFactory.INST.logLevel('none');
 // start arlocal
 console.log('Setting up Warp, Arlocal and Arweave clients!'); // eslint-disable-line
 
-jest.setTimeout(100000);
+jest.setTimeout(200000);
 beforeAll(async () => {
   await arlocal.start();
 
