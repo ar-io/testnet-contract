@@ -2,7 +2,12 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import { IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
-import { TRANSFER_QTY } from './utils/constants';
+import {
+  INSUFFICIENT_FUNDS_MESSAGE,
+  INVALID_INPUT_MESSAGE,
+  INVALID_TARGET_MESSAGE,
+  TRANSFER_QTY,
+} from './utils/constants';
 import { getLocalArNSContractId, getLocalWallet } from './utils/helper';
 
 describe('Transfers', () => {
@@ -64,6 +69,9 @@ describe('Transfers', () => {
       expect(Object.keys(newCachedValue.errorMessages)).toContain(
         writeInteraction!.originalTxId,
       );
+      expect(
+        newCachedValue.errorMessages[writeInteraction!.originalTxId],
+      ).toEqual(INSUFFICIENT_FUNDS_MESSAGE);
       expect(newCachedValue.state).toEqual(prevCachedValue.state);
     });
 
@@ -81,6 +89,9 @@ describe('Transfers', () => {
       expect(Object.keys(newCachedValue.errorMessages)).toContain(
         writeInteraction!.originalTxId,
       );
+      expect(
+        newCachedValue.errorMessages[writeInteraction!.originalTxId],
+      ).toEqual(INVALID_TARGET_MESSAGE);
       expect(newCachedValue.state).toEqual(prevCachedValue.state);
     });
   });
@@ -135,6 +146,9 @@ describe('Transfers', () => {
       expect(Object.keys(newCachedValue.errorMessages)).toContain(
         writeInteraction!.originalTxId,
       );
+      expect(
+        newCachedValue.errorMessages[writeInteraction!.originalTxId],
+      ).toEqual(INVALID_TARGET_MESSAGE);
       expect(newCachedValue.state).toEqual(prevCachedValue.state);
     });
 
@@ -153,6 +167,9 @@ describe('Transfers', () => {
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
           writeInteraction!.originalTxId,
         );
+        expect(
+          newCachedValue.errorMessages[writeInteraction!.originalTxId],
+        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       },
     );
