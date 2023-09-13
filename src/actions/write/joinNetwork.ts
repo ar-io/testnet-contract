@@ -1,10 +1,10 @@
-import { getInvalidAjvMessage } from '../../utilities';
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
-import { validateJoinNetwork } from '../../validations.mjs'
+import { getInvalidAjvMessage } from '../../utilities';
+import { validateJoinNetwork } from '../../validations.mjs';
 
 declare const ContractError;
 declare const SmartWeave: any;
@@ -17,7 +17,7 @@ export class JoinNetwork {
   properties: string;
   protocol: 'http' | 'https';
   port: number;
-  
+
   constructor(input: any) {
     // validate using ajv validator
     if (!validateJoinNetwork(input)) {
@@ -80,7 +80,7 @@ export const joinNetwork = async (
       },
     ],
     settings: {
-      ...gatewaySettings
+      ...gatewaySettings,
     },
     status: NETWORK_JOIN_STATUS,
     start: +SmartWeave.block.height, // TODO: timestamp vs. height

@@ -9,5 +9,5 @@ module.exports = {
   buyRecordSchema,
   extendRecordSchema,
   increaseUndernameCountSchema,
-  joinNetworkSchema
+  joinNetworkSchema,
 };

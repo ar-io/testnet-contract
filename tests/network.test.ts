@@ -73,7 +73,7 @@ describe('Network', () => {
           end: 0,
           vaults: [
             {
-              balance: joinGatewayPayload, // Positive integer, the amount locked
+              balance: joinGatewayPayload.qty, // Positive integer, the amount locked
               start: 2, // At what block the lock starts.
               end: 0, // At what block the lock ends.  0 means no end date.}]
             },
