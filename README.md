@@ -15,6 +15,13 @@ Runs integration tests using arlocal. Note - these test write temporary files to
 - `yarn tests` - runs full test suite
 - `yarn test -t 'auctions'` - runs tests that match this spec name (e.g. `auctions.test.ts`)
 
+## Linting & Formatting
+
+Eslint and Prettier are used for static analysis and formatting.
+
+- `yarn format:fix` - runs prettier and fixes any formatting issues
+- `yarn lint:fix` - runs eslint and fixes any linting issues
+
 ## Tools
 
 In order to deploy contracts and use the functions within the AR.IO Network, like Arweave Name System and the Gateway Address Registry, the following tools are available to be used.
