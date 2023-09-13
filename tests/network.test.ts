@@ -395,6 +395,7 @@ describe('Network', () => {
         'trailing-',
         'bananas.one two three',
         'this-is-a-looong-name-a-verrrryyyyy-loooooong-name-that-is-too-long',
+        '192.168.1.1',
         12345,
       ])(
         'should not modify gateway settings with invalid fqdn',
