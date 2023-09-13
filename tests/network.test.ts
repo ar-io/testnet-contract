@@ -42,17 +42,8 @@ describe('Network', () => {
     describe('join network', () => {
       it('should join the network with correct parameters', async () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
-        const prevState = prevCachedValue.state as IOState;
         const prevBalance =
           prevCachedValue.state.balances[newGatewayOperatorAddress];
-        const qty = prevState.settings.registry.minNetworkJoinStakeAmount; // must meet the minimum
-        const label = 'Test Gateway'; // friendly label
-        const fqdn = 'jest.io';
-        const properties = 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44';
-        const port = 3000;
-        const protocol = 'http';
-        const note =
-          'Our gateway is the best test gateway. Contact bob@ar.io for more.';
         const joinGatewayPayload = {
           qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
           label: 'Test Gateway', // friendly label
@@ -73,27 +64,27 @@ describe('Network', () => {
           writeInteraction!.originalTxId,
         );
         expect(newState.balances[newGatewayOperatorAddress]).toEqual(
-          prevBalance - qty,
+          prevBalance - joinGatewayPayload.qty,
         );
         expect(newState.gateways[newGatewayOperatorAddress]).toEqual({
-          operatorStake: qty,
+          operatorStake: joinGatewayPayload.qty,
           status: NETWORK_JOIN_STATUS,
           start: 2,
           end: 0,
           vaults: [
             {
-              balance: qty, // Positive integer, the amount locked
+              balance: joinGatewayPayload, // Positive integer, the amount locked
               start: 2, // At what block the lock starts.
               end: 0, // At what block the lock ends.  0 means no end date.}]
             },
           ],
           settings: {
-            label: label,
-            fqdn: fqdn,
-            port: port,
-            protocol: protocol,
-            properties: properties,
-            note: note,
+            label: joinGatewayPayload.label,
+            fqdn: joinGatewayPayload.fqdn,
+            port: joinGatewayPayload.port,
+            protocol: joinGatewayPayload.protocol,
+            properties: joinGatewayPayload.properties,
+            note: joinGatewayPayload.note,
           },
         });
       });
