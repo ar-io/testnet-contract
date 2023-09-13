@@ -3,6 +3,7 @@ const { auctionBidSchema } = require('./auction');
 const { increaseUndernameCountSchema } = require('./undernames');
 const { extendRecordSchema } = require('./extend');
 const { joinNetworkSchema } = require('./network');
+const { transferTokensSchema } = require('./transfer');
 
 module.exports = {
   auctionBidSchema,
@@ -10,4 +11,5 @@ module.exports = {
   extendRecordSchema,
   increaseUndernameCountSchema,
   joinNetworkSchema,
+  transferTokensSchema,
 };

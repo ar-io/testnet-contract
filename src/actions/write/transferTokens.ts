@@ -3,27 +3,39 @@ import {
   INVALID_TARGET_MESSAGE,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
+import {
+  getInvalidAjvMessage,
+  walletHasSufficientBalance,
+} from '../../utilities';
+import { validateTransferToken } from '../../validations.mjs';
 
 declare const ContractError;
+
+// TODO: use top level class
+export class TransferToken {
+  target: string;
+  qty: number;
+
+  constructor(input: any) {
+    if (!validateTransferToken(input)) {
+      throw new ContractError(
+        getInvalidAjvMessage(validateTransferToken, input),
+      );
+    }
+    const { target, qty } = input;
+    this.target = target;
+    this.qty = qty;
+  }
+}
 
 export const transferTokens = async (
   state: IOState,
   { caller, input }: PstAction,
 ): Promise<ContractResult> => {
-  const balances = state.balances;
+  const { balances } = state;
+  const { target, qty } = new TransferToken(input);
 
-  // todo: do object parsing and validation on
-  const { target, qty } = input as any;
-
-  if (!Number.isInteger(qty)) {
-    throw new ContractError('Invalid value for "qty". Must be an integer');
-  }
-
-  if (!target) {
-    throw new ContractError('No target specified');
-  }
-
-  if (qty <= 0 || caller === target) {
+  if (caller === target) {
     throw new ContractError(INVALID_TARGET_MESSAGE);
   }
 
@@ -36,7 +48,7 @@ export const transferTokens = async (
     throw new ContractError(`Caller balance is not defined!`);
   }
 
-  if (balances[caller] < qty) {
+  if (!walletHasSufficientBalance(balances, caller, qty)) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
@@ -51,6 +63,5 @@ export const transferTokens = async (
 
   // set balances
   state.balances = balances;
-
   return { state };
 };

@@ -6,6 +6,8 @@ import {
   NETWORK_LEAVING_STATUS,
 } from './constants.js';
 
+// TODO: add InputValidator class that can be extended for specific methods
+
 export type IOState = PstState & {
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to

@@ -10,6 +10,7 @@ const {
   extendRecordSchema,
   increaseUndernameCountSchema,
   joinNetworkSchema,
+  transferTokensSchema,
 } = require('./schemas');
 
 // build our validation source code
@@ -20,6 +21,7 @@ const ajv = new Ajv({
     extendRecordSchema,
     increaseUndernameCountSchema,
     joinNetworkSchema,
+    transferTokensSchema,
   ],
   code: { source: true, esm: true },
   allErrors: true,
@@ -31,6 +33,7 @@ const moduleCode = standaloneCode(ajv, {
   validateExtendRecord: '#/definitions/extendRecord',
   validateIncreaseUndernameCount: '#/definitions/increaseUndernameCount',
   validateJoinNetwork: '#/definitions/joinNetwork',
+  validateTransferToken: '#/definitions/transferTokens',
 });
 
 // Now you can write the module code to file
