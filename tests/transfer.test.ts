@@ -153,7 +153,7 @@ describe('Transfers', () => {
     });
 
     it.each([undefined, 'bad-wallet-address', 100])(
-      'should not be able to transfer to the a bad wallet',
+      'should not be able to transfer to an invalid wallet address',
       async (badWallet) => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const writeInteraction = await contract.writeInteraction({

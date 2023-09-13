@@ -1,5 +1,5 @@
-const transferTokenSchema = {
-  $id: '#/definitions/transferToken',
+const transferTokensSchema = {
+  $id: '#/definitions/transferTokens',
   type: 'object',
   properties: {
     function: {
@@ -20,5 +20,5 @@ const transferTokenSchema = {
 };
 
 module.exports = {
-  transferTokenSchema,
+  transferTokensSchema,
 };
