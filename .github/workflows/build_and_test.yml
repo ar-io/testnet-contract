@@ -6,9 +6,6 @@ on:
     branches-ignore:
       - main
       - develop
-    paths:
-      - src/**
-      - schemas/**
 
 jobs:
   build:

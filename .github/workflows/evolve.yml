@@ -1,4 +1,4 @@
-name: Evolve Contract
+name: Build / Test / Evolve Contract
 
 on:
   workflow_dispatch:
