@@ -30,7 +30,6 @@ declare const ContractError;
 declare const SmartWeave: any;
 
 export class AuctionBid {
-  function: 'submitAuctionBid';
   name: string;
   qty?: number;
   type: 'lease' | 'permabuy';
@@ -129,16 +128,7 @@ export const submitAuctionBid = (
         throw new ContractError(ARNS_NAME_RESERVED_MESSAGE);
       }
 
-      /**
-       * TODO: we may or may not handle premium names
-       * {
-       *     "microsoft": {
-       *          "endTimestamp": today,
-       *          "premium": true, // if premium name - don't delete from reserved and update the endTimestamp and startTimestamp
-       *     },
-       * }
-       */
-
+      // remove the reserved name from state and continue
       delete reserved[name];
       return;
     };
@@ -169,6 +159,7 @@ export const submitAuctionBid = (
   const currentBlockHeight = +SmartWeave.block.height;
   const { decayInterval, decayRate, auctionDuration } = currentAuctionSettings;
 
+  // TODO: add pricing demand factor
   // calculate the standard registration fee
   const registrationFee =
     type === 'lease'
@@ -220,11 +211,7 @@ export const submitAuctionBid = (
     state.balances = balances;
     state.records = records;
     state.reserved = reserved;
-    return { state };
-  }
-
-  // current auction in the state, validate the bid and update state
-  if (auctions[name]) {
+  } else if (auctions[name]) {
     const existingAuction = auctions[name];
     const auctionEndHeight = existingAuction.startHeight + auctionDuration;
     const endTimestamp =
@@ -342,11 +329,8 @@ export const submitAuctionBid = (
     state.balances = balances;
     state.records = records;
     state.reserved = reserved;
-    return { state };
   }
 
-  // no auction - just return
-  return {
-    state,
-  };
+  // return updated state
+  return { state };
 };

@@ -2,7 +2,6 @@ import {
   ARNS_NAME_IN_AUCTION_MESSAGE,
   ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_UNDERNAME_COUNT,
-  INVALID_INPUT_MESSAGE,
   INVALID_SHORT_NAME,
   INVALID_YEARS_MESSAGE,
   MAX_YEARS,
@@ -18,6 +17,7 @@ import {
   calculatePermabuyFee,
   calculateTotalRegistrationFee,
   getInvalidAjvMessage,
+  walletHasSufficientBalance,
 } from '../../utilities';
 // composed by ajv at build
 import { validateBuyRecord } from '../../validations.mjs';
@@ -27,7 +27,6 @@ declare const ContractError;
 declare const SmartWeave: any;
 
 export class BuyRecord {
-  function = 'buyRecord';
   name: string;
   contractTxId: string;
   years: number;
@@ -93,9 +92,6 @@ export const buyRecord = (
     throw new ContractError(INVALID_YEARS_MESSAGE);
   }
 
-  // TODO: do we have a premium multiplier?
-  // price them as a 2 char multiplier
-
   if (reserved[name]) {
     const { target, endTimestamp: reservedEndTimestamp } = reserved[name];
 
@@ -140,6 +136,8 @@ export const buyRecord = (
   // set the end lease period for this based on number of years if it's a lease
   const endTimestamp =
     type === 'lease' ? currentBlockTime + SECONDS_IN_A_YEAR * years : undefined;
+
+  // TODO: add dynamic pricing
   // calculate the total fee (initial registration + annual)
   const totalRegistrationFee =
     type === 'lease'
@@ -151,7 +149,7 @@ export const buyRecord = (
         )
       : calculatePermabuyFee(name, fees, +SmartWeave.block.timestamp);
 
-  if (balances[caller] < totalRegistrationFee) {
+  if (!walletHasSufficientBalance(balances, caller, totalRegistrationFee)) {
     throw new ContractError(
       `Caller balance not high enough to purchase this name for ${totalRegistrationFee} token(s)!`,
     );
@@ -173,7 +171,7 @@ export const buyRecord = (
     }
   }
 
-  // TODO: replace with protocol balance -
+  // TODO: replace with protocol balance
   balances[caller] -= totalRegistrationFee;
   balances[owner] += totalRegistrationFee;
 
@@ -190,7 +188,5 @@ export const buyRecord = (
   state.records = records;
   state.reserved = reserved;
   state.balances = balances;
-
-  // T
   return { state };
 };

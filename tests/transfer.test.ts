@@ -4,6 +4,7 @@ import { IOState } from '../src/types';
 import { arweave, warp } from './setup.jest';
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
+  INVALID_INPUT_MESSAGE,
   INVALID_TARGET_MESSAGE,
   TRANSFER_QTY,
 } from './utils/constants';
@@ -25,7 +26,7 @@ describe('Transfers', () => {
       contract = warp.pst(srcContractId).connect(owner);
     });
 
-    it('should be able to transfer tokens to existing wallet', async () => {
+    it('should be able to transfer tokens to an existing wallet', async () => {
       const existingWallet = getLocalWallet(1);
       const ownerAddress = await arweave.wallets.getAddress(owner);
       const { cachedValue: prevCachedValue } = await contract.readState();
@@ -53,14 +54,10 @@ describe('Transfers', () => {
       );
     });
 
-    it('should not be able to transfer more than wallet balance', async () => {
+    it('should not be able to transfer more tokens than a wallets balance', async () => {
       const existingWallet = getLocalWallet(1);
-      const ownerAddress = await arweave.wallets.getAddress(owner);
       const { cachedValue: prevCachedValue } = await contract.readState();
-      const prevState = prevCachedValue.state as IOState;
-      const prevOwnerBalance = prevState.balances[ownerAddress];
       const targetAddress = await arweave.wallets.getAddress(existingWallet);
-      const prevTargetBalance = prevState.balances[targetAddress];
       const writeInteraction = await contract.writeInteraction({
         function: 'transfer',
         target: targetAddress,
@@ -69,22 +66,18 @@ describe('Transfers', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
-      const newState = newCachedValue.state as IOState;
       expect(Object.keys(newCachedValue.errorMessages)).toContain(
         writeInteraction!.originalTxId,
       );
       expect(
         newCachedValue.errorMessages[writeInteraction!.originalTxId],
       ).toEqual(INSUFFICIENT_FUNDS_MESSAGE);
-      expect(newState.balances[ownerAddress]).toEqual(prevOwnerBalance);
-      expect(newState.balances[targetAddress]).toEqual(prevTargetBalance);
+      expect(newCachedValue.state).toEqual(prevCachedValue.state);
     });
 
-    it('should not be able to transfer to the same wallet', async () => {
+    it('should not be able to transfer tokens to the same wallet', async () => {
       const ownerAddress = await arweave.wallets.getAddress(owner);
       const { cachedValue: prevCachedValue } = await contract.readState();
-      const prevState = prevCachedValue.state as IOState;
-      const prevOwnerBalance = prevState.balances[ownerAddress];
       const writeInteraction = await contract.writeInteraction({
         function: 'transfer',
         target: ownerAddress,
@@ -93,15 +86,36 @@ describe('Transfers', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
-      const newState = newCachedValue.state as IOState;
       expect(Object.keys(newCachedValue.errorMessages)).toContain(
         writeInteraction!.originalTxId,
       );
       expect(
         newCachedValue.errorMessages[writeInteraction!.originalTxId],
       ).toEqual(INVALID_TARGET_MESSAGE);
-      expect(newState.balances[ownerAddress]).toEqual(prevOwnerBalance);
+      expect(newCachedValue.state).toEqual(prevCachedValue.state);
     });
+
+    it.each([undefined, 'bad-wallet-address', 100])(
+      'should not be able to transfer tokens to an invalid wallet address',
+      async (badWallet) => {
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const writeInteraction = await contract.writeInteraction({
+          function: 'transfer',
+          target: badWallet,
+          qty: TRANSFER_QTY,
+        });
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue: newCachedValue } = await contract.readState();
+        expect(Object.keys(newCachedValue.errorMessages)).toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(
+          newCachedValue.errorMessages[writeInteraction!.originalTxId],
+        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
+        expect(newCachedValue.state).toEqual(prevCachedValue.state);
+      },
+    );
   });
 
   describe('non-contract owner', () => {
@@ -112,7 +126,7 @@ describe('Transfers', () => {
       contract = warp.pst(srcContractId).connect(nonContractOwner);
     });
 
-    it('should be able to transfer tokens to existing wallet', async () => {
+    it('should be able to transfer tokens to an existing wallet', async () => {
       const existingWallet = getLocalWallet(0);
       const callerAddress = await arweave.wallets.getAddress(nonContractOwner);
       const { cachedValue: prevCachedValue } = await contract.readState();
@@ -140,11 +154,9 @@ describe('Transfers', () => {
       );
     });
 
-    it('should not be able to transfer to the same wallet', async () => {
+    it('should not be able to transfer tokens to the same wallet', async () => {
       const callerAddress = await arweave.wallets.getAddress(nonContractOwner);
       const { cachedValue: prevCachedValue } = await contract.readState();
-      const prevState = prevCachedValue.state as IOState;
-      const prevOwnerBalance = prevState.balances[callerAddress];
       const writeInteraction = await contract.writeInteraction({
         function: 'transfer',
         target: callerAddress,
@@ -153,14 +165,35 @@ describe('Transfers', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
-      const newState = newCachedValue.state as IOState;
       expect(Object.keys(newCachedValue.errorMessages)).toContain(
         writeInteraction!.originalTxId,
       );
       expect(
         newCachedValue.errorMessages[writeInteraction!.originalTxId],
       ).toEqual(INVALID_TARGET_MESSAGE);
-      expect(newState.balances[callerAddress]).toEqual(prevOwnerBalance);
+      expect(newCachedValue.state).toEqual(prevCachedValue.state);
     });
+
+    it.each([undefined, 'bad-wallet-address', 100])(
+      'should not be able to transfer tokens to an invalid wallet address',
+      async (badWallet) => {
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const writeInteraction = await contract.writeInteraction({
+          function: 'transfer',
+          target: badWallet,
+          qty: TRANSFER_QTY,
+        });
+
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue: newCachedValue } = await contract.readState();
+        expect(Object.keys(newCachedValue.errorMessages)).toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(
+          newCachedValue.errorMessages[writeInteraction!.originalTxId],
+        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
+        expect(newCachedValue.state).toEqual(prevCachedValue.state);
+      },
+    );
   });
 });
