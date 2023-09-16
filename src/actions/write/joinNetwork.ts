@@ -72,13 +72,7 @@ export const joinNetwork = async (
   state.balances[caller] -= qty;
   state.gateways[caller] = {
     operatorStake: qty,
-    vaults: [
-      {
-        balance: qty,
-        start: +SmartWeave.block.height,
-        end: 0,
-      },
-    ],
+    vaults: [],
     settings: {
       ...gatewaySettings,
     },
