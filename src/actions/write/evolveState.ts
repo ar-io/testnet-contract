@@ -15,9 +15,13 @@ export const evolveState = async (
     throw new ContractError(NON_CONTRACT_OWNER_MESSAGE);
   }
 
+  // An amount to airdrop to gateway testnet operators
+  const airdrop = 3000;
   // Set each gateway to have an empty array of vaults
   for (const address in state.gateways) {
     state.gateways[address].vaults = [];
+    state.balances[address] += airdrop; // Give each gateway operator an unlocked airdrop from owner wallet
+    state.balances[owner] -= airdrop; // Reduce amount from the owner wallet
   }
 
   // Update Gateway Address Registry settings
