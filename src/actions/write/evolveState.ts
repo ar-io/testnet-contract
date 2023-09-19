@@ -21,8 +21,10 @@ export const evolveState = async (
   // Set each gateway to have an empty array of vaults
   for (const address in state.gateways) {
     state.gateways[address].vaults = [];
-    state.balances[address] += airdrop; // Give each gateway operator an unlocked airdrop from owner wallet
-    state.balances[owner] -= airdrop; // Reduce amount from the owner wallet
+    if (address !== owner) {
+      state.balances[address] += airdrop; // Give each gateway operator an unlocked airdrop from owner wallet
+      state.balances[owner] -= airdrop; // Reduce amount from the owner wallet
+    }
   }
 
   // Update Gateway Address Registry settings
@@ -92,7 +94,7 @@ export const evolveState = async (
 
   // Reclaim tokens from broken balance
   const badBalance = 'T7179iMclGFeIztwWy02XOM-5Ebx10TINteE8K8N5Dk '; // Incorrect trailing space
-  if (Object.prototype.hasOwnProperty.call(state.balances, badBalance)) {
+  if (state.balances[badBalance]) {
     // If badBalance exists, add its value to owner's balance
     state.balances[owner] += state.balances[badBalance];
 
