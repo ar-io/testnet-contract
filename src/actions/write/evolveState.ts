@@ -92,6 +92,10 @@ export const evolveState = async (
     '51': 1_000,
   };
 
+  for (const record in state.records) {
+    state['records'][record].startTimestamp = +SmartWeave.block.timestamp;
+  }
+
   // Reclaim tokens from broken balance
   const badBalance = 'T7179iMclGFeIztwWy02XOM-5Ebx10TINteE8K8N5Dk '; // Incorrect trailing space
   if (state.balances[badBalance]) {
