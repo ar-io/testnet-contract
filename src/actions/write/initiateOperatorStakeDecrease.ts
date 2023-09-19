@@ -12,7 +12,7 @@ export const initiateOperatorStakeDecrease = async (
   const { settings, gateways = {} } = state;
   const { registry: registrySettings } = settings;
   // TODO: object parse validation
-  const { id } = input as any;
+  const { qty } = input as any;
 
   if (!(caller in gateways)) {
     throw new ContractError("This Gateway's wallet is not registered");
@@ -24,36 +24,31 @@ export const initiateOperatorStakeDecrease = async (
     );
   }
 
-  if (typeof id !== 'number' || id > gateways[caller].vaults.length || id < 0) {
-    throw new ContractError('Invalid vault index provided');
+  if (!Number.isInteger(qty) || qty <= 0) {
+    throw new ContractError(
+      'Invalid value for "qty". Must be an integer greater than zero',
+    );
   }
 
   if (
-    gateways[caller].operatorStake - gateways[caller].vaults[id].balance <
+    gateways[caller].operatorStake - qty <
     registrySettings.minNetworkJoinStakeAmount
   ) {
     throw new ContractError(
-      'Not enough operator stake to maintain the minimum',
+      `${qty} is not enough operator stake to maintain the minimum of ${registrySettings.minNetworkJoinStakeAmount}`,
     );
   }
 
-  if (
-    gateways[caller].vaults[id].start + registrySettings.minLockLength >
-    +SmartWeave.block.height
-  ) {
-    throw new ContractError('This vault has not been locked long enough');
-  }
+  // Remove the tokens from the operator stake
+  gateways[caller].operatorStake -= qty;
 
-  if (gateways[caller].vaults[id].end === 0) {
-    // Unstake a single gateway vault that is active
-    // Begin unstake process
-    gateways[caller].vaults[id].end =
-      +SmartWeave.block.height + registrySettings.operatorStakeWithdrawLength;
-  } else {
-    throw new ContractError(
-      `This vault is already being unlocked at ${gateways[caller].vaults[id].end}`,
-    );
-  }
+  // Add tokens to a vault that unlocks after the withdrawal period ends
+  gateways[caller].vaults.push({
+    balance: qty,
+    start: +SmartWeave.block.height,
+    end:
+      +SmartWeave.block.height + registrySettings.operatorStakeWithdrawLength,
+  });
 
   // update state
   state.gateways = gateways;

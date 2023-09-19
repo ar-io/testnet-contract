@@ -45,10 +45,5 @@ export const increaseOperatorStake = async (
 
   state.balances[caller] -= qty;
   state.gateways[caller].operatorStake += qty;
-  state.gateways[caller].vaults.push({
-    balance: qty,
-    start: +SmartWeave.block.height,
-    end: 0,
-  });
   return { state };
 };

@@ -29,21 +29,18 @@ export const initiateLeave = async (
     throw new ContractError('This Gateway has not been joined long enough');
   }
 
-  const gatewayLeaveHeight =
-    +SmartWeave.block.height + settings.gatewayLeaveLength;
+  // Add tokens to a vault that unlocks after the withdrawal period ends
+  gateways[caller].vaults.push({
+    balance: gateways[caller].operatorStake,
+    start: +SmartWeave.block.height,
+    end: +SmartWeave.block.height + settings.gatewayLeaveLength,
+  });
 
-  // set all the vault end dates
-  const vaults = gateways[caller].vaults;
-  for (const vault of vaults) {
-    // move up any exiting vaults to end when leaving the network
-    if (vault.end === 0 || vault.end > gatewayLeaveHeight) {
-      vault.end = gatewayLeaveHeight;
-    }
-  }
+  // Remove all tokens from the operator's stake
+  gateways[caller].operatorStake = 0;
 
   // Begin leave process by setting end dates to all vaults and the gateway status to leaving network
-  gateways[caller].vaults = vaults;
-  gateways[caller].end = gatewayLeaveHeight;
+  gateways[caller].end = +SmartWeave.block.height + settings.gatewayLeaveLength;
   gateways[caller].status = NETWORK_LEAVING_STATUS;
 
   // set state
