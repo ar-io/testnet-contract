@@ -11,7 +11,7 @@ export const finalizeOperatorStakeDecrease = async (
   const { gateways = {}, balances } = state;
 
   if (!(target in gateways)) {
-    throw new ContractError("This Gateway's wallet is not registered");
+    throw new ContractError('This target is not a registered gateway');
   }
 
   // Finish unstake process for any ended gateway operator vaults and return tokens
@@ -20,14 +20,13 @@ export const finalizeOperatorStakeDecrease = async (
   for (const vault of vaults) {
     if (vault.end !== 0 && vault.end <= +SmartWeave.block.height) {
       balances[target] = (balances[target] ?? 0) + vault.balance;
-      gateways[target].operatorStake -= vault.balance;
-      continue;
+    } else {
+      remainingVaults.push(vault);
     }
-    remainingVaults.push(vault);
   }
 
-  // update vaults
-  gateways[caller].vaults = remainingVaults;
+  // update vaults with only the vaults that havent been unlocked
+  gateways[target].vaults = remainingVaults;
 
   // update state
   state.balances = balances;
