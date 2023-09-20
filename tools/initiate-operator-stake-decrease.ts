@@ -10,8 +10,8 @@ import { keyfile } from './constants';
 // The staked tokens will be returned after the withdrawal period has elapsed
 // Only the gateway's wallet owner is authorized to adjust these settings
 (async () => {
-  // the ID of the staked vault that is to be unlocked and decreased
-  const id = 1;
+  // the amount of tokens that are to be withdrawn from the gateway's stake
+  const qty = 1000;
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
@@ -46,7 +46,7 @@ import { keyfile } from './constants';
   const txId = await pst.writeInteraction(
     {
       function: 'initiateOperatorStakeDecrease',
-      id,
+      qty,
     },
     {
       disableBundling: true,
@@ -54,6 +54,6 @@ import { keyfile } from './constants';
   );
 
   console.log(
-    `${walletAddress} successfully submitted request to initiate decreasing gateway stake with TX id: ${txId}`,
+    `${walletAddress} successfully submitted request to initiate decreasing gateway stake with TX id: ${txId?.originalTxId}`,
   );
 })();
