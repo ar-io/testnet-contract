@@ -1,14 +1,11 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import path from 'path';
-import {
-  LoggerFactory,
-  WarpFactory,
-  defaultCacheOptions,
-} from 'warp-contracts';
+import { LoggerFactory } from 'warp-contracts';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 import { keyfile } from './constants';
+import { warp } from './utilities';
 
 // ~~ Initialize `LoggerFactory` ~~
 LoggerFactory.INST.logLevel('none');
@@ -26,15 +23,10 @@ LoggerFactory.INST.logLevel('none');
     'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // ~~ Initialize SmartWeave ~~
-  const warp = WarpFactory.forMainnet(
-    {
-      ...defaultCacheOptions,
-    },
-    true,
-  ).use(new DeployPlugin());
+  const warpWithDeploy = warp.use(new DeployPlugin());
 
   // Read the ArNS Registry Contract
-  const contract = warp.pst(arnsContractTxId);
+  const contract = warpWithDeploy.pst(arnsContractTxId);
   contract.connect(wallet);
 
   // ~~ Read contract source and initial state files ~~
@@ -44,12 +36,12 @@ LoggerFactory.INST.logLevel('none');
   );
 
   // Create the evolved source code tx
-  const evolveSrcTx = await warp.createSource(
+  const evolveSrcTx = await warpWithDeploy.createSource(
     { src: newLocalSourceCodeJS },
     wallet,
     true,
   );
-  const evolveSrcTxId = await warp.saveSource(evolveSrcTx, true);
+  const evolveSrcTxId = await warpWithDeploy.saveSource(evolveSrcTx, true);
   if (evolveSrcTxId === null) {
     return 0;
   }

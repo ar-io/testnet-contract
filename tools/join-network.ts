@@ -1,4 +1,3 @@
-import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import {
@@ -8,6 +7,7 @@ import {
 } from 'warp-contracts';
 
 import { keyfile } from './constants';
+import { arweave, getContractManifest, warp } from './utilities';
 
 LoggerFactory.INST.logLevel('error');
 
@@ -47,28 +47,21 @@ LoggerFactory.INST.logLevel('error');
     process.env.ARNS_CONTRACT_TX_ID ??
     'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
-  // Initialize Arweave
-  const arweave = Arweave.init({
-    host: 'ar-io.dev',
-    port: 443,
-    protocol: 'https',
-  });
-
-  const warp = WarpFactory.forMainnet(
-    {
-      ...defaultCacheOptions,
-    },
-    true,
-  );
-
   // wallet address
   const walletAddress = await arweave.wallets.getAddress(wallet);
 
-  // Read the ANT Registry Contract
-  const pst = warp.pst(arnsContractTxId).connect(wallet);
+  // get contract manifest
+  const { evaluationOptions = {} } = await getContractManifest({
+    contractTxId: arnsContractTxId,
+  });
+
+  // Read the ArNS Registry Contract
+  const contract = warp
+    .pst(arnsContractTxId)
+    .setEvaluationOptions(evaluationOptions);
 
   console.log('Connected to contract with wallet: %s', walletAddress);
-  const txId = await pst.writeInteraction(
+  const txId = await contract.writeInteraction(
     {
       function: 'joinNetwork',
       qty,

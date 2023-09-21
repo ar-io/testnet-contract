@@ -1,26 +1,36 @@
-import axios, { AxiosResponse } from 'axios';
-import axiosRetry, { exponentialDelay } from 'axios-retry';
-
-declare const ContractError: any;
+import Arweave from 'arweave';
+import { Tag } from 'arweave/node/lib/transaction';
+import {
+  EvaluationManifest,
+  WarpFactory,
+  defaultCacheOptions,
+} from 'warp-contracts';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 export function isArweaveAddress(address: string) {
   const trimmedAddress = address.toString().trim();
-  if (!/[a-z0-9_-]{43}/i.test(trimmedAddress)) {
-    throw new ContractError('Invalid Arweave address.');
-  }
-  return trimmedAddress;
+  return !/[a-z0-9_-]{43}/i.test(trimmedAddress);
 }
 
 export function isipV4Address(ipV4Address: string) {
-  if (
-    /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
-      ipV4Address,
-    )
-  ) {
-    return true;
-  }
-  return false;
+  return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
+    ipV4Address,
+  );
 }
+
+export const arweave = new Arweave({
+  host: 'ar-io.dev',
+  port: 443,
+  protocol: 'https',
+});
+
+export const warp = WarpFactory.forMainnet(
+  {
+    ...defaultCacheOptions,
+  },
+  true,
+  arweave,
+).use(new DeployPlugin());
 
 export function getTotalSupply(state: any) {
   let totalSupply = 0;
@@ -28,4 +38,30 @@ export function getTotalSupply(state: any) {
     totalSupply += state.balances[key];
   }
   return totalSupply;
+}
+
+const defaultArweave = arweave;
+export async function getContractManifest({
+  arweave = defaultArweave,
+  contractTxId,
+}: {
+  arweave?: Arweave;
+  contractTxId: string;
+}): Promise<EvaluationManifest> {
+  const { tags: encodedTags } = await arweave.transactions.get(contractTxId);
+  const decodedTags = tagsToObject(encodedTags);
+  const contractManifestString = decodedTags['Contract-Manifest'] ?? '{}';
+  const contractManifest = JSON.parse(contractManifestString);
+  return contractManifest;
+}
+
+export function tagsToObject(tags: Tag[]): {
+  [x: string]: string;
+} {
+  return tags.reduce((decodedTags: { [x: string]: string }, tag) => {
+    const key = tag.get('name', { decode: true, string: true });
+    const value = tag.get('value', { decode: true, string: true });
+    decodedTags[key] = value;
+    return decodedTags;
+  }, {});
 }

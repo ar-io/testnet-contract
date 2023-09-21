@@ -1,4 +1,9 @@
-import { LoggerFactory, WarpFactory } from 'warp-contracts';
+import { LoggerFactory } from 'warp-contracts';
+
+import { getContractManifest, warp } from './utilities';
+
+// ~~ Initialize `LoggerFactory` ~~
+LoggerFactory.INST.logLevel('fatal');
 
 /* eslint-disable no-console */
 (async () => {
@@ -7,15 +12,16 @@ import { LoggerFactory, WarpFactory } from 'warp-contracts';
     process.env.ARNS_CONTRACT_TX_ID ??
     'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
-  // ~~ Initialize `LoggerFactory` ~~
-  LoggerFactory.INST.logLevel('fatal');
-
-  // ~~ Initialize SmartWeave ~~
-  const warp = WarpFactory.forMainnet();
+  // get contract manifest
+  const { evaluationOptions = {} } = await getContractManifest({
+    contractTxId,
+  });
 
   // Read the ArNS Registry Contract
-  const pst = warp.pst(contractTxId);
-  const state = await pst.readState();
+  const contract = warp
+    .pst(contractTxId)
+    .setEvaluationOptions(evaluationOptions);
+  const state = await contract.readState();
 
   console.log(JSON.stringify(state, null, 2));
 })();
