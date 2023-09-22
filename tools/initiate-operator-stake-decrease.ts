@@ -1,17 +1,19 @@
-import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
-import { WarpFactory, defaultCacheOptions } from 'warp-contracts';
 
 import { keyfile } from './constants';
+import { arweave, getContractManifest, initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
 // This script will initiate decreasing a gateway operator's stake
 // The staked tokens will be returned after the withdrawal period has elapsed
 // Only the gateway's wallet owner is authorized to adjust these settings
 (async () => {
-  // the amount of tokens that are to be withdrawn from the gateway's stake
-  const qty = 1000;
+  // simple setup script
+  initialize();
+
+  // the qty of the staked vault that is to be unlocked and decreased
+  const qty = 1;
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
@@ -23,25 +25,19 @@ import { keyfile } from './constants';
     process.env.ARNS_CONTRACT_TX_ID ??
     'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
-  // Initialize Arweave
-  const arweave = Arweave.init({
-    host: 'arweave.net',
-    port: 443,
-    protocol: 'https',
-  });
-
-  const warp = WarpFactory.forMainnet(
-    {
-      ...defaultCacheOptions,
-    },
-    true,
-  );
-
   // wallet address
   const walletAddress = await arweave.wallets.getAddress(wallet);
 
+  // get contract manifest
+  const { evaluationOptions = {} } = await getContractManifest({
+    contractTxId: arnsContractTxId,
+  });
+
   // Read the ANT Registry Contract
-  const pst = warp.pst(arnsContractTxId).connect(wallet);
+  const pst = warp
+    .pst(arnsContractTxId)
+    .connect(wallet)
+    .setEvaluationOptions(evaluationOptions);
 
   const txId = await pst.writeInteraction(
     {

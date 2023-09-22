@@ -23,6 +23,7 @@
     "arweave": "^1.13.7",
     "axios": "^0.26.0",
     "axios-retry": "^3.2.4",
+    "dotenv": "^16.3.1",
     "esbuild": "^0.17.12",
     "eslint": "^6.7.2",
     "eslint-plugin-jest-formatting": "^3.1.0",

@@ -1,16 +1,14 @@
-import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
-import {
-  LoggerFactory,
-  WarpFactory,
-  defaultCacheOptions,
-} from 'warp-contracts';
 
 import { keyfile } from './constants';
+import { arweave, getContractManifest, initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
+  // simple setup script
+  initialize();
+
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // The recipient target of the token transfer
   const target = '1H7WZIWhzwTH9FIcnuMqYkTsoyv1OTfGa_amvuYwrgo';
@@ -27,25 +25,6 @@ import { keyfile } from './constants';
     process.env.ARNS_CONTRACT_TX_ID ??
     'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
-  // Initialize Arweave
-  const arweave = Arweave.init({
-    host: 'ar-io.dev',
-    port: 443,
-    protocol: 'https',
-  });
-
-  // Initialize `LoggerFactory`
-  LoggerFactory.INST.logLevel('error');
-
-  // ~~ Initialize SmartWeave ~~
-  const warp = WarpFactory.forMainnet(
-    {
-      ...defaultCacheOptions,
-      inMemory: true,
-    },
-    true,
-  );
-
   const walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
   // Read the ANT Registry Contract
@@ -55,9 +34,16 @@ import { keyfile } from './constants';
     walletAddress,
     target,
   );
-  const pst = warp.pst(arnsContractTxId);
-  pst.connect(wallet);
-  await pst.transfer(
+  // get contract manifest
+  const { evaluationOptions = {} } = await getContractManifest({
+    contractTxId: arnsContractTxId,
+  });
+
+  // Read the ANT Registry Contract
+  const contract = warp.pst(arnsContractTxId);
+  contract.connect(wallet).setEvaluationOptions(evaluationOptions);
+
+  await contract.transfer(
     {
       target,
       qty,

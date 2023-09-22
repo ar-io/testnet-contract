@@ -1,15 +1,13 @@
-import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
-import {
-  LoggerFactory,
-  WarpFactory,
-  defaultCacheOptions,
-} from 'warp-contracts';
 
 import { keyfile } from './constants';
+import { getContractManifest, initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
+  // simple setup script
+  initialize();
+
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // This is the name that will be purchased in the Arweave Name System Registry
   const nameToBuy = process.env.ARNS_NAME ?? 'a-test-name';
@@ -32,24 +30,19 @@ import { keyfile } from './constants';
     process.env.ARNS_CONTRACT_TX_ID ??
     'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
 
-  // Initialize `LoggerFactory`
-  LoggerFactory.INST.logLevel('error');
-
-  // ~~ Initialize SmartWeave ~~
-  const warp = WarpFactory.forMainnet(
-    {
-      ...defaultCacheOptions,
-      inMemory: true,
-    },
-    true, // use arweave gateway for L1 transactions
-  );
+  // get contract manifest
+  const { evaluationOptions = {} } = await getContractManifest({
+    contractTxId: arnsContractTxId,
+  });
 
   // Read the ANT Registry Contract
-  const pst = warp.pst(arnsContractTxId);
-  pst.connect(wallet);
+  const contract = warp
+    .pst(arnsContractTxId)
+    .setEvaluationOptions(evaluationOptions);
+  contract.connect(wallet);
 
   // check if this name exists in the registry, if not exit the script.
-  const currentState = await pst.currentState();
+  const currentState = await contract.readState();
   const currentStateString = JSON.stringify(currentState);
   const currentStateJSON = JSON.parse(currentStateString);
   if (currentStateJSON.records[nameToBuy] !== undefined) {
@@ -66,7 +59,7 @@ import { keyfile } from './constants';
     nameToBuy,
     contractTxId,
   );
-  const recordTxId = await pst.writeInteraction(
+  const recordTxId = await contract.writeInteraction(
     {
       function: 'buyRecord',
       name: nameToBuy,

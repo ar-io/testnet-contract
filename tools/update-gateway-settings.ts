@@ -1,14 +1,15 @@
-import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
-import { WarpFactory, defaultCacheOptions } from 'warp-contracts';
 
 import { keyfile } from './constants';
+import { arweave, getContractManifest, initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
-// This script will update the settings for a gateway that is alreadyjoined to the network
+// This script will update the settings for a gateway that is already joined to the network
 // Only the gateway's wallet owner is authorized to adjust these settings
 (async () => {
+  initialize();
+
   // the friendly label for this gateway
   const label = 'Test Gateway';
 
@@ -38,28 +39,22 @@ import { keyfile } from './constants';
     process.env.ARNS_CONTRACT_TX_ID ??
     'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
-  // Initialize Arweave
-  const arweave = Arweave.init({
-    host: 'ar-io.dev',
-    port: 443,
-    protocol: 'https',
-  });
-
-  const warp = WarpFactory.forMainnet(
-    {
-      ...defaultCacheOptions,
-    },
-    true,
-  );
-
   // wallet address
   const walletAddress = await arweave.wallets.getAddress(wallet);
 
+  // get contract manifest
+  const { evaluationOptions = {} } = await getContractManifest({
+    contractTxId: arnsContractTxId,
+  });
+
   // Read the ANT Registry Contract
-  const pst = warp.pst(arnsContractTxId).connect(wallet);
+  const contract = warp
+    .pst(arnsContractTxId)
+    .connect(wallet)
+    .setEvaluationOptions(evaluationOptions);
 
   // Include any settings as needed below
-  const writeInteraction = await pst.writeInteraction(
+  const writeInteraction = await contract.writeInteraction(
     {
       function: 'updateGatewaySettings',
       label,
