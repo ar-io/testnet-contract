@@ -1,18 +1,29 @@
 import Arweave from 'arweave';
 import { Tag } from 'arweave/node/lib/transaction';
+import { config } from 'dotenv';
 import {
   EvaluationManifest,
+  LoggerFactory,
   WarpFactory,
   defaultCacheOptions,
 } from 'warp-contracts';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
-export function isArweaveAddress(address: string) {
+// intended to be run before any scripts
+export const initialize = (): void => {
+  // load environment variables
+  config();
+
+  // Initialize `LoggerFactory`
+  LoggerFactory.INST.logLevel('error');
+};
+
+export function isArweaveAddress(address: string): boolean {
   const trimmedAddress = address.toString().trim();
   return !/[a-z0-9_-]{43}/i.test(trimmedAddress);
 }
 
-export function isipV4Address(ipV4Address: string) {
+export function isipV4Address(ipV4Address: string): boolean {
   return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
     ipV4Address,
   );
@@ -32,7 +43,7 @@ export const warp = WarpFactory.forMainnet(
   arweave,
 ).use(new DeployPlugin());
 
-export function getTotalSupply(state: any) {
+export function getTotalSupply(state: any): number {
   let totalSupply = 0;
   for (const key of Object.keys(state.balances)) {
     totalSupply += state.balances[key];

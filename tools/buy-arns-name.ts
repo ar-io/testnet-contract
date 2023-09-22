@@ -1,14 +1,13 @@
 import * as fs from 'fs';
-import { LoggerFactory } from 'warp-contracts';
 
 import { keyfile } from './constants';
-import { getContractManifest, warp } from './utilities';
-
-// Initialize `LoggerFactory`
-LoggerFactory.INST.logLevel('error');
+import { getContractManifest, initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
+  // simple setup script
+  initialize();
+
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // This is the name that will be purchased in the Arweave Name System Registry
   const nameToBuy = process.env.ARNS_NAME ?? 'a-test-name';

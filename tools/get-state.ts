@@ -1,12 +1,10 @@
-import { LoggerFactory } from 'warp-contracts';
-
-import { getContractManifest, warp } from './utilities';
-
-// ~~ Initialize `LoggerFactory` ~~
-LoggerFactory.INST.logLevel('fatal');
+import { getContractManifest, initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
+  // simple setup script
+  initialize();
+
   // This is the mainnet ArNS Registry Smartweave Contract TX ID
   const contractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??

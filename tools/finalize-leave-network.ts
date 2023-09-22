@@ -1,14 +1,16 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
-import { WarpFactory, defaultCacheOptions } from 'warp-contracts';
 
 import { keyfile } from './constants';
-import { arweave, getContractManifest, warp } from './utilities';
+import { arweave, getContractManifest, initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
 // This script will finalize the leave network protocol and remove the gateway from the registry
 // The gateway's wallet owner or any other user is authorized to finalize the leave network request
 (async () => {
+  // simple setup script
+  initialize();
+
   // load local wallet
   const wallet: JWKInterface = JSON.parse(
     process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),

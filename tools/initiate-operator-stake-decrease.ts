@@ -1,16 +1,17 @@
-import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
-import { WarpFactory, defaultCacheOptions } from 'warp-contracts';
 
 import { keyfile } from './constants';
-import { arweave, getContractManifest, warp } from './utilities';
+import { arweave, getContractManifest, initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
 // This script will initiate decreasing a gateway operator's stake
 // The staked tokens will be returned after the withdrawal period has elapsed
 // Only the gateway's wallet owner is authorized to adjust these settings
 (async () => {
+  // simple setup script
+  initialize();
+
   // the qty of the staked vault that is to be unlocked and decreased
   const qty = 1;
 

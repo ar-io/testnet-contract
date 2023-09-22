@@ -1,16 +1,14 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
-import {
-  LoggerFactory,
-  WarpFactory,
-  defaultCacheOptions,
-} from 'warp-contracts';
 
 import { keyfile } from './constants';
-import { arweave, getContractManifest, warp } from './utilities';
+import { arweave, getContractManifest, initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
+  // simple setup script
+  initialize();
+
   //~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATE THE BELOW~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // The recipient target of the token transfer
   const target = '1H7WZIWhzwTH9FIcnuMqYkTsoyv1OTfGa_amvuYwrgo';
@@ -26,9 +24,6 @@ import { arweave, getContractManifest, warp } from './utilities';
   const arnsContractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
     'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
-
-  // Initialize `LoggerFactory`
-  LoggerFactory.INST.logLevel('error');
 
   const walletAddress = await arweave.wallets.jwkToAddress(wallet);
 

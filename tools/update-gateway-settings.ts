@@ -1,14 +1,15 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
-import { WarpFactory, defaultCacheOptions } from 'warp-contracts';
 
 import { keyfile } from './constants';
-import { arweave, getContractManifest, warp } from './utilities';
+import { arweave, getContractManifest, initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
-// This script will update the settings for a gateway that is alreadyjoined to the network
+// This script will update the settings for a gateway that is already joined to the network
 // Only the gateway's wallet owner is authorized to adjust these settings
 (async () => {
+  initialize();
+
   // the friendly label for this gateway
   const label = 'Test Gateway';
 

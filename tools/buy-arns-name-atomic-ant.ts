@@ -3,10 +3,12 @@ import * as fs from 'fs';
 import { Tag } from 'warp-contracts';
 
 import { keyfile } from './constants';
-import { arweave, warp } from './utilities';
+import { arweave, initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
+  // simple setup script
+  initialize();
   // the name to buy
   const domainName = 'atomic-ant-10';
   // source code tx for ANT (must be in approved list)

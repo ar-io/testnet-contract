@@ -5,13 +5,16 @@ import { LoggerFactory } from 'warp-contracts';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 import { keyfile } from './constants';
-import { warp } from './utilities';
-
-// ~~ Initialize `LoggerFactory` ~~
-LoggerFactory.INST.logLevel('none');
+import { initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
+  // simple setup script
+  initialize();
+
+  // override log settings
+  LoggerFactory.INST.logLevel('none');
+
   // load local wallet
   const wallet: JWKInterface = JSON.parse(
     process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),

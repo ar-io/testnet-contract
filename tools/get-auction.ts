@@ -1,13 +1,10 @@
-import {
-  LoggerFactory,
-  WarpFactory,
-  defaultCacheOptions,
-} from 'warp-contracts';
-
-import { getContractManifest, warp } from './utilities';
+import { getContractManifest, initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
+  // simple setup script
+  initialize();
+
   // the name of the auction to get
   const auctionName = 'test-auction-name';
 
@@ -15,8 +12,6 @@ import { getContractManifest, warp } from './utilities';
   const contractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
     'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
-
-  LoggerFactory.INST.logLevel('error');
 
   // get contract manifest
   const { evaluationOptions = {} } = await getContractManifest({

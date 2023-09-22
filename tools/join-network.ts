@@ -7,15 +7,16 @@ import {
 } from 'warp-contracts';
 
 import { keyfile } from './constants';
-import { arweave, getContractManifest, warp } from './utilities';
-
-LoggerFactory.INST.logLevel('error');
+import { arweave, getContractManifest, initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
 // This script will join a gateway to the ar.io network, identified by the gateway operator's wallet address
 // A minimum amount of tokens must be staked to join, along with other settings that must be configured
 // Only the gateway's wallet owner is authorized to adjust these settings or leave the network in the future
 (async () => {
+  // simple setup script
+  initialize();
+
   // the quantity of tokens to stake.  Must be greater than the minimum
   const qty = 100_000;
 

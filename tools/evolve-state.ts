@@ -1,16 +1,14 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import fs from 'fs';
-import {
-  LoggerFactory,
-  WarpFactory,
-  defaultCacheOptions,
-} from 'warp-contracts';
 
 import { keyfile } from './constants';
-import { arweave, getContractManifest, warp } from './utilities';
+import { getContractManifest, initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
+  // simple setup script
+  initialize();
+
   // load state of contract
   const arnsContractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
@@ -20,8 +18,6 @@ import { arweave, getContractManifest, warp } from './utilities';
   const wallet: JWKInterface = JSON.parse(
     process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
   );
-
-  LoggerFactory.INST.logLevel('error');
 
   // get contract manifest
   const { evaluationOptions = {} } = await getContractManifest({

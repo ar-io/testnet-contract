@@ -1,12 +1,16 @@
 import * as fs from 'fs';
 import path from 'path';
-import { LoggerFactory, SourceType } from 'warp-contracts';
+import { SourceType } from 'warp-contracts';
 
 import { IOState } from '../src/types';
 import { keyfile } from './constants';
-import { arweave, warp } from './utilities';
+import { arweave, initialize, warp } from './utilities';
 
 (async () => {
+  // simple setup script
+  initialize();
+
+  // load wallet
   const wallet = JSON.parse(
     process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
   );
@@ -15,11 +19,6 @@ import { arweave, warp } from './utilities';
   const ARNS_CONTRACT_TX_ID =
     process.env.ARNS_CONTRACT_TX_ID ??
     'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
-
-  // ~~ Initialize `LoggerFactory` ~~
-  LoggerFactory.INST.logLevel('error');
-
-  // ~~ Initialize SmartWeave ~~;
 
   // ~~ Read contract source and initial state files ~~
   const contractSrc = fs.readFileSync(
