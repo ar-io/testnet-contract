@@ -1,5 +1,6 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
+import { Tag } from 'warp-contracts';
 
 import { keyfile } from './constants';
 import { arweave, warp } from './utilities';
@@ -46,29 +47,23 @@ import { arweave, warp } from './utilities';
     controller: walletAddress,
   };
 
+  const appNameTag = new Tag('App-Name', 'SmartWeaveAction');
+  const contractTag = new Tag('Contract', arnsContractTxId);
+  const inputTag = new Tag(
+    'Input',
+    JSON.stringify({
+      function: 'buyRecord',
+      name: domainName,
+      contractTxId: 'atomic',
+    }),
+  );
+
   const { contractTxId } = await warp.deployFromSourceTx(
     {
       wallet,
       initState: JSON.stringify(initialState),
       srcTxId: ANT_SOURCE_CODE_TX_ID,
-      tags: [
-        {
-          name: 'App-Name',
-          value: 'SmartWeaveAction',
-        },
-        {
-          name: 'Contract',
-          value: arnsContractTxId,
-        },
-        {
-          name: 'Input',
-          value: JSON.stringify({
-            function: 'buyRecord',
-            name: domainName,
-            contractTxId: 'atomic',
-          }),
-        },
-      ],
+      tags: [appNameTag, contractTag, inputTag],
     },
     true,
   );
