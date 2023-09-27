@@ -41,6 +41,8 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
 
   // Read the ANT Registry Contract
   const contract = warp.pst(arnsContractTxId);
+
+  // connect to wallet
   contract.connect(wallet).setEvaluationOptions(evaluationOptions);
 
   await contract.transfer(
