@@ -56,9 +56,10 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
     contractTxId: arnsContractTxId,
   });
 
-  // Read the ArNS Registry Contract
+  // Connect the ArNS Registry Contract
   const contract = warp
     .pst(arnsContractTxId)
+    .connect(wallet)
     .setEvaluationOptions(evaluationOptions);
 
   console.log('Connected to contract with wallet: %s', walletAddress);
