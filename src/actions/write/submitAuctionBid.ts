@@ -18,8 +18,7 @@ import {
 } from '../../types';
 import {
   calculateMinimumAuctionBid,
-  calculatePermabuyFee,
-  calculateTotalRegistrationFee,
+  generateAuctionObject,
   getInvalidAjvMessage,
   walletHasSufficientBalance,
 } from '../../utilities';
@@ -159,52 +158,34 @@ export const submitAuctionBid = (
   const currentBlockHeight = +SmartWeave.block.height;
   const { decayInterval, decayRate, auctionDuration } = currentAuctionSettings;
 
-  // TODO: add pricing demand factor
-  // calculate the standard registration fee
-  const registrationFee =
-    type === 'lease'
-      ? calculateTotalRegistrationFee(
-          name,
-          fees,
-          years!,
-          +SmartWeave.block.timestamp,
-        )
-      : calculatePermabuyFee(name, fees, +SmartWeave.block.timestamp);
-
   // no current auction, create one and vault the balance from the user
   if (!auctions[name]) {
-    const {
-      id: auctionSettingsId,
-      floorPriceMultiplier,
-      startPriceMultiplier,
-    } = currentAuctionSettings;
-    // floor price multiplier could be a decimal, or whole number (e.g. 0.5 vs 2)
-    const calculatedFloor = registrationFee * floorPriceMultiplier;
-    // if someone submits a high floor price, we'll take it
-    const floorPrice = submittedBid
-      ? Math.max(submittedBid, calculatedFloor)
-      : calculatedFloor;
-    // multiply by the floor price, as it could be higher than the calculated floor
-    const startPrice = floorPrice * startPriceMultiplier;
+    // TODO: add pricing demand factor to the auction bid
+    const initalAuctionObject = generateAuctionObject({
+      name,
+      caller,
+      contractTxId,
+      type,
+      years,
+      blockHeight: +SmartWeave.block.height,
+      blockTime: +SmartWeave.block.timestamp,
+      auctionSettings: currentAuctionSettings,
+      fees,
+    });
 
     // throw an error on invalid balance
-    if (!walletHasSufficientBalance(balances, caller, floorPrice)) {
+    if (
+      !walletHasSufficientBalance(
+        balances,
+        caller,
+        initalAuctionObject.floorPrice,
+      )
+    ) {
       throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
     }
 
-    // create the initial auction bid
-    const initialAuctionBid = {
-      auctionSettingsId,
-      floorPrice, // this is decremented from the initiators wallet, and could be higher than the precalculated floor
-      startPrice,
-      contractTxId,
-      startHeight: currentBlockHeight, // auction starts right away
-      type,
-      initiator: caller, // the balance that the floor price is decremented from
-      ...(years ? { years } : {}),
-    };
-    auctions[name] = initialAuctionBid; // create the auction object
-    balances[caller] -= floorPrice; // decremented based on the floor price
+    auctions[name] = initalAuctionObject; // create the auction object
+    balances[caller] -= initalAuctionObject.floorPrice; // decremented based on the floor price
 
     // update the state
     state.auctions = auctions;

@@ -192,12 +192,8 @@ export type Auction = AuctionParameters &
     prices: Record<string | number, number>;
     minimumAuctionBid: number;
     isExpired: boolean;
+    isAvailableForAuction: boolean;
   };
-
-export type AuctionPermutations = {
-  [x: number]: Auction; // leases
-  permabuy: Auction;
-};
 
 export type AuctionGeneratorProps = {
   name: string;

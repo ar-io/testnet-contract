@@ -6,7 +6,7 @@ import {
 } from '../../types';
 import {
   calculateMinimumAuctionBid,
-  generateAuctionPermutations,
+  generateAuctionObject,
   getInvalidAjvMessage,
 } from '../../utilities';
 import { validateGetAuction } from '../../validations.mjs';
@@ -48,7 +48,10 @@ export const getAuction = (
         `Auction settings with id ${settings.auctions.current} do not exist.`,
       );
     }
-    const generatedAuctions = generateAuctionPermutations({
+
+    const { auctionSettingsId: _, ...auctionWithoutSettingsId } = auction;
+
+    const auction = generateAuctionObject({
       name: name.toLowerCase().trim(),
       auctionSettings: currentAuctionSettings,
       blockHeight: +SmartWeave.block.height,
@@ -59,7 +62,9 @@ export const getAuction = (
 
     return {
       result: {
-        ...generatedAuctions,
+        ...auction,
+        // something to signify this auction is not currently in the state
+        isAvailableForAuction: true,
       },
     };
   }
@@ -100,12 +105,13 @@ export const getAuction = (
       auction: {
         ...auctionWithoutSettingsId,
         endHeight: expirationHeight,
+        isAvailableForAuction: false,
+        isExpired: expirationHeight < +SmartWeave.block.height,
         settings: {
           id: auctionSettingsId,
           ...auctionSettings,
         },
         prices,
-        isExpired: expirationHeight < +SmartWeave.block.height,
       },
     },
   };

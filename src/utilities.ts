@@ -4,7 +4,6 @@ import {
   INVALID_INPUT_MESSAGE,
   MAX_YEARS,
   MINIMUM_ALLOWED_NAME_LENGTH,
-  MIN_YEARS,
   NAMESPACE_LENGTH,
   PERMABUY_LEASE_FEE_LENGTH,
   RARITY_MULTIPLIER_HALVENING,
@@ -16,7 +15,6 @@ import {
   Auction,
   AuctionGeneratorProps,
   AuctionParameters,
-  AuctionPermutations,
   AuctionSettings,
   Fees,
 } from './types';
@@ -245,23 +243,8 @@ export function getInvalidAjvMessage(validator: any, input: any) {
     .join(', ')}`;
 }
 
-export function generateAuctionPermutations(
-  props: AuctionGeneratorProps,
-): AuctionPermutations {
-  const auctions = {};
-  for (let i = 0; i <= MIN_YEARS; i++) {
-    auctions[i] = generateAuction({
-      ...props,
-      years: i ?? undefined, // 0 = permabuy-
-    });
-  }
-
-  return auctions as AuctionPermutations;
-}
-
-export function generateAuction(props: AuctionGeneratorProps): Auction {
+export function generateAuctionObject(props: AuctionGeneratorProps): Auction {
   // calculate the auctions prices for each year (leases) and for permabuy
-
   const {
     name,
     blockHeight,
@@ -306,6 +289,7 @@ export function generateAuction(props: AuctionGeneratorProps): Auction {
     ...auction,
     ...auctionSettings,
     isExpired: false,
+    isAvailableForAuction: true,
     minimumAuctionBid: startPrice,
     prices,
   };
