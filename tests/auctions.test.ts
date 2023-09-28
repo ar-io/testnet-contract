@@ -13,8 +13,7 @@ import { arweave, warp } from './setup.jest';
 import { ANT_CONTRACT_IDS } from './utils/constants';
 import {
   calculateMinimumAuctionBid,
-  generateAuction,
-  generateAuctionPermutations,
+  generateAuctionObject,
   getBlockTime,
   getCurrentBlock,
   getLocalArNSContractId,
@@ -637,7 +636,7 @@ describe('Auctions', () => {
         });
 
         it('should expect to generate auction prices on read function', async () => {
-          const expected = generateAuctionPermutations({
+          const expected = generateAuctionObject({
             name: 'tesla',
             blockHeight: await getCurrentBlock(arweave),
             blockTime: await getBlockTime(arweave),
