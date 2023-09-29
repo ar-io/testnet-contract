@@ -50,8 +50,8 @@ export const getAuction = (
         isExpired: false,
         // TODO: add expiration check for both
         isAvailableForAuction:
-          !!records[name.toLowerCase().trim()] &&
-          !!reserved[name.toLowerCase().trim()],
+          !records[name.toLowerCase().trim()] &&
+          !reserved[name.toLowerCase().trim()],
         type,
         name,
         prices,
