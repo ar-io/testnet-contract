@@ -12,7 +12,9 @@ export const getAuction = (
   const auction = auctions[name.toLowerCase().trim()];
 
   if (!auction) {
-    throw new ContractError(`No live auction exists for ${auction}`);
+    throw new ContractError(
+      `No live auction exists for ${name.toLowerCase().trim()}`,
+    );
   }
 
   const { auctionSettingsId, startHeight, floorPrice, startPrice } = auction;
