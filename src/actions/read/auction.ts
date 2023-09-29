@@ -1,20 +1,66 @@
+import { NON_EXPIRED_ARNS_NAME_MESSAGE } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
-import { calculateMinimumAuctionBid } from '../../utilities';
+import {
+  calculatePermabuyFee,
+  calculateTotalRegistrationFee,
+  getAuctionPrices,
+} from '../../utilities';
 
 declare const SmartWeave: any;
 declare const ContractError;
 
 export const getAuction = (
   state: IOState,
-  { input: { name } }: PstAction,
+  { input: { name, type = 'lease' } }: PstAction,
 ): ContractResult => {
-  const { auctions, settings } = state;
+  const { records, auctions, settings, fees, reserved } = state;
   const auction = auctions[name.toLowerCase().trim()];
 
   if (!auction) {
-    throw new ContractError(
-      `No live auction exists for ${name.toLowerCase().trim()}`,
+    // get the current auction settings to create prices
+    const auctionSettingsId = settings.auctions.current;
+    const auctionSettings = settings.auctions.history.find(
+      (a) => a.id === auctionSettingsId,
     );
+
+    const { floorPriceMultiplier, startPriceMultiplier } = auctionSettings;
+
+    const registrationFee =
+      type === 'lease'
+        ? calculateTotalRegistrationFee(
+            name,
+            fees,
+            1,
+            +SmartWeave.block.timestamp,
+          )
+        : calculatePermabuyFee(name, fees, +SmartWeave.block.timestamp);
+
+    const floorPrice = registrationFee * floorPriceMultiplier;
+    const startPrice = floorPrice * startPriceMultiplier;
+
+    const prices = getAuctionPrices({
+      auctionSettings,
+      startHeight: 0, // set to zero to indicate that the auction has not started at a specific block
+      startPrice,
+      floorPrice,
+    });
+
+    return {
+      result: {
+        isExpired: false,
+        // TODO: add expiration check for both
+        isAvailableForAuction:
+          !!records[name.toLowerCase().trim()] &&
+          !!reserved[name.toLowerCase().trim()],
+        type,
+        name,
+        prices,
+        settings: {
+          id: auctionSettingsId,
+          ...auctionSettings,
+        },
+      },
+    };
   }
 
   const { auctionSettingsId, startHeight, floorPrice, startPrice } = auction;
@@ -30,39 +76,24 @@ export const getAuction = (
 
   const expirationHeight = startHeight + auctionSettings.auctionDuration;
 
-  if (expirationHeight < +SmartWeave.block.height) {
-    throw new ContractError('Auction is expired!');
-  }
-
-  const { auctionDuration, decayRate, decayInterval } = auctionSettings;
-  const intervalCount = auctionDuration / decayInterval;
-  const prices = {};
-  for (let i = 0; i <= intervalCount; i++) {
-    const intervalHeight = startHeight + i * decayInterval;
-    const price = calculateMinimumAuctionBid({
-      startHeight,
-      startPrice,
-      floorPrice,
-      currentBlockHeight: intervalHeight,
-      decayInterval,
-      decayRate,
-    });
-    prices[intervalHeight] = price;
-  }
-
-  const { auctionSettingsId: _, ...auctionWithoutSettingsId } = auction;
+  const prices = getAuctionPrices({
+    auctionSettings,
+    startHeight,
+    startPrice,
+    floorPrice,
+  });
 
   return {
     result: {
-      auction: {
-        ...auctionWithoutSettingsId,
-        endHeight: expirationHeight,
-        settings: {
-          id: auctionSettingsId,
-          ...auctionSettings,
-        },
-        prices,
+      [name]: auction,
+      endHeight: expirationHeight,
+      isExpired: expirationHeight < +SmartWeave.block.height,
+      isAvailableForAuction: false,
+      settings: {
+        id: auctionSettingsId,
+        ...auctionSettings,
       },
+      prices,
     },
   };
 };

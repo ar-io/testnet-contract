@@ -236,3 +236,26 @@ export function getInvalidAjvMessage(validator: any, input: any) {
     })
     .join(', ')}`;
 }
+
+export function getAuctionPrices({
+  auctionSettings,
+  startHeight,
+  startPrice,
+  floorPrice,
+}) {
+  const { auctionDuration, decayRate, decayInterval } = auctionSettings;
+  const intervalCount = auctionDuration / decayInterval;
+  const prices = {};
+  for (let i = 0; i <= intervalCount; i++) {
+    const intervalHeight = startHeight + i * decayInterval;
+    const price = calculateMinimumAuctionBid({
+      startHeight,
+      startPrice,
+      floorPrice,
+      currentBlockHeight: intervalHeight,
+      decayInterval,
+      decayRate,
+    });
+    prices[intervalHeight] = price;
+  }
+}
