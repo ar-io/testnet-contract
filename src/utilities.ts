@@ -258,4 +258,5 @@ export function getAuctionPrices({
     });
     prices[intervalHeight] = price;
   }
+  return prices;
 }
