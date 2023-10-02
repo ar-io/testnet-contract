@@ -4,12 +4,22 @@ import { ContractResult, IOState } from '../../types';
 declare const SmartWeave: any;
 
 // Removes gateway from the gateway address registry after the leave period completes
-export const tick = async (state: IOState): Promise<ContractResult> => {
-  const { records, auctions, reserved } = state;
+export const tick = (state: IOState): ContractResult => {
+  const { records, auctions, reserved, settings } = state;
 
-  // TODO: do we give the caller a tip?
+  const { records: updatedRecords, auctions: updatedAuctions } = tickAuctions({
+    auctions,
+    records,
+    settings,
+  });
+  state.auctions = updatedAuctions;
+  state.records = tickRecords({ records: updatedRecords });
+  state.reserved = tickReservedNames({ reserved });
 
-  // remove any expired records
+  return { state };
+};
+
+function tickRecords({ records }) {
   const activeRecords = Object.keys(records).reduce((current, key) => {
     const record = records[key];
     if (
@@ -21,10 +31,10 @@ export const tick = async (state: IOState): Promise<ContractResult> => {
     }
     return current;
   }, {});
+  return activeRecords;
+}
 
-  state.records = activeRecords;
-
-  // handle any expired reserved names that have not been claimed
+function tickReservedNames({ reserved }) {
   const activeReservedNames = Object.keys(reserved).reduce((current, key) => {
     const reservedName = reserved[key];
     // still active reservation
@@ -36,13 +46,14 @@ export const tick = async (state: IOState): Promise<ContractResult> => {
     }
     return current;
   }, {});
+  return activeReservedNames;
+}
 
-  state.reserved = activeReservedNames;
-
+function tickAuctions({ auctions, settings, records }) {
   // handle expired auctions
   const activeAuctions = Object.keys(auctions).reduce((current, key) => {
     const auction = auctions[key];
-    const auctionSettings = state.settings.auctions.history.find(
+    const auctionSettings = settings.auctions.history.find(
       (settings) => settings.id === auction.auctionSettingsId,
     );
 
@@ -59,20 +70,21 @@ export const tick = async (state: IOState): Promise<ContractResult> => {
       // update the records field but do not decrement balance from the initiator as that happens on auction initiation
       const endTimestamp =
         +auction.years * SECONDS_IN_A_YEAR + +SmartWeave.block.timestamp;
-      state.records[key] = {
+      records[key] = {
         type: auction.type,
         contractTxId: auction.contractTxId,
-        ...(auction.type === 'lease' ? { endTimestamp: endTimestamp } : {}),
         startTimestamp: +SmartWeave.block.timestamp,
         undernames: DEFAULT_UNDERNAME_COUNT,
+        // optionally add endTimestamp
+        ...(auction.type === 'lease' && { endTimestamp }),
       };
     }
 
     // now return the auction object
     return current;
   }, {});
-
-  state.auctions = activeAuctions;
-
-  return { state };
-};
+  return {
+    auctions: activeAuctions,
+    records,
+  };
+}
