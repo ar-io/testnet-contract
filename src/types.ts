@@ -6,6 +6,15 @@ import {
   NETWORK_LEAVING_STATUS,
 } from './constants.js';
 
+export type DemandFactoringData = {
+  periodStartBlockHeight: number; // TODO: Set me on evolve or fork
+  currentPeriod: number;
+  trailingPeriodPurchases: number[]; // TODO: can TS require the array to be of a specific size
+  purchasesThisPeriod: number;
+  demandFactor: number;
+  consecutivePeriodsWithMinDemandFactor: number;
+};
+
 // TODO: add InputValidator class that can be extended for specific methods
 
 export type IOState = PstState & {
@@ -39,14 +48,7 @@ export type IOState = PstState & {
   lastTickedHeight: number;
   // TODO: epoch tracking - relevant to GAR observers
   // demand factoring
-  demandFactoring: {
-    periodStartBlockHeight: number; // TODO: Set me on evolve or fork
-    currentPeriod: number;
-    trailingPeriodPurchases: number[]; // TODO: can TS require the array to be of a specific size
-    purchasesThisPeriod: number;
-    demandFactor: number;
-    consecutivePeriodsWithMinDemandFactor: number;
-  };
+  demandFactoring: DemandFactoringData;
 };
 
 export type Fees = {
@@ -280,3 +282,53 @@ export class BlockTimestamp extends PositiveFiniteInteger {
     super(blockTimestamp);
   }
 }
+
+// Following types were acquired from ts-essentials library
+export type Primitive =
+  | string
+  | number
+  | boolean
+  | bigint
+  | symbol
+  | undefined
+  | null;
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type Builtin = Primitive | Function | Date | Error | RegExp;
+export type AnyArray<Type = any> = Array<Type> | ReadonlyArray<Type>;
+export type IsTuple<Type> = Type extends readonly any[]
+  ? any[] extends Type
+    ? never
+    : Type
+  : never;
+export type IsAny<Type> = 0 extends 1 & Type ? true : false;
+export type IsUnknown<Type> = IsAny<Type> extends true
+  ? false
+  : unknown extends Type
+  ? true
+  : false;
+
+export type DeepReadonly<Type> = Type extends Exclude<Builtin, Error>
+  ? Type
+  : Type extends Map<infer Keys, infer Values>
+  ? ReadonlyMap<DeepReadonly<Keys>, DeepReadonly<Values>>
+  : Type extends ReadonlyMap<infer Keys, infer Values>
+  ? ReadonlyMap<DeepReadonly<Keys>, DeepReadonly<Values>>
+  : Type extends WeakMap<infer Keys, infer Values>
+  ? WeakMap<DeepReadonly<Keys>, DeepReadonly<Values>>
+  : Type extends Set<infer Values>
+  ? ReadonlySet<DeepReadonly<Values>>
+  : Type extends ReadonlySet<infer Values>
+  ? ReadonlySet<DeepReadonly<Values>>
+  : Type extends WeakSet<infer Values>
+  ? WeakSet<DeepReadonly<Values>>
+  : Type extends Promise<infer Value>
+  ? Promise<DeepReadonly<Value>>
+  : Type extends AnyArray<infer Values>
+  ? Type extends IsTuple<Type>
+    ? { readonly [Key in keyof Type]: DeepReadonly<Type[Key]> }
+    : ReadonlyArray<DeepReadonly<Values>>
+  : Type extends {}
+  ? { readonly [Key in keyof Type]: DeepReadonly<Type[Key]> }
+  : IsUnknown<Type> extends true
+  ? unknown
+  : Readonly<Type>;

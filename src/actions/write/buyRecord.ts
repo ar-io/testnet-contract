@@ -171,10 +171,10 @@ export const buyRecord = (
   state.reserved = reserved;
   state.balances = balances;
 
-  // TODO: Validate state mutation paradigm
-  const updatedState = tallyNamePurchase(
+  state.demandFactoring = tallyNamePurchase(
     new BlockHeight(+SmartWeave.block.height),
-    state,
+    state.demandFactoring,
   );
-  return { state: updatedState };
+
+  return { state };
 };

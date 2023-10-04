@@ -1,18 +1,24 @@
 import { DEMAND_FACTORING_SETTINGS } from './constants';
-import { BlockHeight, IOState } from './types';
+import {
+  BlockHeight,
+  DeepReadonly,
+  DemandFactoringData,
+  IOState,
+} from './types';
 
-// TODO: Consider the return type of this function since state's contents are mutable anyway
 export function tallyNamePurchase(
   currentHeight: BlockHeight,
-  state: IOState,
-): IOState {
-  // Tally the purchase
-  state.demandFactoring.purchasesThisPeriod++;
-  state.demandFactoring.trailingPeriodPurchases[
-    demandFactorPeriodIndex(currentHeight)
-  ]++;
+  dfData: DeepReadonly<DemandFactoringData>,
+): DemandFactoringData {
+  const newDfData = {
+    ...dfData,
+    trailingPeriodPurchases: dfData.trailingPeriodPurchases.slice(),
+  };
 
-  return state;
+  newDfData.purchasesThisPeriod++;
+  newDfData.trailingPeriodPurchases[demandFactorPeriodIndex(currentHeight)]++;
+
+  return newDfData;
 }
 
 export function updateDemandFactor(

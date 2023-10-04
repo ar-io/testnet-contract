@@ -123,8 +123,10 @@ function tickAuctions(height: BlockHeight, state: IOState): IOState {
         ...maybeEndTimestamp,
       };
 
-      // TODO: DEAL WITH MUTABILITY OF STATE AND RETURN TYPE HERE
-      tallyNamePurchase(new BlockHeight(+SmartWeave.block.height), state);
+      state.demandFactoring = tallyNamePurchase(
+        new BlockHeight(+SmartWeave.block.height),
+        state.demandFactoring,
+      );
     }
     // now return the auction object
     return current;

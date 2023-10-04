@@ -271,8 +271,10 @@ export const submitAuctionBid = (
     state.records = records;
     state.reserved = reserved;
 
-    // TODO: deal with mutability of state object and return type here
-    tallyNamePurchase(new BlockHeight(+SmartWeave.block.height), state);
+    state.demandFactoring = tallyNamePurchase(
+      new BlockHeight(+SmartWeave.block.height),
+      state.demandFactoring,
+    );
   }
 
   // return updated state
