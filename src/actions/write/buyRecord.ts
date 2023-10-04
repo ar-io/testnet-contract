@@ -10,7 +10,9 @@ import {
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
+import { tallyNamePurchase } from '../../pricing';
 import {
+  BlockHeight,
   ContractResult,
   IOState,
   PstAction,
@@ -168,5 +170,11 @@ export const buyRecord = (
   state.records = records;
   state.reserved = reserved;
   state.balances = balances;
-  return { state };
+
+  // TODO: Validate state mutation paradigm
+  const updatedState = tallyNamePurchase(
+    new BlockHeight(+SmartWeave.block.height),
+    state,
+  );
+  return { state: updatedState };
 };

@@ -105,3 +105,13 @@ export const AUCTION_SETTINGS: AuctionSettings = {
   decayRate: 0.0225, // 5% decay
   auctionDuration: 5040, // approx 7 days long
 };
+
+export const DEMAND_FACTORING_SETTINGS = {
+  movingAvgPeriodCount: 7,
+  periodBlockCount: 720,
+  demandFactorBaseValue: 1,
+  demandFactorMin: 0.5,
+  demandFactorUpAdjustment: 0.05,
+  demandFactorDownAdjustment: 0.05,
+  stepDownThreshold: 3,
+};

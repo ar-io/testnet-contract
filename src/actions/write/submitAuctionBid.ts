@@ -7,8 +7,10 @@ import {
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
+import { tallyNamePurchase } from '../../pricing';
 import {
   AuctionSettings,
+  BlockHeight,
   ContractResult,
   IOState,
   PstAction,
@@ -268,6 +270,9 @@ export const submitAuctionBid = (
     state.balances = balances;
     state.records = records;
     state.reserved = reserved;
+
+    // TODO: deal with mutability of state object and return type here
+    tallyNamePurchase(new BlockHeight(+SmartWeave.block.height), state);
   }
 
   // return updated state

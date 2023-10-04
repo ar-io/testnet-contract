@@ -16,6 +16,7 @@ import {
   ArNSName,
   Auction,
   AuctionSettings,
+  BlockHeight,
   Fees,
   RegistrationType,
   ReservedName,
@@ -129,16 +130,18 @@ export function calculateMinimumAuctionBid({
   decayInterval,
   decayRate,
 }: {
-  startHeight: number;
+  startHeight: BlockHeight;
   startPrice: number;
   floorPrice: number;
-  currentBlockHeight: number;
+  currentBlockHeight: BlockHeight;
   decayInterval: number;
   decayRate: number;
 }): number {
   const blockIntervalsPassed = Math.max(
     0,
-    Math.floor((currentBlockHeight - startHeight) / decayInterval),
+    Math.floor(
+      (currentBlockHeight.valueOf() - startHeight.valueOf()) / decayInterval,
+    ),
   );
   const dutchAuctionBid =
     startPrice * Math.pow(1 - decayRate, blockIntervalsPassed);

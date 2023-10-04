@@ -35,6 +35,18 @@ export type IOState = PstState & {
   auctions: {
     [name: string]: Auction;
   };
+  // periodicity management
+  lastTickedHeight: number;
+  // TODO: epoch tracking - relevant to GAR observers
+  // demand factoring
+  demandFactoring: {
+    periodStartBlockHeight: number; // TODO: Set me on evolve or fork
+    currentPeriod: number;
+    trailingPeriodPurchases: number[]; // TODO: can TS require the array to be of a specific size
+    purchasesThisPeriod: number;
+    demandFactor: number;
+    consecutivePeriodsWithMinDemandFactor: number;
+  };
 };
 
 export type Fees = {
@@ -46,13 +58,14 @@ export type Auction = {
   floorPrice: number;
   startHeight: number;
   endHeight: number;
-  type: 'lease' | 'permabuy';
+  type: RegistrationType;
   initiator: string;
   contractTxId: string;
   years?: number;
   settings: AuctionSettings;
 };
 
+// TODO: Since we're not allowing mutability of this via governance, we could do away with ID-based settings
 export type AuctionSettings = {
   floorPriceMultiplier: number; // if we ever want to drop prices
   startPriceMultiplier: number;
@@ -185,3 +198,85 @@ export type ContractResult =
         [x: string | number]: any; // eslint-disable-line
       };
     };
+
+export interface Equatable<T> {
+  equals(other: T): boolean;
+}
+
+export class PositiveFiniteInteger implements Equatable<PositiveFiniteInteger> {
+  constructor(private readonly positiveFiniteInteger: number) {
+    if (
+      !Number.isFinite(this.positiveFiniteInteger) ||
+      !Number.isInteger(this.positiveFiniteInteger) ||
+      this.positiveFiniteInteger < 0
+    ) {
+      throw new Error('Byte count must be a non-negative integer value!');
+    }
+  }
+
+  [Symbol.toPrimitive](hint?: string): number | string {
+    if (hint === 'string') {
+      this.toString();
+    }
+
+    return this.positiveFiniteInteger;
+  }
+
+  plus(positiveFiniteInteger: PositiveFiniteInteger): PositiveFiniteInteger {
+    return new PositiveFiniteInteger(
+      this.positiveFiniteInteger + positiveFiniteInteger.positiveFiniteInteger,
+    );
+  }
+
+  minus(positiveFiniteInteger: PositiveFiniteInteger): PositiveFiniteInteger {
+    return new PositiveFiniteInteger(
+      this.positiveFiniteInteger - positiveFiniteInteger.positiveFiniteInteger,
+    );
+  }
+
+  isGreaterThan(positiveFiniteInteger: PositiveFiniteInteger): boolean {
+    return (
+      this.positiveFiniteInteger > positiveFiniteInteger.positiveFiniteInteger
+    );
+  }
+
+  isGreaterThanOrEqualTo(
+    positiveFiniteInteger: PositiveFiniteInteger,
+  ): boolean {
+    return (
+      this.positiveFiniteInteger >= positiveFiniteInteger.positiveFiniteInteger
+    );
+  }
+
+  toString(): string {
+    return `${this.positiveFiniteInteger}`;
+  }
+
+  valueOf(): number {
+    return this.positiveFiniteInteger;
+  }
+
+  toJSON(): number {
+    return this.positiveFiniteInteger;
+  }
+
+  equals(other: PositiveFiniteInteger): boolean {
+    return this.positiveFiniteInteger === other.positiveFiniteInteger;
+  }
+}
+
+export class BlockHeight extends PositiveFiniteInteger {
+  // TODO: Improve upon this technique for sub-type discrimination
+  readonly type = 'BlockHeight';
+  constructor(blockHeight: number) {
+    super(blockHeight);
+  }
+}
+
+export class BlockTimestamp extends PositiveFiniteInteger {
+  // TODO: Improve upon this technique for sub-type discrimination
+  readonly type = 'BlockTimestamp';
+  constructor(blockTimestamp: number) {
+    super(blockTimestamp);
+  }
+}
