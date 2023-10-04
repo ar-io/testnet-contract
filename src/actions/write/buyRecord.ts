@@ -133,13 +133,13 @@ export const buyRecord = (
       ? currentBlockTimestamp + SECONDS_IN_A_YEAR * years
       : undefined;
 
-  // TODO: add dynamic pricing
   const totalRegistrationFee = calculateRegistrationFee({
     name,
     fees,
     years,
     type,
     currentBlockTimestamp: +SmartWeave.block.timestamp,
+    demandFactoring: state.demandFactoring,
   });
 
   if (!walletHasSufficientBalance(balances, caller, totalRegistrationFee)) {

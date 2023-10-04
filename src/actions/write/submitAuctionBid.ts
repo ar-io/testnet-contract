@@ -112,6 +112,7 @@ export const submitAuctionBid = (
     years,
     type,
     currentBlockTimestamp: +SmartWeave.block.timestamp,
+    demandFactoring: state.demandFactoring,
   });
 
   // no current auction, create one and vault the balance from the user
@@ -163,10 +164,10 @@ export const submitAuctionBid = (
 
     // calculate the current bid price and compare it to the floor price set by the initiator
     const currentRequiredMinimumBid = calculateMinimumAuctionBid({
-      startHeight: existingAuction.startHeight,
+      startHeight: new BlockHeight(existingAuction.startHeight),
       startPrice: existingAuction.startPrice,
       floorPrice: existingAuction.floorPrice,
-      currentBlockHeight,
+      currentBlockHeight: new BlockHeight(currentBlockHeight),
       decayRate,
       decayInterval,
     });

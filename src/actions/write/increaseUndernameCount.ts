@@ -49,12 +49,12 @@ export const increaseUndernameCount = async (
 
   const { undernames = 10, type, endTimestamp } = record;
   const currentBlockTime = +SmartWeave.block.timestamp;
-  const undernameCost = calculateProRatedUndernameCost(
+  const undernameCost = calculateProRatedUndernameCost({
     qty,
-    currentBlockTime,
+    currentTimestamp: currentBlockTime,
     type,
     endTimestamp,
-  );
+  });
 
   // the new total qty
   const incrementedUndernames = undernames + qty;

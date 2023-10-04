@@ -17,6 +17,8 @@ import {
   Auction,
   AuctionSettings,
   BlockHeight,
+  DeepReadonly,
+  DemandFactoringData,
   Fees,
   RegistrationType,
   ReservedName,
@@ -24,25 +26,34 @@ import {
 
 declare const ContractError: any;
 
-export function calculateLeaseFee(
-  name: string,
-  fees: Fees,
-  years: number,
-  currentTimestamp: number, // block timestamp
-): number {
+export function calculateLeaseFee({
+  name,
+  fees,
+  years,
+  currentTimestamp,
+  demandFactoring,
+}: {
+  name: string;
+  fees: Fees;
+  years: number;
+  currentTimestamp: number; // block timestamp
+  demandFactoring: DeepReadonly<DemandFactoringData>;
+}): number {
   // Initial cost to register a name
+  // TODO: Harden the types here to make fees[name.length] an error
   const initialNamePurchaseFee = fees[name.length.toString()];
 
   // total cost to purchase name
   return (
-    initialNamePurchaseFee +
-    calculateAnnualRenewalFee(
-      name,
-      fees,
-      years,
-      DEFAULT_UNDERNAME_COUNT,
-      currentTimestamp + SECONDS_IN_A_YEAR * years,
-    )
+    demandFactoring.demandFactor *
+    (initialNamePurchaseFee +
+      calculateAnnualRenewalFee(
+        name,
+        fees,
+        years,
+        DEFAULT_UNDERNAME_COUNT,
+        currentTimestamp + SECONDS_IN_A_YEAR * years,
+      ))
   );
 }
 
@@ -73,21 +84,27 @@ export function calculateAnnualRenewalFee(
     undernameCount === DEFAULT_UNDERNAME_COUNT
       ? totalAnnualRenewalCost
       : totalAnnualRenewalCost +
-        calculateProRatedUndernameCost(
-          undernameCount,
-          endTimestamp,
-          'lease',
-          extensionEndTimestamp,
-        );
+        calculateProRatedUndernameCost({
+          qty: undernameCount,
+          currentTimestamp: endTimestamp,
+          type: 'lease',
+          endTimestamp: extensionEndTimestamp,
+        });
 
   return totalCost;
 }
 
-export function calculatePermabuyFee(
-  name: string,
-  fees: Fees,
-  currentTimestamp: number,
-): number {
+export function calculatePermabuyFee({
+  name,
+  fees,
+  currentTimestamp,
+  demandFactoring,
+}: {
+  name: string;
+  fees: Fees;
+  currentTimestamp: number;
+  demandFactoring: DeepReadonly<DemandFactoringData>;
+}): number {
   // calculate the annual fee for the name for default of 10 years
   const permabuyLeasePrice = calculateAnnualRenewalFee(
     name,
@@ -96,6 +113,8 @@ export function calculatePermabuyFee(
     DEFAULT_UNDERNAME_COUNT,
     currentTimestamp + SECONDS_IN_A_YEAR * PERMABUY_LEASE_FEE_LENGTH,
   );
+
+  // TODO: EXTRACT TO OWN FUNCTION AND UNIT TEST
   // rarity multiplier based on the length of the name (e.g 1.3);
   // e.g. name is 7 characters - this would be 0
   // name is 2 characters - this would 8
@@ -119,7 +138,7 @@ export function calculatePermabuyFee(
   };
   const rarityMultiplier = getMultiplier();
   const permabuyFee = permabuyLeasePrice * rarityMultiplier;
-  return permabuyFee;
+  return demandFactoring.demandFactor * permabuyFee;
 }
 
 export function calculateMinimumAuctionBid({
@@ -170,12 +189,18 @@ export function walletHasSufficientBalance(
 }
 
 // TODO: update after dynamic pricing?
-export function calculateProRatedUndernameCost(
-  qty: number,
-  currentTimestamp: number,
-  type: RegistrationType,
-  endTimestamp?: number,
-): number {
+export function calculateProRatedUndernameCost({
+  qty,
+  currentTimestamp,
+  type,
+  endTimestamp,
+}: {
+  qty: number;
+  currentTimestamp: number;
+  type: RegistrationType;
+  endTimestamp?: number;
+  // demandFactoring: DemandFactoringData, // TODO: Is this relevant?
+}): number {
   const fullCost =
     type === 'lease'
       ? UNDERNAME_REGISTRATION_IO_FEE * qty
@@ -278,18 +303,31 @@ export function calculateRegistrationFee({
   fees,
   years,
   currentBlockTimestamp,
+  demandFactoring,
 }: {
   type: RegistrationType;
   name: string;
   fees: Fees;
   years: number;
   currentBlockTimestamp: number;
+  demandFactoring: DeepReadonly<DemandFactoringData>;
 }): number {
   switch (type) {
     case 'lease':
-      return calculateLeaseFee(name, fees, years, currentBlockTimestamp);
+      return calculateLeaseFee({
+        name,
+        fees,
+        years,
+        currentTimestamp: currentBlockTimestamp,
+        demandFactoring,
+      });
     case 'permabuy':
-      return calculatePermabuyFee(name, fees, currentBlockTimestamp);
+      return calculatePermabuyFee({
+        name,
+        fees,
+        currentTimestamp: currentBlockTimestamp,
+        demandFactoring,
+      });
   }
 }
 

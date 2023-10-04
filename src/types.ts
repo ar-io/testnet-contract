@@ -327,7 +327,7 @@ export type DeepReadonly<Type> = Type extends Exclude<Builtin, Error>
   ? Type extends IsTuple<Type>
     ? { readonly [Key in keyof Type]: DeepReadonly<Type[Key]> }
     : ReadonlyArray<DeepReadonly<Values>>
-  : Type extends {}
+  : Type extends {} // eslint-disable-line
   ? { readonly [Key in keyof Type]: DeepReadonly<Type[Key]> }
   : IsUnknown<Type> extends true
   ? unknown

@@ -1,4 +1,10 @@
-import { ContractResult, IOState, PstAction } from '../../types';
+import {
+  BlockHeight,
+  ContractResult,
+  DeepReadonly,
+  IOState,
+  PstAction,
+} from '../../types';
 import {
   calculateMinimumAuctionBid,
   calculateRegistrationFee,
@@ -11,7 +17,7 @@ import {
 declare const SmartWeave: any;
 
 export const getAuction = (
-  state: IOState,
+  state: DeepReadonly<IOState>,
   { caller, input: { name, type = 'lease' } }: PstAction,
 ): ContractResult => {
   const { records, auctions, settings, fees, reserved } = state;
@@ -29,6 +35,7 @@ export const getAuction = (
       fees,
       years: 1,
       currentBlockTimestamp,
+      demandFactoring: settings.demandFactoring,
     });
 
     // existing record
@@ -103,10 +110,10 @@ export const getAuction = (
 
   // calculate the minimum bid
   const minimumBid = calculateMinimumAuctionBid({
-    startHeight,
+    startHeight: new BlockHeight(startHeight),
     startPrice,
     floorPrice,
-    currentBlockHeight: +SmartWeave.block.height,
+    currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
     decayInterval: auctionSettings.decayInterval,
     decayRate: auctionSettings.decayRate,
   });

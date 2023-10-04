@@ -1,3 +1,5 @@
+import { tallyNamePurchase } from '@/pricing';
+
 import {
   ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
   INSUFFICIENT_FUNDS_MESSAGE,
@@ -5,7 +7,7 @@ import {
   INVALID_YEARS_MESSAGE,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
-import { ContractResult, IOState, PstAction } from '../../types';
+import { BlockHeight, ContractResult, IOState, PstAction } from '../../types';
 import {
   calculateAnnualRenewalFee,
   getInvalidAjvMessage,
@@ -73,13 +75,17 @@ export const extendRecord = async (
   }
 
   // total cost to extend a record
-  const totalExtensionAnnualFee = calculateAnnualRenewalFee(
-    name,
-    fees,
-    years,
-    record.undernames,
-    record.endTimestamp,
-  );
+  // TODO: Extract this to a separate fee calculation function for extensions
+  const demandFactor = state.demandFactoring.demandFactor;
+  const totalExtensionAnnualFee =
+    demandFactor *
+    calculateAnnualRenewalFee(
+      name,
+      fees,
+      years,
+      record.undernames,
+      record.endTimestamp,
+    );
 
   if (!walletHasSufficientBalance(balances, caller, totalExtensionAnnualFee)) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
@@ -90,5 +96,11 @@ export const extendRecord = async (
   state.balances[SmartWeave.contract.id] += totalExtensionAnnualFee;
 
   state.records[name].endTimestamp += SECONDS_IN_A_YEAR * years;
+
+  state.demandFactoring = tallyNamePurchase(
+    new BlockHeight(+SmartWeave.block.height),
+    state.demandFactoring,
+  );
+
   return { state };
 };
