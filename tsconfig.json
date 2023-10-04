@@ -12,9 +12,6 @@
     "allowJs": true,
     "baseUrl": ".",
     "types": ["jest"],
-    "paths": {
-      "@/*": ["src/*"]
-    },
     "lib": ["esnext"]
   },
   "include": ["src"],
