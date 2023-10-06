@@ -13,6 +13,7 @@ import {
   NON_EXPIRED_ARNS_NAME_MESSAGE,
 } from './utils/constants';
 import {
+  calculateLeaseFee,
   calculatePermabuyFee,
   calculateRegistrationFee,
   getLocalArNSContractId,
@@ -92,12 +93,12 @@ describe('Records', () => {
       );
 
       const currentBlock = await arweave.blocks.getCurrent();
-      const expectedPurchasePrice = calculateRegistrationFee({
+      const expectedPurchasePrice = calculateLeaseFee({
         name: namePurchase.name,
-        type: 'lease',
         fees: prevState.fees,
         years: namePurchase.years,
         currentBlockTimestamp: currentBlock.timestamp,
+        demandFactoring: prevState.demandFactoring, // TODO: is this the right state instance to use?
       });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -146,6 +147,7 @@ describe('Records', () => {
         years: 1,
         type: 'lease',
         currentBlockTimestamp: currentBlock.timestamp,
+        demandFactoring: prevState.demandFactoring, // TODO: is this the right state instance to use?
       });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -189,11 +191,12 @@ describe('Records', () => {
       );
 
       const currentBlock = await arweave.blocks.getCurrent();
-      const expectedPurchasePrice = calculatePermabuyFee(
-        namePurchase.name,
-        prevState.fees,
-        currentBlock.timestamp,
-      );
+      const expectedPurchasePrice = calculatePermabuyFee({
+        name: namePurchase.name,
+        fees: prevState.fees,
+        currentBlockTimestamp: currentBlock.timestamp,
+        demandFactoring: prevState.demandFactoring, // TODO: is this the right state instance to use?
+      });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();

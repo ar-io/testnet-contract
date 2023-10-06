@@ -69,7 +69,7 @@ describe('Network', () => {
         expect(newState.gateways[newGatewayOperatorAddress]).toEqual({
           operatorStake: joinGatewayPayload.qty,
           status: NETWORK_JOIN_STATUS,
-          start: await getCurrentBlock(arweave),
+          start: (await getCurrentBlock(arweave)).valueOf(),
           end: 0,
           vaults: [],
           settings: {
@@ -321,9 +321,10 @@ describe('Network', () => {
           qty,
         });
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
-        const expectedStartBlock = await getCurrentBlock(arweave);
+        const expectedStartBlock = (await getCurrentBlock(arweave)).valueOf();
         const expectedEndBlock =
-          expectedStartBlock + CONTRACT_SETTINGS.operatorStakeWithdrawLength;
+          expectedStartBlock.valueOf() +
+          CONTRACT_SETTINGS.operatorStakeWithdrawLength;
         const { cachedValue: newCachedValue } = await contract.readState();
         const newState = newCachedValue.state as IOState;
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
@@ -378,7 +379,7 @@ describe('Network', () => {
         // mine the remaining blocks
         await mineBlocks(
           arweave,
-          prevVault.end - (await getCurrentBlock(arweave)),
+          prevVault.end - (await getCurrentBlock(arweave)).valueOf(),
         );
         const writeInteraction = await contract.writeInteraction({
           function: 'finalizeOperatorStakeDecrease',
@@ -599,7 +600,7 @@ describe('Network', () => {
         const { cachedValue: newCachedValue } = await contract.readState();
         const newState = newCachedValue.state as IOState;
         const expectedEndBlock =
-          (await getCurrentBlock(arweave)) +
+          (await getCurrentBlock(arweave)).valueOf() +
           CONTRACT_SETTINGS.gatewayLeaveLength;
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
           writeInteraction!.originalTxId,
@@ -644,7 +645,10 @@ describe('Network', () => {
         // mine the correct number of blocks necessary to leave
         await mineBlocks(
           arweave,
-          Math.max(0, prevGateway.end - (await getCurrentBlock(arweave))),
+          Math.max(
+            0,
+            prevGateway.end - (await getCurrentBlock(arweave)).valueOf(),
+          ),
         );
         const writeInteraction = await contract.writeInteraction({
           function: 'finalizeLeave',

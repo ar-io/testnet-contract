@@ -30,13 +30,13 @@ export function calculateLeaseFee({
   name,
   fees,
   years,
-  currentTimestamp,
+  currentBlockTimestamp,
   demandFactoring,
 }: {
   name: string;
   fees: Fees;
   years: number;
-  currentTimestamp: number; // block timestamp
+  currentBlockTimestamp: number;
   demandFactoring: DeepReadonly<DemandFactoringData>;
 }): number {
   // Initial cost to register a name
@@ -52,7 +52,7 @@ export function calculateLeaseFee({
         fees,
         years,
         DEFAULT_UNDERNAME_COUNT,
-        currentTimestamp + SECONDS_IN_A_YEAR * years,
+        currentBlockTimestamp + SECONDS_IN_A_YEAR * years,
       ))
   );
 }
@@ -97,12 +97,12 @@ export function calculateAnnualRenewalFee(
 export function calculatePermabuyFee({
   name,
   fees,
-  currentTimestamp,
+  currentBlockTimestamp,
   demandFactoring,
 }: {
   name: string;
   fees: Fees;
-  currentTimestamp: number;
+  currentBlockTimestamp: number;
   demandFactoring: DeepReadonly<DemandFactoringData>;
 }): number {
   // calculate the annual fee for the name for default of 10 years
@@ -111,7 +111,7 @@ export function calculatePermabuyFee({
     fees,
     PERMABUY_LEASE_FEE_LENGTH,
     DEFAULT_UNDERNAME_COUNT,
-    currentTimestamp + SECONDS_IN_A_YEAR * PERMABUY_LEASE_FEE_LENGTH,
+    currentBlockTimestamp + SECONDS_IN_A_YEAR * PERMABUY_LEASE_FEE_LENGTH,
   );
 
   // TODO: EXTRACT TO OWN FUNCTION AND UNIT TEST
@@ -318,14 +318,14 @@ export function calculateRegistrationFee({
         name,
         fees,
         years,
-        currentTimestamp: currentBlockTimestamp,
+        currentBlockTimestamp,
         demandFactoring,
       });
     case 'permabuy':
       return calculatePermabuyFee({
         name,
         fees,
-        currentTimestamp: currentBlockTimestamp,
+        currentBlockTimestamp,
         demandFactoring,
       });
   }

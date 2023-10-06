@@ -35,7 +35,7 @@ export const getAuction = (
       fees,
       years: 1,
       currentBlockTimestamp,
-      demandFactoring: settings.demandFactoring,
+      demandFactoring: state.demandFactoring,
     });
 
     // existing record

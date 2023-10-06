@@ -3,7 +3,7 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import path from 'path';
 
-import { IOState } from '../../src/types';
+import { BlockHeight, IOState } from '../../src/types';
 import {
   ANT_CONTRACT_IDS,
   AUCTION_SETTINGS,
@@ -37,8 +37,8 @@ export async function mineBlock(arweave: Arweave): Promise<boolean> {
   return true;
 }
 
-export async function getCurrentBlock(arweave: Arweave): Promise<number> {
-  return (await arweave.blocks.getCurrent()).height;
+export async function getCurrentBlock(arweave: Arweave): Promise<BlockHeight> {
+  return new BlockHeight((await arweave.blocks.getCurrent()).height);
 }
 
 export async function mineBlocks(

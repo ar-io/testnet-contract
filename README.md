@@ -12,7 +12,7 @@ Clone this repository and install the dependencies.
 
 Runs integration tests using arlocal. Note - these test write temporary files to your local disc.
 
-- `yarn tests` - runs full test suite
+- `yarn test` - runs full test suite
 - `yarn test -t 'auctions'` - runs tests that match this spec name (e.g. `auctions.test.ts`)
 
 ## Linting & Formatting

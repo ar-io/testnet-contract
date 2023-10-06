@@ -8,7 +8,7 @@ import {
   NON_EXPIRED_ARNS_NAME_MESSAGE,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../src/constants';
-import { Auction, IOState } from '../src/types';
+import { Auction, BlockHeight, IOState } from '../src/types';
 import { ANT_CONTRACT_IDS } from './utils/constants';
 import {
   calculateMinimumAuctionBid,
@@ -197,9 +197,9 @@ describe('Auctions', () => {
                   startPrice: expect.any(Number),
                   type: 'lease',
                   endHeight:
-                    (await getCurrentBlock(arweave)) +
+                    (await getCurrentBlock(arweave)).valueOf() +
                     AUCTION_SETTINGS.auctionDuration,
-                  startHeight: await getCurrentBlock(arweave),
+                  startHeight: (await getCurrentBlock(arweave)).valueOf(),
                   initiator: nonContractOwnerAddress,
                   contractTxId: ANT_CONTRACT_IDS[0],
                   years: 1,
@@ -252,7 +252,7 @@ describe('Auctions', () => {
                 // fast forward a few blocks, then construct winning bid
                 await mineBlocks(arweave, 3504);
                 const winningBidQty = calculateMinimumAuctionBid({
-                  startHeight: auctionObj.startHeight,
+                  startHeight: new BlockHeight(auctionObj.startHeight),
                   startPrice: auctionObj.startPrice,
                   floorPrice: auctionObj.floorPrice,
                   currentBlockHeight: await getCurrentBlock(arweave),
@@ -419,9 +419,9 @@ describe('Auctions', () => {
                 floorPrice: expect.any(Number),
                 startPrice: expect.any(Number),
                 type: 'lease',
-                startHeight: await getCurrentBlock(arweave),
+                startHeight: (await getCurrentBlock(arweave)).valueOf(),
                 endHeight:
-                  (await getCurrentBlock(arweave)) +
+                  (await getCurrentBlock(arweave)).valueOf() +
                   AUCTION_SETTINGS.auctionDuration,
                 initiator: nonContractOwnerAddress,
                 contractTxId: ANT_CONTRACT_IDS[0],
@@ -466,9 +466,9 @@ describe('Auctions', () => {
             floorPrice: expect.any(Number),
             startPrice: expect.any(Number),
             type: 'permabuy',
-            startHeight: await getCurrentBlock(arweave),
+            startHeight: (await getCurrentBlock(arweave)).valueOf(),
             endHeight:
-              (await getCurrentBlock(arweave)) +
+              (await getCurrentBlock(arweave)).valueOf() +
               AUCTION_SETTINGS.auctionDuration,
             initiator: nonContractOwnerAddress,
             contractTxId: ANT_CONTRACT_IDS[0],
@@ -487,7 +487,7 @@ describe('Auctions', () => {
           // fast forward a few blocks, then construct winning bid
           await mineBlocks(arweave, 3504);
           const winningBidQty = calculateMinimumAuctionBid({
-            startHeight: auctionObj.startHeight,
+            startHeight: new BlockHeight(auctionObj.startHeight),
             startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
             currentBlockHeight: await getCurrentBlock(arweave),
@@ -559,9 +559,9 @@ describe('Auctions', () => {
             floorPrice: expect.any(Number),
             startPrice: expect.any(Number),
             type: 'lease',
-            startHeight: await getCurrentBlock(arweave),
+            startHeight: (await getCurrentBlock(arweave)).valueOf(),
             endHeight:
-              (await getCurrentBlock(arweave)) +
+              (await getCurrentBlock(arweave)).valueOf() +
               AUCTION_SETTINGS.auctionDuration,
             initiator: nonContractOwnerAddress,
             contractTxId: ANT_CONTRACT_IDS[0],
@@ -581,12 +581,14 @@ describe('Auctions', () => {
           `should expect the bid amount to not exceed the start price after %s blocks`,
           async (block) => {
             const winningBidQty = calculateMinimumAuctionBid({
-              startHeight: auctionObj.startHeight,
+              startHeight: new BlockHeight(auctionObj.startHeight),
               startPrice: auctionObj.startPrice,
               floorPrice: auctionObj.floorPrice,
-              currentBlockHeight: auctionObj.startHeight + block,
               decayInterval: AUCTION_SETTINGS.decayInterval,
               decayRate: AUCTION_SETTINGS.decayRate,
+              currentBlockHeight: new BlockHeight(
+                auctionObj.startHeight + block,
+              ),
             });
 
             expect(winningBidQty).toBeLessThanOrEqual(auctionObj.startPrice);
@@ -597,7 +599,7 @@ describe('Auctions', () => {
           // fast forward a few blocks, then construct winning bid
           await mineBlocks(arweave, 3504);
           const winningBidQty = calculateMinimumAuctionBid({
-            startHeight: auctionObj.startHeight,
+            startHeight: new BlockHeight(auctionObj.startHeight),
             startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
             currentBlockHeight: await getCurrentBlock(arweave),

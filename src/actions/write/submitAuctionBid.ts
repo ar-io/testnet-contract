@@ -102,7 +102,7 @@ export const submitAuctionBid = (
   const currentAuctionSettings: AuctionSettings = settings.auctions;
 
   // all the things we need to handle an auction bid
-  const currentBlockHeight = +SmartWeave.block.height;
+  const currentBlockHeight = new BlockHeight(+SmartWeave.block.height);
   const { decayInterval, decayRate, auctionDuration } = currentAuctionSettings;
 
   // TODO: add pricing demand factor
@@ -167,13 +167,13 @@ export const submitAuctionBid = (
       startHeight: new BlockHeight(existingAuction.startHeight),
       startPrice: existingAuction.startPrice,
       floorPrice: existingAuction.floorPrice,
-      currentBlockHeight: new BlockHeight(currentBlockHeight),
+      currentBlockHeight: currentBlockHeight,
       decayRate,
       decayInterval,
     });
     if (
-      existingAuction.startHeight > currentBlockHeight ||
-      currentBlockHeight > auctionEndHeight ||
+      existingAuction.startHeight > currentBlockHeight.valueOf() ||
+      currentBlockHeight.valueOf() > auctionEndHeight ||
       existingAuction.floorPrice >= currentRequiredMinimumBid
     ) {
       /**

@@ -4,7 +4,7 @@ import {
   NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
-} from './constants.js';
+} from './constants';
 
 export type DemandFactoringData = {
   periodStartBlockHeight: number; // TODO: Set me on evolve or fork
@@ -197,7 +197,7 @@ export type ContractResult =
   | { result: ArNSNameResult }
   | {
       result: {
-        [x: string | number]: any; // eslint-disable-line
+        [key in string | number]: any; // eslint-disable-line
       };
     };
 
@@ -327,7 +327,8 @@ export type DeepReadonly<Type> = Type extends Exclude<Builtin, Error>
   ? Type extends IsTuple<Type>
     ? { readonly [Key in keyof Type]: DeepReadonly<Type[Key]> }
     : ReadonlyArray<DeepReadonly<Values>>
-  : Type extends {} // eslint-disable-line
+  : // eslint-disable-next-line @typescript-eslint/ban-types
+  Type extends {}
   ? { readonly [Key in keyof Type]: DeepReadonly<Type[Key]> }
   : IsUnknown<Type> extends true
   ? unknown
