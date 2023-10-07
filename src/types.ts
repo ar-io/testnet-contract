@@ -35,6 +35,16 @@ export type IOState = PstState & {
   auctions: {
     [name: string]: Auction;
   };
+  observationReports: {
+    [epochStartHeight: number]: {
+      observerSummaries: {
+        [failedGatewayAddress: string]: string[]; // the gateway that has been marked as down and the gateways that marked it down
+      };
+      observerReports: {
+        [observerAddress: string]: string; // the observer's publc address and the observation report transaction id
+      };
+    };
+  };
 };
 
 export type Fees = {
