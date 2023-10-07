@@ -260,3 +260,36 @@ export function getAuctionPrices({
   }
   return prices;
 }
+
+export function getEpochStart({
+  startHeight,
+  epochBlockLength,
+  height,
+}: {
+  startHeight: number;
+  epochBlockLength: number;
+  height: number;
+}): number {
+  return (
+    getEpochEnd({ startHeight, epochBlockLength, height }) +
+    1 -
+    epochBlockLength
+  );
+}
+
+export function getEpochEnd({
+  startHeight,
+  epochBlockLength,
+  height,
+}: {
+  startHeight: number;
+  epochBlockLength: number;
+  height: number;
+}): number {
+  return (
+    startHeight +
+    epochBlockLength *
+      (Math.floor((height - startHeight) / epochBlockLength) + 1) -
+    1
+  );
+}

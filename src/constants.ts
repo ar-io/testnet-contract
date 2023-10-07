@@ -115,3 +115,5 @@ export const AUCTION_SETTINGS: {
     },
   ],
 };
+
+export const DEFAULT_EPOCH_BLOCK_LENGTH = 5000;
