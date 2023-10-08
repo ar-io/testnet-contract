@@ -29,6 +29,11 @@ export const INVALID_ARNS_NAME_MESSAGE = 'Invalid ArNS Record Name';
 export const ARNS_NAME_RESERVED_MESSAGE = 'Name is reserved.';
 export const ARNS_NAME_IN_AUCTION_MESSAGE = 'Name is currently in auction.';
 export const INVALID_INPUT_MESSAGE = 'Invalid input for interaction';
+export const CALLER_NOT_REGISTERED_GATEWAY_MESSAGE =
+  'Cannot submit observation report because caller has not registered a gateway';
+export const DEFAULT_NUM_SAMPLED_BLOCKS = 1; // TO DO: Update this to 3, which involves modifying entropy method
+export const DEFAULT_SAMPLED_BLOCKS_OFFSET = 50;
+export const NUM_OBSERVERS_PER_EPOCH = 50;
 export const NON_EXPIRED_ARNS_NAME_MESSAGE =
   'This name already exists in an active lease';
 export const ARNS_NAME_DOES_NOT_EXIST_MESSAGE =

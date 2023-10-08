@@ -20,6 +20,7 @@ import { increaseUndernameCount } from './actions/write/increaseUndernameCount';
 import { initiateLeave } from './actions/write/initiateLeave';
 import { initiateOperatorStakeDecrease } from './actions/write/initiateOperatorStakeDecrease';
 import { joinNetwork } from './actions/write/joinNetwork';
+import { saveObservations } from './actions/write/saveObservations';
 import { submitAuctionBid } from './actions/write/submitAuctionBid';
 import { transferTokens } from './actions/write/transferTokens';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
@@ -81,6 +82,8 @@ export async function handle(
       return submitAuctionBid(state, action);
     case 'auction':
       return getAuction(state, action);
+    case 'saveObservations':
+      return saveObservations(state, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognized: "${input.function}"`,
