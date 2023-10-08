@@ -35,11 +35,11 @@ export type IOState = PstState & {
   auctions: {
     [name: string]: Auction;
   };
-  observations: ObservationReports;
+  observations: Observations;
 };
 
 // The health reports and failure summaries submitted by observers for an epoch
-export type ObservationReports = {
+export type Observations = {
   [epochStartHeight: number]: {
     // the starting height of the epoch that this report is for
     summaries: {
