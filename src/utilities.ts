@@ -1,10 +1,12 @@
 import {
   ANNUAL_PERCENTAGE_FEE,
+  DEFAULT_NUM_SAMPLED_BLOCKS,
   DEFAULT_UNDERNAME_COUNT,
   INVALID_INPUT_MESSAGE,
   MAX_YEARS,
   MINIMUM_ALLOWED_NAME_LENGTH,
   NAMESPACE_LENGTH,
+  NUM_OBSERVERS_PER_EPOCH,
   PERMABUY_LEASE_FEE_LENGTH,
   RARITY_MULTIPLIER_HALVENING,
   SECONDS_IN_A_YEAR,
@@ -14,6 +16,7 @@ import {
 import { Fees } from './types';
 
 declare const ContractError: any;
+declare const SmartWeave: any;
 
 export function calculateTotalRegistrationFee(
   name: string,
@@ -292,4 +295,59 @@ export function getEpochEnd({
       (Math.floor((height - startHeight) / epochBlockLength) + 1) -
     1
   );
+}
+
+export async function getEntropy({
+  height,
+}: {
+  height: number;
+}): Promise<Buffer> {
+  const hash = SmartWeave.arweave.crypto.createHash('sha256');
+
+  // We hash multiples block hashes to reduce the chance that someone will
+  // influence the value produced by grinding with excessive hash power.
+  for (let i = 0; i < DEFAULT_NUM_SAMPLED_BLOCKS; i++) {
+    if (
+      !SmartWeave.block.indep_hash ||
+      typeof SmartWeave.block.indep_hash !== 'string'
+    ) {
+      throw new ContractError(`Block ${height - i} has no indep_hash`);
+    }
+    hash.update(Buffer.from(SmartWeave.block.indep_hash, 'base64url'));
+  }
+  return hash.digest();
+}
+
+export async function getSelectedObservers(
+  height: number,
+  potentialObservers: string[],
+): Promise<string[]> {
+  const selectedObservers: string[] = [];
+  const usedIndexes = new Set<number>();
+  const entropy = await getEntropy({ height });
+  const potentialObserversCount = potentialObservers.length;
+
+  // If we want to source more observers than exist in the list, just return all potential observers
+  if (NUM_OBSERVERS_PER_EPOCH >= potentialObserversCount) {
+    return potentialObservers;
+  }
+
+  let hash = SmartWeave.arweave.crypto
+    .createHash('sha256')
+    .update(entropy)
+    .digest();
+  for (let i = 0; i < NUM_OBSERVERS_PER_EPOCH; i++) {
+    let index = hash.readUInt32BE(0) % potentialObserversCount;
+
+    while (usedIndexes.has(index)) {
+      index = (index + 1) % potentialObserversCount;
+    }
+
+    usedIndexes.add(index);
+    selectedObservers.push(await this.gatewayList.getName(height, index));
+
+    hash = SmartWeave.arweave.crypto.createHash('sha256').update(hash).digest();
+  }
+
+  return selectedObservers;
 }

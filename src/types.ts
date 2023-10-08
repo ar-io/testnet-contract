@@ -35,14 +35,18 @@ export type IOState = PstState & {
   auctions: {
     [name: string]: Auction;
   };
-  observationReports: {
-    [epochStartHeight: number]: {
-      observerSummaries: {
-        [failedGatewayAddress: string]: string[]; // the gateway that has been marked as down and the gateways that marked it down
-      };
-      observerReports: {
-        [observerAddress: string]: string; // the observer's publc address and the observation report transaction id
-      };
+  observation: ObservationReports;
+};
+
+// The health reports and failure summaries submitted by observers for an epoch
+export type ObservationReports = {
+  [epochStartHeight: number]: {
+    // the starting height of the epoch that this report is for
+    summaries: {
+      [failedGatewayAddress: string]: string[]; // the gateway that has been marked as down and the gateways that marked it down
+    };
+    reports: {
+      [observerAddress: string]: string; // the observer's publc address and the observation report transaction id
     };
   };
 };
@@ -184,7 +188,12 @@ export type GARFunctions =
   | 'finalizeOperatorStakeDecrease'
   | 'updateGatewaySettings';
 
-export type IOContractFunctions = GARFunctions & ArNSFunctions & PstFunctions;
+export type ObservationFunctions = 'saveObservations';
+
+export type IOContractFunctions = ObservationFunctions &
+  GARFunctions &
+  ArNSFunctions &
+  PstFunctions;
 
 export type ContractResult =
   | { state: IOState }
