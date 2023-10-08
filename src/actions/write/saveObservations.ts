@@ -33,7 +33,7 @@ export const saveObservations = (
   { caller, input }: PstAction,
 ): ContractResult => {
   // get all other relevant state data
-  const { observation, gateways } = state;
+  const { observations, gateways } = state;
   const { observationReportTxId, failedGateways } = new SaveObservations(input); // does validation on constructor
   const currentEpochStartHeight = getEpochStart({
     startHeight: 0,
@@ -56,21 +56,21 @@ export const saveObservations = (
       gateways[failedGateways[i]].start <= currentEpochStartHeight
     ) {
       // check if this gateway has already been marked as failed
-      if (observation[currentEpochStartHeight].summaries[failedGateways[i]]) {
+      if (observations[currentEpochStartHeight].summaries[failedGateways[i]]) {
         //check if this observer has already marked this gateway as failed, and if not, mark it as failed
         if (
-          observation[currentEpochStartHeight].summaries[
+          observations[currentEpochStartHeight].summaries[
             failedGateways[i]
           ].indexOf(caller) === -1
         ) {
           // has not been marked as down this observer, so it is marked as down
-          observation[currentEpochStartHeight].summaries[
+          observations[currentEpochStartHeight].summaries[
             failedGateways[i]
           ].push(caller);
         }
       } else {
         // has not been marked as down by any observer, so it is marked as down
-        observation[currentEpochStartHeight].summaries[failedGateways[i]] = [
+        observations[currentEpochStartHeight].summaries[failedGateways[i]] = [
           caller,
         ];
       }
@@ -78,7 +78,7 @@ export const saveObservations = (
   }
 
   // add this observers report tx id to this epoch
-  state.observation[currentEpochStartHeight].reports[caller] =
+  state.observations[currentEpochStartHeight].reports[caller] =
     observationReportTxId;
   return { state };
 };
