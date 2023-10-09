@@ -40,7 +40,7 @@ export const increaseUndernameCount = async (
   { caller, input }: PstAction,
 ): Promise<ContractResult> => {
   const { name, qty } = new IncreaseUndernameCount(input);
-  const { balances, records, owner } = state;
+  const { balances, records } = state;
   const record = records[name];
 
   // check if record exists
@@ -81,7 +81,7 @@ export const increaseUndernameCount = async (
   // TODO: move cost to protocol balance
   state.records[name].undernames = incrementedUndernames;
   state.balances[caller] -= undernameCost;
-  state.balances[owner] += undernameCost;
+  state.balances[SmartWeave.contract.id] += undernameCost;
 
   return { state };
 };

@@ -173,7 +173,7 @@ export const buyRecord = (
 
   // TODO: replace with protocol balance
   balances[caller] -= totalRegistrationFee;
-  balances[owner] += totalRegistrationFee;
+  balances[SmartWeave.contract.id] += totalRegistrationFee;
 
   records[name] = {
     contractTxId,

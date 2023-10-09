@@ -59,15 +59,7 @@ export const submitAuctionBid = (
   state: IOState,
   { caller, input }: PstAction,
 ): ContractResult => {
-  const {
-    auctions = {},
-    fees,
-    records,
-    reserved,
-    settings,
-    balances,
-    owner,
-  } = state;
+  const { auctions = {}, fees, records, reserved, settings, balances } = state;
 
   // does validation on constructor
   const {
@@ -315,12 +307,12 @@ export const submitAuctionBid = (
       balances[existingAuction.initiator] += existingAuction.floorPrice;
     } else {
       // add back the initial floor price to the amount returned to the protocol balances
-      balances[owner] += existingAuction.floorPrice;
+      balances[SmartWeave.contract.id] += existingAuction.floorPrice;
     }
 
     // decrement the final bids and move to owner wallet
     balances[caller] -= finalBid;
-    balances[owner] += finalBid;
+    balances[SmartWeave.contract.id] += finalBid;
 
     // delete the auction
     delete auctions[name];

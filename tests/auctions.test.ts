@@ -293,8 +293,9 @@ describe('Auctions', () => {
                 expect(balances[winnerAddress]).toEqual(
                   prevState.balances[winnerAddress] - winningBidQty,
                 );
-                expect(balances[contractOwnerAddress]).toEqual(
-                  prevState.balances[contractOwnerAddress] + winningBidQty,
+                expect(balances[srcContractId]).toEqual(
+                  // Uses the smartweave contract ID to act as the protocol balance
+                  prevState.balances[srcContractId] + winningBidQty,
                 );
                 expect(balances[auctionObj.initiator]).toEqual(
                   prevState.balances[auctionObj.initiator] +
@@ -523,8 +524,8 @@ describe('Auctions', () => {
           expect(balances[auctionObj.initiator]).toEqual(
             prevState.balances[auctionObj.initiator] + auctionObj.floorPrice,
           );
-          expect(balances[contractOwnerAddress]).toEqual(
-            prevState.balances[contractOwnerAddress] + winningBidQty,
+          expect(balances[srcContractId]).toEqual(
+            prevState.balances[srcContractId] + winningBidQty,
           );
         });
       });
@@ -628,8 +629,8 @@ describe('Auctions', () => {
           expect(balances[nonContractOwnerAddress]).toEqual(
             prevState.balances[nonContractOwnerAddress] - floorToBidDifference,
           );
-          expect(balances[contractOwnerAddress]).toEqual(
-            prevState.balances[contractOwnerAddress] + winningBidQty,
+          expect(balances[srcContractId]).toEqual(
+            prevState.balances[srcContractId] + winningBidQty,
           );
         });
       });
