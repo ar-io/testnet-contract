@@ -1,3 +1,5 @@
+import { tallyNamePurchase } from '@/pricing';
+
 import {
   ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
   INSUFFICIENT_FUNDS_MESSAGE,
@@ -5,7 +7,6 @@ import {
   INVALID_YEARS_MESSAGE,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
-import { tallyNamePurchase } from '../../pricing';
 import { BlockHeight, ContractResult, IOState, PstAction } from '../../types';
 import {
   calculateAnnualRenewalFee,
