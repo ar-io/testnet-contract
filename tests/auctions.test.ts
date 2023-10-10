@@ -213,6 +213,7 @@ describe('Auctions', () => {
               // for the remaining tests
               auctionObj = auctions[auctionBid.name];
               auctionTxId = writeInteraction!.originalTxId;
+              // TODO: Check for incremented state
             });
 
             describe('another bid', () => {
@@ -481,6 +482,7 @@ describe('Auctions', () => {
           // for the remaining tests
           auctionObj = auctions[auctionBid.name];
           auctionTxId = writeInteraction!.originalTxId;
+          // TODO: Check that number of purchases is incremented
         });
 
         it('should update the records object when a winning bid comes in', async () => {
@@ -575,6 +577,7 @@ describe('Auctions', () => {
           // for the remaining tests
           auctionObj = auctions[auctionBid.name];
           auctionTxId = writeInteraction!.originalTxId;
+          // TODO: Check that number of purchases is incremented
         });
 
         it.each([-10, -1, 10, 19, 20, 69])(
