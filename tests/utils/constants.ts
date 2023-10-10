@@ -26,5 +26,7 @@ export const CONTRACT_SETTINGS = {
   gatewayLeaveLength: 2,
   operatorStakeWithdrawLength: 5,
 };
+export const EXAMPLE_OBSERVATION_REPORT_TX_ID =
+  'U35xQUnop2Oq1NwhpzRfTeXVSjC0M8H50MVlmo_cTJc';
 // Also export all our other constants
 export * from '../../src/constants';
