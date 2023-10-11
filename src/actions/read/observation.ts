@@ -28,14 +28,14 @@ export function getEpochStart(height: number): number {
 export const isValidObserver = async (
   state: IOState,
   { input: { target, height } }: PstAction,
-): Promise<boolean> => {
+): Promise<ContractResult> => {
   const { settings, gateways } = state;
   const gateway = gateways[target];
   const currentEpochStartHeight = getEpochStart(height);
   if (!gateway) {
-    throw new ContractError(TARGET_GATEWAY_NOT_REGISTERED);
+    return { result: false };
   } else if (gateway.start > currentEpochStartHeight) {
-    throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
+    return { result: false };
   }
 
   const eligibleObservers = {};
@@ -62,5 +62,5 @@ export const isValidObserver = async (
 
   // CHECK ENTROPY IN ELIGIBLE OBSERVERS
 
-  return true;
+  return { result: true };
 };
