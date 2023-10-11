@@ -102,11 +102,5 @@ export const evolveState = async (
     delete state.balances[badBalance];
   }
 
-  const name = ' ab ad flaysdf formatting';
-
-  if (name) {
-    throw new Error('I was badly formatted before this update.');
-  }
-
   return { state };
 };
