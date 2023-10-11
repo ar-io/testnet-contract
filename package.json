@@ -9,7 +9,7 @@
     "format:fix": "prettier . --write",
     "lint:check": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "yarn build && jest tests --runInBand",
+    "test": "yarn build && jest --runInBand",
     "evolve": "yarn ts-node ./tools/evolve-contract.ts",
     "prepare": "husky install",
     "pre-commit": "lint-staged"

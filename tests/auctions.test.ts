@@ -375,7 +375,7 @@ describe('Auctions', () => {
 
             it('should throw an error if a name is reserved for a specific wallet without an expiration', async () => {
               const auctionBid = {
-                name: 'twitter',
+                name: 'www',
                 contractTxId: ANT_CONTRACT_IDS[0],
               };
               // connect using another wallet
@@ -400,7 +400,7 @@ describe('Auctions', () => {
 
             it('should start the auction if the reserved target submits the auction bid', async () => {
               const auctionBid = {
-                name: 'twitter',
+                name: 'auction',
                 contractTxId: ANT_CONTRACT_IDS[0],
               };
               const writeInteraction = await contract.writeInteraction({

@@ -69,7 +69,7 @@ describe('Network', () => {
         expect(newState.gateways[newGatewayOperatorAddress]).toEqual({
           operatorStake: joinGatewayPayload.qty,
           status: NETWORK_JOIN_STATUS,
-          start: 2,
+          start: await getCurrentBlock(arweave),
           end: 0,
           vaults: [],
           settings: {

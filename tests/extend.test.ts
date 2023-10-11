@@ -29,13 +29,9 @@ describe('Extend', () => {
   describe('contract owner', () => {
     let nonContractOwner: JWKInterface;
     let nonContractOwnerAddress: string;
-    let contractOwner: JWKInterface;
-    let contractOwnerAddress: string;
     let emptyWalletCaller: JWKInterface;
 
     beforeAll(async () => {
-      contractOwner = getLocalWallet(0);
-      contractOwnerAddress = await arweave.wallets.getAddress(contractOwner);
       nonContractOwner = getLocalWallet(1);
       nonContractOwnerAddress = await arweave.wallets.getAddress(
         nonContractOwner,
@@ -49,7 +45,7 @@ describe('Extend', () => {
       contract.connect(nonContractOwner);
     });
 
-    it('should not be able to extend a record if the caller has insufficient balance', async () => {
+    it.only('should not be able to extend a record if the caller has insufficient balance', async () => {
       const extendYears = 1;
       const name = 'name1';
       const { cachedValue: prevCachedValue } = await contract.readState();

@@ -276,7 +276,7 @@ export function setupInitialContractState(
   // add balance to the owner
   state.balances = {
     ...state.balances,
-    [owner]: WALLET_FUND_AMOUNT,
+    [owner]: WALLET_FUND_AMOUNT, // TODO: transfer this to the protocol balance
   };
 
   // setup auctions
@@ -311,6 +311,9 @@ export function setupInitialContractState(
     ['twitter']: {
       target: wallets[1],
       endTimestamp: Math.floor(sixMonthsLater.getTime() / 1000),
+    },
+    ['auction']: {
+      target: wallets[1],
     },
     // no owner, expires in 6 months but not premium
     ['ario']: {

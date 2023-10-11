@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import path from 'path';
 
+import { WALLET_FUND_AMOUNT } from './utils/constants';
 import { createLocalWallet, setupInitialContractState } from './utils/helper';
 import { arlocal, arweave, warp } from './utils/services';
 
@@ -49,6 +50,13 @@ module.exports = async () => {
     },
     true, // disable bundling
   );
+
+  // transfer funds to the protocol balance
+  await warp.pst(contractTxId).connect(wallets[0].wallet).writeInteraction({
+    function: 'transfer',
+    target: contractTxId,
+    qty: 1, // just a hack for now - we'll need to give it a balance
+  });
 
   // write contract to local
   fs.writeFileSync(

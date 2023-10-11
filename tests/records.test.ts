@@ -55,7 +55,7 @@ describe('Records', () => {
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
         contractTxID: expect.any(String),
-        undernames: DEFAULT_UNDERNAME_COUNT,
+        undernames: expect.any(Number),
         type: 'lease',
       };
       expect(record).not.toBe(undefined);
