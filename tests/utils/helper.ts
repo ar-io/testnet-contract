@@ -259,10 +259,10 @@ function createGateways(wallets: string[]) {
   return gateways;
 }
 
-export async function setupInitialContractState(
+export function setupInitialContractState(
   owner: string,
   wallets: string[],
-): Promise<IOState> {
+): IOState {
   const state: IOState = INITIAL_STATE as unknown as IOState;
 
   // set the fees
@@ -276,7 +276,7 @@ export async function setupInitialContractState(
   // add balance to the owner
   state.balances = {
     ...state.balances,
-    [owner]: WALLET_FUND_AMOUNT,
+    [owner]: WALLET_FUND_AMOUNT, // TODO: transfer this to the protocol balance
   };
 
   // setup auctions
@@ -311,6 +311,9 @@ export async function setupInitialContractState(
     ['twitter']: {
       target: wallets[1],
       endTimestamp: Math.floor(sixMonthsLater.getTime() / 1000),
+    },
+    ['auction']: {
+      target: wallets[1],
     },
     // no owner, expires in 6 months but not premium
     ['ario']: {

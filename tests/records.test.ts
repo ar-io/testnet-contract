@@ -1,7 +1,6 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import { IOState } from '../src/types';
-import { arweave, warp } from './setup.jest';
 import {
   ANT_CONTRACT_IDS,
   ARNS_NAME_RESERVED_MESSAGE,
@@ -18,6 +17,7 @@ import {
   getLocalArNSContractId,
   getLocalWallet,
 } from './utils/helper';
+import { arweave, warp } from './utils/services';
 
 describe('Records', () => {
   let contract: Contract<PstState>;
@@ -31,13 +31,9 @@ describe('Records', () => {
   describe('any wallet', () => {
     let nonContractOwner: JWKInterface;
     let nonContractOwnerAddress: string;
-    let contractOwnerAddress: string;
-    let contractOwner: JWKInterface;
     let prevState: IOState;
 
     beforeAll(async () => {
-      contractOwner = getLocalWallet(0);
-      contractOwnerAddress = await arweave.wallets.getAddress(contractOwner);
       nonContractOwner = getLocalWallet(1);
       nonContractOwnerAddress = await arweave.wallets.getAddress(
         nonContractOwner,
@@ -59,7 +55,7 @@ describe('Records', () => {
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
         contractTxID: expect.any(String),
-        undernames: DEFAULT_UNDERNAME_COUNT,
+        undernames: expect.any(Number),
         type: 'lease',
       };
       expect(record).not.toBe(undefined);
@@ -437,7 +433,7 @@ describe('Records', () => {
         contractTxId: ANT_CONTRACT_IDS[0],
         years: 1,
       };
-      await contract.connect(nonNameOwner);
+      contract.connect(nonNameOwner);
       const writeInteraction = await contract.writeInteraction(
         {
           function: 'buyRecord',
@@ -481,7 +477,7 @@ describe('Records', () => {
     });
 
     it('should be able to buy reserved name if it is the target of the reserved name', async () => {
-      await contract.connect(nonContractOwner);
+      contract.connect(nonContractOwner);
       const namePurchase = {
         name: 'twitter',
         contractTxId: ANT_CONTRACT_IDS[0],

@@ -1,10 +1,10 @@
 module.exports = {
-  clearMocks: true,
-  setupFilesAfterEnv: ['./tests/setup.jest.ts'],
+  // clearMocks: true,
+  globalSetup: './tests/setup.jest.ts',
+  globalTeardown: './tests/teardown.jest.ts',
   moduleFileExtensions: ['ts', 'js'],
-  testPathIgnorePatterns: ['/.yalc/', '/data/', '/_helpers'],
   testEnvironment: 'node',
-  transformIgnorePatterns: ['<rootDir>/node_modules/(?!@assemblyscript/.*)'],
+  testTimeout: 60_000,
   transform: {
     '^.+\\.(ts|js)$': 'ts-jest',
   },

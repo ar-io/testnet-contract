@@ -9,7 +9,6 @@ import {
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../src/constants';
 import { Auction, AuctionSettings, IOState } from '../src/types';
-import { arweave, warp } from './setup.jest';
 import { ANT_CONTRACT_IDS } from './utils/constants';
 import {
   calculateMinimumAuctionBid,
@@ -18,6 +17,7 @@ import {
   getLocalWallet,
   mineBlocks,
 } from './utils/helper';
+import { arweave, warp } from './utils/services';
 
 describe('Auctions', () => {
   let contract: Contract<PstState>;
@@ -30,17 +30,13 @@ describe('Auctions', () => {
   describe('any address', () => {
     let nonContractOwner: JWKInterface;
     let nonContractOwnerAddress: string;
-    let contractOwnerAddress: string;
-    let contractOwner;
 
     beforeAll(async () => {
       nonContractOwner = getLocalWallet(1);
-      contractOwner = getLocalWallet(0);
       contract = warp.pst(srcContractId).connect(nonContractOwner);
       nonContractOwnerAddress = await arweave.wallets.getAddress(
         nonContractOwner,
       );
-      contractOwnerAddress = await arweave.wallets.getAddress(contractOwner);
     });
 
     describe('submits an auction bid', () => {
@@ -379,7 +375,7 @@ describe('Auctions', () => {
 
             it('should throw an error if a name is reserved for a specific wallet without an expiration', async () => {
               const auctionBid = {
-                name: 'twitter',
+                name: 'www',
                 contractTxId: ANT_CONTRACT_IDS[0],
               };
               // connect using another wallet
@@ -404,7 +400,7 @@ describe('Auctions', () => {
 
             it('should start the auction if the reserved target submits the auction bid', async () => {
               const auctionBid = {
-                name: 'twitter',
+                name: 'auction',
                 contractTxId: ANT_CONTRACT_IDS[0],
               };
               const writeInteraction = await contract.writeInteraction({
