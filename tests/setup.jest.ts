@@ -21,7 +21,7 @@ export const arweave = Arweave.init({
 });
 // Warp
 export const warp = WarpFactory.forLocal(1820, arweave).use(new DeployPlugin());
-LoggerFactory.INST.logLevel('none');
+LoggerFactory.INST.logLevel('error');
 
 // start arlocal
 console.log('Setting up Warp, Arlocal and Arweave clients!'); // eslint-disable-line
@@ -44,7 +44,7 @@ beforeAll(async () => {
     address: string;
   }[] = [];
 
-  for (let i = 0; i < 55; i++) {
+  for (let i = 0; i < 10; i++) {
     const wallet = await createLocalWallet(arweave);
     wallets.push(wallet);
   }

@@ -16,20 +16,22 @@ describe('Observation', () => {
 
   describe('valid observer', () => {
     let newObserver: JWKInterface;
-    let newObserverAddress: string;
+    let failedGateway1: JWKInterface;
+    let failedGateway2: JWKInterface;
 
     beforeAll(async () => {
       owner = getLocalWallet(0);
+      failedGateway1 = getLocalWallet(1);
+      failedGateway2 = getLocalWallet(2);
       newObserver = getLocalWallet(5);
-      newObserverAddress = await arweave.wallets.getAddress(newObserver);
       contract = warp.pst(srcContractId).connect(newObserver);
     });
 
     describe('save observation', () => {
       it('should save observations if selected as observer', async () => {
         const failedGateways = [
-          '36Ar8VmyC7YS7JGaep9ca2ANjLABETTpxSeA7WOV45Y',
-          'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA',
+          await arweave.wallets.getAddress(failedGateway1),
+          await arweave.wallets.getAddress(failedGateway2),
         ];
         const writeInteraction = await contract.writeInteraction({
           function: 'saveObservations',
@@ -45,11 +47,5 @@ describe('Observation', () => {
         expect(newState.observations).not.toEqual(undefined);
       });
     });
-  });
-
-  afterAll(async () => {
-    const { cachedValue: newCachedValue } = await contract.readState();
-    const newState = newCachedValue.state as IOState;
-    console.log(newState);
   });
 });

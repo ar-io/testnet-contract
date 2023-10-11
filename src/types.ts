@@ -38,11 +38,11 @@ export type IOState = PstState & {
   observations: Observations;
 };
 
-// The health reports and failure summaries submitted by observers for an epoch
+// The health reports and failure failureSummaries submitted by observers for an epoch
 export type Observations = {
   [epochStartHeight: number]: {
     // the starting height of the epoch that this report is for
-    summaries: {
+    failureSummaries: {
       [failedGatewayAddress: string]: string[]; // the gateway that has been marked as down and the gateways that marked it down
     };
     reports: {
