@@ -15,11 +15,15 @@ src/validations.mjs
 **key**.json
 wallets
 
-# warp
-cache
-
 # local env files
 .env
+
+# warp
+cache/
+
+# yarn
+.yarn/install-state.gz
+.yarn/cache
 
 # Log files
 npm-debug.log*

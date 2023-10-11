@@ -45,7 +45,7 @@ describe('Extend', () => {
       contract.connect(nonContractOwner);
     });
 
-    it.only('should not be able to extend a record if the caller has insufficient balance', async () => {
+    it('should not be able to extend a record if the caller has insufficient balance', async () => {
       const extendYears = 1;
       const name = 'name1';
       const { cachedValue: prevCachedValue } = await contract.readState();
