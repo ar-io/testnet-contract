@@ -202,8 +202,8 @@ describe('Extend', () => {
         expect(state.balances[nonContractOwnerAddress]).toEqual(
           prevBalance - totalExtensionAnnualFee,
         );
-        expect(state.balances[contractOwnerAddress]).toEqual(
-          prevState.balances[contractOwnerAddress] + totalExtensionAnnualFee,
+        expect(state.balances[srcContractId]).toEqual(
+          prevState.balances[srcContractId] + totalExtensionAnnualFee,
         );
       },
     );
@@ -245,8 +245,8 @@ describe('Extend', () => {
         expect(state.balances[nonContractOwnerAddress]).toEqual(
           prevBalance - totalExtensionAnnualFee,
         );
-        expect(state.balances[contractOwnerAddress]).toEqual(
-          prevState.balances[contractOwnerAddress] + totalExtensionAnnualFee,
+        expect(state.balances[srcContractId]).toEqual(
+          prevState.balances[srcContractId] + totalExtensionAnnualFee,
         );
       },
     );

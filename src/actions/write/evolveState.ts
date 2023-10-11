@@ -102,8 +102,5 @@ export const evolveState = async (
     delete state.balances[badBalance];
   }
 
-  // remove ANT src code txs
-  delete state['approvedANTSourceCodeTxs'];
-
   return { state };
 };

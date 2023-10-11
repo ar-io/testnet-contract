@@ -118,8 +118,8 @@ describe('Records', () => {
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevBalance - expectedPurchasePrice,
       );
-      expect(balances[contractOwnerAddress]).toEqual(
-        prevState.balances[contractOwnerAddress] + expectedPurchasePrice,
+      expect(balances[srcContractId]).toEqual(
+        prevState.balances[srcContractId] + expectedPurchasePrice,
       );
     });
 
@@ -165,8 +165,8 @@ describe('Records', () => {
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevBalance - expectedPurchasePrice,
       );
-      expect(balances[contractOwnerAddress]).toEqual(
-        prevState.balances[contractOwnerAddress] + expectedPurchasePrice,
+      expect(balances[srcContractId]).toEqual(
+        prevState.balances[srcContractId] + expectedPurchasePrice,
       );
     });
 
@@ -211,8 +211,8 @@ describe('Records', () => {
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevBalance - expectedPurchasePrice,
       );
-      expect(balances[contractOwnerAddress]).toEqual(
-        prevState.balances[contractOwnerAddress] + expectedPurchasePrice,
+      expect(balances[srcContractId]).toEqual(
+        prevState.balances[srcContractId] + expectedPurchasePrice,
       );
     });
 

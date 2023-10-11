@@ -46,7 +46,7 @@ export const extendRecord = async (
   state: IOState,
   { caller, input }: PstAction,
 ): Promise<ContractResult> => {
-  const { balances, records, fees, owner } = state;
+  const { balances, records, fees } = state;
   const currentBlockTime = +SmartWeave.block.timestamp;
   const { name, years } = new ExtendRecord(input);
   const record = records[name];
@@ -87,7 +87,7 @@ export const extendRecord = async (
 
   // TODO: implement protocol balance transfer for this charge.
   state.balances[caller] -= totalExtensionAnnualFee;
-  state.balances[owner] += totalExtensionAnnualFee;
+  state.balances[SmartWeave.contract.id] += totalExtensionAnnualFee;
 
   state.records[name].endTimestamp += SECONDS_IN_A_YEAR * years;
   return { state };
