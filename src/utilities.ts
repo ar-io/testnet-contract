@@ -163,7 +163,9 @@ export function walletHasSufficientBalance(
   wallet: string,
   qty: number,
 ): boolean {
-  return !!balances[wallet] && balances[wallet] >= qty;
+  return (
+    !!balances[wallet] && !isNaN(balances[wallet]) && balances[wallet] >= qty
+  );
 }
 
 // TODO: update after dynamic pricing?

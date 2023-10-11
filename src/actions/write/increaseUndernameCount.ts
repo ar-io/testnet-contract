@@ -68,6 +68,13 @@ export const increaseUndernameCount = async (
     );
   }
 
+  // This name's lease has expired and cannot be extended
+  if (endTimestamp + SECONDS_IN_GRACE_PERIOD <= currentBlockTime) {
+    throw new ContractError(
+      `This name has expired and must renewed before its undername support can be extended.`,
+    );
+  }
+
   // Check if the user has enough tokens to increase the undername count
   if (!walletHasSufficientBalance(balances, caller, undernameCost)) {
     throw new ContractError(

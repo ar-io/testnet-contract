@@ -125,6 +125,22 @@ export const buyRecord = (
     throw new ContractError(ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE);
   }
 
+  // Check if the requested name exists on a lease and in a grace period
+  if (
+    records[name] &&
+    records[name].type === 'lease' &&
+    records[name].endTimestamp
+  ) {
+    const { endTimestamp } = records[name];
+    if (
+      endTimestamp &&
+      endTimestamp + SECONDS_IN_GRACE_PERIOD > +SmartWeave.block.timestamp
+    ) {
+      // name is still on active lease during grace period
+      throw new ContractError(NON_EXPIRED_ARNS_NAME_MESSAGE);
+    }
+  }
+
   // set the end lease period for this based on number of years if it's a lease
   const endTimestamp =
     type === 'lease'
@@ -140,6 +156,7 @@ export const buyRecord = (
     currentBlockTimestamp: +SmartWeave.block.timestamp,
   });
 
+  // Check if the user has enough tokens to purchase the name
   if (!walletHasSufficientBalance(balances, caller, totalRegistrationFee)) {
     throw new ContractError(
       `Caller balance not high enough to purchase this name for ${totalRegistrationFee} token(s)!`,

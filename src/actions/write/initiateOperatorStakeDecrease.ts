@@ -24,12 +24,6 @@ export const initiateOperatorStakeDecrease = async (
     );
   }
 
-  if (!Number.isInteger(qty) || qty <= 0) {
-    throw new ContractError(
-      'Invalid value for "qty". Must be an integer greater than zero',
-    );
-  }
-
   if (
     gateways[caller].operatorStake - qty <
     registrySettings.minNetworkJoinStakeAmount

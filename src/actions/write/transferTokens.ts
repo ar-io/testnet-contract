@@ -39,15 +39,6 @@ export const transferTokens = async (
     throw new ContractError(INVALID_TARGET_MESSAGE);
   }
 
-  if (
-    !balances[caller] ||
-    balances[caller] == undefined ||
-    balances[caller] == null ||
-    isNaN(balances[caller])
-  ) {
-    throw new ContractError(`Caller balance is not defined!`);
-  }
-
   if (!walletHasSufficientBalance(balances, caller, qty)) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }

@@ -51,15 +51,6 @@ export const extendRecord = async (
   const { name, years } = new ExtendRecord(input);
   const record = records[name];
 
-  if (
-    !balances[caller] ||
-    balances[caller] == undefined ||
-    balances[caller] == null ||
-    isNaN(balances[caller])
-  ) {
-    throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
-  }
-
   if (!record) {
     throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
   }

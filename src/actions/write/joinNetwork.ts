@@ -3,7 +3,10 @@ import {
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
-import { getInvalidAjvMessage } from '../../utilities';
+import {
+  getInvalidAjvMessage,
+  walletHasSufficientBalance,
+} from '../../utilities';
 import { validateJoinNetwork } from '../../validations.mjs';
 
 declare const ContractError;
@@ -45,16 +48,7 @@ export const joinNetwork = async (
 
   const { qty, ...gatewaySettings } = new JoinNetwork(input);
 
-  if (
-    !balances[caller] ||
-    balances[caller] == undefined ||
-    balances[caller] == null ||
-    isNaN(balances[caller])
-  ) {
-    throw new ContractError(`Caller balance is not defined!`);
-  }
-
-  if (balances[caller] < qty) {
+  if (!walletHasSufficientBalance(balances, caller, qty)) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 

@@ -1,8 +1,8 @@
 import { NETWORK_LEAVING_STATUS } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
+import { walletHasSufficientBalance } from '../../utilities';
 
 declare const ContractError;
-declare const SmartWeave: any;
 
 // Locks tokens into a new gateway operator vault
 export const increaseOperatorStake = async (
@@ -24,20 +24,7 @@ export const increaseOperatorStake = async (
     );
   }
 
-  if (!Number.isInteger(qty) || qty <= 0) {
-    throw new ContractError('Quantity must be a positive integer.');
-  }
-
-  if (
-    !balances[caller] ||
-    balances[caller] == undefined ||
-    balances[caller] == null ||
-    isNaN(balances[caller])
-  ) {
-    throw new ContractError(`Caller balance is not defined!`);
-  }
-
-  if (balances[caller] < qty) {
+  if (!walletHasSufficientBalance(balances, caller, qty)) {
     throw new ContractError(
       `Caller balance not high enough to stake ${qty} token(s)!`,
     );
