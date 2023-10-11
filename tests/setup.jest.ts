@@ -2,7 +2,7 @@ import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import * as fs from 'fs';
 import path from 'path';
-import { LoggerFactory, WarpFactory } from 'warp-contracts';
+import { JWKInterface, LoggerFactory, WarpFactory } from 'warp-contracts';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 import {
@@ -39,21 +39,15 @@ beforeAll(async () => {
   );
 
   // create owner wallet
-  const wallets = [
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave), // starting foundation member
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-  ];
+  const wallets: {
+    wallet: JWKInterface;
+    address: string;
+  }[] = [];
+
+  for (let i = 0; i < 55; i++) {
+    const wallet = await createLocalWallet(arweave);
+    wallets.push(wallet);
+  }
   const [owner] = wallets;
 
   // save wallets to disk
