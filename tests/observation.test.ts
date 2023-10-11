@@ -17,28 +17,35 @@ import {
 describe('Observation', () => {
   let contract: Contract<PstState>;
   let srcContractId: string;
+  // TODO: MAKE ALL THIS BETTER
+  let goodObserver1: JWKInterface;
+  let goodObserver2: JWKInterface;
+  let goodObserver3: JWKInterface;
+  let goodObserver4: JWKInterface;
+  let goodObserver5: JWKInterface;
+  let failedGateway1: JWKInterface;
+  let failedGateway2: JWKInterface;
+  let nonValidObserver: JWKInterface;
+  let goodObserver1Address: string;
+  let nonValidObserverAddress: string;
 
   beforeAll(async () => {
     srcContractId = getLocalArNSContractId();
+    failedGateway1 = getLocalWallet(0);
+    failedGateway2 = getLocalWallet(1);
+    goodObserver1 = getLocalWallet(2);
+    goodObserver2 = getLocalWallet(3);
+    goodObserver3 = getLocalWallet(4);
+    goodObserver4 = getLocalWallet(5);
+    goodObserver5 = getLocalWallet(6);
+    nonValidObserver = getLocalWallet(10);
+    nonValidObserverAddress = await arweave.wallets.getAddress(
+      nonValidObserver,
+    );
   });
 
   describe('valid observer', () => {
-    let goodObserver1: JWKInterface;
-    let goodObserver2: JWKInterface;
-    let goodObserver3: JWKInterface;
-    let goodObserver4: JWKInterface;
-    let goodObserver5: JWKInterface;
-    let failedGateway1: JWKInterface;
-    let failedGateway2: JWKInterface;
-
     beforeAll(async () => {
-      failedGateway1 = getLocalWallet(0);
-      failedGateway2 = getLocalWallet(1);
-      goodObserver1 = getLocalWallet(2);
-      goodObserver2 = getLocalWallet(3);
-      goodObserver3 = getLocalWallet(4);
-      goodObserver4 = getLocalWallet(5);
-      goodObserver5 = getLocalWallet(6);
       contract = warp.pst(srcContractId).connect(goodObserver1);
     });
 
@@ -117,6 +124,9 @@ describe('Observation', () => {
         );
       });
 
+      // add it should NOT allow interactions with malformed report tx id
+      // add it should NOT allow interactions with malformed failed gateways
+
       it('should allow an observer to update their observation with new failures/report if selected as observer', async () => {
         contract = warp.pst(srcContractId).connect(goodObserver1);
         const height = await getCurrentBlock(arweave);
@@ -147,47 +157,56 @@ describe('Observation', () => {
   });
 
   describe('non-valid observer', () => {
-    let nonValidObserver: JWKInterface;
-    let nonValidObserverAddress: string;
-
     beforeAll(async () => {
-      nonValidObserver = getLocalWallet(10);
+      goodObserver1Address = await arweave.wallets.getAddress(goodObserver1);
       contract = warp.pst(srcContractId).connect(nonValidObserver);
-      nonValidObserverAddress = await arweave.wallets.getAddress(
-        nonValidObserver,
-      );
     });
 
     describe('read interactions', () => {
-      it('should be able to fetch gateway details via view state', async () => {
-        const { result: gateway } = await contract.viewState({
-          function: 'gateway',
-          target: ownerAddress,
+      it('should be able to check if target is valid observer for a given epoch', async () => {
+        const height = await getCurrentBlock(arweave);
+        const { result: isValidObserver } = await contract.viewState({
+          function: 'isValidObserver',
+          target: nonValidObserverAddress,
+          height,
         });
-        const expectedGatewayObj = expect.objectContaining({
-          operatorStake: expect.any(Number),
-          status: expect.any(String),
-          vaults: expect.any(Array),
-          settings: expect.any(Object),
+        expect(isValidObserver).toBe(false);
+        const { result: isValidObserver2 } = await contract.viewState({
+          function: 'isValidObserver',
+          target: goodObserver1Address,
+          height,
         });
-        expect(gateway).not.toBe(undefined);
-        expect(gateway).toEqual(expectedGatewayObj);
+        expect(isValidObserver2).toBe(true);
       });
     });
 
     describe('write interactions', () => {
-      it('should not modify gateway settings without already being in GAR', async () => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
-        const writeInteraction = await contract.writeInteraction({
-          function: 'updateGatewaySettings',
-          status: NETWORK_HIDDEN_STATUS,
+      it('should not save observation report if not in the GAR', async () => {
+        const height = await getCurrentBlock(arweave);
+        const currentEpochStartHeight = getEpochStart({
+          startHeight: DEFAULT_START_HEIGHT,
+          epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
+          height,
         });
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const failedGateways = [
+          await arweave.wallets.getAddress(failedGateway1),
+          await arweave.wallets.getAddress(failedGateway2),
+        ];
+        const writeInteraction = await contract.writeInteraction({
+          function: 'saveObservations',
+          observationReportTxId: EXAMPLE_OBSERVATION_REPORT_TX_IDS[0],
+          failedGateways,
+        });
         const { cachedValue: newCachedValue } = await contract.readState();
+        const newState = newCachedValue.state as IOState;
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
           writeInteraction!.originalTxId,
         );
-        expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        expect(
+          newState.observations[currentEpochStartHeight].reports[
+            nonValidObserverAddress
+          ],
+        ).toEqual(undefined);
       });
     });
   });
