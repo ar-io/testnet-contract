@@ -106,7 +106,6 @@ export const saveObservations = (
             failedGateways[i]
           ].indexOf(caller) === -1
         ) {
-          console.log(`${caller} has not marked ${failedGateways[i]} down yet`);
           observations[currentEpochStartHeight].failureSummaries[
             failedGateways[i]
           ].push(caller);
