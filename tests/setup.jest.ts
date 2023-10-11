@@ -1,33 +1,13 @@
-import ArLocal from 'arlocal';
-import Arweave from 'arweave';
 import * as fs from 'fs';
 import path from 'path';
-import { LoggerFactory, WarpFactory } from 'warp-contracts';
-import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
-import {
-  createLocalWallet,
-  mineBlock,
-  setupInitialContractState,
-} from './utils/helper';
+import { createLocalWallet, setupInitialContractState } from './utils/helper';
+import { arlocal, arweave, warp } from './utils/services';
 
-// Arlocal
-export const arlocal = new ArLocal(1820, false);
-// Arweave
-export const arweave = Arweave.init({
-  host: 'localhost',
-  port: 1820,
-  protocol: 'http',
-});
-// Warp
-export const warp = WarpFactory.forLocal(1820, arweave).use(new DeployPlugin());
-LoggerFactory.INST.logLevel('none');
+module.exports = async () => {
+  // start arlocal
+  console.log('\n\nSetting up Warp, Arlocal and Arweave clients...'); // eslint-disable-line
 
-// start arlocal
-console.log('Setting up Warp, Arlocal and Arweave clients!'); // eslint-disable-line
-
-jest.setTimeout(100000);
-beforeAll(async () => {
   await arlocal.start();
 
   createDirectories();
@@ -39,23 +19,9 @@ beforeAll(async () => {
   );
 
   // create owner wallet
-  const wallets = [
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave), // starting foundation member
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-    await createLocalWallet(arweave),
-  ];
-  const [owner] = wallets;
-
+  const wallets = await Promise.all(
+    Array.from({ length: 10 }).map(() => createLocalWallet(arweave)),
+  );
   // save wallets to disk
   wallets.forEach((w, index) => {
     fs.writeFileSync(
@@ -64,23 +30,27 @@ beforeAll(async () => {
     );
   });
 
-  // // create initial contract
-  const initialContractState = await setupInitialContractState(
-    owner.address,
+  console.log('Successfully created wallets!'); // eslint-disable-line
+
+  // // // create initial contract
+  const initialContractState = setupInitialContractState(
+    wallets[0].address,
     wallets.map((w) => w.address),
   );
+
+  console.log('Successfully created initial contract state!'); // eslint-disable-line
 
   // deploy contract to arlocal
   const { contractTxId } = await warp.deploy(
     {
-      wallet: owner.wallet,
+      wallet: wallets[0].wallet,
       initState: JSON.stringify(initialContractState),
       src: contractSrcJs,
     },
     true, // disable bundling
   );
 
-  // write contract id to file
+  // write contract to local
   fs.writeFileSync(
     path.join(__dirname, `./contract/arns_contract.json`),
     JSON.stringify({
@@ -89,31 +59,14 @@ beforeAll(async () => {
     }),
   );
 
-  // // mine everything
-  await mineBlock(arweave);
-
   console.log('Successfully setup ArLocal and deployed contract.'); // eslint-disable-line
-});
-
-afterAll(async () => {
-  removeDirectories();
-  await arlocal.stop();
-});
+};
 
 function createDirectories() {
   ['./wallets', './contract'].forEach((d) => {
     const dir = path.join(__dirname, d);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir);
-    }
-  });
-}
-
-function removeDirectories() {
-  ['./wallets', './contract'].forEach((d) => {
-    const dir = path.join(__dirname, d);
-    if (fs.existsSync(dir)) {
-      fs.rmSync(dir, { recursive: true, force: true });
     }
   });
 }

@@ -259,10 +259,10 @@ function createGateways(wallets: string[]) {
   return gateways;
 }
 
-export async function setupInitialContractState(
+export function setupInitialContractState(
   owner: string,
   wallets: string[],
-): Promise<IOState> {
+): IOState {
   const state: IOState = INITIAL_STATE as unknown as IOState;
 
   // set the fees

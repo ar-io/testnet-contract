@@ -1,7 +1,6 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import { IOState } from '../src/types';
-import { arweave, warp } from './setup.jest';
 import {
   CONTRACT_SETTINGS,
   NETWORK_HIDDEN_STATUS,
@@ -15,6 +14,7 @@ import {
   getLocalWallet,
   mineBlocks,
 } from './utils/helper';
+import { arweave, warp } from './utils/services';
 
 describe('Network', () => {
   let contract: Contract<PstState>;

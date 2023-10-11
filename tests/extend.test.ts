@@ -1,7 +1,6 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import { IOState } from '../src/types';
-import { arweave, warp } from './setup.jest';
 import {
   ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
   INSUFFICIENT_FUNDS_MESSAGE,
@@ -17,6 +16,7 @@ import {
   getLocalArNSContractId,
   getLocalWallet,
 } from './utils/helper';
+import { arweave, warp } from './utils/services';
 
 describe('Extend', () => {
   let contract: Contract<PstState>;
