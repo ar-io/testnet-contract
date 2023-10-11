@@ -5,7 +5,7 @@ import { arweave, warp } from './setup.jest';
 import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_START_HEIGHT,
-  EXAMPLE_OBSERVATION_REPORT_TX_ID,
+  EXAMPLE_OBSERVATION_REPORT_TX_IDS,
 } from './utils/constants';
 import {
   getCurrentBlock,
@@ -42,7 +42,7 @@ describe('Observation', () => {
       contract = warp.pst(srcContractId).connect(goodObserver1);
     });
 
-    describe('save observation', () => {
+    describe('valid observer', () => {
       it('should save first observation in epoch if selected as observer', async () => {
         const height = await getCurrentBlock(arweave);
         const currentEpochStartHeight = getEpochStart({
@@ -56,7 +56,7 @@ describe('Observation', () => {
         ];
         const writeInteraction = await contract.writeInteraction({
           function: 'saveObservations',
-          observationReportTxId: EXAMPLE_OBSERVATION_REPORT_TX_ID,
+          observationReportTxId: EXAMPLE_OBSERVATION_REPORT_TX_IDS[0],
           failedGateways,
         });
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -78,7 +78,7 @@ describe('Observation', () => {
         ];
         let writeInteraction = await contract.writeInteraction({
           function: 'saveObservations',
-          observationReportTxId: EXAMPLE_OBSERVATION_REPORT_TX_ID,
+          observationReportTxId: EXAMPLE_OBSERVATION_REPORT_TX_IDS[0],
           failedGateways,
         });
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -96,7 +96,7 @@ describe('Observation', () => {
         ];
         writeInteraction = await contract.writeInteraction({
           function: 'saveObservations',
-          observationReportTxId: EXAMPLE_OBSERVATION_REPORT_TX_ID,
+          observationReportTxId: EXAMPLE_OBSERVATION_REPORT_TX_IDS[0],
           failedGateways,
         });
         const height = await getCurrentBlock(arweave);
@@ -115,6 +115,79 @@ describe('Observation', () => {
         expect(newState.observations[currentEpochStartHeight]).not.toEqual(
           undefined,
         );
+      });
+
+      it('should allow an observer to update their observation with new failures/report if selected as observer', async () => {
+        contract = warp.pst(srcContractId).connect(goodObserver1);
+        const height = await getCurrentBlock(arweave);
+        const currentEpochStartHeight = getEpochStart({
+          startHeight: DEFAULT_START_HEIGHT,
+          epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
+          height,
+        });
+        const failedGateways = [
+          await arweave.wallets.getAddress(goodObserver2),
+        ];
+        const writeInteraction = await contract.writeInteraction({
+          function: 'saveObservations',
+          observationReportTxId: EXAMPLE_OBSERVATION_REPORT_TX_IDS[1],
+          failedGateways,
+        });
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue: newCachedValue } = await contract.readState();
+        const newState = newCachedValue.state as IOState;
+        expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(newState.observations[currentEpochStartHeight]).not.toEqual(
+          undefined,
+        );
+      });
+    });
+  });
+
+  describe('non-valid observer', () => {
+    let nonValidObserver: JWKInterface;
+    let nonValidObserverAddress: string;
+
+    beforeAll(async () => {
+      nonValidObserver = getLocalWallet(10);
+      contract = warp.pst(srcContractId).connect(nonValidObserver);
+      nonValidObserverAddress = await arweave.wallets.getAddress(
+        nonValidObserver,
+      );
+    });
+
+    describe('read interactions', () => {
+      it('should be able to fetch gateway details via view state', async () => {
+        const { result: gateway } = await contract.viewState({
+          function: 'gateway',
+          target: ownerAddress,
+        });
+        const expectedGatewayObj = expect.objectContaining({
+          operatorStake: expect.any(Number),
+          status: expect.any(String),
+          vaults: expect.any(Array),
+          settings: expect.any(Object),
+        });
+        expect(gateway).not.toBe(undefined);
+        expect(gateway).toEqual(expectedGatewayObj);
+      });
+    });
+
+    describe('write interactions', () => {
+      it('should not modify gateway settings without already being in GAR', async () => {
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const writeInteraction = await contract.writeInteraction({
+          function: 'updateGatewaySettings',
+          status: NETWORK_HIDDEN_STATUS,
+        });
+        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        const { cachedValue: newCachedValue } = await contract.readState();
+        expect(Object.keys(newCachedValue.errorMessages)).toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
     });
   });
