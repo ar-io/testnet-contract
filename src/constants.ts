@@ -29,8 +29,8 @@ export const INVALID_ARNS_NAME_MESSAGE = 'Invalid ArNS Record Name';
 export const ARNS_NAME_RESERVED_MESSAGE = 'Name is reserved.';
 export const ARNS_NAME_IN_AUCTION_MESSAGE = 'Name is currently in auction.';
 export const INVALID_INPUT_MESSAGE = 'Invalid input for interaction';
-export const CALLER_NOT_REGISTERED_GATEWAY_MESSAGE =
-  'Cannot submit observation report because caller has not registered a gateway';
+export const CALLER_NOT_VALID_OBSERVER_MESSAGE =
+  'Cannot submit observation report because caller is not elligible to observe';
 export const TARGET_GATEWAY_NOT_REGISTERED =
   'Target gateway is not currently registered';
 export const INVALID_OBSERVATION_TARGET =
@@ -125,4 +125,5 @@ export const AUCTION_SETTINGS: {
   ],
 };
 
-export const DEFAULT_EPOCH_BLOCK_LENGTH = 5000;
+export const DEFAULT_EPOCH_BLOCK_LENGTH = 50; // 5000 for mainnet
+export const DEFAULT_START_HEIGHT = 0;

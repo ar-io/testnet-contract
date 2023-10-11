@@ -161,7 +161,7 @@ function createGateways(wallets: string[]) {
   gateways[wallets[2]] = {
     operatorStake: 500_000,
     status: NETWORK_JOIN_STATUS,
-    start: 1,
+    start: 0,
     end: 0,
     vaults: [],
     settings: {
@@ -226,6 +226,21 @@ function createGateways(wallets: string[]) {
         note: 'Observation testing',
       },
     });
+  gateways[wallets[6]] = {
+    operatorStake: 20_000,
+    status: NETWORK_JOIN_STATUS,
+    start: 8,
+    end: 0,
+    vaults: [],
+    settings: {
+      label: 'Another Observer', // The friendly name used to label this gateway
+      fqdn: 'observation-again.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
+      port: 443, // The port used by this gateway eg. 443
+      protocol: 'https', // The protocol used by this gateway, either http or https
+      properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
+      note: 'More observervation testing',
+    },
+  };
 
   return gateways;
 }
