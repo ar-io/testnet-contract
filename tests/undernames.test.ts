@@ -11,7 +11,7 @@ import {
   getLocalArNSContractId,
   getLocalWallet,
 } from './utils/helper';
-import { arweave, warp } from './utils/services';
+import { warp } from './utils/services';
 
 describe('undernames', () => {
   let contract: Contract<IOState>;
@@ -23,7 +23,6 @@ describe('undernames', () => {
 
   describe('any address', () => {
     let nonContractOwner: JWKInterface;
-    let nonContractOwnerAddress: string;
     const arnsName = 'name1';
 
     beforeAll(async () => {
@@ -31,9 +30,6 @@ describe('undernames', () => {
       contract = warp
         .contract<IOState>(srcContractId)
         .connect(nonContractOwner);
-      nonContractOwnerAddress = await arweave.wallets.getAddress(
-        nonContractOwner,
-      );
     });
 
     describe('Submits undername increase', () => {

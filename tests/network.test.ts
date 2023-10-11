@@ -438,7 +438,6 @@ describe('Network', () => {
 
       it('should not modify gateway settings with incorrect status', async () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
-        const prevState = prevCachedValue.state as IOState;
         const writeInteraction = await contract.writeInteraction({
           function: 'updateGatewaySettings',
           status: 'OOPSIE',
@@ -665,16 +664,12 @@ describe('Network', () => {
 
   describe('non-valid gateway operator', () => {
     let nonGatewayOperator: JWKInterface;
-    let nonGatewayOperatorAddress: string;
 
     beforeAll(async () => {
       owner = getLocalWallet(0);
       ownerAddress = await arweave.wallets.getAddress(owner);
       nonGatewayOperator = getLocalWallet(6);
       contract = warp.pst(srcContractId).connect(nonGatewayOperator);
-      nonGatewayOperatorAddress = await arweave.wallets.getAddress(
-        nonGatewayOperator,
-      );
     });
 
     describe('read interactions', () => {

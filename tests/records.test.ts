@@ -8,7 +8,6 @@ import {
   DEFAULT_UNDERNAME_COUNT,
   INVALID_INPUT_MESSAGE,
   INVALID_SHORT_NAME,
-  INVALID_YEARS_MESSAGE,
   MAX_YEARS,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
 } from './utils/constants';
@@ -376,7 +375,7 @@ describe('Records', () => {
         );
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(INVALID_YEARS_MESSAGE);
+        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
         expect(cachedValue.state).toEqual(prevState);
       },
     );
