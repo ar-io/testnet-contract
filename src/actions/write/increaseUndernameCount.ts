@@ -13,7 +13,7 @@ import {
 } from '../../utilities';
 import { validateIncreaseUndernameCount } from '../../validations.mjs';
 
-declare const ContractError;
+declare const ContractError: any;
 declare const SmartWeave: any;
 
 export class IncreaseUndernameCount {

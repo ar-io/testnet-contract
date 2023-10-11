@@ -208,11 +208,17 @@ export function calculateUndernamePermutations(domain: string): number {
   return numberOfPossibleUndernames;
 }
 
-export function isNameInGracePeriod(currentTime: number, endTimestamp: number) {
+export function isNameInGracePeriod(
+  currentTime: number,
+  endTimestamp: number,
+): boolean {
   return endTimestamp + SECONDS_IN_GRACE_PERIOD >= currentTime;
 }
 
-export function getLeaseDurationFromEndTimestamp(start: number, end: number) {
+export function getLeaseDurationFromEndTimestamp(
+  start: number,
+  end: number,
+): number {
   const differenceInYears = Math.ceil((end - start) / SECONDS_IN_A_YEAR);
   const years = Math.max(1, differenceInYears);
 
@@ -237,9 +243,9 @@ export function getMaxLeaseExtension(
   );
 }
 
-export function getInvalidAjvMessage(validator: any, input: any) {
+export function getInvalidAjvMessage(validator: any, input: any): string {
   return `${INVALID_INPUT_MESSAGE} for ${this.function}: ${validator.errors
-    .map((e) => {
+    .map((e: any) => {
       const key = e.instancePath.replace('/', '');
       const value = input[key];
       return `${key} ('${value}') ${e.message}`;
@@ -252,10 +258,15 @@ export function getAuctionPrices({
   startHeight,
   startPrice,
   floorPrice,
-}) {
+}: {
+  auctionSettings: AuctionSettings;
+  startHeight: number;
+  startPrice: number;
+  floorPrice: number;
+}): { [x: number]: number } {
   const { auctionDuration, decayRate, decayInterval } = auctionSettings;
   const intervalCount = auctionDuration / decayInterval;
-  const prices = {};
+  const prices: { [x: number]: number } = {};
   for (let i = 0; i <= intervalCount; i++) {
     const intervalHeight = startHeight + i * decayInterval;
     const price = calculateMinimumAuctionBid({

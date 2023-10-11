@@ -1,7 +1,7 @@
 import { NETWORK_LEAVING_STATUS } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
-declare const ContractError;
+declare const ContractError: any;
 declare const SmartWeave: any;
 
 // Begins the process to unlocks the vault of a gateway operator

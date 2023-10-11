@@ -30,7 +30,7 @@ import {
   PstAction,
 } from './types';
 
-declare const ContractError;
+declare const ContractError: any;
 
 export async function handle(
   state: IOState,

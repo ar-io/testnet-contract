@@ -9,7 +9,7 @@ import {
 } from '../../utilities';
 import { validateTransferToken } from '../../validations.mjs';
 
-declare const ContractError;
+declare const ContractError: any;
 
 // TODO: use top level class
 export class TransferToken {

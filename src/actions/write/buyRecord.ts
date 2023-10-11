@@ -4,8 +4,6 @@ import {
   ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_UNDERNAME_COUNT,
   INVALID_SHORT_NAME,
-  INVALID_YEARS_MESSAGE,
-  MAX_YEARS,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
@@ -29,7 +27,7 @@ import {
 import { validateBuyRecord } from '../../validations.mjs';
 import { submitAuctionBid } from './submitAuctionBid';
 
-declare const ContractError;
+declare const ContractError: any;
 declare const SmartWeave: any;
 
 export class BuyRecord {
@@ -83,21 +81,6 @@ export const buyRecord = (
     throw new ContractError(ARNS_NAME_IN_AUCTION_MESSAGE);
   }
 
-  // Check if the user has enough tokens to purchase the name
-  if (
-    !balances[caller] ||
-    balances[caller] == undefined ||
-    balances[caller] == null ||
-    isNaN(balances[caller])
-  ) {
-    throw new ContractError(`Caller balance is not defined!`);
-  }
-
-  // Additional check if it includes a valid number of years (TODO: this may be set in contract settings)
-  if (years > MAX_YEARS) {
-    throw new ContractError(INVALID_YEARS_MESSAGE);
-  }
-
   if (
     isActiveReservedName({
       caller,
@@ -123,22 +106,6 @@ export const buyRecord = (
 
   if (isNameRequiredToBeAuction({ name, type })) {
     throw new ContractError(ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE);
-  }
-
-  // Check if the requested name exists on a lease and in a grace period
-  if (
-    records[name] &&
-    records[name].type === 'lease' &&
-    records[name].endTimestamp
-  ) {
-    const { endTimestamp } = records[name];
-    if (
-      endTimestamp &&
-      endTimestamp + SECONDS_IN_GRACE_PERIOD > +SmartWeave.block.timestamp
-    ) {
-      // name is still on active lease during grace period
-      throw new ContractError(NON_EXPIRED_ARNS_NAME_MESSAGE);
-    }
   }
 
   // set the end lease period for this based on number of years if it's a lease

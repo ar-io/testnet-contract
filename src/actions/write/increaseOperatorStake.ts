@@ -2,7 +2,7 @@ import { NETWORK_LEAVING_STATUS } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 import { walletHasSufficientBalance } from '../../utilities';
 
-declare const ContractError;
+declare const ContractError: any;
 
 // Locks tokens into a new gateway operator vault
 export const increaseOperatorStake = async (
