@@ -102,10 +102,14 @@ function demandIsIncreasing({
   );
 }
 
-function demandFactorPeriodIndex(periodStartBlockHeight: BlockHeight): number {
+export function demandFactorPeriodIndex(
+  periodStartBlockHeight: BlockHeight,
+): number {
   return (
-    periodStartBlockHeight.valueOf() %
-    DEMAND_FACTORING_SETTINGS.periodBlockCount
+    Math.floor(
+      periodStartBlockHeight.valueOf() /
+        DEMAND_FACTORING_SETTINGS.periodBlockCount,
+    ) % DEMAND_FACTORING_SETTINGS.movingAvgPeriodCount
   );
 }
 
