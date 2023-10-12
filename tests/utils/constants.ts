@@ -31,5 +31,8 @@ export const EXAMPLE_OBSERVATION_REPORT_TX_IDS = [
   'TtXk8kqgGYVqTQeHaJzst3toA2qz9UO0AGX1lUeuxvc',
 ];
 
+export const EXAMPLE_LIST_OF_FAILED_GATEWAYS = [
+  EXAMPLE_OBSERVATION_REPORT_TX_IDS.concat(['fakeone']),
+];
 // Also export all our other constants
 export * from '../../src/constants';

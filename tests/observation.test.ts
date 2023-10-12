@@ -1,10 +1,10 @@
-import { Contract, JWKInterface, PstState } from 'warp-contracts';
+import { Contract, JWKInterface, PstState } from 'warp-contracts/lib/types';
 
 import { IOState } from '../src/types';
-import { arweave, warp } from './setup.jest';
 import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_START_HEIGHT,
+  EXAMPLE_LIST_OF_FAILED_GATEWAYS,
   EXAMPLE_OBSERVATION_REPORT_TX_IDS,
 } from './utils/constants';
 import {
@@ -13,6 +13,7 @@ import {
   getLocalArNSContractId,
   getLocalWallet,
 } from './utils/helper';
+import { arweave, warp } from './utils/services';
 
 describe('Observation', () => {
   let contract: Contract<PstState>;
@@ -20,13 +21,17 @@ describe('Observation', () => {
   // TODO: MAKE ALL THIS BETTER
   let goodObserver1: JWKInterface;
   let goodObserver2: JWKInterface;
+  let leavingFirstEpochObserver: JWKInterface;
   let goodObserver3: JWKInterface;
-  let goodObserver4: JWKInterface;
-  let goodObserver5: JWKInterface;
+  let joiningSecondEpochObserver: JWKInterface;
   let failedGateway1: JWKInterface;
   let failedGateway2: JWKInterface;
   let nonValidObserver: JWKInterface;
   let goodObserver1Address: string;
+  let goodObserver2Address: string;
+  let goodObserver3Address: string;
+  let leavingFirstEpochObserverAddress: string;
+  let joiningSecondEpochObserverAddress: string;
   let nonValidObserverAddress: string;
 
   beforeAll(async () => {
@@ -35,13 +40,21 @@ describe('Observation', () => {
     failedGateway2 = getLocalWallet(1);
     goodObserver1 = getLocalWallet(2);
     goodObserver2 = getLocalWallet(3);
-    goodObserver3 = getLocalWallet(4);
-    goodObserver4 = getLocalWallet(5);
-    goodObserver5 = getLocalWallet(6);
+    leavingFirstEpochObserver = getLocalWallet(4);
+    goodObserver3 = getLocalWallet(5);
+    joiningSecondEpochObserver = getLocalWallet(6); // This wallet does not join until mid-second epoch.
     nonValidObserver = getLocalWallet(10);
     nonValidObserverAddress = await arweave.wallets.getAddress(
       nonValidObserver,
     );
+    joiningSecondEpochObserverAddress = await arweave.wallets.getAddress(
+      joiningSecondEpochObserver,
+    );
+    leavingFirstEpochObserverAddress = await arweave.wallets.getAddress(
+      leavingFirstEpochObserver,
+    );
+    goodObserver2Address = await arweave.wallets.getAddress(goodObserver2);
+    goodObserver3Address = await arweave.wallets.getAddress(goodObserver3);
   });
 
   describe('valid observer', () => {
@@ -94,8 +107,6 @@ describe('Observation', () => {
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
           writeInteraction!.originalTxId,
         );
-        expect(newState.observations).not.toEqual(undefined);
-
         contract = warp.pst(srcContractId).connect(goodObserver3);
         failedGateways = [
           await arweave.wallets.getAddress(failedGateway1),
@@ -119,13 +130,69 @@ describe('Observation', () => {
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
           writeInteraction!.originalTxId,
         );
-        expect(newState.observations[currentEpochStartHeight]).not.toEqual(
-          undefined,
-        );
+        expect(
+          newState.observations[currentEpochStartHeight].reports[
+            goodObserver2Address
+          ],
+        ).toEqual(EXAMPLE_OBSERVATION_REPORT_TX_IDS[0]);
+        expect(
+          newState.observations[currentEpochStartHeight].reports[
+            goodObserver3Address
+          ],
+        ).toEqual(EXAMPLE_OBSERVATION_REPORT_TX_IDS[0]);
       });
 
-      // add it should NOT allow interactions with malformed report tx id
-      // add it should NOT allow interactions with malformed failed gateways
+      it.each([undefined, 'bad-tx-id', 100])(
+        'it must not allow interactions with malformed report tx id',
+        async (observationReportTxId) => {
+          const height = await getCurrentBlock(arweave);
+          const currentEpochStartHeight = getEpochStart({
+            startHeight: DEFAULT_START_HEIGHT,
+            epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
+            height,
+          });
+          const failedGateways = [goodObserver3Address];
+          const writeInteraction = await contract.writeInteraction({
+            function: 'saveObservations',
+            observationReportTxId,
+            failedGateways,
+          });
+          const { cachedValue: newCachedValue } = await contract.readState();
+          const newState = newCachedValue.state as IOState;
+          expect(Object.keys(newCachedValue.errorMessages)).toContain(
+            writeInteraction!.originalTxId,
+          );
+          expect(
+            newState.observations[currentEpochStartHeight].reports[
+              goodObserver3Address
+            ],
+          ).not.toEqual(observationReportTxId);
+        },
+      );
+
+      it.each([
+        undefined,
+        goodObserver3Address, // should reject this because it is not an array
+        ['bad-tx-id'],
+        [100],
+        [EXAMPLE_LIST_OF_FAILED_GATEWAYS],
+      ])(
+        'it must not allow interactions with malformed failed gateways',
+        async (failedGateways) => {
+          const { cachedValue: prevCachedValue } = await contract.readState();
+          const writeInteraction = await contract.writeInteraction({
+            function: 'saveObservations',
+            observationReportTxId: EXAMPLE_OBSERVATION_REPORT_TX_IDS[0],
+            failedGateways,
+          });
+          const { cachedValue: newCachedValue } = await contract.readState();
+          expect(Object.keys(newCachedValue.errorMessages)).toContain(
+            writeInteraction!.originalTxId,
+          );
+          expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        },
+      );
+      // add
 
       it('should allow an observer to update their observation with new failures/report if selected as observer', async () => {
         contract = warp.pst(srcContractId).connect(goodObserver1);
@@ -205,6 +272,35 @@ describe('Observation', () => {
         expect(
           newState.observations[currentEpochStartHeight].reports[
             nonValidObserverAddress
+          ],
+        ).toEqual(undefined);
+      });
+
+      it('should not save observation report if gateway is leaving', async () => {
+        contract = warp.pst(srcContractId).connect(leavingFirstEpochObserver);
+        const height = await getCurrentBlock(arweave);
+        const currentEpochStartHeight = getEpochStart({
+          startHeight: DEFAULT_START_HEIGHT,
+          epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
+          height,
+        });
+        const failedGateways = [
+          await arweave.wallets.getAddress(failedGateway1),
+          await arweave.wallets.getAddress(failedGateway2),
+        ];
+        const writeInteraction = await contract.writeInteraction({
+          function: 'saveObservations',
+          observationReportTxId: EXAMPLE_OBSERVATION_REPORT_TX_IDS[0],
+          failedGateways,
+        });
+        const { cachedValue: newCachedValue } = await contract.readState();
+        const newState = newCachedValue.state as IOState;
+        expect(Object.keys(newCachedValue.errorMessages)).toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(
+          newState.observations[currentEpochStartHeight].reports[
+            leavingFirstEpochObserverAddress
           ],
         ).toEqual(undefined);
       });

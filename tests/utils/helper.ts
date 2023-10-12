@@ -194,7 +194,7 @@ function createGateways(wallets: string[]) {
     operatorStake: 10_000,
     status: NETWORK_LEAVING_STATUS,
     start: 0,
-    end: 4,
+    end: 2,
     vaults: [
       {
         balance: 10_000,

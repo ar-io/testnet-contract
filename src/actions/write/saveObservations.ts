@@ -82,7 +82,7 @@ export const saveObservations = (
     };
   }
 
-  // mark each gateway as failed in the observation report
+  // process the failed gateway summary
   for (let i = 0; i < failedGateways.length; i++) {
     // check if gateway is valid for being observed
     if (!gateways[failedGateways[i]]) {
@@ -112,7 +112,7 @@ export const saveObservations = (
         }
       }
     } else {
-      throw new ContractError(TARGET_GATEWAY_NOT_REGISTERED); // optionally, we could skip these records instead of throwing an error
+      throw new ContractError(INVALID_OBSERVATION_TARGET); // optionally, we could skip these records instead of throwing an error
     }
   }
 

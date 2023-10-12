@@ -20,7 +20,7 @@ module.exports = async () => {
 
   // create owner wallet
   const wallets = await Promise.all(
-    Array.from({ length: 10 }).map(() => createLocalWallet(arweave)),
+    Array.from({ length: 11 }).map(() => createLocalWallet(arweave)),
   );
   // save wallets to disk
   wallets.forEach((w, index) => {
