@@ -93,9 +93,7 @@ export const extendRecord = async (
   // TODO: implement protocol balance transfer for this charge.
   state.balances[caller] -= totalExtensionAnnualFee;
   state.balances[SmartWeave.contract.id] += totalExtensionAnnualFee;
-
   state.records[name].endTimestamp += SECONDS_IN_A_YEAR * years;
-
   state.demandFactoring = tallyNamePurchase(
     new BlockHeight(+SmartWeave.block.height),
     state.demandFactoring,
