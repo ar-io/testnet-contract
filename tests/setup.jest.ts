@@ -1,15 +1,18 @@
 import * as fs from 'fs';
 import path from 'path';
-import { JWKInterface } from 'warp-contracts';
-import { ArweaveSigner } from 'warp-contracts-plugin-deploy';
 
 import { TEST_WALLET_IDS } from './utils/constants';
-import { getLocalWallet, setupInitialContractState } from './utils/helper';
-import { arlocal, warp } from './utils/services';
+import {
+  addFunds,
+  getLocalWallet,
+  setupInitialContractState,
+} from './utils/helper';
+import { arlocal, arweave, warp } from './utils/services';
 
+/* eslint-disable no-console */
 module.exports = async () => {
   // start arlocal
-  console.log('\n\nSetting up Warp, Arlocal and Arweave clients...'); // eslint-disable-line
+  console.log('\n\nSetting up Warp, Arlocal and Arweave clients...');
 
   await arlocal.start();
 
@@ -23,12 +26,17 @@ module.exports = async () => {
 
   // inject our test wallets to the contract
   const wallets = TEST_WALLET_IDS;
-  const owner = new ArweaveSigner(getLocalWallet(0));
+  const owner = getLocalWallet(0);
+
+  // fund them all
+  await Promise.all(
+    wallets.map((_, idx) => addFunds(arweave, getLocalWallet(idx))),
+  );
 
   // create initial contract state
   const initialContractState = setupInitialContractState(wallets[0], wallets);
 
-  console.log('Successfully created initial contract state!'); // eslint-disable-line
+  console.log('Successfully created initial contract state!');
 
   // deploy contract to arlocal
   const { contractTxId } = await warp.deploy(
@@ -56,7 +64,7 @@ module.exports = async () => {
     }),
   );
 
-  console.log('Successfully setup ArLocal and deployed contract.'); // eslint-disable-line
+  console.log('Successfully setup ArLocal and deployed contract.');
 };
 
 function createDirectories() {

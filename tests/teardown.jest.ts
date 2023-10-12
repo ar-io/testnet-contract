@@ -9,7 +9,7 @@ module.exports = async () => {
 };
 
 function removeDirectories() {
-  ['./wallets', './contract'].forEach((d) => {
+  ['./contract'].forEach((d) => {
     const dir = path.join(__dirname, d);
     if (fs.existsSync(dir)) {
       fs.rmSync(dir, { recursive: true, force: true });
