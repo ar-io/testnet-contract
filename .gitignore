@@ -13,7 +13,6 @@ src/validations.mjs
 
 # keys
 **key**.json
-wallets
 
 # local env files
 .env

@@ -28,3 +28,17 @@ export const CONTRACT_SETTINGS = {
 };
 // Also export all our other constants
 export * from '../../src/constants';
+
+// stored in ./wallets directory
+export const TEST_WALLET_IDS = [
+  'BwcaNGvP9OQFQYn7ModWNyTmm_UiBP2HMmj9jGzPnkc',
+  'F20eFICcNqd5YtEC6NvjvcAKCgE2YRFtl6R1PhIuGJA',
+  'FUo4elJRgyPPPlXWFOvbjDEwOpdd5H_9GVpcW5ECqAo',
+  'G6r5GhJkHeBCFntfLmIXkrIPOPqldY4t99IEM4nHy8Y',
+  'MD7yq8v-CadUNRu0WabSh0QIdMzcd4sN8j-pK64lTFA',
+  'QgKhSVnwXSbwnjcB64FiESUCcoIo1Vac1lClPtVYsqk',
+  'Sqp_5Kt22--PebyhwRVYq4_mqhNFDHMBrHpp23mxuaQ',
+  'tPNpS_qoeNjTbhumXD_4WqGt4yRM4lgX8r_1mJnB73w',
+  'W24cNE-ZXWYSac8_45x4ZMqxmut6WqV-jOxPGw0kChU',
+  'xinm5fA92EnMT3zI-2I7QGs-B42vUa05z2nPtiFnD38',
+];

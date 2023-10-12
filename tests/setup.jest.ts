@@ -1,9 +1,11 @@
 import * as fs from 'fs';
 import path from 'path';
+import { JWKInterface } from 'warp-contracts';
+import { ArweaveSigner } from 'warp-contracts-plugin-deploy';
 
-import { WALLET_FUND_AMOUNT } from './utils/constants';
-import { createLocalWallet, setupInitialContractState } from './utils/helper';
-import { arlocal, arweave, warp } from './utils/services';
+import { TEST_WALLET_IDS } from './utils/constants';
+import { getLocalWallet, setupInitialContractState } from './utils/helper';
+import { arlocal, warp } from './utils/services';
 
 module.exports = async () => {
   // start arlocal
@@ -19,32 +21,19 @@ module.exports = async () => {
     'utf8',
   );
 
-  // create owner wallet
-  const wallets = await Promise.all(
-    Array.from({ length: 10 }).map(() => createLocalWallet(arweave)),
-  );
-  // save wallets to disk
-  wallets.forEach((w, index) => {
-    fs.writeFileSync(
-      path.join(__dirname, `./wallets/${index}.json`),
-      JSON.stringify(w.wallet),
-    );
-  });
+  // inject our test wallets to the contract
+  const wallets = TEST_WALLET_IDS;
+  const owner = new ArweaveSigner(getLocalWallet(0));
 
-  console.log('Successfully created wallets!'); // eslint-disable-line
-
-  // // // create initial contract
-  const initialContractState = setupInitialContractState(
-    wallets[0].address,
-    wallets.map((w) => w.address),
-  );
+  // create initial contract state
+  const initialContractState = setupInitialContractState(wallets[0], wallets);
 
   console.log('Successfully created initial contract state!'); // eslint-disable-line
 
   // deploy contract to arlocal
   const { contractTxId } = await warp.deploy(
     {
-      wallet: wallets[0].wallet,
+      wallet: owner,
       initState: JSON.stringify(initialContractState),
       src: contractSrcJs,
     },
@@ -52,7 +41,7 @@ module.exports = async () => {
   );
 
   // transfer funds to the protocol balance
-  await warp.pst(contractTxId).connect(wallets[0].wallet).writeInteraction({
+  await warp.pst(contractTxId).connect(owner).writeInteraction({
     function: 'transfer',
     target: contractTxId,
     qty: 1, // just a hack for now - we'll need to give it a balance
@@ -71,7 +60,7 @@ module.exports = async () => {
 };
 
 function createDirectories() {
-  ['./wallets', './contract'].forEach((d) => {
+  ['./contract'].forEach((d) => {
     const dir = path.join(__dirname, d);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir);

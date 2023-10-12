@@ -17,6 +17,7 @@ import {
   REGISTRATION_TYPES,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
+  TEST_WALLET_IDS,
   WALLET_FUND_AMOUNT,
 } from './constants';
 
@@ -324,8 +325,9 @@ export function setupInitialContractState(
 }
 
 export function getLocalWallet(index = 0): JWKInterface {
+  const id = TEST_WALLET_IDS[index];
   const wallet = JSON.parse(
-    fs.readFileSync(path.join(__dirname, `../wallets/${index}.json`), 'utf8'),
+    fs.readFileSync(path.join(__dirname, `../wallets/${id}.json`), 'utf8'),
   ) as unknown as JWKInterface;
   return wallet;
 }
