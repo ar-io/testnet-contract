@@ -1,4 +1,3 @@
-import { NON_EXPIRED_ARNS_NAME_MESSAGE } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 import {
   calculatePermabuyFee,
@@ -7,7 +6,6 @@ import {
 } from '../../utilities';
 
 declare const SmartWeave: any;
-declare const ContractError;
 
 export const getAuction = (
   state: IOState,
@@ -15,14 +13,9 @@ export const getAuction = (
 ): ContractResult => {
   const { records, auctions, settings, fees, reserved } = state;
   const auction = auctions[name.toLowerCase().trim()];
+  const auctionSettings = settings.auctions;
 
   if (!auction) {
-    // get the current auction settings to create prices
-    const auctionSettingsId = settings.auctions.current;
-    const auctionSettings = settings.auctions.history.find(
-      (a) => a.id === auctionSettingsId,
-    );
-
     const { floorPriceMultiplier, startPriceMultiplier } = auctionSettings;
 
     const registrationFee =
@@ -55,25 +48,12 @@ export const getAuction = (
         type,
         name,
         prices,
-        settings: {
-          id: auctionSettingsId,
-          ...auctionSettings,
-        },
+        settings: auctionSettings,
       },
     };
   }
 
-  const { auctionSettingsId, startHeight, floorPrice, startPrice } = auction;
-  const auctionSettings = settings.auctions.history.find(
-    (a) => a.id === auctionSettingsId,
-  );
-
-  if (!auctionSettings) {
-    throw new ContractError(
-      `Auction settings with id ${auctionSettingsId} does not exist.`,
-    );
-  }
-
+  const { startHeight, floorPrice, startPrice } = auction;
   const expirationHeight = startHeight + auctionSettings.auctionDuration;
 
   const prices = getAuctionPrices({
@@ -85,14 +65,10 @@ export const getAuction = (
 
   return {
     result: {
-      [name]: auction,
+      ...auction,
       endHeight: expirationHeight,
       isExpired: expirationHeight < +SmartWeave.block.height,
       isAvailableForAuction: false,
-      settings: {
-        id: auctionSettingsId,
-        ...auctionSettings,
-      },
       prices,
     },
   };

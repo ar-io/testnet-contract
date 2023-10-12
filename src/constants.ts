@@ -97,21 +97,10 @@ export const FEE_STRUCTURE = {
   '50': 50,
   '51': 50,
 };
-export const AUCTION_SETTINGS_ID =
-  '3IkWJ-0HdwuATDhBXuJRm0bWspXOOkRjxTm-5R2xRbw';
-export const AUCTION_SETTINGS: {
-  current: string;
-  history: AuctionSettings[];
-} = {
-  current: AUCTION_SETTINGS_ID,
-  history: [
-    {
-      id: AUCTION_SETTINGS_ID,
-      floorPriceMultiplier: 1,
-      startPriceMultiplier: 50,
-      decayInterval: 30, // decrement every 30 blocks - approx every 1 hour
-      decayRate: 0.0225, // 5% decay
-      auctionDuration: 5040, // approx 7 days long
-    },
-  ],
+export const AUCTION_SETTINGS: AuctionSettings = {
+  floorPriceMultiplier: 1,
+  startPriceMultiplier: 50,
+  decayInterval: 30, // decrement every 30 blocks - approx every 1 hour
+  decayRate: 0.0225, // 5% decay
+  auctionDuration: 5040, // approx 7 days long
 };
