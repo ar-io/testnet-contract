@@ -2,6 +2,7 @@ import {
   CALLER_NOT_REGISTERED_GATEWAY_MESSAGE,
   DEFAULT_EPOCH_BLOCK_LENGTH,
   NETWORK_JOIN_STATUS,
+  TARGET_GATEWAY_NOT_REGISTERED,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 import { getEpochStart, getInvalidAjvMessage } from '../../utilities';
@@ -48,31 +49,45 @@ export const saveObservations = (
     throw new ContractError(CALLER_NOT_REGISTERED_GATEWAY_MESSAGE);
   }
 
+  // check if this is the first report filed in this epoch
+  if (!observations[currentEpochStartHeight]) {
+    observations[currentEpochStartHeight] = {
+      failureSummaries: {},
+      reports: {},
+    };
+  }
+
   // mark each gateway as failed in the observation report
   for (let i = 0; i < failedGateways.length; i++) {
-    // check if gateway is valid for this epoch
-    if (
-      gateways[failedGateways[i]].status === NETWORK_JOIN_STATUS &&
-      gateways[failedGateways[i]].start <= currentEpochStartHeight
-    ) {
+    // check if gateway is valid for being observed
+    if (!gateways[failedGateways[i]]) {
+      throw new ContractError(TARGET_GATEWAY_NOT_REGISTERED); // optionally, we could skip these records instead of throwing an error
+    }
+
+    if (gateways[failedGateways[i]].start <= currentEpochStartHeight) {
       // check if this gateway has already been marked as failed
-      if (observations[currentEpochStartHeight].summaries[failedGateways[i]]) {
+      if (
+        observations[currentEpochStartHeight] &&
+        observations[currentEpochStartHeight].failureSummaries[
+          failedGateways[i]
+        ]
+      ) {
         //check if this observer has already marked this gateway as failed, and if not, mark it as failed
         if (
-          observations[currentEpochStartHeight].summaries[
+          observations[currentEpochStartHeight].failureSummaries[
             failedGateways[i]
           ].indexOf(caller) === -1
         ) {
           // has not been marked as down this observer, so it is marked as down
-          observations[currentEpochStartHeight].summaries[
+          observations[currentEpochStartHeight].failureSummaries[
             failedGateways[i]
           ].push(caller);
         }
       } else {
         // has not been marked as down by any observer, so it is marked as down
-        observations[currentEpochStartHeight].summaries[failedGateways[i]] = [
-          caller,
-        ];
+        observations[currentEpochStartHeight].failureSummaries[
+          failedGateways[i]
+        ] = [caller];
       }
     }
   }

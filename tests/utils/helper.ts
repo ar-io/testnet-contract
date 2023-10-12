@@ -128,21 +128,10 @@ function createGateways(wallets: string[]) {
   const gateways: any = {};
   gateways[wallets[0]] = {
     operatorStake: 50_000,
-    start: 1,
+    start: 0,
     end: 0,
     status: NETWORK_JOIN_STATUS,
-    vaults: [
-      {
-        balance: 40_000,
-        start: 1,
-        end: 0,
-      },
-      {
-        balance: 10_000,
-        start: 1,
-        end: 0,
-      },
-    ],
+    vaults: [],
     settings: {
       label: 'Arweave Community Gateway', // The friendly name used to label this gateway
       fqdn: 'arweave.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -154,17 +143,11 @@ function createGateways(wallets: string[]) {
   };
 
   gateways[wallets[1]] = {
-    operatorStake: 5_000, // this includes the additional vault we add below
+    operatorStake: 10_000,
     status: NETWORK_JOIN_STATUS,
-    start: 1,
+    start: 0,
     end: 0,
-    vaults: [
-      {
-        balance: 5_000,
-        start: 1,
-        end: 0,
-      },
-    ],
+    vaults: [],
     settings: {
       label: 'Slashme', // The friendly name used to label this gateway
       fqdn: 'slash-this-gateway.io', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -176,32 +159,11 @@ function createGateways(wallets: string[]) {
   };
 
   gateways[wallets[2]] = {
-    operatorStake: 500_000, // this includes the additional vault we add below
+    operatorStake: 500_000,
     status: NETWORK_JOIN_STATUS,
     start: 1,
     end: 0,
-    vaults: [
-      {
-        balance: 250_000,
-        start: 1,
-        end: 0,
-      },
-      {
-        balance: 50_000,
-        start: 1,
-        end: 0,
-      },
-      {
-        balance: 100_000,
-        start: 1,
-        end: 0,
-      },
-      {
-        balance: 100_000,
-        start: 1,
-        end: 0,
-      },
-    ],
+    vaults: [],
     settings: {
       label: 'Delegateme', // The friendly name used to label this gateway
       fqdn: 'delegate.org', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -213,17 +175,11 @@ function createGateways(wallets: string[]) {
   };
 
   gateways[wallets[3]] = {
-    operatorStake: 5_000, // this includes the additional vault we add below
+    operatorStake: 10_000,
     status: NETWORK_HIDDEN_STATUS,
-    start: 1,
+    start: 0,
     end: 0,
-    vaults: [
-      {
-        balance: 5_000,
-        start: 1,
-        end: 0,
-      },
-    ],
+    vaults: [],
     settings: {
       label: 'Wack-gateway', // The friendly name used to label this gateway
       fqdn: 'brokeninfra.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -234,16 +190,16 @@ function createGateways(wallets: string[]) {
     },
   };
 
-  gateways[wallets[4]] = {
-    operatorStake: 10_000, // this includes the additional vault we add below
+  (gateways[wallets[4]] = {
+    operatorStake: 10_000,
     status: NETWORK_LEAVING_STATUS,
-    start: 1,
+    start: 0,
     end: 4,
     vaults: [
       {
         balance: 10_000,
         start: 1,
-        end: 0,
+        end: 4,
       },
     ],
     settings: {
@@ -254,7 +210,22 @@ function createGateways(wallets: string[]) {
       properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
       note: 'Leaving the network',
     },
-  };
+  }),
+    (gateways[wallets[5]] = {
+      operatorStake: 666_000,
+      status: NETWORK_JOIN_STATUS,
+      start: 0,
+      end: 0,
+      vaults: [],
+      settings: {
+        label: 'Observation', // The friendly name used to label this gateway
+        fqdn: 'observation.com', // the fully qualified domain name this gateway can be reached at. eg arweave.net
+        port: 443, // The port used by this gateway eg. 443
+        protocol: 'https', // The protocol used by this gateway, either http or https
+        properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
+        note: 'Observation testing',
+      },
+    });
 
   return gateways;
 }

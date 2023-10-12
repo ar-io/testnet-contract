@@ -10,5 +10,6 @@
   "fees": {},
   "auctions": {},
   "settings": {},
-  "gateways": {}
+  "gateways": {},
+  "observations": {}
 }
