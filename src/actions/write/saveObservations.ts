@@ -1,17 +1,18 @@
 import {
   CALLER_NOT_VALID_OBSERVER_MESSAGE,
+  DEFAULT_EPOCH_BLOCK_LENGTH,
+  DEFAULT_START_HEIGHT,
   INVALID_OBSERVATION_TARGET,
   TARGET_GATEWAY_NOT_REGISTERED,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 import {
-  getEligibleObservers,
+  getEpochStart,
   getInvalidAjvMessage,
   getPrescribedObservers,
 } from '../../utilities';
 // composed by ajv at build
 import { validateSaveObservations } from '../../validations.mjs';
-import { getEpochStart } from '../read/observation';
 
 declare const ContractError;
 declare const SmartWeave: any;
@@ -33,14 +34,18 @@ export class SaveObservations {
   }
 }
 
-export const saveObservations = (
+export const saveObservations = async (
   state: IOState,
   { caller, input }: PstAction,
-): ContractResult => {
+): Promise<ContractResult> => {
   // get all other relevant state data
   const { observations, gateways, settings } = state;
   const { observationReportTxId, failedGateways } = new SaveObservations(input); // does validation on constructor
-  const currentEpochStartHeight = getEpochStart(+SmartWeave.block.height);
+  const currentEpochStartHeight = getEpochStart({
+    startHeight: DEFAULT_START_HEIGHT,
+    epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
+    height: +SmartWeave.block.currentBlockHeight,
+  });
 
   const gateway = gateways[caller];
   if (!gateway) {
@@ -49,14 +54,10 @@ export const saveObservations = (
     throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
   }
 
-  const eligibleObservers = getEligibleObservers(
+  const prescribedObservers = await getPrescribedObservers(
     gateways,
     settings.registry.gatewayLeaveLength,
     currentEpochStartHeight,
-  );
-  const prescribedObservers = getPrescribedObservers(
-    currentEpochStartHeight,
-    eligibleObservers,
   );
 
   if (!(caller in prescribedObservers)) {
