@@ -1,3 +1,4 @@
+import { write } from 'fs';
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import { IOState } from '../src/types';
@@ -430,12 +431,12 @@ describe('Records', () => {
 
     it('should not be able to buy reserved name when the caller is not the target of the reserved name', async () => {
       const nonNameOwner = getLocalWallet(2);
+      contract.connect(nonNameOwner);
       const namePurchase = {
         name: 'twitter',
         contractTxId: ANT_CONTRACT_IDS[0],
         years: 1,
       };
-      contract.connect(nonNameOwner);
       const writeInteraction = await contract.writeInteraction(
         {
           function: 'buyRecord',

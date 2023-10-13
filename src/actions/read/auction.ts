@@ -1,15 +1,15 @@
-import {
-  MINIMUM_ALLOWED_NAME_LENGTH,
-  SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
-} from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
-import { calculateRegistrationFee, getAuctionPrices } from '../../utilities';
+import {
+  calculateRegistrationFee,
+  getAuctionPrices,
+  isNameAvailableForAuction,
+} from '../../utilities';
 
 declare const SmartWeave: any;
 
 export const getAuction = (
   state: IOState,
-  { input: { name, type = 'lease' } }: PstAction,
+  { caller, input: { name, type = 'lease' } }: PstAction,
 ): ContractResult => {
   const { records, auctions, settings, fees, reserved } = state;
   const formattedName = name.toLowerCase().trim();
@@ -37,32 +37,22 @@ export const getAuction = (
       floorPrice,
     });
 
-    // TODO: check record and reserved name expirations
-    const record = records[formattedName];
-    // add grace period
-    const isExistingActiveRecord =
-      record &&
-      record.endTimestamp &&
-      record.endTimestamp > +SmartWeave.block.timestamp;
+    const currentBlockTimestamp = +SmartWeave.block.timestamp;
 
+    // existing record
+    const record = records[formattedName];
+
+    // reserved name
     const reservedName = reserved[formattedName];
 
     // TODO: move to util function
-    const isActiveReservedName =
-      reservedName &&
-      reservedName.endTimestamp &&
-      reservedName.endTimestamp > +SmartWeave.block.timestamp;
-
-    // TODO: move to util function
-    const isShortNameRestricted =
-      formattedName.length < MINIMUM_ALLOWED_NAME_LENGTH &&
-      SmartWeave.block.timestamp < SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP;
-
-    // TODO: move to util function
-    const isAvailableForAuction =
-      !isExistingActiveRecord &&
-      !isActiveReservedName &&
-      !isShortNameRestricted;
+    const isAvailableForAuction = isNameAvailableForAuction({
+      caller,
+      name: formattedName,
+      record,
+      reservedName,
+      currentBlockTimestamp,
+    });
 
     // TODO: move to util function
     const isRequiredToBeAuctioned =

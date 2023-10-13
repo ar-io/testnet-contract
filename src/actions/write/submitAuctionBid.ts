@@ -3,12 +3,9 @@ import {
   DEFAULT_UNDERNAME_COUNT,
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_SHORT_NAME,
-  MINIMUM_ALLOWED_NAME_LENGTH,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
-  SECONDS_IN_GRACE_PERIOD,
-  SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../../constants';
 import {
   AuctionSettings,
@@ -20,6 +17,9 @@ import {
   calculateMinimumAuctionBid,
   calculateRegistrationFee,
   getInvalidAjvMessage,
+  isActiveReservedName,
+  isExistingActiveRecord,
+  isShortNameRestricted,
   walletHasSufficientBalance,
 } from '../../utilities';
 // composed by ajv at build
@@ -69,77 +69,29 @@ export const submitAuctionBid = (
     years,
   } = new AuctionBid(input);
 
-  // name already exists on an active lease
-  if (records[name]) {
-    const { endTimestamp, type } = records[name];
+  const currentBlockTimestamp = +SmartWeave.block.timestamp;
 
-    /**
-     * Three scenarios:
-     *
-     * 1. The name is currently in records, but it's lease is expired - this means it can be removed from state
-     * 2. The name is currently in records, and not expired
-     * 3. The name is currently in records and is a permabuy
-     * @returns
-     */
-    const handleExistingName = () => {
-      if (
-        type === 'lease' &&
-        endTimestamp &&
-        endTimestamp + SECONDS_IN_GRACE_PERIOD <= +SmartWeave.block.timestamp
-      ) {
-        // lease has expired, remove from state and it's available for auction
-        delete records[name];
-        return;
-      }
-
-      // throw an error saying the name is already owned
-      throw new ContractError(NON_EXPIRED_ARNS_NAME_MESSAGE);
-    };
-
-    handleExistingName();
+  if (
+    isActiveReservedName({
+      caller,
+      reservedName: reserved[name],
+      currentBlockTimestamp,
+    })
+  ) {
+    throw new ContractError(ARNS_NAME_RESERVED_MESSAGE);
   }
 
-  if (reserved[name]) {
-    const { target, endTimestamp: reservedEndTimestamp } = reserved[name];
+  if (isShortNameRestricted({ name, currentBlockTimestamp })) {
+    throw new ContractError(INVALID_SHORT_NAME);
+  }
 
-    /**
-     * Three scenarios:
-     *
-     * 1. name is reserved, regardless of length can be purchased only by target, unless expired - the reserved name from state, making it available for anyone
-     * 2. name is reserved, but only for a certain amount of time
-     * 3. name is reserved, with no target and no timestamp (i.e. target and timestamp are empty)
-     */
-    const handleReservedName = () => {
-      const reservedByCaller = target === caller;
-      const reservedExpired =
-        reservedEndTimestamp &&
-        reservedEndTimestamp <= +SmartWeave.block.timestamp;
-      // the reservation has expired - delete from state and make it available for auctions/buying
-      if (!reservedByCaller && !reservedExpired) {
-        throw new ContractError(ARNS_NAME_RESERVED_MESSAGE);
-      }
-
-      // remove the reserved name from state and continue
-      delete reserved[name];
-      return;
-    };
-
-    handleReservedName();
-  } else {
-    // not reserved but it's a short name, it can only be auctioned after the short name auction expiration date has passed
-    const handleShortName = () => {
-      /**
-       * If a name is 1-4 characters, it can only be auctioned and after the set expiration.
-       */
-      if (
-        name.length < MINIMUM_ALLOWED_NAME_LENGTH &&
-        +SmartWeave.block.timestamp < SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP
-      ) {
-        throw new ContractError(INVALID_SHORT_NAME);
-      }
-      return;
-    };
-    handleShortName();
+  if (
+    isExistingActiveRecord({
+      record: records[name],
+      currentBlockTimestamp,
+    })
+  ) {
+    throw new ContractError(NON_EXPIRED_ARNS_NAME_MESSAGE);
   }
 
   // get the current auction settings, create one of it doesn't exist yet
@@ -190,6 +142,11 @@ export const submitAuctionBid = (
     };
     auctions[name] = initialAuctionBid; // create the auction object
     balances[caller] -= floorPrice; // decremented based on the floor price
+
+    // delete the rename if exists
+    if (reserved[name]) {
+      delete reserved[name];
+    }
 
     // update the state
     state.auctions = auctions;

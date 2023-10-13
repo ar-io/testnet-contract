@@ -9,9 +9,10 @@ import {
   RARITY_MULTIPLIER_HALVENING,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
+  SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
   UNDERNAME_REGISTRATION_IO_FEE,
 } from './constants';
-import { Fees } from './types';
+import { ArNSName, Fees, ReservedName } from './types';
 
 declare const ContractError: any;
 
@@ -280,4 +281,72 @@ export function calculateRegistrationFee({
     case 'permabuy':
       return calculatePermabuyFee(name, fees, currentBlockTimestamp);
   }
+}
+
+export function isExistingActiveRecord({
+  record,
+  currentBlockTimestamp,
+}: {
+  record: ArNSName;
+  currentBlockTimestamp: number;
+}): boolean {
+  return (
+    record &&
+    record.endTimestamp &&
+    record.endTimestamp + SECONDS_IN_GRACE_PERIOD > currentBlockTimestamp
+  );
+}
+
+export function isShortNameRestricted({
+  name,
+  currentBlockTimestamp,
+}: {
+  name: string;
+  currentBlockTimestamp: number;
+}): boolean {
+  return (
+    name.length < MINIMUM_ALLOWED_NAME_LENGTH &&
+    currentBlockTimestamp < SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP
+  );
+}
+
+export function isActiveReservedName({
+  caller,
+  reservedName,
+  currentBlockTimestamp,
+}: {
+  caller: string;
+  reservedName: ReservedName | undefined;
+  currentBlockTimestamp: number;
+}): boolean {
+  if (!reservedName) return false;
+  const target = reservedName.target;
+  const endTimestamp = reservedName.endTimestamp;
+  const permanentlyReserved = !target && !endTimestamp;
+  const callerNotTarget = target !== caller;
+  const notExpired = endTimestamp && endTimestamp > currentBlockTimestamp;
+  if (permanentlyReserved || (callerNotTarget && notExpired)) {
+    return true;
+  }
+  return false;
+}
+
+export function isNameAvailableForAuction({
+  name,
+  record,
+  reservedName,
+  caller,
+  currentBlockTimestamp,
+}: {
+  name: string;
+  record: ArNSName | undefined;
+  caller: string;
+  reservedName: ReservedName | undefined;
+  currentBlockTimestamp: number;
+}): boolean {
+  return (
+    !isExistingActiveRecord({ record, currentBlockTimestamp }) &&
+    !isActiveReservedName({ reservedName, caller, currentBlockTimestamp }) &&
+    !isShortNameRestricted({ name, currentBlockTimestamp })
+  );
 }
