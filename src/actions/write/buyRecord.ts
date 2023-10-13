@@ -12,9 +12,9 @@ import {
   SECONDS_IN_GRACE_PERIOD,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../../constants';
+import { calculateRegistrationFee } from '../../registration';
 import { ContractResult, IOState, PstAction } from '../../types';
 import {
-  calculateRegistrationFee,
   getInvalidAjvMessage,
   walletHasSufficientBalance,
 } from '../../utilities';

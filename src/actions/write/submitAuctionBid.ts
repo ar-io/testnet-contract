@@ -10,6 +10,7 @@ import {
   SECONDS_IN_GRACE_PERIOD,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../../constants';
+import { calculateRegistrationFee } from '../../registration';
 import {
   AuctionSettings,
   ContractResult,
@@ -18,7 +19,6 @@ import {
 } from '../../types';
 import {
   calculateMinimumAuctionBid,
-  calculateRegistrationFee,
   getInvalidAjvMessage,
   walletHasSufficientBalance,
 } from '../../utilities';

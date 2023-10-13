@@ -12,7 +12,6 @@ import {
   NON_EXPIRED_ARNS_NAME_MESSAGE,
 } from './utils/constants';
 import {
-  calculatePermabuyFee,
   calculateRegistrationFee,
   getLocalArNSContractId,
   getLocalWallet,
@@ -188,11 +187,13 @@ describe('Records', () => {
       );
 
       const currentBlock = await arweave.blocks.getCurrent();
-      const expectedPurchasePrice = calculatePermabuyFee(
-        namePurchase.name,
-        prevState.fees,
-        currentBlock.timestamp,
-      );
+      const expectedPurchasePrice = calculateRegistrationFee({
+        name: namePurchase.name,
+        fees: prevState.fees,
+        type: 'permabuy',
+        years: 1,
+        currentBlockTimestamp: currentBlock.timestamp,
+      });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();

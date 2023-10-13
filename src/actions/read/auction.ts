@@ -1,6 +1,6 @@
-import { NON_EXPIRED_ARNS_NAME_MESSAGE } from '../../constants';
+import { calculateRegistrationFee } from '../../registration';
 import { ContractResult, IOState, PstAction } from '../../types';
-import { calculateRegistrationFee, getAuctionPrices } from '../../utilities';
+import { getAuctionPrices } from '../../utilities';
 
 declare const SmartWeave: any;
 declare const ContractError;

@@ -5,9 +5,9 @@ import {
   MAX_UNDERNAME_MESSAGE,
   SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
+import { calculateProRatedUndernameCost } from '../../registration';
 import { ContractResult, IOState, PstAction } from '../../types';
 import {
-  calculateProRatedUndernameCost,
   getInvalidAjvMessage,
   walletHasSufficientBalance,
 } from '../../utilities';
@@ -49,12 +49,12 @@ export const increaseUndernameCount = async (
 
   const { undernames = 10, type, endTimestamp } = record;
   const currentBlockTime = +SmartWeave.block.timestamp;
-  const undernameCost = calculateProRatedUndernameCost(
-    qty,
-    currentBlockTime,
+  const undernameCost = calculateProRatedUndernameCost({
+    count: qty,
+    currentTimestamp: currentBlockTime,
     type,
     endTimestamp,
-  );
+  });
 
   // the new total qty
   const incrementedUndernames = undernames + qty;

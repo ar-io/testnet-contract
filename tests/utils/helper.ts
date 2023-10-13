@@ -342,3 +342,4 @@ export function getLocalArNSContractId(): string {
 
 export * from '../../src/utilities';
 export * from '../../tools/utilities';
+export * from '../../src/registration';

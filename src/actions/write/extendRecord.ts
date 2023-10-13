@@ -5,9 +5,9 @@ import {
   INVALID_YEARS_MESSAGE,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
+import { calculateAnnualRenewalFee } from '../../registration';
 import { ContractResult, IOState, PstAction } from '../../types';
 import {
-  calculateAnnualRenewalFee,
   getInvalidAjvMessage,
   getMaxLeaseExtension,
   walletHasSufficientBalance,
