@@ -24,8 +24,6 @@ import {
   ReservedName,
 } from './types';
 
-declare const ContractError: any;
-
 export function calculateLeaseFee({
   name,
   fees,
@@ -94,6 +92,25 @@ export function calculateAnnualRenewalFee(
   return totalCost;
 }
 
+export function getRarityMultiplier({ name }: { name: string }): number {
+  if (name.length >= RARITY_MULTIPLIER_HALVENING) {
+    return 0.5; // cut the price in half
+  }
+  // names between 5 and 24 characters (inclusive)
+  if (
+    name.length >= MINIMUM_ALLOWED_NAME_LENGTH &&
+    name.length < RARITY_MULTIPLIER_HALVENING
+  ) {
+    return 1; // e.g. it's the cost of a 10 year lease
+  }
+  // short names
+  if (name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
+    const shortNameMultiplier = 1 + ((10 - name.length) * 10) / 100;
+    return shortNameMultiplier;
+  }
+  return 1;
+}
+
 export function calculatePermabuyFee({
   name,
   fees,
@@ -113,30 +130,7 @@ export function calculatePermabuyFee({
     DEFAULT_UNDERNAME_COUNT,
     currentBlockTimestamp + SECONDS_IN_A_YEAR * PERMABUY_LEASE_FEE_LENGTH,
   );
-
-  // TODO: EXTRACT TO OWN FUNCTION AND UNIT TEST
-  // rarity multiplier based on the length of the name (e.g 1.3);
-  // e.g. name is 7 characters - this would be 0
-  // name is 2 characters - this would 8
-  const getMultiplier = (): number => {
-    if (name.length >= RARITY_MULTIPLIER_HALVENING) {
-      return 0.5; // cut the price in half
-    }
-    // names between 5 and 24 characters (inclusive)
-    if (
-      name.length >= MINIMUM_ALLOWED_NAME_LENGTH &&
-      name.length < RARITY_MULTIPLIER_HALVENING
-    ) {
-      return 1; // e.g. it's the cost of a 10 year lease
-    }
-    // short names
-    if (name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
-      const shortNameMultiplier = 1 + ((10 - name.length) * 10) / 100;
-      return shortNameMultiplier;
-    }
-    throw new ContractError('Unable to compute name multiplier.');
-  };
-  const rarityMultiplier = getMultiplier();
+  const rarityMultiplier = getRarityMultiplier({ name });
   const permabuyFee = permabuyLeasePrice * rarityMultiplier;
   return demandFactoring.demandFactor * permabuyFee;
 }
@@ -201,15 +195,15 @@ export function calculateProRatedUndernameCost({
   endTimestamp?: number;
   // demandFactoring: DemandFactoringData, // TODO: Is this relevant?
 }): number {
-  const fullCost =
-    type === 'lease'
-      ? UNDERNAME_REGISTRATION_IO_FEE * qty
-      : PERMABUY_LEASE_FEE_LENGTH * qty;
-  const proRatedCost =
-    type === 'lease'
-      ? (fullCost / SECONDS_IN_A_YEAR) * (endTimestamp - currentTimestamp)
-      : fullCost;
-  return proRatedCost;
+  switch (type) {
+    case 'lease':
+      return (
+        ((UNDERNAME_REGISTRATION_IO_FEE * qty) / SECONDS_IN_A_YEAR) *
+        (endTimestamp - currentTimestamp)
+      );
+    case 'permabuy':
+      return PERMABUY_LEASE_FEE_LENGTH * qty;
+  }
 }
 
 export function calculateUndernamePermutations(domain: string): number {

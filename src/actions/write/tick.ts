@@ -123,10 +123,7 @@ function tickAuctions(height: BlockHeight, state: IOState): IOState {
         ...maybeEndTimestamp,
       };
 
-      state.demandFactoring = tallyNamePurchase(
-        new BlockHeight(+SmartWeave.block.height),
-        state.demandFactoring,
-      );
+      state.demandFactoring = tallyNamePurchase(state.demandFactoring);
     }
     // now return the auction object
     return current;

@@ -12,7 +12,6 @@ import {
 } from '../../constants';
 import { tallyNamePurchase } from '../../pricing';
 import {
-  BlockHeight,
   ContractResult,
   IOState,
   PstAction,
@@ -138,7 +137,7 @@ export const buyRecord = (
     fees,
     years,
     type,
-    currentBlockTimestamp: +SmartWeave.block.timestamp,
+    currentBlockTimestamp,
     demandFactoring: state.demandFactoring,
   });
 
@@ -171,10 +170,7 @@ export const buyRecord = (
   state.reserved = reserved;
   state.balances = balances;
 
-  state.demandFactoring = tallyNamePurchase(
-    new BlockHeight(+SmartWeave.block.height),
-    state.demandFactoring,
-  );
+  state.demandFactoring = tallyNamePurchase(state.demandFactoring);
 
   return { state };
 };

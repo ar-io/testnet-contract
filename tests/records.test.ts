@@ -13,7 +13,6 @@ import {
   NON_EXPIRED_ARNS_NAME_MESSAGE,
 } from './utils/constants';
 import {
-  calculateLeaseFee,
   calculatePermabuyFee,
   calculateRegistrationFee,
   getLocalArNSContractId,
@@ -25,7 +24,7 @@ describe('Records', () => {
   let contract: Contract<PstState>;
   let srcContractId: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     srcContractId = getLocalArNSContractId();
     contract = warp.pst(srcContractId);
   });
@@ -93,8 +92,9 @@ describe('Records', () => {
       );
 
       const currentBlock = await arweave.blocks.getCurrent();
-      const expectedPurchasePrice = calculateLeaseFee({
+      const expectedPurchasePrice = calculateRegistrationFee({
         name: namePurchase.name,
+        type: 'lease',
         fees: prevState.fees,
         years: namePurchase.years,
         currentBlockTimestamp: currentBlock.timestamp,

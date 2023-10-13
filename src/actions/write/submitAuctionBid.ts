@@ -62,7 +62,15 @@ export const submitAuctionBid = (
   state: IOState,
   { caller, input }: PstAction,
 ): ContractResult => {
-  const { auctions = {}, fees, records, reserved, settings, balances } = state;
+  const {
+    auctions = {},
+    fees,
+    records,
+    reserved,
+    settings,
+    balances,
+    demandFactoring,
+  } = state;
 
   // does validation on constructor
   const {
@@ -105,14 +113,14 @@ export const submitAuctionBid = (
   const currentBlockHeight = new BlockHeight(+SmartWeave.block.height);
   const { decayInterval, decayRate, auctionDuration } = currentAuctionSettings;
 
-  // TODO: add pricing demand factor
+  // calculate the registration fee taking into account demand factoring
   const registrationFee = calculateRegistrationFee({
     name,
     fees,
     years,
     type,
-    currentBlockTimestamp: +SmartWeave.block.timestamp,
-    demandFactoring: state.demandFactoring,
+    currentBlockTimestamp,
+    demandFactoring,
   });
 
   // no current auction, create one and vault the balance from the user
@@ -142,6 +150,11 @@ export const submitAuctionBid = (
     auctions[name] = initialAuctionBid; // create the auction object
     // TODO: where do we put this temporarily?
     balances[caller] -= initialAuctionBid.floorPrice; // decremented based on the floor price
+
+    // delete the rename if exists
+    if (reserved[name]) {
+      delete reserved[name];
+    }
 
     // delete the rename if exists
     if (reserved[name]) {
@@ -272,10 +285,7 @@ export const submitAuctionBid = (
     state.records = records;
     state.reserved = reserved;
 
-    state.demandFactoring = tallyNamePurchase(
-      new BlockHeight(+SmartWeave.block.height),
-      state.demandFactoring,
-    );
+    state.demandFactoring = tallyNamePurchase(state.demandFactoring);
   }
 
   // return updated state

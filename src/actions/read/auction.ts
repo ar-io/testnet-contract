@@ -38,27 +38,6 @@ export const getAuction = (
       demandFactoring: state.demandFactoring,
     });
 
-    // existing record
-    const record = records[formattedName];
-
-    // reserved name
-    const reservedName = reserved[formattedName];
-
-    // check if name is available for auction
-    const isAvailableForAuction = isNameAvailableForAuction({
-      caller,
-      name: formattedName,
-      record,
-      reservedName,
-      currentBlockTimestamp,
-    });
-
-    // some names must be auctioned depending on the type
-    const isRequiredToBeAuctioned = isNameRequiredToBeAuction({
-      name: formattedName,
-      type,
-    });
-
     // a stubbed auction object
     const auctionObject = createAuctionObject({
       auctionSettings,
@@ -78,6 +57,27 @@ export const getAuction = (
       startHeight: currentBlockHeight, // set it to the current block height
       startPrice,
       floorPrice,
+    });
+
+    // existing record
+    const record = records[formattedName];
+
+    // reserved name
+    const reservedName = reserved[formattedName];
+
+    // check if name is available for auction
+    const isAvailableForAuction = isNameAvailableForAuction({
+      caller,
+      name: formattedName,
+      record,
+      reservedName,
+      currentBlockTimestamp,
+    });
+
+    // some names must be auctioned depending on the type
+    const isRequiredToBeAuctioned = isNameRequiredToBeAuction({
+      name: formattedName,
+      type,
     });
 
     return {

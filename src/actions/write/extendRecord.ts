@@ -6,7 +6,7 @@ import {
   SECONDS_IN_A_YEAR,
 } from '../../constants';
 import { tallyNamePurchase } from '../../pricing';
-import { BlockHeight, ContractResult, IOState, PstAction } from '../../types';
+import { ContractResult, IOState, PstAction } from '../../types';
 import {
   calculateAnnualRenewalFee,
   getInvalidAjvMessage,
@@ -94,10 +94,7 @@ export const extendRecord = async (
   state.balances[caller] -= totalExtensionAnnualFee;
   state.balances[SmartWeave.contract.id] += totalExtensionAnnualFee;
   state.records[name].endTimestamp += SECONDS_IN_A_YEAR * years;
-  state.demandFactoring = tallyNamePurchase(
-    new BlockHeight(+SmartWeave.block.height),
-    state.demandFactoring,
-  );
+  state.demandFactoring = tallyNamePurchase(state.demandFactoring);
 
   return { state };
 };
