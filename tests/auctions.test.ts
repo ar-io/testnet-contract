@@ -196,6 +196,9 @@ describe('Auctions', () => {
                   floorPrice: expect.any(Number),
                   startPrice: expect.any(Number),
                   type: 'lease',
+                  endHeight:
+                    (await getCurrentBlock(arweave)) +
+                    AUCTION_SETTINGS.auctionDuration,
                   startHeight: await getCurrentBlock(arweave),
                   initiator: nonContractOwnerAddress,
                   contractTxId: ANT_CONTRACT_IDS[0],
@@ -417,6 +420,9 @@ describe('Auctions', () => {
                 startPrice: expect.any(Number),
                 type: 'lease',
                 startHeight: await getCurrentBlock(arweave),
+                endHeight:
+                  (await getCurrentBlock(arweave)) +
+                  AUCTION_SETTINGS.auctionDuration,
                 initiator: nonContractOwnerAddress,
                 contractTxId: ANT_CONTRACT_IDS[0],
                 years: 1,
@@ -461,6 +467,9 @@ describe('Auctions', () => {
             startPrice: expect.any(Number),
             type: 'permabuy',
             startHeight: await getCurrentBlock(arweave),
+            endHeight:
+              (await getCurrentBlock(arweave)) +
+              AUCTION_SETTINGS.auctionDuration,
             initiator: nonContractOwnerAddress,
             contractTxId: ANT_CONTRACT_IDS[0],
             settings: AUCTION_SETTINGS,
@@ -551,6 +560,9 @@ describe('Auctions', () => {
             startPrice: expect.any(Number),
             type: 'lease',
             startHeight: await getCurrentBlock(arweave),
+            endHeight:
+              (await getCurrentBlock(arweave)) +
+              AUCTION_SETTINGS.auctionDuration,
             initiator: nonContractOwnerAddress,
             contractTxId: ANT_CONTRACT_IDS[0],
             years: 1,
@@ -568,7 +580,6 @@ describe('Auctions', () => {
         it.each([-10, -1, 10, 19, 20, 69])(
           `should expect the bid amount to not exceed the start price after %s blocks`,
           async (block) => {
-            // fast forward a few blocks, then construct winning bid
             const winningBidQty = calculateMinimumAuctionBid({
               startHeight: auctionObj.startHeight,
               startPrice: auctionObj.startPrice,

@@ -72,19 +72,17 @@ export const getAuction = (
 
     // TODO: move to util function
     const isRequiredToBeAuctioned =
-      type == 'permabuy' &&
-      formattedName.length > MINIMUM_ALLOWED_NAME_LENGTH &&
-      formattedName < 12;
+      type == 'permabuy' && formattedName.length < 12;
 
     return {
       result: {
         name,
-        prices,
         isActive: false,
         isAvailableForAuction: isAvailableForAuction,
         isRequiredToBeAuctioned: isRequiredToBeAuctioned,
         minimumBid: floorPrice, // since its not active yet, the minimum bid is the floor price
         endHeight: +SmartWeave.block.height + auctionSettings.auctionDuration,
+        prices,
         settings: auctionSettings,
       },
     };
