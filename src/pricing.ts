@@ -7,26 +7,22 @@ import {
 } from './types';
 
 export function tallyNamePurchase(
-  currentHeight: BlockHeight,
   dfData: DeepReadonly<DemandFactoringData>,
 ): DemandFactoringData {
   const newDfData = {
     ...dfData,
     trailingPeriodPurchases: dfData.trailingPeriodPurchases.slice(),
   };
-
   newDfData.purchasesThisPeriod++;
-  newDfData.trailingPeriodPurchases[demandFactorPeriodIndex(currentHeight)]++;
-
   return newDfData;
 }
 
+// TODO: Pure input output?
 export function updateDemandFactor(
   currentHeight: BlockHeight,
   state: IOState,
 ): IOState {
   if (shouldUpdateDemandFactor(currentHeight, state)) {
-    // Update to the demand factor that will be used for the next period
     const numNamesPurchasedInLastPeriod =
       state.demandFactoring.purchasesThisPeriod;
     const mvgAvgOfTrailingNamePurchases = mvgAvgTrailingPurchaseCounts(state);
@@ -64,14 +60,14 @@ export function updateDemandFactor(
         DEMAND_FACTORING_SETTINGS.demandFactorBaseValue;
     }
 
-    // Increment the period
-    state.demandFactoring.periodStartBlockHeight = currentHeight.valueOf();
-
-    // Reset the number of purchases for this period
-    state.demandFactoring.purchasesThisPeriod = 0;
+    // Stash the number of purchases for this period in the trailing metrics
     state.demandFactoring.trailingPeriodPurchases[
-      demandFactorPeriodIndex(currentHeight)
-    ] = 0;
+      demandFactorPeriodIndex(state.demandFactoring.currentPeriod)
+    ] = numNamesPurchasedInLastPeriod;
+
+    // Increment the current period and reset the purchase count
+    state.demandFactoring.currentPeriod++;
+    state.demandFactoring.purchasesThisPeriod = 0;
   }
 
   return state;
@@ -79,14 +75,13 @@ export function updateDemandFactor(
 
 function shouldUpdateDemandFactor(
   currentHeight: BlockHeight,
-  state: IOState,
+  state: DeepReadonly<IOState>,
 ): boolean {
-  return (
-    currentHeight.valueOf() > state.demandFactoring.periodStartBlockHeight &&
-    (currentHeight.valueOf() - state.demandFactoring.periodStartBlockHeight) %
-      DEMAND_FACTORING_SETTINGS.periodBlockCount ===
-      0
+  const currentPeriod = periodAtHeight(
+    currentHeight,
+    new BlockHeight(state.demandFactoring.periodZeroBlockHeight),
   );
+  return currentPeriod > state.demandFactoring.currentPeriod;
 }
 
 function demandIsIncreasing({
@@ -102,22 +97,35 @@ function demandIsIncreasing({
   );
 }
 
-export function demandFactorPeriodIndex(
-  periodStartBlockHeight: BlockHeight,
+export function periodAtHeight(
+  height: BlockHeight,
+  periodZeroHeight: BlockHeight,
 ): number {
-  return (
-    Math.floor(
-      periodStartBlockHeight.valueOf() /
-        DEMAND_FACTORING_SETTINGS.periodBlockCount,
-    ) % DEMAND_FACTORING_SETTINGS.movingAvgPeriodCount
+  return Math.floor(
+    (height.valueOf() - periodZeroHeight.valueOf()) /
+      DEMAND_FACTORING_SETTINGS.periodBlockCount,
   );
 }
 
-function mvgAvgTrailingPurchaseCounts(state: IOState): number {
+export function demandFactorPeriodIndex(period: number): number {
+  return period % DEMAND_FACTORING_SETTINGS.movingAvgPeriodCount;
+}
+
+export function mvgAvgTrailingPurchaseCounts(
+  state: DeepReadonly<IOState>,
+): number {
   return (
     state.demandFactoring.trailingPeriodPurchases.reduce(
       (acc, periodPurchaseCount) => acc + periodPurchaseCount,
       0,
     ) / DEMAND_FACTORING_SETTINGS.movingAvgPeriodCount
   );
+}
+
+export function purchasesThisPeriod(
+  demandFactoringData: DeepReadonly<DemandFactoringData>,
+): number {
+  return demandFactoringData.trailingPeriodPurchases[
+    demandFactorPeriodIndex(demandFactoringData.currentPeriod)
+  ];
 }

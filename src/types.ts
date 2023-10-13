@@ -7,9 +7,9 @@ import {
 } from './constants';
 
 export type DemandFactoringData = {
-  periodStartBlockHeight: number; // TODO: Set me on evolve or fork
+  periodZeroBlockHeight: number; // TODO: The block height at which the contract was initialized
   currentPeriod: number;
-  trailingPeriodPurchases: number[]; // TODO: can TS require the array to be of a specific size
+  trailingPeriodPurchases: number[]; // Acts as a ring buffer of trailing period purchase counts
   purchasesThisPeriod: number;
   demandFactor: number;
   consecutivePeriodsWithMinDemandFactor: number;
