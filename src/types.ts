@@ -103,12 +103,13 @@ export type GatewaySettings = {
 };
 
 export type AllowedProtocols = 'http' | 'https';
+export type RegistrationType = 'lease' | 'permabuy';
 
 export type ArNSName = {
   contractTxId: string; // The ANT Contract used to manage this name
   startTimestamp: number; // At what unix time (seconds since epoch) the lease starts
   endTimestamp?: number; // At what unix time (seconds since epoch) the lease ends
-  type: 'lease' | 'permabuy';
+  type: RegistrationType;
   undernames: number;
 };
 

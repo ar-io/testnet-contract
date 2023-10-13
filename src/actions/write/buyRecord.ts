@@ -1,5 +1,6 @@
 import {
   ARNS_NAME_IN_AUCTION_MESSAGE,
+  ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE,
   ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_UNDERNAME_COUNT,
   INVALID_SHORT_NAME,
@@ -9,12 +10,18 @@ import {
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
-import { ContractResult, IOState, PstAction } from '../../types';
+import {
+  ContractResult,
+  IOState,
+  PstAction,
+  RegistrationType,
+} from '../../types';
 import {
   calculateRegistrationFee,
   getInvalidAjvMessage,
   isActiveReservedName,
   isExistingActiveRecord,
+  isNameRequiredToBeAuction,
   isShortNameRestricted,
   walletHasSufficientBalance,
 } from '../../utilities';
@@ -29,7 +36,7 @@ export class BuyRecord {
   name: string;
   contractTxId: string;
   years: number;
-  type: 'lease' | 'permabuy';
+  type: RegistrationType;
   auction: boolean;
   qty: number;
 
@@ -112,6 +119,10 @@ export const buyRecord = (
     })
   ) {
     throw new ContractError(NON_EXPIRED_ARNS_NAME_MESSAGE);
+  }
+
+  if (isNameRequiredToBeAuction({ name, type })) {
+    throw new ContractError(ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE);
   }
 
   // set the end lease period for this based on number of years if it's a lease

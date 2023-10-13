@@ -12,7 +12,7 @@ import {
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
   UNDERNAME_REGISTRATION_IO_FEE,
 } from './constants';
-import { ArNSName, Fees, ReservedName } from './types';
+import { ArNSName, Fees, RegistrationType, ReservedName } from './types';
 
 declare const ContractError: any;
 
@@ -163,7 +163,7 @@ export function walletHasSufficientBalance(
 export function calculateProRatedUndernameCost(
   qty: number,
   currentTimestamp: number,
-  type: 'lease' | 'permabuy',
+  type: RegistrationType,
   endTimestamp?: number,
 ): number {
   const fullCost =
@@ -269,7 +269,7 @@ export function calculateRegistrationFee({
   years,
   currentBlockTimestamp,
 }: {
-  type: 'lease' | 'permabuy';
+  type: RegistrationType;
   name: string;
   fees: Fees;
   years: number;
@@ -349,4 +349,14 @@ export function isNameAvailableForAuction({
     !isActiveReservedName({ reservedName, caller, currentBlockTimestamp }) &&
     !isShortNameRestricted({ name, currentBlockTimestamp })
   );
+}
+
+export function isNameRequiredToBeAuction({
+  name,
+  type,
+}: {
+  name: string;
+  type: RegistrationType;
+}): boolean {
+  return type === 'permabuy' && name.length < 12;
 }

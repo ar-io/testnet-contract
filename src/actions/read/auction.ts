@@ -3,6 +3,7 @@ import {
   calculateRegistrationFee,
   getAuctionPrices,
   isNameAvailableForAuction,
+  isNameRequiredToBeAuction,
 } from '../../utilities';
 
 declare const SmartWeave: any;
@@ -45,7 +46,7 @@ export const getAuction = (
     // reserved name
     const reservedName = reserved[formattedName];
 
-    // TODO: move to util function
+    // check if name is available for auction
     const isAvailableForAuction = isNameAvailableForAuction({
       caller,
       name: formattedName,
@@ -54,9 +55,11 @@ export const getAuction = (
       currentBlockTimestamp,
     });
 
-    // TODO: move to util function
-    const isRequiredToBeAuctioned =
-      type == 'permabuy' && formattedName.length < 12;
+    // some names must be auctioned depending on the type
+    const isRequiredToBeAuctioned = isNameRequiredToBeAuction({
+      name: formattedName,
+      type,
+    });
 
     return {
       result: {

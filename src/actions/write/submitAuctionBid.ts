@@ -12,6 +12,7 @@ import {
   ContractResult,
   IOState,
   PstAction,
+  RegistrationType,
 } from '../../types';
 import {
   calculateMinimumAuctionBid,
@@ -31,7 +32,7 @@ declare const SmartWeave: any;
 export class AuctionBid {
   name: string;
   qty?: number;
-  type: 'lease' | 'permabuy';
+  type: RegistrationType;
   contractTxId: string;
   years?: number;
   constructor(input: any) {
