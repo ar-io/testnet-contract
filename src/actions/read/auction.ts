@@ -1,3 +1,7 @@
+import {
+  MINIMUM_ALLOWED_NAME_LENGTH,
+  SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
+} from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 import {
   calculatePermabuyFee,
@@ -12,7 +16,8 @@ export const getAuction = (
   { input: { name, type = 'lease' } }: PstAction,
 ): ContractResult => {
   const { records, auctions, settings, fees, reserved } = state;
-  const auction = auctions[name.toLowerCase().trim()];
+  const formattedName = name.toLowerCase().trim();
+  const auction = auctions[formattedName];
   const auctionSettings = settings.auctions;
 
   if (!auction) {
@@ -33,21 +38,46 @@ export const getAuction = (
 
     const prices = getAuctionPrices({
       auctionSettings,
-      startHeight: 0, // set to zero to indicate that the auction has not started at a specific block
+      startHeight: +SmartWeave.block.height, // set it to the current blockheight
       startPrice,
       floorPrice,
     });
 
+    // TODO: check record and reserved name expirations
+    const record = records[formattedName];
+    // add grace period
+    const isExistingActiveRecord =
+      record &&
+      record.endTimestamp &&
+      record.endTimestamp > +SmartWeave.block.timestamp;
+
+    const reservedName = reserved[formattedName];
+    const isActiveReservedName =
+      reservedName &&
+      reservedName.endTimestamp &&
+      reservedName.endTimestamp > +SmartWeave.block.timestamp;
+
+    const isShortNameRestricted =
+      formattedName.length < MINIMUM_ALLOWED_NAME_LENGTH &&
+      SmartWeave.block.timestamp < SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP;
+
+    const isAvailableForAuction =
+      !isExistingActiveRecord &&
+      !isActiveReservedName &&
+      !isShortNameRestricted;
+
+    const isRequiredToBeAuctioned =
+      formattedName.length > MINIMUM_ALLOWED_NAME_LENGTH && formattedName < 12;
+
     return {
       result: {
-        isExpired: false,
-        // TODO: add expiration check for both
-        isAvailableForAuction:
-          !records[name.toLowerCase().trim()] &&
-          !reserved[name.toLowerCase().trim()],
-        type,
         name,
         prices,
+        isActive: false,
+        isAvailableForAuction: isAvailableForAuction,
+        isRequiredToBeAuctioned: isRequiredToBeAuctioned,
+        minimumBid: floorPrice, // since its not active yet, the minimum bid is the floor price
+        endHeight: +SmartWeave.block.height + auctionSettings.auctionDuration,
         settings: auctionSettings,
       },
     };
@@ -67,9 +97,10 @@ export const getAuction = (
     result: {
       ...auction,
       endHeight: expirationHeight,
-      isExpired: expirationHeight < +SmartWeave.block.height,
+      // TODO: inclusive or exclusive here
+      isActive: expirationHeight > +SmartWeave.block.height,
       isAvailableForAuction: false,
-      prices,
+      isRequiredToBeAuctioned: prices,
     },
   };
 };

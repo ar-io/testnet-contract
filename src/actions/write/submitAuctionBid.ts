@@ -187,6 +187,7 @@ export const submitAuctionBid = (
       startPrice,
       contractTxId,
       startHeight: currentBlockHeight, // auction starts right away
+      endHeight: currentBlockHeight + auctionDuration, // auction ends after the set duration
       type,
       initiator: caller, // the balance that the floor price is decremented from
       ...(years ? { years } : {}),

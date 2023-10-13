@@ -45,6 +45,7 @@ export type Auction = {
   startPrice: number;
   floorPrice: number;
   startHeight: number;
+  endHeight: number;
   type: 'lease' | 'permabuy';
   initiator: string;
   contractTxId: string;
