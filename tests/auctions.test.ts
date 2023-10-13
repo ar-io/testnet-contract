@@ -8,7 +8,7 @@ import {
   NON_EXPIRED_ARNS_NAME_MESSAGE,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../src/constants';
-import { Auction, AuctionSettings, IOState } from '../src/types';
+import { Auction, IOState } from '../src/types';
 import { ANT_CONTRACT_IDS } from './utils/constants';
 import {
   calculateMinimumAuctionBid,
@@ -196,11 +196,14 @@ describe('Auctions', () => {
                   floorPrice: expect.any(Number),
                   startPrice: expect.any(Number),
                   type: 'lease',
-                  auctionSettingsId: AUCTION_SETTINGS.current,
+                  endHeight:
+                    (await getCurrentBlock(arweave)) +
+                    AUCTION_SETTINGS.auctionDuration,
                   startHeight: await getCurrentBlock(arweave),
                   initiator: nonContractOwnerAddress,
                   contractTxId: ANT_CONTRACT_IDS[0],
                   years: 1,
+                  settings: AUCTION_SETTINGS,
                 }),
               );
               expect(balances[nonContractOwnerAddress]).toEqual(
@@ -247,16 +250,14 @@ describe('Auctions', () => {
 
               it('should update the records object when a winning bid comes in', async () => {
                 // fast forward a few blocks, then construct winning bid
-                const auctionSettings: AuctionSettings =
-                  AUCTION_SETTINGS.history[0];
                 await mineBlocks(arweave, 3504);
                 const winningBidQty = calculateMinimumAuctionBid({
                   startHeight: auctionObj.startHeight,
                   startPrice: auctionObj.startPrice,
                   floorPrice: auctionObj.floorPrice,
                   currentBlockHeight: await getCurrentBlock(arweave),
-                  decayInterval: auctionSettings.decayInterval,
-                  decayRate: auctionSettings.decayRate,
+                  decayInterval: AUCTION_SETTINGS.decayInterval,
+                  decayRate: AUCTION_SETTINGS.decayRate,
                 });
                 const auctionBid = {
                   name: 'apple',
@@ -418,11 +419,14 @@ describe('Auctions', () => {
                 floorPrice: expect.any(Number),
                 startPrice: expect.any(Number),
                 type: 'lease',
-                auctionSettingsId: AUCTION_SETTINGS.current,
                 startHeight: await getCurrentBlock(arweave),
+                endHeight:
+                  (await getCurrentBlock(arweave)) +
+                  AUCTION_SETTINGS.auctionDuration,
                 initiator: nonContractOwnerAddress,
                 contractTxId: ANT_CONTRACT_IDS[0],
                 years: 1,
+                settings: AUCTION_SETTINGS,
               });
               expect(balances[nonContractOwnerAddress]).toEqual(
                 prevState.balances[nonContractOwnerAddress] -
@@ -462,10 +466,13 @@ describe('Auctions', () => {
             floorPrice: expect.any(Number),
             startPrice: expect.any(Number),
             type: 'permabuy',
-            auctionSettingsId: AUCTION_SETTINGS.current,
             startHeight: await getCurrentBlock(arweave),
+            endHeight:
+              (await getCurrentBlock(arweave)) +
+              AUCTION_SETTINGS.auctionDuration,
             initiator: nonContractOwnerAddress,
             contractTxId: ANT_CONTRACT_IDS[0],
+            settings: AUCTION_SETTINGS,
           });
           expect(balances[nonContractOwnerAddress]).toEqual(
             prevState.balances[nonContractOwnerAddress] -
@@ -478,15 +485,14 @@ describe('Auctions', () => {
 
         it('should update the records object when a winning bid comes in', async () => {
           // fast forward a few blocks, then construct winning bid
-          const auctionSettings: AuctionSettings = AUCTION_SETTINGS.history[0];
           await mineBlocks(arweave, 3504);
           const winningBidQty = calculateMinimumAuctionBid({
             startHeight: auctionObj.startHeight,
             startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
             currentBlockHeight: await getCurrentBlock(arweave),
-            decayInterval: auctionSettings.decayInterval,
-            decayRate: auctionSettings.decayRate,
+            decayInterval: AUCTION_SETTINGS.decayInterval,
+            decayRate: AUCTION_SETTINGS.decayRate,
           });
           const auctionBid = {
             name: 'microsoft',
@@ -553,11 +559,14 @@ describe('Auctions', () => {
             floorPrice: expect.any(Number),
             startPrice: expect.any(Number),
             type: 'lease',
-            auctionSettingsId: AUCTION_SETTINGS.current,
             startHeight: await getCurrentBlock(arweave),
+            endHeight:
+              (await getCurrentBlock(arweave)) +
+              AUCTION_SETTINGS.auctionDuration,
             initiator: nonContractOwnerAddress,
             contractTxId: ANT_CONTRACT_IDS[0],
             years: 1,
+            settings: AUCTION_SETTINGS,
           });
           expect(balances[nonContractOwnerAddress]).toEqual(
             prevState.balances[nonContractOwnerAddress] -
@@ -571,17 +580,13 @@ describe('Auctions', () => {
         it.each([-10, -1, 10, 19, 20, 69])(
           `should expect the bid amount to not exceed the start price after %s blocks`,
           async (block) => {
-            // fast forward a few blocks, then construct winning bid
-            const auctionSettings: AuctionSettings =
-              AUCTION_SETTINGS.history[0];
-
             const winningBidQty = calculateMinimumAuctionBid({
               startHeight: auctionObj.startHeight,
               startPrice: auctionObj.startPrice,
               floorPrice: auctionObj.floorPrice,
               currentBlockHeight: auctionObj.startHeight + block,
-              decayInterval: auctionSettings.decayInterval,
-              decayRate: auctionSettings.decayRate,
+              decayInterval: AUCTION_SETTINGS.decayInterval,
+              decayRate: AUCTION_SETTINGS.decayRate,
             });
 
             expect(winningBidQty).toBeLessThanOrEqual(auctionObj.startPrice);
@@ -590,15 +595,14 @@ describe('Auctions', () => {
 
         it('should update the records when the caller is the initiator, and only withdraw the difference of the current bid to the original floor price that was already withdrawn from the initiator', async () => {
           // fast forward a few blocks, then construct winning bid
-          const auctionSettings: AuctionSettings = AUCTION_SETTINGS.history[0];
           await mineBlocks(arweave, 3504);
           const winningBidQty = calculateMinimumAuctionBid({
             startHeight: auctionObj.startHeight,
             startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
             currentBlockHeight: await getCurrentBlock(arweave),
-            decayInterval: auctionSettings.decayInterval,
-            decayRate: auctionSettings.decayRate,
+            decayInterval: AUCTION_SETTINGS.decayInterval,
+            decayRate: AUCTION_SETTINGS.decayRate,
           });
           const auctionBid = {
             name: 'tesla',

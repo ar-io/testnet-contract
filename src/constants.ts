@@ -26,6 +26,7 @@ export const MAX_ALLOWED_UNDERNAMES = 10_000; // when modifying these, update th
 export const UNDERNAME_REGISTRATION_IO_FEE = 1; // 1 IO token per undername
 export const NON_CONTRACT_OWNER_MESSAGE = `Caller is not the owner of the ArNS!`;
 export const INVALID_ARNS_NAME_MESSAGE = 'Invalid ArNS Record Name';
+export const ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE = 'Name must be auctioned.';
 export const ARNS_NAME_RESERVED_MESSAGE = 'Name is reserved.';
 export const ARNS_NAME_IN_AUCTION_MESSAGE = 'Name is currently in auction.';
 export const INVALID_INPUT_MESSAGE = 'Invalid input for interaction';
@@ -106,23 +107,12 @@ export const FEE_STRUCTURE = {
   '50': 50,
   '51': 50,
 };
-export const AUCTION_SETTINGS_ID =
-  '3IkWJ-0HdwuATDhBXuJRm0bWspXOOkRjxTm-5R2xRbw';
-export const AUCTION_SETTINGS: {
-  current: string;
-  history: AuctionSettings[];
-} = {
-  current: AUCTION_SETTINGS_ID,
-  history: [
-    {
-      id: AUCTION_SETTINGS_ID,
-      floorPriceMultiplier: 1,
-      startPriceMultiplier: 50,
-      decayInterval: 30, // decrement every 30 blocks - approx every 1 hour
-      decayRate: 0.0225, // 5% decay
-      auctionDuration: 5040, // approx 7 days long
-    },
-  ],
+export const AUCTION_SETTINGS: AuctionSettings = {
+  floorPriceMultiplier: 1,
+  startPriceMultiplier: 50,
+  decayInterval: 30, // decrement every 30 blocks - approx every 1 hour
+  decayRate: 0.0225, // 5% decay
+  auctionDuration: 5040, // approx 7 days long
 };
 
 export const DEFAULT_EPOCH_BLOCK_LENGTH = 50; // 5000 for mainnet
