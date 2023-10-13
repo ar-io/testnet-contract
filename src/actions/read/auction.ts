@@ -1,5 +1,6 @@
 import { ContractResult, IOState, PstAction } from '../../types';
 import {
+  calculateMinimumAuctionBid,
   calculateRegistrationFee,
   getAuctionPrices,
   isNameAvailableForAuction,
@@ -83,6 +84,7 @@ export const getAuction = (
     type: auction.type,
   });
 
+  // get all the prices for the auction
   const prices = getAuctionPrices({
     auctionSettings,
     startHeight,
@@ -90,14 +92,24 @@ export const getAuction = (
     floorPrice,
   });
 
+  // calculate the minimum bid
+  const minimumBid = calculateMinimumAuctionBid({
+    startHeight,
+    startPrice,
+    floorPrice,
+    currentBlockHeight: +SmartWeave.block.height,
+    decayInterval: auctionSettings.decayInterval,
+    decayRate: auctionSettings.decayRate,
+  });
+
   return {
     result: {
       ...auction,
-      endHeight: expirationHeight,
       // TODO: inclusive or exclusive here
       isActive: expirationHeight > +SmartWeave.block.height,
       isAvailableForAuction: false,
       isRequiredToBeAuctioned: isRequiredToBeAuctioned,
+      minimumBid,
       prices,
     },
   };
