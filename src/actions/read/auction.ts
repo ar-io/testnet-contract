@@ -78,6 +78,10 @@ export const getAuction = (
 
   const { startHeight, floorPrice, startPrice } = auction;
   const expirationHeight = startHeight + auctionSettings.auctionDuration;
+  const isRequiredToBeAuctioned = isNameRequiredToBeAuction({
+    name: formattedName,
+    type: auction.type,
+  });
 
   const prices = getAuctionPrices({
     auctionSettings,
@@ -93,7 +97,8 @@ export const getAuction = (
       // TODO: inclusive or exclusive here
       isActive: expirationHeight > +SmartWeave.block.height,
       isAvailableForAuction: false,
-      isRequiredToBeAuctioned: prices,
+      isRequiredToBeAuctioned: isRequiredToBeAuctioned,
+      prices,
     },
   };
 };
