@@ -17,6 +17,7 @@ import {
 import {
   calculateMinimumAuctionBid,
   calculateRegistrationFee,
+  createAuctionObject,
   getInvalidAjvMessage,
   isActiveReservedName,
   isExistingActiveRecord,
@@ -113,36 +114,31 @@ export const submitAuctionBid = (
 
   // no current auction, create one and vault the balance from the user
   if (!auctions[name]) {
-    const { floorPriceMultiplier, startPriceMultiplier } =
-      currentAuctionSettings;
-    // floor price multiplier could be a decimal, or whole number (e.g. 0.5 vs 2)
-    const calculatedFloor = registrationFee * floorPriceMultiplier;
-    // if someone submits a high floor price, we'll take it
-    const floorPrice = submittedBid
-      ? Math.max(submittedBid, calculatedFloor)
-      : calculatedFloor;
-    // multiply by the floor price, as it could be higher than the calculated floor
-    const startPrice = floorPrice * startPriceMultiplier;
+    // create the initial auction bid
+    const initialAuctionBid = createAuctionObject({
+      auctionSettings: currentAuctionSettings,
+      type,
+      initialRegistrationFee: registrationFee,
+      currentBlockHeight: +SmartWeave.block.height,
+      initiator: caller,
+      providedFloorPrice: submittedBid,
+      contractTxId,
+    });
 
     // throw an error on invalid balance
-    if (!walletHasSufficientBalance(balances, caller, floorPrice)) {
+    if (
+      !walletHasSufficientBalance(
+        balances,
+        caller,
+        initialAuctionBid.floorPrice,
+      )
+    ) {
       throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
     }
 
-    // create the initial auction bid
-    const initialAuctionBid = {
-      settings: currentAuctionSettings,
-      floorPrice, // this is decremented from the initiators wallet, and could be higher than the precalculated floor
-      startPrice,
-      contractTxId,
-      startHeight: currentBlockHeight, // auction starts right away
-      endHeight: currentBlockHeight + auctionDuration, // auction ends after the set duration
-      type,
-      initiator: caller, // the balance that the floor price is decremented from
-      ...(years ? { years } : {}),
-    };
     auctions[name] = initialAuctionBid; // create the auction object
-    balances[caller] -= floorPrice; // decremented based on the floor price
+    // TODO: where do we put this temporarily?
+    balances[caller] -= initialAuctionBid.floorPrice; // decremented based on the floor price
 
     // delete the rename if exists
     if (reserved[name]) {

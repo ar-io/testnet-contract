@@ -12,7 +12,14 @@ import {
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
   UNDERNAME_REGISTRATION_IO_FEE,
 } from './constants';
-import { ArNSName, Fees, RegistrationType, ReservedName } from './types';
+import {
+  ArNSName,
+  Auction,
+  AuctionSettings,
+  Fees,
+  RegistrationType,
+  ReservedName,
+} from './types';
 
 declare const ContractError: any;
 
@@ -359,4 +366,44 @@ export function isNameRequiredToBeAuction({
   type: RegistrationType;
 }): boolean {
   return type === 'permabuy' && name.length < 12;
+}
+export function createAuctionObject({
+  auctionSettings,
+  initialRegistrationFee,
+  contractTxId,
+  currentBlockHeight,
+  type,
+  initiator,
+  providedFloorPrice,
+}: {
+  auctionSettings: AuctionSettings;
+  initialRegistrationFee: number;
+  contractTxId: string | undefined;
+  currentBlockHeight: number;
+  type: RegistrationType;
+  initiator: string | undefined;
+  years?: number;
+  providedFloorPrice?: number;
+}): Auction {
+  const calculatedFloor =
+    initialRegistrationFee * auctionSettings.floorPriceMultiplier;
+  // if someone submits a high floor price, we'll take it
+  const floorPrice = providedFloorPrice
+    ? Math.max(providedFloorPrice, calculatedFloor)
+    : calculatedFloor;
+
+  const startPrice = floorPrice * auctionSettings.startPriceMultiplier;
+  const endHeight = currentBlockHeight + auctionSettings.auctionDuration;
+  const years = type === 'lease' ? 1 : undefined;
+  return {
+    settings: auctionSettings,
+    floorPrice, // this is decremented from the initiators wallet, and could be higher than the precalculated floor
+    startPrice,
+    contractTxId,
+    startHeight: currentBlockHeight, // auction starts right away
+    endHeight, // auction ends after the set duration
+    type,
+    initiator, // the balance that the floor price is decremented from
+    ...(years ? { years } : {}),
+  };
 }
