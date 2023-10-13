@@ -396,14 +396,14 @@ export function createAuctionObject({
   const endHeight = currentBlockHeight + auctionSettings.auctionDuration;
   const years = type === 'lease' ? 1 : undefined;
   return {
-    settings: auctionSettings,
-    floorPrice, // this is decremented from the initiators wallet, and could be higher than the precalculated floor
-    startPrice,
+    initiator, // the balance that the floor price is decremented from
     contractTxId,
+    startPrice,
+    floorPrice, // this is decremented from the initiators wallet, and could be higher than the precalculated floor
     startHeight: currentBlockHeight, // auction starts right away
     endHeight, // auction ends after the set duration
     type,
-    initiator, // the balance that the floor price is decremented from
     ...(years ? { years } : {}),
+    settings: auctionSettings,
   };
 }
