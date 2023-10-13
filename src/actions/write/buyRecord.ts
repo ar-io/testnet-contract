@@ -14,8 +14,7 @@ import {
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 import {
-  calculatePermabuyFee,
-  calculateTotalRegistrationFee,
+  calculateRegistrationFee,
   getInvalidAjvMessage,
   walletHasSufficientBalance,
 } from '../../utilities';
@@ -138,16 +137,13 @@ export const buyRecord = (
     type === 'lease' ? currentBlockTime + SECONDS_IN_A_YEAR * years : undefined;
 
   // TODO: add dynamic pricing
-  // calculate the total fee (initial registration + annual)
-  const totalRegistrationFee =
-    type === 'lease'
-      ? calculateTotalRegistrationFee(
-          name,
-          fees,
-          years,
-          +SmartWeave.block.timestamp,
-        )
-      : calculatePermabuyFee(name, fees, +SmartWeave.block.timestamp);
+  const totalRegistrationFee = calculateRegistrationFee({
+    name,
+    fees,
+    years,
+    type,
+    currentBlockTimestamp: +SmartWeave.block.timestamp,
+  });
 
   if (!walletHasSufficientBalance(balances, caller, totalRegistrationFee)) {
     throw new ContractError(

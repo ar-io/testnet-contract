@@ -15,7 +15,7 @@ import { Fees } from './types';
 
 declare const ContractError: any;
 
-export function calculateTotalRegistrationFee(
+export function calculateLeaseFee(
   name: string,
   fees: Fees,
   years: number,
@@ -259,4 +259,25 @@ export function getAuctionPrices({
     prices[intervalHeight] = price;
   }
   return prices;
+}
+
+export function calculateRegistrationFee({
+  type,
+  name,
+  fees,
+  years,
+  currentBlockTimestamp,
+}: {
+  type: 'lease' | 'permabuy';
+  name: string;
+  fees: Fees;
+  years: number;
+  currentBlockTimestamp: number;
+}): number {
+  switch (type) {
+    case 'lease':
+      return calculateLeaseFee(name, fees, years, currentBlockTimestamp);
+    case 'permabuy':
+      return calculatePermabuyFee(name, fees, currentBlockTimestamp);
+  }
 }

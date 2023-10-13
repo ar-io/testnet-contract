@@ -1,10 +1,6 @@
 import { NON_EXPIRED_ARNS_NAME_MESSAGE } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
-import {
-  calculatePermabuyFee,
-  calculateTotalRegistrationFee,
-  getAuctionPrices,
-} from '../../utilities';
+import { calculateRegistrationFee, getAuctionPrices } from '../../utilities';
 
 declare const SmartWeave: any;
 declare const ContractError;
@@ -25,15 +21,13 @@ export const getAuction = (
 
     const { floorPriceMultiplier, startPriceMultiplier } = auctionSettings;
 
-    const registrationFee =
-      type === 'lease'
-        ? calculateTotalRegistrationFee(
-            name,
-            fees,
-            1,
-            +SmartWeave.block.timestamp,
-          )
-        : calculatePermabuyFee(name, fees, +SmartWeave.block.timestamp);
+    const registrationFee = calculateRegistrationFee({
+      type,
+      name,
+      fees,
+      years: 1,
+      currentBlockTimestamp: +SmartWeave.block.timestamp,
+    });
 
     const floorPrice = registrationFee * floorPriceMultiplier;
     const startPrice = floorPrice * startPriceMultiplier;

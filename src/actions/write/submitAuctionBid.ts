@@ -18,8 +18,7 @@ import {
 } from '../../types';
 import {
   calculateMinimumAuctionBid,
-  calculatePermabuyFee,
-  calculateTotalRegistrationFee,
+  calculateRegistrationFee,
   getInvalidAjvMessage,
   walletHasSufficientBalance,
 } from '../../utilities';
@@ -152,16 +151,13 @@ export const submitAuctionBid = (
   const { decayInterval, decayRate, auctionDuration } = currentAuctionSettings;
 
   // TODO: add pricing demand factor
-  // calculate the standard registration fee
-  const registrationFee =
-    type === 'lease'
-      ? calculateTotalRegistrationFee(
-          name,
-          fees,
-          years!,
-          +SmartWeave.block.timestamp,
-        )
-      : calculatePermabuyFee(name, fees, +SmartWeave.block.timestamp);
+  const registrationFee = calculateRegistrationFee({
+    name,
+    fees,
+    years,
+    type,
+    currentBlockTimestamp: +SmartWeave.block.timestamp,
+  });
 
   // no current auction, create one and vault the balance from the user
   if (!auctions[name]) {
