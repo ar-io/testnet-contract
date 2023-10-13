@@ -59,7 +59,14 @@ describe('Observation', () => {
 
   describe('valid observer', () => {
     beforeAll(async () => {
-      contract = warp.pst(srcContractId).connect(goodObserver1);
+      contract = warp
+        .pst(srcContractId)
+        .connect(goodObserver1)
+        .setEvaluationOptions({
+          internalWrites: true,
+          unsafeClient: 'allow', // set to 'skip' to ignore unsafe
+          updateCacheForEachInteraction: true,
+        });
     });
 
     describe('valid observer', () => {
@@ -91,7 +98,14 @@ describe('Observation', () => {
       });
 
       it('should allow multiple observations in epoch if selected as observer', async () => {
-        contract = warp.pst(srcContractId).connect(goodObserver2);
+        contract = warp
+          .pst(srcContractId)
+          .connect(goodObserver2)
+          .setEvaluationOptions({
+            internalWrites: true,
+            unsafeClient: 'allow', // set to 'skip' to ignore unsafe
+            updateCacheForEachInteraction: true,
+          });
         let failedGateways = [
           await arweave.wallets.getAddress(failedGateway1),
           await arweave.wallets.getAddress(failedGateway2),
@@ -107,7 +121,14 @@ describe('Observation', () => {
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
           writeInteraction!.originalTxId,
         );
-        contract = warp.pst(srcContractId).connect(goodObserver3);
+        contract = warp
+          .pst(srcContractId)
+          .connect(goodObserver3)
+          .setEvaluationOptions({
+            internalWrites: true,
+            unsafeClient: 'allow', // set to 'skip' to ignore unsafe
+            updateCacheForEachInteraction: true,
+          });
         failedGateways = [
           await arweave.wallets.getAddress(failedGateway1),
           await arweave.wallets.getAddress(goodObserver1),
@@ -195,7 +216,14 @@ describe('Observation', () => {
       // add
 
       it('should allow an observer to update their observation with new failures/report if selected as observer', async () => {
-        contract = warp.pst(srcContractId).connect(goodObserver1);
+        contract = warp
+          .pst(srcContractId)
+          .connect(goodObserver1)
+          .setEvaluationOptions({
+            internalWrites: true,
+            unsafeClient: 'allow', // set to 'skip' to ignore unsafe
+            updateCacheForEachInteraction: true,
+          });
         const height = await getCurrentBlock(arweave);
         const currentEpochStartHeight = getEpochStart({
           startHeight: DEFAULT_START_HEIGHT,
@@ -226,7 +254,14 @@ describe('Observation', () => {
   describe('non-valid observer', () => {
     beforeAll(async () => {
       goodObserver1Address = await arweave.wallets.getAddress(goodObserver1);
-      contract = warp.pst(srcContractId).connect(nonValidObserver);
+      contract = warp
+        .pst(srcContractId)
+        .connect(nonValidObserver)
+        .setEvaluationOptions({
+          internalWrites: true,
+          unsafeClient: 'allow', // set to 'skip' to ignore unsafe
+          updateCacheForEachInteraction: true,
+        });
     });
 
     describe('read interactions', () => {
@@ -277,7 +312,14 @@ describe('Observation', () => {
       });
 
       it('should not save observation report if gateway is leaving', async () => {
-        contract = warp.pst(srcContractId).connect(leavingFirstEpochObserver);
+        contract = warp
+          .pst(srcContractId)
+          .connect(leavingFirstEpochObserver)
+          .setEvaluationOptions({
+            internalWrites: true,
+            unsafeClient: 'allow', // set to 'skip' to ignore unsafe
+            updateCacheForEachInteraction: true,
+          });
         const height = await getCurrentBlock(arweave);
         const currentEpochStartHeight = getEpochStart({
           startHeight: DEFAULT_START_HEIGHT,

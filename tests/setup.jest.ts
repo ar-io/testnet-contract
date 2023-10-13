@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import path from 'path';
+import { SourceType } from 'warp-contracts';
 
 import { createLocalWallet, setupInitialContractState } from './utils/helper';
 import { arlocal, arweave, warp } from './utils/services';
@@ -46,9 +47,17 @@ module.exports = async () => {
       wallet: wallets[0].wallet,
       initState: JSON.stringify(initialContractState),
       src: contractSrcJs,
+      evaluationManifest: {
+        evaluationOptions: {
+          internalWrites: true,
+          useKVStorage: true, // tells evaluators the key value storage is used for storing contract state
+          updateCacheForEachInteraction: true, // required for internal writes - increases performance, but takes memory hit
+          sourceType: SourceType.ARWEAVE,
+        },
+      },
     },
-    true, // disable bundling
-  );
+    true,
+  ); // disable bundling
 
   // transfer funds to the protocol balance
   await warp.pst(contractTxId).connect(wallets[0].wallet).writeInteraction({
