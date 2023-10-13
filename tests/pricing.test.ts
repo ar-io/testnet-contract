@@ -2,6 +2,7 @@ import {
   demandFactorPeriodIndex,
   mvgAvgTrailingPurchaseCounts,
   periodAtHeight,
+  shouldUpdateDemandFactor,
   tallyNamePurchase,
 } from '../src/pricing';
 import { BlockHeight } from '../src/types';
@@ -142,6 +143,39 @@ describe('Pricing functions:', () => {
             consecutivePeriodsWithMinDemandFactor: 0,
           }),
         ).toEqual(expectedMvgAvg);
+      },
+    );
+  });
+
+  describe('shouldUpdateDemandFactor function', () => {
+    it.each([
+      [[0, 0, 0], false],
+      [[1, 0, 0], false],
+      [[719, 0, 0], false],
+      [[720, 0, 0], true],
+      [[721, 1, 0], false],
+      [[101, 0, 101], false],
+      [[102, 0, 101], false],
+      [[820, 0, 101], false],
+      [[821, 0, 101], true],
+      [[1540, 1, 101], false],
+      [[1541, 1, 101], true],
+    ])(
+      'given valid block height, current period, and height of zero-th period %j, should return %d',
+      (
+        [currentHeight, currentPeriod, periodZeroBlockHeight],
+        expectedResult,
+      ) => {
+        expect(
+          shouldUpdateDemandFactor(new BlockHeight(currentHeight), {
+            periodZeroBlockHeight,
+            currentPeriod,
+            trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
+            purchasesThisPeriod: 10,
+            demandFactor: 1,
+            consecutivePeriodsWithMinDemandFactor: 0,
+          }),
+        ).toEqual(expectedResult);
       },
     );
   });

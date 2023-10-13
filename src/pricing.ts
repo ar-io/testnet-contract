@@ -22,7 +22,7 @@ export function updateDemandFactor(
   currentHeight: BlockHeight,
   state: IOState,
 ): IOState {
-  if (shouldUpdateDemandFactor(currentHeight, state)) {
+  if (shouldUpdateDemandFactor(currentHeight, state.demandFactoring)) {
     const numNamesPurchasedInLastPeriod =
       state.demandFactoring.purchasesThisPeriod;
     const mvgAvgOfTrailingNamePurchases = mvgAvgTrailingPurchaseCounts(
@@ -75,15 +75,20 @@ export function updateDemandFactor(
   return state;
 }
 
-function shouldUpdateDemandFactor(
+export function shouldUpdateDemandFactor(
   currentHeight: BlockHeight,
-  state: DeepReadonly<IOState>,
+  dfData: DeepReadonly<DemandFactoringData>,
 ): boolean {
+  // Don't update the demand factor if we're still in the first-ever period
+  if (currentHeight.valueOf() === dfData.periodZeroBlockHeight) {
+    return false;
+  }
+
   const currentPeriod = periodAtHeight(
     currentHeight,
-    new BlockHeight(state.demandFactoring.periodZeroBlockHeight),
+    new BlockHeight(dfData.periodZeroBlockHeight),
   );
-  return currentPeriod > state.demandFactoring.currentPeriod;
+  return currentPeriod > dfData.currentPeriod;
 }
 
 function demandIsIncreasing({
