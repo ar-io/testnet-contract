@@ -52,22 +52,29 @@ export const getAuction = (
       record.endTimestamp > +SmartWeave.block.timestamp;
 
     const reservedName = reserved[formattedName];
+
+    // TODO: move to util function
     const isActiveReservedName =
       reservedName &&
       reservedName.endTimestamp &&
       reservedName.endTimestamp > +SmartWeave.block.timestamp;
 
+    // TODO: move to util function
     const isShortNameRestricted =
       formattedName.length < MINIMUM_ALLOWED_NAME_LENGTH &&
       SmartWeave.block.timestamp < SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP;
 
+    // TODO: move to util function
     const isAvailableForAuction =
       !isExistingActiveRecord &&
       !isActiveReservedName &&
       !isShortNameRestricted;
 
+    // TODO: move to util function
     const isRequiredToBeAuctioned =
-      formattedName.length > MINIMUM_ALLOWED_NAME_LENGTH && formattedName < 12;
+      type == 'permabuy' &&
+      formattedName.length > MINIMUM_ALLOWED_NAME_LENGTH &&
+      formattedName < 12;
 
     return {
       result: {
