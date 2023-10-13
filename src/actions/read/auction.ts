@@ -64,7 +64,7 @@ export const getAuction = (
 
     return {
       result: {
-        name,
+        name: formattedName,
         isActive: false,
         type,
         isAvailableForAuction: isAvailableForAuction,
@@ -104,6 +104,7 @@ export const getAuction = (
 
   return {
     result: {
+      name: formattedName,
       ...auction,
       // TODO: inclusive or exclusive here
       isActive: expirationHeight > +SmartWeave.block.height,
