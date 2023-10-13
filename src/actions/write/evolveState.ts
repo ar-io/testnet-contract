@@ -14,14 +14,8 @@ export const evolveState = async (
     throw new ContractError(NON_CONTRACT_OWNER_MESSAGE);
   }
 
-  // Update Gateway Address Registry settings
-  state.settings.auctions = {
-    floorPriceMultiplier: 1,
-    startPriceMultiplier: 50,
-    auctionDuration: 5040,
-    decayRate: 0.0225,
-    decayInterval: 30,
-  };
+  // remove existing auctions
+  state.auctions = {};
 
   return { state };
 };

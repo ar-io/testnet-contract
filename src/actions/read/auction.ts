@@ -65,6 +65,7 @@ export const getAuction = (
       result: {
         name,
         isActive: false,
+        type,
         isAvailableForAuction: isAvailableForAuction,
         isRequiredToBeAuctioned: isRequiredToBeAuctioned,
         minimumBid: floorPrice, // since its not active yet, the minimum bid is the floor price
