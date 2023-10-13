@@ -13,7 +13,7 @@ import {
 } from './utils/constants';
 import {
   calculatePermabuyFee,
-  calculateTotalRegistrationFee,
+  calculateRegistrationFee,
   getLocalArNSContractId,
   getLocalWallet,
 } from './utils/helper';
@@ -91,12 +91,13 @@ describe('Records', () => {
       );
 
       const currentBlock = await arweave.blocks.getCurrent();
-      const expectedPurchasePrice = calculateTotalRegistrationFee(
-        namePurchase.name,
-        prevState.fees,
-        namePurchase.years,
-        currentBlock.timestamp,
-      );
+      const expectedPurchasePrice = calculateRegistrationFee({
+        name: namePurchase.name,
+        type: 'lease',
+        fees: prevState.fees,
+        years: namePurchase.years,
+        currentBlockTimestamp: currentBlock.timestamp,
+      });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
@@ -138,12 +139,13 @@ describe('Records', () => {
       );
 
       const currentBlock = await arweave.blocks.getCurrent();
-      const expectedPurchasePrice = calculateTotalRegistrationFee(
-        namePurchase.name!,
-        prevState.fees,
-        1,
-        currentBlock.timestamp,
-      );
+      const expectedPurchasePrice = calculateRegistrationFee({
+        name: namePurchase.name!,
+        fees: prevState.fees,
+        years: 1,
+        type: 'lease',
+        currentBlockTimestamp: currentBlock.timestamp,
+      });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();

@@ -3,11 +3,7 @@ import {
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
-import {
-  calculatePermabuyFee,
-  calculateTotalRegistrationFee,
-  getAuctionPrices,
-} from '../../utilities';
+import { calculateRegistrationFee, getAuctionPrices } from '../../utilities';
 
 declare const SmartWeave: any;
 
@@ -23,15 +19,13 @@ export const getAuction = (
   if (!auction) {
     const { floorPriceMultiplier, startPriceMultiplier } = auctionSettings;
 
-    const registrationFee =
-      type === 'lease'
-        ? calculateTotalRegistrationFee(
-            name,
-            fees,
-            1,
-            +SmartWeave.block.timestamp,
-          )
-        : calculatePermabuyFee(name, fees, +SmartWeave.block.timestamp);
+    const registrationFee = calculateRegistrationFee({
+      type,
+      name,
+      fees,
+      years: 1,
+      currentBlockTimestamp: +SmartWeave.block.timestamp,
+    });
 
     const floorPrice = registrationFee * floorPriceMultiplier;
     const startPrice = floorPrice * startPriceMultiplier;
