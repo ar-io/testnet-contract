@@ -11,8 +11,8 @@ const {
   increaseUndernameCountSchema,
   joinNetworkSchema,
   transferTokensSchema,
+  saveObservationsSchema,
 } = require('./schemas');
-const { saveObservationsSchema } = require('./schemas/saveObservations');
 
 // build our validation source code
 const ajv = new Ajv({
