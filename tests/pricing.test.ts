@@ -1,5 +1,6 @@
 import {
   demandFactorPeriodIndex,
+  mvgAvgTrailingPurchaseCounts,
   periodAtHeight,
   tallyNamePurchase,
 } from '../src/pricing';
@@ -107,5 +108,41 @@ describe('Pricing functions:', () => {
         consecutivePeriodsWithMinDemandFactor: 3,
       });
     });
+  });
+
+  describe('mvgAvgTrailingPurchaseCounts function', () => {
+    it.each([
+      [[[0, 0, 0, 0, 0, 0, 0]], 0],
+      [[[0, 0, 0, 1, 0, 0, 0]], 1 / 7],
+      [[[1, 1, 1, 1, 1, 1, 1]], 1],
+      [
+        [
+          [
+            Number.MAX_SAFE_INTEGER,
+            Number.MAX_SAFE_INTEGER,
+            Number.MAX_SAFE_INTEGER,
+            Number.MAX_SAFE_INTEGER,
+            Number.MAX_SAFE_INTEGER,
+            Number.MAX_SAFE_INTEGER,
+            Number.MAX_SAFE_INTEGER,
+          ],
+        ],
+        Number.MAX_SAFE_INTEGER,
+      ],
+    ])(
+      'given period purchase history %j, should return moving average %d',
+      ([trailingPeriodPurchases], expectedMvgAvg) => {
+        expect(
+          mvgAvgTrailingPurchaseCounts({
+            periodZeroBlockHeight: 0,
+            currentPeriod: 0,
+            trailingPeriodPurchases,
+            purchasesThisPeriod: 10,
+            demandFactor: 1,
+            consecutivePeriodsWithMinDemandFactor: 0,
+          }),
+        ).toEqual(expectedMvgAvg);
+      },
+    );
   });
 });

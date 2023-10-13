@@ -25,7 +25,9 @@ export function updateDemandFactor(
   if (shouldUpdateDemandFactor(currentHeight, state)) {
     const numNamesPurchasedInLastPeriod =
       state.demandFactoring.purchasesThisPeriod;
-    const mvgAvgOfTrailingNamePurchases = mvgAvgTrailingPurchaseCounts(state);
+    const mvgAvgOfTrailingNamePurchases = mvgAvgTrailingPurchaseCounts(
+      state.demandFactoring,
+    );
     if (
       demandIsIncreasing({
         numNamesPurchasedInLastPeriod,
@@ -112,10 +114,10 @@ export function demandFactorPeriodIndex(period: number): number {
 }
 
 export function mvgAvgTrailingPurchaseCounts(
-  state: DeepReadonly<IOState>,
+  dfData: DeepReadonly<DemandFactoringData>,
 ): number {
   return (
-    state.demandFactoring.trailingPeriodPurchases.reduce(
+    dfData.trailingPeriodPurchases.reduce(
       (acc, periodPurchaseCount) => acc + periodPurchaseCount,
       0,
     ) / DEMAND_FACTORING_SETTINGS.movingAvgPeriodCount
