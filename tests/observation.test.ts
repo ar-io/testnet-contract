@@ -232,18 +232,18 @@ describe('Observation', () => {
     describe('read interactions', () => {
       it('should be able to check if target is valid observer for a given epoch', async () => {
         const height = await getCurrentBlock(arweave);
-        const { result: isValidObserver } = await contract.viewState({
-          function: 'isValidObserver',
+        const { result: isPrescribedObserver } = await contract.viewState({
+          function: 'isPrescribedObserver',
           target: nonValidObserverAddress,
           height,
         });
-        expect(isValidObserver).toBe(false);
-        const { result: isValidObserver2 } = await contract.viewState({
-          function: 'isValidObserver',
+        expect(isPrescribedObserver).toBe(false);
+        const { result: isPrescribedObserver2 } = await contract.viewState({
+          function: 'isPrescribedObserver',
           target: goodObserver1Address,
           height,
         });
-        expect(isValidObserver2).toBe(true);
+        expect(isPrescribedObserver2).toBe(true);
       });
     });
 

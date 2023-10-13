@@ -188,7 +188,7 @@ export type GARFunctions =
   | 'finalizeOperatorStakeDecrease'
   | 'updateGatewaySettings';
 
-export type ObservationFunctions = 'saveObservations' | 'isValidObserver';
+export type ObservationFunctions = 'saveObservations' | 'isPrescribedObserver';
 
 export type IOContractFunctions = ObservationFunctions &
   GARFunctions &
@@ -200,6 +200,7 @@ export type ContractResult =
   | { result: PstResult }
   | { result: ArNSNameResult }
   | { result: boolean }
+  | { result: number }
   | {
       result: {
         [x: string | number]: any; // eslint-disable-line

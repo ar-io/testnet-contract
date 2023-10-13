@@ -4,7 +4,6 @@ import {
   CALLER_NOT_VALID_OBSERVER_MESSAGE,
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_START_HEIGHT,
-  TARGET_GATEWAY_NOT_REGISTERED,
 } from '../../constants';
 
 declare const ContractError;
@@ -25,7 +24,7 @@ export function getEpochStart(height: number): number {
   return getEpochEnd(height) + 1 - DEFAULT_EPOCH_BLOCK_LENGTH;
 }
 
-export const isValidObserver = async (
+export const isPrescribedObserver = async (
   state: IOState,
   { input: { target, height } }: PstAction,
 ): Promise<ContractResult> => {
@@ -59,8 +58,6 @@ export const isValidObserver = async (
     // The gateway with the specified address is not found in the eligibleObservers list
     throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
   }
-
-  // CHECK ENTROPY IN ELIGIBLE OBSERVERS
 
   return { result: true };
 };

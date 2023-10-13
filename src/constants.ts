@@ -35,7 +35,7 @@ export const TARGET_GATEWAY_NOT_REGISTERED =
   'Target gateway is not currently registered';
 export const INVALID_OBSERVATION_TARGET =
   'Target gateway is leaving the network and must not be observed';
-export const DEFAULT_NUM_SAMPLED_BLOCKS = 1; // TO DO: Update this to 3, which involves modifying entropy method
+export const DEFAULT_NUM_SAMPLED_BLOCKS = 3;
 export const DEFAULT_SAMPLED_BLOCKS_OFFSET = 50;
 export const NUM_OBSERVERS_PER_EPOCH = 50;
 export const NON_EXPIRED_ARNS_NAME_MESSAGE =

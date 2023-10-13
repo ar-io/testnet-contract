@@ -8,7 +8,7 @@ import {
   getGatewayTotalStake,
   getRankedGatewayRegistry,
 } from './actions/read/gateways';
-import { isValidObserver } from './actions/read/observation';
+import { isPrescribedObserver } from './actions/read/observation';
 import { getRecord } from './actions/read/record';
 import { buyRecord } from './actions/write/buyRecord';
 import { evolve } from './actions/write/evolve';
@@ -59,8 +59,8 @@ export async function handle(
       return getRecord(state, action);
     case 'gateway':
       return getGateway(state, action);
-    case 'isValidObserver':
-      return isValidObserver(state, action);
+    case 'isPrescribedObserver':
+      return isPrescribedObserver(state, action);
     case 'gatewayTotalStake':
       return getGatewayTotalStake(state, action);
     case 'gatewayRegistry':

@@ -1,6 +1,9 @@
+import crypto from 'node:crypto';
+
 import {
   ANNUAL_PERCENTAGE_FEE,
   DEFAULT_NUM_SAMPLED_BLOCKS,
+  DEFAULT_SAMPLED_BLOCKS_OFFSET,
   DEFAULT_UNDERNAME_COUNT,
   INVALID_INPUT_MESSAGE,
   MAX_YEARS,
@@ -13,7 +16,7 @@ import {
   SECONDS_IN_GRACE_PERIOD,
   UNDERNAME_REGISTRATION_IO_FEE,
 } from './constants';
-import { Fees } from './types';
+import { Fees, Gateway } from './types';
 
 declare const ContractError: any;
 declare const SmartWeave: any;
@@ -297,39 +300,59 @@ export function getEpochEnd({
   );
 }
 
-export async function getEntropy({
-  height,
-}: {
-  height: number;
-}): Promise<Buffer> {
-  const hash = SmartWeave.arweave.crypto.createHash('sha256');
-
+export async function getEntropy(height: number): Promise<Buffer> {
+  const hash = crypto.createHash('sha256');
   // We hash multiples block hashes to reduce the chance that someone will
   // influence the value produced by grinding with excessive hash power.
   for (let i = 0; i < DEFAULT_NUM_SAMPLED_BLOCKS; i++) {
-    if (
-      !SmartWeave.block.indep_hash ||
-      typeof SmartWeave.block.indep_hash !== 'string'
-    ) {
+    const block = await SmartWeave.unsafeClient.blocks.getByHeight(
+      `${height - DEFAULT_SAMPLED_BLOCKS_OFFSET - i}`,
+    );
+
+    if (!block.indep_hash || typeof block.indep_hash !== 'string') {
       throw new ContractError(`Block ${height - i} has no indep_hash`);
     }
-    hash.update(Buffer.from(SmartWeave.block.indep_hash, 'base64url'));
+    hash.update(Buffer.from(block.indep_hash, 'base64url'));
   }
   return hash.digest();
 }
 
-export async function getSelectedObservers(
+export function getEligibleObservers(
+  gateways: {
+    [address: string]: Gateway;
+  },
+  gatewayLeaveLength: number,
+  height: number,
+): string[] {
+  const eligibleObservers: string[] = [];
+  for (const address in gateways) {
+    const gateway = gateways[address];
+
+    // Check the conditions
+    const isWithinStartRange = gateway.start <= height;
+    const isWithinEndRange =
+      gateway.end === 0 || gateway.end - gatewayLeaveLength < height;
+
+    // Keep the gateway if it meets the conditions
+    if (isWithinStartRange && isWithinEndRange) {
+      eligibleObservers.push(address);
+    }
+  }
+  return eligibleObservers;
+}
+
+export async function getPrescribedObservers(
   height: number,
   potentialObservers: string[],
 ): Promise<string[]> {
-  const selectedObservers: string[] = [];
+  const prescribedObservers: string[] = [];
   const usedIndexes = new Set<number>();
-  const entropy = await getEntropy({ height });
-  const potentialObserversCount = potentialObservers.length;
+  const entropy = await getEntropy(height);
+  const prescribedObserversCount = Object.keys(potentialObservers).length;
 
   // If we want to source more observers than exist in the list, just return all potential observers
-  if (NUM_OBSERVERS_PER_EPOCH >= potentialObserversCount) {
-    return potentialObservers;
+  if (NUM_OBSERVERS_PER_EPOCH >= prescribedObserversCount) {
+    return prescribedObservers;
   }
 
   let hash = SmartWeave.arweave.crypto
@@ -337,17 +360,17 @@ export async function getSelectedObservers(
     .update(entropy)
     .digest();
   for (let i = 0; i < NUM_OBSERVERS_PER_EPOCH; i++) {
-    let index = hash.readUInt32BE(0) % potentialObserversCount;
+    let index = hash.readUInt32BE(0) % prescribedObserversCount;
 
     while (usedIndexes.has(index)) {
-      index = (index + 1) % potentialObserversCount;
+      index = (index + 1) % prescribedObserversCount;
     }
 
     usedIndexes.add(index);
-    selectedObservers.push(await this.gatewayList.getName(height, index));
+    prescribedObservers.push(potentialObservers[index]);
 
     hash = SmartWeave.arweave.crypto.createHash('sha256').update(hash).digest();
   }
 
-  return selectedObservers;
+  return prescribedObservers;
 }

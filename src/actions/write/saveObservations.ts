@@ -1,14 +1,17 @@
 import {
   CALLER_NOT_VALID_OBSERVER_MESSAGE,
-  DEFAULT_EPOCH_BLOCK_LENGTH,
-  DEFAULT_START_HEIGHT,
   INVALID_OBSERVATION_TARGET,
   TARGET_GATEWAY_NOT_REGISTERED,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
-import { getEpochStart, getInvalidAjvMessage } from '../../utilities';
+import {
+  getEligibleObservers,
+  getInvalidAjvMessage,
+  getPrescribedObservers,
+} from '../../utilities';
 // composed by ajv at build
 import { validateSaveObservations } from '../../validations.mjs';
+import { getEpochStart } from '../read/observation';
 
 declare const ContractError;
 declare const SmartWeave: any;
@@ -37,11 +40,7 @@ export const saveObservations = (
   // get all other relevant state data
   const { observations, gateways, settings } = state;
   const { observationReportTxId, failedGateways } = new SaveObservations(input); // does validation on constructor
-  const currentEpochStartHeight = getEpochStart({
-    startHeight: DEFAULT_START_HEIGHT,
-    epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
-    height: +SmartWeave.block.height,
-  });
+  const currentEpochStartHeight = getEpochStart(+SmartWeave.block.height);
 
   const gateway = gateways[caller];
   if (!gateway) {
@@ -50,29 +49,20 @@ export const saveObservations = (
     throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
   }
 
-  const eligibleObservers = {};
-  for (const address in gateways) {
-    const gateway = gateways[address];
+  const eligibleObservers = getEligibleObservers(
+    gateways,
+    settings.registry.gatewayLeaveLength,
+    currentEpochStartHeight,
+  );
+  const prescribedObservers = getPrescribedObservers(
+    currentEpochStartHeight,
+    eligibleObservers,
+  );
 
-    // Check the conditions
-    const isWithinStartRange = gateway.start <= currentEpochStartHeight;
-    const isWithinEndRange =
-      gateway.end === 0 ||
-      gateway.end - settings.registry.gatewayLeaveLength <
-        currentEpochStartHeight;
-
-    // Keep the gateway if it meets the conditions
-    if (isWithinStartRange && isWithinEndRange) {
-      eligibleObservers[address] = gateway;
-    }
-  }
-
-  if (!(caller in eligibleObservers)) {
+  if (!(caller in prescribedObservers)) {
     // The gateway with the specified address is not found in the eligibleObservers list
     throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
   }
-
-  // get entropy and pick from list of eligible observers
 
   // check if this is the first report filed in this epoch
   if (!observations[currentEpochStartHeight]) {
