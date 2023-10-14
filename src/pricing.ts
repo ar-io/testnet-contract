@@ -91,7 +91,7 @@ export function shouldUpdateDemandFactor(
   return currentPeriod > dfData.currentPeriod;
 }
 
-function demandIsIncreasing({
+export function demandIsIncreasing({
   numNamesPurchasedInLastPeriod,
   mvgAvgOfTailingNamePurchases,
 }: {

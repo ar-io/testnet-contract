@@ -1,5 +1,6 @@
 import {
   demandFactorPeriodIndex,
+  demandIsIncreasing,
   mvgAvgTrailingPurchaseCounts,
   periodAtHeight,
   shouldUpdateDemandFactor,
@@ -174,6 +175,28 @@ describe('Pricing functions:', () => {
             purchasesThisPeriod: 10,
             demandFactor: 1,
             consecutivePeriodsWithMinDemandFactor: 0,
+          }),
+        ).toEqual(expectedResult);
+      },
+    );
+  });
+
+  describe('demandIsIncreasing function', () => {
+    it.each([
+      [[0, 0], false],
+      [[0, 1], false],
+      [[1, 1], true],
+      [[2, 1], true],
+    ])(
+      'given [current period purchase count, moving average purchase count] of %j, should return %d',
+      (
+        [numNamesPurchasedInLastPeriod, mvgAvgOfTailingNamePurchases],
+        expectedResult,
+      ) => {
+        expect(
+          demandIsIncreasing({
+            numNamesPurchasedInLastPeriod,
+            mvgAvgOfTailingNamePurchases,
           }),
         ).toEqual(expectedResult);
       },
