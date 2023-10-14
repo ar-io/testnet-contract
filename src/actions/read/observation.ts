@@ -1,11 +1,10 @@
-import { ContractResult, IOState, PstAction } from 'src/types';
-import { getEpochStart, getPrescribedObservers } from 'src/utilities';
-
 import {
   CALLER_NOT_VALID_OBSERVER_MESSAGE,
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_START_HEIGHT,
 } from '../../constants';
+import { ContractResult, IOState, PstAction } from '../../types';
+import { getEpochStart, getPrescribedObservers } from '../../utilities';
 
 declare const ContractError;
 declare const SmartWeave: any;
@@ -19,7 +18,7 @@ export const isPrescribedObserver = async (
   const currentEpochStartHeight = getEpochStart({
     startHeight: DEFAULT_START_HEIGHT,
     epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
-    height: height || +SmartWeave.block.currentBlockHeight, // use the current block height if not provided
+    height: height,
   });
   if (!gateway) {
     return { result: false };

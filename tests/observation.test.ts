@@ -12,6 +12,7 @@ import {
   getEpochStart,
   getLocalArNSContractId,
   getLocalWallet,
+  mineBlock,
 } from './utils/helper';
 import { arweave, warp } from './utils/services';
 
@@ -55,6 +56,8 @@ describe('Observation', () => {
     );
     goodObserver2Address = await arweave.wallets.getAddress(goodObserver2);
     goodObserver3Address = await arweave.wallets.getAddress(goodObserver3);
+
+    await mineBlock(arweave);
   });
 
   describe('valid observer', () => {

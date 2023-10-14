@@ -44,7 +44,7 @@ export const saveObservations = async (
   const currentEpochStartHeight = getEpochStart({
     startHeight: DEFAULT_START_HEIGHT,
     epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
-    height: +SmartWeave.block.currentBlockHeight,
+    height: +SmartWeave.block.height,
   });
 
   const gateway = gateways[caller];
