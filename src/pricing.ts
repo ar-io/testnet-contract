@@ -128,11 +128,3 @@ export function mvgAvgTrailingPurchaseCounts(
     ) / DEMAND_FACTORING_SETTINGS.movingAvgPeriodCount
   );
 }
-
-export function purchasesThisPeriod(
-  demandFactoringData: DeepReadonly<DemandFactoringData>,
-): number {
-  return demandFactoringData.trailingPeriodPurchases[
-    demandFactorPeriodIndex(demandFactoringData.currentPeriod)
-  ];
-}
