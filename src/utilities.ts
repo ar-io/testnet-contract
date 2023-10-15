@@ -35,23 +35,29 @@ export function calculateLeaseFee(
   // total cost to purchase name
   return (
     initialNamePurchaseFee +
-    calculateAnnualRenewalFee(
+    calculateAnnualRenewalFee({
       name,
       fees,
       years,
-      DEFAULT_UNDERNAME_COUNT,
-      currentTimestamp + SECONDS_IN_A_YEAR * years,
-    )
+      undernameCount: DEFAULT_UNDERNAME_COUNT,
+      endTimestamp: currentTimestamp + SECONDS_IN_A_YEAR * years,
+    })
   );
 }
 
-export function calculateAnnualRenewalFee(
-  name: string,
-  fees: Fees,
-  years: number,
-  undernames: number,
-  endTimestamp: number,
-): number {
+export function calculateAnnualRenewalFee({
+  name,
+  fees,
+  years,
+  undernameCount,
+  endTimestamp,
+}: {
+  name: string;
+  fees: Fees;
+  years: number;
+  undernameCount: number;
+  endTimestamp: number;
+}): number {
   // Determine annual registration price of name
   const initialNamePurchaseFee = fees[name.length.toString()];
 
@@ -62,12 +68,6 @@ export function calculateAnnualRenewalFee(
   const totalAnnualRenewalCost = nameAnnualRegistrationFee * years;
 
   const extensionEndTimestamp = endTimestamp + years * SECONDS_IN_A_YEAR;
-  // Do not charge for undernames if there are less or equal than the default
-  const undernameCount =
-    undernames > DEFAULT_UNDERNAME_COUNT
-      ? undernames - DEFAULT_UNDERNAME_COUNT
-      : undernames;
-
   const totalCost =
     undernameCount === DEFAULT_UNDERNAME_COUNT
       ? totalAnnualRenewalCost
@@ -82,41 +82,41 @@ export function calculateAnnualRenewalFee(
   return totalCost;
 }
 
+export function getRarityMultiplierForName({ name }: { name: string }) {
+  if (name.length >= RARITY_MULTIPLIER_HALVENING) {
+    return 0.5; // cut the price in half
+  }
+  // names between 5 and 24 characters (inclusive)
+  if (
+    name.length >= MINIMUM_ALLOWED_NAME_LENGTH &&
+    name.length < RARITY_MULTIPLIER_HALVENING
+  ) {
+    return 1; // e.g. it's the cost of a 10 year lease
+  }
+  // short names
+  if (name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
+    const rarityPercentIncreaseForName = 10 - name.length / 10;
+    return 1 + rarityPercentIncreaseForName;
+  }
+  throw new ContractError('Unable to compute name multiplier.');
+}
+
 export function calculatePermabuyFee(
   name: string,
   fees: Fees,
   currentTimestamp: number,
 ): number {
   // calculate the annual fee for the name for default of 10 years
-  const permabuyLeasePrice = calculateAnnualRenewalFee(
+  const permabuyLeasePrice = calculateAnnualRenewalFee({
     name,
     fees,
-    PERMABUY_LEASE_FEE_LENGTH,
-    DEFAULT_UNDERNAME_COUNT,
-    currentTimestamp + SECONDS_IN_A_YEAR * PERMABUY_LEASE_FEE_LENGTH,
-  );
-  // rarity multiplier based on the length of the name (e.g 1.3);
-  // e.g. name is 7 characters - this would be 0
-  // name is 2 characters - this would 8
-  const getMultiplier = (): number => {
-    if (name.length >= RARITY_MULTIPLIER_HALVENING) {
-      return 0.5; // cut the price in half
-    }
-    // names between 5 and 24 characters (inclusive)
-    if (
-      name.length >= MINIMUM_ALLOWED_NAME_LENGTH &&
-      name.length < RARITY_MULTIPLIER_HALVENING
-    ) {
-      return 1; // e.g. it's the cost of a 10 year lease
-    }
-    // short names
-    if (name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
-      const shortNameMultiplier = 1 + ((10 - name.length) * 10) / 100;
-      return shortNameMultiplier;
-    }
-    throw new ContractError('Unable to compute name multiplier.');
-  };
-  const rarityMultiplier = getMultiplier();
+    years: PERMABUY_LEASE_FEE_LENGTH,
+    undernameCount: DEFAULT_UNDERNAME_COUNT,
+    endTimestamp:
+      currentTimestamp + SECONDS_IN_A_YEAR * PERMABUY_LEASE_FEE_LENGTH,
+  });
+
+  const rarityMultiplier = getRarityMultiplierForName({ name });
   const permabuyFee = permabuyLeasePrice * rarityMultiplier;
   return permabuyFee;
 }

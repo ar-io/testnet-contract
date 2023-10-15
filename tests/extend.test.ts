@@ -172,13 +172,13 @@ describe('Extend', () => {
         const record = prevState.records[name]!;
         const prevBalance = prevState.balances[nonContractOwnerAddress];
         const fees = prevState.fees;
-        const totalExtensionAnnualFee = calculateAnnualRenewalFee(
+        const totalExtensionAnnualFee = calculateAnnualRenewalFee({
           name,
           fees,
           years,
-          record.undernames,
-          record.endTimestamp!,
-        );
+          undernameCount: record.undernames,
+          endTimestamp: record.endTimestamp!,
+        });
 
         const writeInteraction = await contract.writeInteraction({
           function: 'extendRecord',
@@ -210,18 +210,18 @@ describe('Extend', () => {
         const name = `lease-length-name${MAX_YEARS - years}`; // should select the name correctly based on how the helper function generates names
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevState = prevCachedValue.state as IOState;
-        const prevEndTimestamp = prevState.records[name].endTimestamp!;
         const prevBalance = prevState.balances[nonContractOwnerAddress];
         const record = prevState.records[name]!;
+        const prevEndTimestamp = record.endTimestamp!;
         const fees = prevState.fees;
 
-        const totalExtensionAnnualFee = calculateAnnualRenewalFee(
+        const totalExtensionAnnualFee = calculateAnnualRenewalFee({
           name,
           fees,
           years,
-          record.undernames,
-          record.endTimestamp!,
-        );
+          undernameCount: record.undernames,
+          endTimestamp: record.endTimestamp!,
+        });
 
         const writeInteraction = await contract.writeInteraction({
           function: 'extendRecord',

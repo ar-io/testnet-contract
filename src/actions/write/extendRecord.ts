@@ -64,13 +64,13 @@ export const extendRecord = async (
   }
 
   // total cost to extend a record
-  const totalExtensionAnnualFee = calculateAnnualRenewalFee(
+  const totalExtensionAnnualFee = calculateAnnualRenewalFee({
     name,
     fees,
     years,
-    record.undernames,
-    record.endTimestamp,
-  );
+    undernameCount: record.undernames,
+    endTimestamp: record.endTimestamp,
+  });
 
   if (!walletHasSufficientBalance(balances, caller, totalExtensionAnnualFee)) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);

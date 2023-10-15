@@ -10,6 +10,7 @@ coverage
 src/validations.mjs
 
 # source
+.yarn/install-state.gz
 
 # keys
 **key**.json

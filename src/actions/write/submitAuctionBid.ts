@@ -150,7 +150,11 @@ export const submitAuctionBid = (
     state.balances = balances;
     state.records = records;
     state.reserved = reserved;
-  } else if (auctions[name]) {
+
+    return { state };
+  }
+
+  if (auctions[name]) {
     const existingAuction = auctions[name];
     const auctionEndHeight = existingAuction.startHeight + auctionDuration;
     const endTimestamp =
@@ -173,35 +177,7 @@ export const submitAuctionBid = (
       currentBlockHeight > auctionEndHeight ||
       existingAuction.floorPrice >= currentRequiredMinimumBid
     ) {
-      /**
-       * We can update the state if a bid was placed after an auction has ended, or the initial floor was set to a value higher than the current minimum bid required to win.
-       *
-       * To do so we need to:
-       * 1. Update the records to reflect their new name
-       * 2. Delete the auction object
-       * 3. Return an error to the second bidder, telling them they did not win the bid.
-       */
-
-      records[name] = {
-        contractTxId: existingAuction.contractTxId,
-        type: existingAuction.type,
-        startTimestamp: +SmartWeave.block.timestamp,
-        // only include timestamp on lease
-        undernames: DEFAULT_UNDERNAME_COUNT,
-        // something to think about - what if a ticking of state never comes? what do we set endTimestamp to?
-        ...(existingAuction.type === 'lease' ? { endTimestamp } : {}),
-      };
-
-      // delete the auction
-      delete auctions[name];
-      // update the state
-      state.auctions = auctions;
-      state.records = records;
-      state.balances = balances;
-
-      // this ticks the state - but doesn't notify the second bidder...sorry!
-      // better put: the purpose of their interaction was rejected, but the state incremented forwarded
-      return { state };
+      throw new ContractError('Auction has expired. Bid not accepted.');
     }
 
     // we could throw an error if qty wasn't provided
@@ -268,8 +244,10 @@ export const submitAuctionBid = (
     state.balances = balances;
     state.records = records;
     state.reserved = reserved;
+
+    return { state };
   }
 
   // return updated state
-  return { state };
+  throw ContractError('Failed to process auction bid.');
 };
