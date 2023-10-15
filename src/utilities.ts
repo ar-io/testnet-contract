@@ -72,12 +72,12 @@ export function calculateAnnualRenewalFee({
     undernameCount === DEFAULT_UNDERNAME_COUNT
       ? totalAnnualRenewalCost
       : totalAnnualRenewalCost +
-        calculateProRatedUndernameCost(
-          undernameCount,
-          endTimestamp,
-          'lease',
-          extensionEndTimestamp,
-        );
+        calculateProRatedUndernameCost({
+          increaseUndernameCount: undernameCount,
+          currentTimestamp: endTimestamp,
+          type: 'lease',
+          endTimestamp: extensionEndTimestamp,
+        });
 
   return totalCost;
 }
@@ -169,21 +169,27 @@ export function walletHasSufficientBalance(
 }
 
 // TODO: update after dynamic pricing?
-export function calculateProRatedUndernameCost(
-  qty: number,
-  currentTimestamp: number,
-  type: RegistrationType,
-  endTimestamp?: number,
-): number {
-  const fullCost =
-    type === 'lease'
-      ? UNDERNAME_REGISTRATION_IO_FEE * qty
-      : PERMABUY_LEASE_FEE_LENGTH * qty;
-  const proRatedCost =
-    type === 'lease'
-      ? (fullCost / SECONDS_IN_A_YEAR) * (endTimestamp - currentTimestamp)
-      : fullCost;
-  return proRatedCost;
+export function calculateProRatedUndernameCost({
+  increaseUndernameCount,
+  currentTimestamp,
+  type,
+  endTimestamp,
+}: {
+  increaseUndernameCount: number;
+  currentTimestamp: number;
+  type: RegistrationType;
+  endTimestamp?: number;
+}): number {
+  switch (type) {
+    case 'lease':
+      return (
+        ((UNDERNAME_REGISTRATION_IO_FEE * increaseUndernameCount) /
+          SECONDS_IN_A_YEAR) *
+        (endTimestamp - currentTimestamp)
+      );
+    case 'permabuy':
+      return PERMABUY_LEASE_FEE_LENGTH * increaseUndernameCount;
+  }
 }
 
 export function calculateUndernamePermutations(domain: string): number {
@@ -208,11 +214,14 @@ export function calculateUndernamePermutations(domain: string): number {
   return numberOfPossibleUndernames;
 }
 
-export function isNameInGracePeriod(
-  currentTime: number,
-  endTimestamp: number,
-): boolean {
-  return endTimestamp + SECONDS_IN_GRACE_PERIOD >= currentTime;
+export function isNameInGracePeriod({
+  currentTimestamp,
+  endTimestamp,
+}: {
+  currentTimestamp: number;
+  endTimestamp: number;
+}): boolean {
+  return endTimestamp + SECONDS_IN_GRACE_PERIOD >= currentTimestamp;
 }
 
 export function getLeaseDurationFromEndTimestamp(
@@ -234,7 +243,7 @@ export function getMaxLeaseExtension(
     return 0;
   }
 
-  if (isNameInGracePeriod(currentTimestamp, endTimestamp)) {
+  if (isNameInGracePeriod({ currentTimestamp, endTimestamp })) {
     return MAX_YEARS;
   }
   // a number between 0 and 5 (MAX_YEARS)
@@ -310,11 +319,22 @@ export function isExistingActiveRecord({
   record: ArNSName;
   currentBlockTimestamp: number;
 }): boolean {
-  return (
-    record &&
-    record.endTimestamp &&
-    record.endTimestamp + SECONDS_IN_GRACE_PERIOD > currentBlockTimestamp
-  );
+  if (!record) {
+    return false;
+  }
+  switch (record.type) {
+    case 'lease':
+      return (
+        record &&
+        record.endTimestamp &&
+        isNameInGracePeriod({
+          currentTimestamp: currentBlockTimestamp,
+          endTimestamp: record.endTimestamp,
+        })
+      );
+    case 'permabuy':
+      return !!record;
+  }
 }
 
 export function isShortNameRestricted({

@@ -248,6 +248,6 @@ export const submitAuctionBid = (
     return { state };
   }
 
-  // return updated state
-  throw ContractError('Failed to process auction bid.');
+  // we should never get here
+  throw new ContractError('Failed to process auction bid.');
 };

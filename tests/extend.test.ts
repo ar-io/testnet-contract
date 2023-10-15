@@ -118,7 +118,6 @@ describe('Extend', () => {
     });
 
     it('should not be able to extend a non-existent name ', async () => {
-      // advance current timer
       const extendYears = MAX_YEARS - 1;
       const name = 'non-existent-name';
 
@@ -139,7 +138,6 @@ describe('Extend', () => {
     });
 
     it('should not be able to extend a permanent name ', async () => {
-      // advance current timer
       const extendYears = 1;
       const name = `lease-length-name${REGISTRATION_TYPES.BUY}`;
       const { cachedValue: prevCachedValue } = await contract.readState();

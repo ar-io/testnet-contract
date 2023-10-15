@@ -33,7 +33,7 @@ export const INVALID_INPUT_MESSAGE = 'Invalid input for interaction';
 export const NON_EXPIRED_ARNS_NAME_MESSAGE =
   'This name already exists in an active lease';
 export const ARNS_NAME_DOES_NOT_EXIST_MESSAGE =
-  'Name does not exist in the ArNS Contract!';
+  'This record has expired or does not exist and cannot be modified!';
 export const EXISTING_ANT_SOURCE_CODE_TX_MESSAGE =
   'This ANT Source Code Transaction ID is already allowed.';
 export const INSUFFICIENT_FUNDS_MESSAGE =

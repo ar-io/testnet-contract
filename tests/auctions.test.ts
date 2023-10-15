@@ -182,6 +182,7 @@ describe('Auctions', () => {
               contract.connect(nonContractOwner);
             });
 
+            // NOTE: all other tests are dependent on the auction object created in this test. If this fails, all the others will.
             it('should create the initial auction object', async () => {
               const writeInteraction = await contract.writeInteraction({
                 function: 'submitAuctionBid',
