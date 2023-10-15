@@ -23,7 +23,10 @@ const tickInternal = (height: BlockHeight, state: IOState): IOState => {
   let updatedState = state;
 
   // Update the current demand factor if necessary
-  updatedState = updateDemandFactor(height, updatedState);
+  updatedState.demandFactoring = updateDemandFactor(
+    height,
+    updatedState.demandFactoring,
+  );
   updatedState = tickAuctions(height, updatedState);
   return updatedState;
 };

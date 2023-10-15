@@ -1,78 +1,67 @@
 import { DEMAND_FACTORING_SETTINGS } from './constants';
-import {
-  BlockHeight,
-  DeepReadonly,
-  DemandFactoringData,
-  IOState,
-} from './types';
+import { BlockHeight, DeepReadonly, DemandFactoringData } from './types';
 
 export function tallyNamePurchase(
   dfData: DeepReadonly<DemandFactoringData>,
 ): DemandFactoringData {
-  const newDfData = {
-    ...dfData,
-    trailingPeriodPurchases: dfData.trailingPeriodPurchases.slice(),
-  };
+  const newDfData = cloneDemandFactoringData(dfData);
   newDfData.purchasesThisPeriod++;
   return newDfData;
 }
 
-// TODO: Pure input output?
 export function updateDemandFactor(
   currentHeight: BlockHeight,
-  state: IOState,
-): IOState {
-  if (shouldUpdateDemandFactor(currentHeight, state.demandFactoring)) {
-    const numNamesPurchasedInLastPeriod =
-      state.demandFactoring.purchasesThisPeriod;
-    const mvgAvgOfTrailingNamePurchases = mvgAvgTrailingPurchaseCounts(
-      state.demandFactoring,
-    );
-    if (
-      demandIsIncreasing({
-        numNamesPurchasedInLastPeriod,
-        mvgAvgOfTailingNamePurchases: mvgAvgOfTrailingNamePurchases,
-      })
-    ) {
-      state.demandFactoring.demandFactor *=
-        1 + DEMAND_FACTORING_SETTINGS.demandFactorUpAdjustment;
-    } else if (
-      state.demandFactoring.demandFactor >
-      DEMAND_FACTORING_SETTINGS.demandFactorMin
-    ) {
-      state.demandFactoring.demandFactor *=
-        1 - DEMAND_FACTORING_SETTINGS.demandFactorDownAdjustment;
-    }
-
-    // If necessary, reset the demand factor after enough consecutive periods at the minimum
-    if (
-      state.demandFactoring.demandFactor ===
-      DEMAND_FACTORING_SETTINGS.demandFactorMin
-    ) {
-      state.demandFactoring.consecutivePeriodsWithMinDemandFactor++;
-    } else {
-      state.demandFactoring.consecutivePeriodsWithMinDemandFactor = 0;
-    }
-    if (
-      state.demandFactoring.consecutivePeriodsWithMinDemandFactor >=
-      DEMAND_FACTORING_SETTINGS.stepDownThreshold
-    ) {
-      state.demandFactoring.consecutivePeriodsWithMinDemandFactor = 0;
-      state.demandFactoring.demandFactor =
-        DEMAND_FACTORING_SETTINGS.demandFactorBaseValue;
-    }
-
-    // Stash the number of purchases for this period in the trailing metrics
-    state.demandFactoring.trailingPeriodPurchases[
-      demandFactorPeriodIndex(state.demandFactoring.currentPeriod)
-    ] = numNamesPurchasedInLastPeriod;
-
-    // Increment the current period and reset the purchase count
-    state.demandFactoring.currentPeriod++;
-    state.demandFactoring.purchasesThisPeriod = 0;
+  dfData: DeepReadonly<DemandFactoringData>,
+): DemandFactoringData {
+  if (!shouldUpdateDemandFactor(currentHeight, dfData)) {
+    return dfData as DemandFactoringData;
   }
 
-  return state;
+  const newDemandFactoringData = cloneDemandFactoringData(dfData);
+
+  const numNamesPurchasedInLastPeriod = dfData.purchasesThisPeriod;
+  const mvgAvgOfTrailingNamePurchases = mvgAvgTrailingPurchaseCounts(dfData);
+  if (
+    demandIsIncreasing({
+      numNamesPurchasedInLastPeriod,
+      mvgAvgOfTailingNamePurchases: mvgAvgOfTrailingNamePurchases,
+    })
+  ) {
+    newDemandFactoringData.demandFactor *=
+      1 + DEMAND_FACTORING_SETTINGS.demandFactorUpAdjustment;
+  } else if (dfData.demandFactor > DEMAND_FACTORING_SETTINGS.demandFactorMin) {
+    newDemandFactoringData.demandFactor *=
+      1 - DEMAND_FACTORING_SETTINGS.demandFactorDownAdjustment;
+  }
+
+  // If necessary, reset the demand factor after enough consecutive periods at the minimum
+  if (
+    newDemandFactoringData.demandFactor ===
+    DEMAND_FACTORING_SETTINGS.demandFactorMin
+  ) {
+    newDemandFactoringData.consecutivePeriodsWithMinDemandFactor++;
+  } else {
+    newDemandFactoringData.consecutivePeriodsWithMinDemandFactor = 0;
+  }
+  if (
+    newDemandFactoringData.consecutivePeriodsWithMinDemandFactor >=
+    DEMAND_FACTORING_SETTINGS.stepDownThreshold
+  ) {
+    newDemandFactoringData.consecutivePeriodsWithMinDemandFactor = 0;
+    newDemandFactoringData.demandFactor =
+      DEMAND_FACTORING_SETTINGS.demandFactorBaseValue;
+  }
+
+  // Stash the number of purchases for this period in the trailing metrics
+  newDemandFactoringData.trailingPeriodPurchases[
+    demandFactorPeriodIndex(newDemandFactoringData.currentPeriod)
+  ] = numNamesPurchasedInLastPeriod;
+
+  // Increment the current period and reset the purchase count
+  newDemandFactoringData.currentPeriod++;
+  newDemandFactoringData.purchasesThisPeriod = 0;
+
+  return newDemandFactoringData;
 }
 
 export function shouldUpdateDemandFactor(
@@ -127,4 +116,13 @@ export function mvgAvgTrailingPurchaseCounts(
       0,
     ) / DEMAND_FACTORING_SETTINGS.movingAvgPeriodCount
   );
+}
+
+export function cloneDemandFactoringData(
+  dfData: DeepReadonly<DemandFactoringData>,
+): DemandFactoringData {
+  return {
+    ...dfData,
+    trailingPeriodPurchases: dfData.trailingPeriodPurchases.slice(),
+  };
 }
