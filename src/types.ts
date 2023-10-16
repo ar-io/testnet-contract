@@ -21,30 +21,15 @@ export type DemandFactoringData = {
 export type IOState = PstState & {
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
-  records: {
-    // A list of all names and their corresponding attributes
-    [name: string]: ArNSName;
-  };
-  gateways: {
-    // a registry of all gateways
-    [address: string]: Gateway; // each gateway uses its public arweave wallet address to identify it in the gateway registry
-  };
+  records: Record<string, ArNSName>;
+  gateways: Record<string, Gateway>; // each gateway uses its public arweave wallet address to identify it in the gateway registry
   // A list of all fees for purchasing ArNS names
   fees: Fees;
   settings: ContractSettings; // protocol settings and parameters
-  reserved: {
-    // A list of all reserved names that are not allowed to be purchased at this time
-    [name: string]: ReservedName;
-  };
-  vaults: {
-    // a list of all vaults that have locked balances
-    [address: string]: TokenVault[];
-    // a wallet can have multiple vaults
-  };
+  reserved: Record<string, ReservedName>; // A list of all reserved names that are not allowed to be purchased at this time
+  vaults: Record<string, TokenVault[]>; // a wallet can have multiple vaults
   // auctions
-  auctions: {
-    [name: string]: Auction;
-  };
+  auctions: Record<string, Auction>;
   // periodicity management
   lastTickedHeight: number;
   // TODO: epoch tracking - relevant to GAR observers
@@ -197,9 +182,7 @@ export type ContractResult =
   | { result: PstResult }
   | { result: ArNSNameResult }
   | {
-      result: {
-        [key in string | number]: any; // eslint-disable-line
-      };
+      result: Record<string | number, unknown>;
     };
 
 export interface Equatable<T> {
