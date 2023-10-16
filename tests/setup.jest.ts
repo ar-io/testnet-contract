@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import path from 'path';
 import { SourceType } from 'warp-contracts';
 
+import { WALLETS_TO_CREATE } from './utils/constants';
 import { createLocalWallet, setupInitialContractState } from './utils/helper';
 import { arlocal, arweave, warp } from './utils/services';
 
@@ -21,7 +22,9 @@ module.exports = async () => {
 
   // create owner wallet
   const wallets = await Promise.all(
-    Array.from({ length: 11 }).map(() => createLocalWallet(arweave)),
+    Array.from({ length: WALLETS_TO_CREATE }).map(() =>
+      createLocalWallet(arweave),
+    ),
   );
   // save wallets to disk
   wallets.forEach((w, index) => {

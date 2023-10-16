@@ -306,14 +306,16 @@ export function getEpochEnd({
 }
 
 export async function getEntropy(height: number): Promise<Buffer> {
-  let entropyBuffer: Buffer;
+  let entropyBuffer: Buffer = Buffer.alloc(0);
   // We hash multiples block hashes to reduce the chance that someone will
   // influence the value produced by grinding with excessive hash power.
   for (let i = 0; i < DEFAULT_NUM_SAMPLED_BLOCKS; i++) {
-    const offsetHeight = (height - DEFAULT_SAMPLED_BLOCKS_OFFSET - i) | 0;
+    const offsetHeight =
+      height - DEFAULT_SAMPLED_BLOCKS_OFFSET - i < 0
+        ? 0
+        : height - DEFAULT_SAMPLED_BLOCKS_OFFSET - i;
     const path = `/block/height/${offsetHeight}`;
     const { data } = await SmartWeave.unsafeClient.api.get(path);
-    // console.log('Got response ', data);
     const indep_hash = data.indep_hash;
     if (!indep_hash || typeof indep_hash !== 'string') {
       throw new ContractError(`Block ${height - i} has no indep_hash`);
@@ -323,10 +325,8 @@ export async function getEntropy(height: number): Promise<Buffer> {
       Buffer.from(indep_hash, 'base64url'),
     ]);
   }
-  // entropyBuffer = Buffer.from(SmartWeave.block.indep_hash, 'base64url');
-  const hash = SmartWeave.arweave.crypto.hash(entropyBuffer, 'sha256');
+  const hash = await SmartWeave.arweave.crypto.hash(entropyBuffer, 'SHA-256');
   return hash;
-  // return entropyBuffer;
 }
 
 export function getEligibleObservers(
@@ -362,29 +362,20 @@ export async function getPrescribedObservers(
 ): Promise<string[]> {
   const prescribedObservers: string[] = [];
   const usedIndexes = new Set<number>();
-  const entropy = await getEntropy(height);
-  // console.log('getting eligible observers');
   const eligibleObservers = getEligibleObservers(
     gateways,
     gatewayLeaveLength,
     height,
   );
 
-  // If we want to source more observers than exist in the list, just return all potential observers
+  // If we want to source more observers than exist in the list, just return all eligible observers
   const eligibleObserversCount = eligibleObservers.length;
   if (NUM_OBSERVERS_PER_EPOCH >= eligibleObserversCount) {
-    for (let i = 0; i < eligibleObserversCount; i++) {
-      for (const address in eligibleObservers) {
-        prescribedObservers.push(address);
-      }
-    }
-    // console.log('Not enough observers, returning all of them');
-    return prescribedObservers;
+    return eligibleObservers;
   }
 
-  // console.log('Eligible observers', eligibleObservers);
-
-  let hash = SmartWeave.arweave.crypto.hash(entropy, 'sha256');
+  const entropy = await getEntropy(height);
+  let hash = await SmartWeave.arweave.crypto.hash(entropy, 'SHA-256');
   for (let i = 0; i < NUM_OBSERVERS_PER_EPOCH; i++) {
     let index = hash.readUInt32BE(0) % eligibleObserversCount;
 
@@ -395,10 +386,8 @@ export async function getPrescribedObservers(
     usedIndexes.add(index);
     prescribedObservers.push(eligibleObservers[index]);
 
-    hash = SmartWeave.arweave.crypto.hash(hash, 'sha256');
+    hash = await SmartWeave.arweave.crypto.hash(hash, 'SHA-256');
   }
-
-  // console.log('Prescribed observers', prescribedObservers);
   return prescribedObservers;
 }
 

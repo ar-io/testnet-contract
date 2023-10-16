@@ -32,7 +32,7 @@ describe('Network', () => {
 
     beforeAll(async () => {
       owner = getLocalWallet(0);
-      newGatewayOperator = getLocalWallet(7);
+      newGatewayOperator = getLocalWallet(9);
       newGatewayOperatorAddress = await arweave.wallets.getAddress(
         newGatewayOperator,
       );

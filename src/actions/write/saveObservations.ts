@@ -46,6 +46,7 @@ export const saveObservations = async (
     epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
     height: +SmartWeave.block.height,
   });
+  // console.log('%s is saving observation: ', caller);
 
   const gateway = gateways[caller];
   if (!gateway) {
@@ -60,12 +61,14 @@ export const saveObservations = async (
     currentEpochStartHeight,
   );
 
-  if (!(caller in prescribedObservers)) {
+  if (!prescribedObservers.includes(caller)) {
     // The gateway with the specified address is not found in the eligibleObservers list
-    throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
+    throw new ContractError(`${caller} not a prescribed observer`);
+    // throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
   }
 
   // check if this is the first report filed in this epoch
+  // TODO: THIS MAKES IT SO TWO OBSERVERS CANNOT SUBMIT THE FIRST REPORT IN THE SAME BLOCK
   if (!observations[currentEpochStartHeight]) {
     observations[currentEpochStartHeight] = {
       failureSummaries: {},
@@ -77,11 +80,13 @@ export const saveObservations = async (
   for (let i = 0; i < failedGateways.length; i++) {
     // check if gateway is valid for being observed
     if (!gateways[failedGateways[i]]) {
-      throw new ContractError(TARGET_GATEWAY_NOT_REGISTERED); // optionally, we could skip these records instead of throwing an error
+      continue;
+      // throw new ContractError(TARGET_GATEWAY_NOT_REGISTERED); // optionally, we could halt here and throw an error
     }
 
     if (gateways[failedGateways[i]].start <= currentEpochStartHeight) {
       // Check if any observer has failed this gateway, and if not, mark it as failed
+      // TODO: THIS MAKES SO TWO OBSERVERS CANNOT SUBMIT A FAILURE REPORT FOR THE SAME GATEWAY IN THE SAME BLOCK
       if (
         !observations[currentEpochStartHeight].failureSummaries[
           failedGateways[i]
@@ -103,12 +108,14 @@ export const saveObservations = async (
         }
       }
     } else {
-      throw new ContractError(INVALID_OBSERVATION_TARGET); // optionally, we could skip these records instead of throwing an error
+      continue;
+      // throw new ContractError(INVALID_OBSERVATION_TARGET); // optionally, we could halt here and throw an error
     }
   }
 
   // add this observers report tx id to this epoch
   state.observations[currentEpochStartHeight].reports[caller] =
     observationReportTxId;
+  //console.log('Saved observation from: ', caller);
   return { state };
 };

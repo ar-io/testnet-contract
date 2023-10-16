@@ -1,3 +1,5 @@
+import { JWKInterface } from 'warp-contracts';
+
 import initialContractState from './initial-state.json';
 
 export enum REGISTRATION_TYPES {
@@ -36,3 +38,5 @@ export const EXAMPLE_LIST_OF_FAILED_GATEWAYS = [
 ];
 // Also export all our other constants
 export * from '../../src/constants';
+
+export const WALLETS_TO_CREATE = 11;

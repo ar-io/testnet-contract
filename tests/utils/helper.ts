@@ -3,7 +3,7 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import path from 'path';
 
-import { IOState } from '../../src/types';
+import { Gateway, IOState } from '../../src/types';
 import {
   ANT_CONTRACT_IDS,
   AUCTION_SETTINGS,
@@ -190,11 +190,59 @@ function createGateways(wallets: string[]) {
     },
   };
 
-  (gateways[wallets[4]] = {
+  gateways[wallets[4]] = {
+    operatorStake: 666_000,
+    status: NETWORK_JOIN_STATUS,
+    start: 0,
+    end: 0,
+    vaults: [],
+    settings: {
+      label: 'Observation', // The friendly name used to label this gateway
+      fqdn: 'observation.com', // the fully qualified domain name this gateway can be reached at. eg arweave.net
+      port: 443, // The port used by this gateway eg. 443
+      protocol: 'https', // The protocol used by this gateway, either http or https
+      properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
+      note: 'Observation testing',
+    },
+  };
+
+  gateways[wallets[5]] = {
+    operatorStake: 20_000,
+    status: NETWORK_JOIN_STATUS,
+    start: 0,
+    end: 0,
+    vaults: [],
+    settings: {
+      label: 'Another Observer', // The friendly name used to label this gateway
+      fqdn: 'observation-again.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
+      port: 443, // The port used by this gateway eg. 443
+      protocol: 'https', // The protocol used by this gateway, either http or https
+      properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
+      note: 'More observervation testing',
+    },
+  };
+
+  gateways[wallets[6]] = {
+    operatorStake: 20_000,
+    status: NETWORK_JOIN_STATUS,
+    start: 10,
+    end: 0,
+    vaults: [],
+    settings: {
+      label: 'Leaving', // The friendly name used to label this gateway
+      fqdn: 'leaving.io', // the fully qualified domain name this gateway can be reached at. eg arweave.net
+      port: 443, // The port used by this gateway eg. 443
+      protocol: 'https', // The protocol used by this gateway, either http or https
+      properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
+      note: 'Leaving after epoch 0',
+    },
+  };
+
+  gateways[wallets[7]] = {
     operatorStake: 10_000,
     status: NETWORK_LEAVING_STATUS,
     start: 0,
-    end: 2,
+    end: 0,
     vaults: [
       {
         balance: 10_000,
@@ -210,35 +258,49 @@ function createGateways(wallets: string[]) {
       properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
       note: 'Leaving the network',
     },
-  }),
-    (gateways[wallets[5]] = {
-      operatorStake: 666_000,
-      status: NETWORK_JOIN_STATUS,
-      start: 0,
-      end: 0,
-      vaults: [],
-      settings: {
-        label: 'Observation', // The friendly name used to label this gateway
-        fqdn: 'observation.com', // the fully qualified domain name this gateway can be reached at. eg arweave.net
-        port: 443, // The port used by this gateway eg. 443
-        protocol: 'https', // The protocol used by this gateway, either http or https
-        properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
-        note: 'Observation testing',
-      },
-    });
-  gateways[wallets[6]] = {
-    operatorStake: 20_000,
+  };
+
+  gateways[wallets[8]] = {
+    operatorStake: 10_000,
     status: NETWORK_JOIN_STATUS,
-    start: 8,
+    start: 0,
     end: 0,
-    vaults: [],
+    vaults: [
+      {
+        balance: 10_000,
+        start: 1,
+        end: 4,
+      },
+    ],
     settings: {
-      label: 'Another Observer', // The friendly name used to label this gateway
-      fqdn: 'observation-again.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
+      label: 'See Ya Later', // The friendly name used to label this gateway
+      fqdn: 'goodbye.com', // the fully qualified domain name this gateway can be reached at. eg arweave.net
       port: 443, // The port used by this gateway eg. 443
       protocol: 'https', // The protocol used by this gateway, either http or https
       properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
-      note: 'More observervation testing',
+      note: 'Leaving the network',
+    },
+  };
+
+  gateways[wallets[9]] = {
+    operatorStake: 10_000,
+    status: NETWORK_LEAVING_STATUS,
+    start: 0,
+    end: 10,
+    vaults: [
+      {
+        balance: 10_000,
+        start: 1,
+        end: 4,
+      },
+    ],
+    settings: {
+      label: 'See Ya Later', // The friendly name used to label this gateway
+      fqdn: 'goodbye.com', // the fully qualified domain name this gateway can be reached at. eg arweave.net
+      port: 443, // The port used by this gateway eg. 443
+      protocol: 'https', // The protocol used by this gateway, either http or https
+      properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
+      note: 'Leaving the network',
     },
   };
 
@@ -324,6 +386,20 @@ export function getLocalArNSContractId(): string {
     ),
   ) as unknown as IOState & { id: string };
   return contract.id;
+}
+
+export function getRandomFailedGatewaysSubset(gateways: string[]): string[] {
+  const percentageToPick = Math.random() * 0.3; // Randomly pick a percentage between 0 and 0.3
+  const numberOfElements = Math.floor(gateways.length * percentageToPick); // Calculate the number of elements to pick
+
+  // Shuffle the array
+  for (let i = gateways.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [gateways[i], gateways[j]] = [gateways[j], gateways[i]];
+  }
+
+  // Return the subset of the array
+  return gateways.slice(0, numberOfElements);
 }
 
 export * from '../../src/utilities';
