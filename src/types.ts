@@ -1,6 +1,7 @@
 import { PstState } from 'warp-contracts';
 
 import {
+  MAX_ALLOWED_DECIMALS,
   NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
@@ -20,30 +21,15 @@ export type DemandFactoringData = {
 export type IOState = PstState & {
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
-  records: {
-    // A list of all names and their corresponding attributes
-    [name: string]: ArNSName;
-  };
-  gateways: {
-    // a registry of all gateways
-    [address: string]: Gateway; // each gateway uses its public arweave wallet address to identify it in the gateway registry
-  };
+  records: Record<string, ArNSName>;
+  gateways: Record<string, Gateway>; // each gateway uses its public arweave wallet address to identify it in the gateway registry
   // A list of all fees for purchasing ArNS names
   fees: Fees;
   settings: ContractSettings; // protocol settings and parameters
-  reserved: {
-    // A list of all reserved names that are not allowed to be purchased at this time
-    [name: string]: ReservedName;
-  };
-  vaults: {
-    // a list of all vaults that have locked balances
-    [address: string]: TokenVault[];
-    // a wallet can have multiple vaults
-  };
+  reserved: Record<string, ReservedName>; // A list of all reserved names that are not allowed to be purchased at this time
+  vaults: Record<string, TokenVault[]>; // a wallet can have multiple vaults
   // auctions
-  auctions: {
-    [name: string]: Auction;
-  };
+  auctions: Record<string, Auction>;
   // periodicity management
   lastTickedHeight: number;
   // TODO: epoch tracking - relevant to GAR observers
@@ -196,9 +182,7 @@ export type ContractResult =
   | { result: PstResult }
   | { result: ArNSNameResult }
   | {
-      result: {
-        [key in string | number]: any; // eslint-disable-line
-      };
+      result: Record<string | number, unknown>;
     };
 
 export interface Equatable<T> {
@@ -333,3 +317,23 @@ export type DeepReadonly<Type> = Type extends Exclude<Builtin, Error>
   : IsUnknown<Type> extends true
   ? unknown
   : Readonly<Type>;
+
+// TODO: extend this class and use it for all balance/IO token logic
+export class IOToken {
+  protected value: number;
+  constructor(value: number) {
+    // do some big number casting for allowed decimals
+    this.value = +value.toFixed(MAX_ALLOWED_DECIMALS);
+  }
+
+  valueOf(): number {
+    return this.value;
+  }
+}
+
+export class mIOToken extends PositiveFiniteInteger {
+  protected value: number;
+  constructor(value: number) {
+    super(value);
+  }
+}

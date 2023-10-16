@@ -6,7 +6,7 @@ import { ContractResult, IOState, PstAction } from '../../types';
 import { getInvalidAjvMessage } from '../../utilities';
 import { validateJoinNetwork } from '../../validations.mjs';
 
-declare const ContractError;
+declare const ContractError: any;
 declare const SmartWeave: any;
 
 export class JoinNetwork {
@@ -21,7 +21,9 @@ export class JoinNetwork {
   constructor(input: any) {
     // validate using ajv validator
     if (!validateJoinNetwork(input)) {
-      throw new ContractError(getInvalidAjvMessage(validateJoinNetwork, input));
+      throw new ContractError(
+        getInvalidAjvMessage(validateJoinNetwork, input, 'joinNetwork'),
+      );
     }
 
     const { qty, label, port, fqdn, note, protocol, properties } = input;

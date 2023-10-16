@@ -1,3 +1,4 @@
+import { calculateMinimumAuctionBid } from '../../pricing';
 import {
   BlockHeight,
   BlockTimestamp,
@@ -7,7 +8,6 @@ import {
   PstAction,
 } from '../../types';
 import {
-  calculateMinimumAuctionBid,
   calculateRegistrationFee,
   createAuctionObject,
   getAuctionPrices,
@@ -106,8 +106,8 @@ export const getAuction = (
   // get all the prices for the auction
   const prices = getAuctionPrices({
     auctionSettings,
-    startHeight,
-    startPrice,
+    startHeight: new BlockHeight(startHeight),
+    startPrice, // TODO: use IOTOken class
     floorPrice,
   });
 
@@ -128,7 +128,7 @@ export const getAuction = (
       isActive: expirationHeight > +SmartWeave.block.height,
       isAvailableForAuction: false,
       isRequiredToBeAuctioned: isRequiredToBeAuctioned,
-      minimumBid,
+      minimumBid: minimumBid.valueOf(),
       ...auction,
       prices,
     },

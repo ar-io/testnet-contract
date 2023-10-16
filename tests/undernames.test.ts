@@ -11,7 +11,7 @@ import {
   getLocalArNSContractId,
   getLocalWallet,
 } from './utils/helper';
-import { arweave, warp } from './utils/services';
+import { warp } from './utils/services';
 
 describe('undernames', () => {
   let contract: Contract<IOState>;
@@ -23,7 +23,6 @@ describe('undernames', () => {
 
   describe('any address', () => {
     let nonContractOwner: JWKInterface;
-    let nonContractOwnerAddress: string;
     const arnsName = 'name1';
 
     beforeAll(async () => {
@@ -31,9 +30,6 @@ describe('undernames', () => {
       contract = warp
         .contract<IOState>(srcContractId)
         .connect(nonContractOwner);
-      nonContractOwnerAddress = await arweave.wallets.getAddress(
-        nonContractOwner,
-      );
     });
 
     describe('Submits undername increase', () => {
@@ -71,10 +67,10 @@ describe('undernames', () => {
           expect(writeInteraction?.originalTxId).not.toBe(undefined);
           const { cachedValue } = await contract.readState();
           expect(Object.keys(cachedValue.errorMessages)).toContain(
-            writeInteraction!.originalTxId,
+            writeInteraction.originalTxId,
           );
           expect(
-            cachedValue.errorMessages[writeInteraction!.originalTxId],
+            cachedValue.errorMessages[writeInteraction.originalTxId],
           ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
           expect(cachedValue.state).toEqual(prevState);
         },
@@ -117,10 +113,10 @@ describe('undernames', () => {
           expect(writeInteraction?.originalTxId).not.toBe(undefined);
           const { cachedValue } = await contract.readState();
           expect(Object.keys(cachedValue.errorMessages)).toContain(
-            writeInteraction!.originalTxId,
+            writeInteraction.originalTxId,
           );
           expect(
-            cachedValue.errorMessages[writeInteraction!.originalTxId],
+            cachedValue.errorMessages[writeInteraction.originalTxId],
           ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
           expect(cachedValue.state).toEqual(prevState);
         },
@@ -155,10 +151,10 @@ describe('undernames', () => {
           expect(writeInteraction?.originalTxId).not.toBe(undefined);
           const { cachedValue } = await contract.readState();
           expect(Object.keys(cachedValue.errorMessages)).toContain(
-            writeInteraction!.originalTxId,
+            writeInteraction.originalTxId,
           );
           expect(
-            cachedValue.errorMessages[writeInteraction!.originalTxId],
+            cachedValue.errorMessages[writeInteraction.originalTxId],
           ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
           expect(cachedValue.state).toEqual(prevState);
         },
@@ -207,7 +203,7 @@ describe('undernames', () => {
           const { cachedValue } = await contract.readState();
 
           expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-            writeInteraction!.originalTxId,
+            writeInteraction.originalTxId,
           );
           expect(cachedValue.state.records[arnsName].undernames).toEqual(
             initialUndernameCount + goodQty,
@@ -240,7 +236,7 @@ describe('undernames', () => {
           expect(writeInteraction?.originalTxId).not.toBe(undefined);
           const { cachedValue } = await contract.readState();
           expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-            writeInteraction!.originalTxId,
+            writeInteraction.originalTxId,
           );
           expect(cachedValue.state.records[validName].undernames).toEqual(
             initialUndernameCount + 1,

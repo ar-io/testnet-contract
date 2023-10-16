@@ -5,7 +5,12 @@ import {
   MAX_UNDERNAME_MESSAGE,
   SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
-import { ContractResult, IOState, PstAction } from '../../types';
+import {
+  BlockTimestamp,
+  ContractResult,
+  IOState,
+  PstAction,
+} from '../../types';
 import {
   calculateProRatedUndernameCost,
   getInvalidAjvMessage,
@@ -13,7 +18,7 @@ import {
 } from '../../utilities';
 import { validateIncreaseUndernameCount } from '../../validations.mjs';
 
-declare const ContractError;
+declare const ContractError: any;
 declare const SmartWeave: any;
 
 export class IncreaseUndernameCount {
@@ -25,7 +30,11 @@ export class IncreaseUndernameCount {
     // validate using ajv validator
     if (!validateIncreaseUndernameCount(input)) {
       throw new ContractError(
-        getInvalidAjvMessage(validateIncreaseUndernameCount, input),
+        getInvalidAjvMessage(
+          validateIncreaseUndernameCount,
+          input,
+          'increaseUndernameCount',
+        ),
       );
     }
     const { name, qty } = input;
@@ -48,12 +57,12 @@ export const increaseUndernameCount = async (
   }
 
   const { undernames = 10, type, endTimestamp } = record;
-  const currentBlockTime = +SmartWeave.block.timestamp;
+  const currentBlockTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
   const undernameCost = calculateProRatedUndernameCost({
     qty,
-    currentTimestamp: currentBlockTime,
+    currentBlockTimestamp,
     type,
-    endTimestamp,
+    endTimestamp: new BlockTimestamp(endTimestamp),
   });
 
   // the new total qty
@@ -62,7 +71,10 @@ export const increaseUndernameCount = async (
     throw new ContractError(MAX_UNDERNAME_MESSAGE);
   }
   // This name's lease has expired and cannot be extended
-  if (endTimestamp + SECONDS_IN_GRACE_PERIOD <= currentBlockTime) {
+  if (
+    endTimestamp + SECONDS_IN_GRACE_PERIOD <=
+    currentBlockTimestamp.valueOf()
+  ) {
     throw new ContractError(
       `This name has expired and must renewed before its undername support can be extended.`,
     );

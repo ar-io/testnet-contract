@@ -19,7 +19,7 @@ export class TransferToken {
   constructor(input: any) {
     if (!validateTransferToken(input)) {
       throw new ContractError(
-        getInvalidAjvMessage(validateTransferToken, input),
+        getInvalidAjvMessage(validateTransferToken, input, 'transferToken'),
       );
     }
     const { target, qty } = input;

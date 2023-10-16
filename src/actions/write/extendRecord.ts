@@ -20,7 +20,7 @@ import {
 } from '../../utilities';
 import { validateExtendRecord } from '../../validations.mjs';
 
-declare const ContractError;
+declare const ContractError: any;
 declare const SmartWeave: any;
 
 export class ExtendRecord {
@@ -31,7 +31,7 @@ export class ExtendRecord {
   constructor(input: any) {
     if (!validateExtendRecord(input)) {
       throw new ContractError(
-        getInvalidAjvMessage(validateExtendRecord, input),
+        getInvalidAjvMessage(validateExtendRecord, input, 'extendRecord'),
       );
     }
     const { name, years } = input;

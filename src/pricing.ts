@@ -1,5 +1,10 @@
 import { DEMAND_FACTORING_SETTINGS } from './constants';
-import { BlockHeight, DeepReadonly, DemandFactoringData } from './types';
+import {
+  BlockHeight,
+  DeepReadonly,
+  DemandFactoringData,
+  IOToken,
+} from './types';
 
 export function tallyNamePurchase(
   dfData: DeepReadonly<DemandFactoringData>,
@@ -125,4 +130,31 @@ export function cloneDemandFactoringData(
     ...dfData,
     trailingPeriodPurchases: dfData.trailingPeriodPurchases.slice(),
   };
+}
+
+export function calculateMinimumAuctionBid({
+  startHeight,
+  startPrice,
+  floorPrice,
+  currentBlockHeight,
+  decayInterval,
+  decayRate,
+}: {
+  startHeight: BlockHeight;
+  startPrice: number;
+  floorPrice: number;
+  currentBlockHeight: BlockHeight;
+  decayInterval: number;
+  decayRate: number;
+}): IOToken {
+  const blockIntervalsPassed = Math.max(
+    0,
+    Math.floor(
+      (currentBlockHeight.valueOf() - startHeight.valueOf()) / decayInterval,
+    ),
+  );
+  const dutchAuctionBid =
+    startPrice * Math.pow(1 - decayRate, blockIntervalsPassed);
+  // TODO: we shouldn't be rounding like this, use a separate class to handle the number of allowed decimals for IO values and use them here
+  return new IOToken(Math.max(floorPrice, dutchAuctionBid));
 }

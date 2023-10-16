@@ -1,13 +1,15 @@
-import { isActiveReservedName, isExistingActiveRecord } from 'src/utilities';
-
 import { DEFAULT_UNDERNAME_COUNT, SECONDS_IN_A_YEAR } from '../../constants';
 import { tallyNamePurchase, updateDemandFactor } from '../../pricing';
 import {
+  ArNSName,
+  Auction,
   BlockHeight,
   BlockTimestamp,
   ContractResult,
   IOState,
+  ReservedName,
 } from '../../types';
+import { isActiveReservedName, isExistingActiveRecord } from '../../utilities';
 
 declare const SmartWeave: any; // TODO: tighter type bindings
 declare const ContractError: any; // TODO: tighter type bindings
@@ -51,13 +53,16 @@ function tickRecords({
   currentBlockTimestamp: BlockTimestamp;
   state: IOState;
 }): IOState {
-  const tickedRecords = Object.keys(state.records).reduce((acc, key) => {
-    const record = state.records[key];
-    if (isExistingActiveRecord({ record, currentBlockTimestamp })) {
-      acc[key] = record;
-    }
-    return acc;
-  }, {});
+  const tickedRecords = Object.keys(state.records).reduce(
+    (acc: Record<string, ArNSName>, key: string) => {
+      const record = state.records[key];
+      if (isExistingActiveRecord({ record, currentBlockTimestamp })) {
+        acc[key] = record;
+      }
+      return acc;
+    },
+    {},
+  );
   // update our state
   state.records = tickedRecords;
   return state;
@@ -71,20 +76,23 @@ function tickReservedNames({
   currentBlockTimestamp: BlockTimestamp;
   state: IOState;
 }): IOState {
-  const activeReservedNames = Object.keys(state.reserved).reduce((acc, key) => {
-    const reservedName = state.reserved[key];
-    // still active reservation
-    if (
-      isActiveReservedName({
-        caller: undefined,
-        reservedName,
-        currentBlockTimestamp,
-      })
-    ) {
-      acc[key] = reservedName;
-    }
-    return acc;
-  }, {});
+  const activeReservedNames = Object.keys(state.reserved).reduce(
+    (acc: Record<string, ReservedName>, key: string) => {
+      const reservedName = state.reserved[key];
+      // still active reservation
+      if (
+        isActiveReservedName({
+          caller: undefined,
+          reservedName,
+          currentBlockTimestamp,
+        })
+      ) {
+        acc[key] = reservedName;
+      }
+      return acc;
+    },
+    {},
+  );
 
   // update reserved names
   state.reserved = activeReservedNames;
@@ -101,45 +109,48 @@ function tickAuctions({
   state: IOState;
 }): IOState {
   // handle expired auctions
-  const activeAuctions = Object.keys(state.auctions).reduce((current, key) => {
-    const auction = state.auctions[key];
-    const auctionSettings = auction.settings;
+  const activeAuctions = Object.keys(state.auctions).reduce(
+    (acc: Record<string, Auction>, key) => {
+      const auction = state.auctions[key];
+      const auctionSettings = auction.settings;
 
-    // endHeight represents the height at which the auction is CLOSED and at which bids are no longer accepted
-    const endHeight = auction.startHeight + auctionSettings.auctionDuration;
+      // endHeight represents the height at which the auction is CLOSED and at which bids are no longer accepted
+      const endHeight = auction.startHeight + auctionSettings.auctionDuration;
 
-    // still an active auction
-    if (endHeight > currentBlockHeight.valueOf()) {
-      current[key] = auction;
-    } else {
-      // TODO: Block timestamps is broken here - user could be getting bonus time here when the next write interaction occurs
-      // update the records field but do not decrement balance from the initiator as that happens on auction initiation
-      const endTimestamp =
-        +auction.years * SECONDS_IN_A_YEAR + +SmartWeave.block.timestamp;
+      // still an active auction
+      if (endHeight > currentBlockHeight.valueOf()) {
+        acc[key] = auction;
+      } else {
+        // TODO: Block timestamps is broken here - user could be getting bonus time here when the next write interaction occurs
+        // update the records field but do not decrement balance from the initiator as that happens on auction initiation
+        const endTimestamp =
+          +auction.years * SECONDS_IN_A_YEAR + +SmartWeave.block.timestamp;
 
-      // create the new record object
-      const maybeEndTimestamp = (() => {
-        switch (auction.type) {
-          case 'permabuy':
-            return {};
-          case 'lease':
-            return { endTimestamp };
-        }
-      })();
-      state.records[key] = {
-        type: auction.type,
-        contractTxId: auction.contractTxId,
-        // TODO: get the end timestamp of the auction based on what block it ended at, not the timestamp of the current interaction timestamp
-        startTimestamp: currentBlockTimestamp.valueOf(),
-        undernames: DEFAULT_UNDERNAME_COUNT,
-        ...maybeEndTimestamp,
-      };
+        // create the new record object
+        const maybeEndTimestamp = (() => {
+          switch (auction.type) {
+            case 'permabuy':
+              return {};
+            case 'lease':
+              return { endTimestamp };
+          }
+        })();
+        state.records[key] = {
+          type: auction.type,
+          contractTxId: auction.contractTxId,
+          // TODO: get the end timestamp of the auction based on what block it ended at, not the timestamp of the current interaction timestamp
+          startTimestamp: currentBlockTimestamp.valueOf(),
+          undernames: DEFAULT_UNDERNAME_COUNT,
+          ...maybeEndTimestamp,
+        };
 
-      state.demandFactoring = tallyNamePurchase(state.demandFactoring);
-    }
-    // now return the auction object
-    return current;
-  }, {});
+        state.demandFactoring = tallyNamePurchase(state.demandFactoring);
+      }
+      // now return the auction object
+      return acc;
+    },
+    {},
+  );
   // update auctions (records was already modified)
   state.auctions = activeAuctions;
   return state;
