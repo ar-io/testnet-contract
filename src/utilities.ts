@@ -51,7 +51,7 @@ export function calculateLeaseFee({
 
   // total cost to purchase name
   return (
-    1 *
+    demandFactoring.demandFactor *
     (initialNamePurchaseFee +
       calculateAnnualRenewalFee({
         name,
@@ -255,9 +255,9 @@ export function getInvalidAjvMessage(
   validator: any,
   input: any,
   functionName: string,
-) {
+): string {
   return `${INVALID_INPUT_MESSAGE} for ${functionName}: ${validator.errors
-    .map((e) => {
+    .map((e: any) => {
       const key = e.instancePath.replace('/', '');
       const value = input[key];
       return `${key} ('${value}') ${e.message}`;
@@ -278,7 +278,7 @@ export function getAuctionPrices({
 }): Record<number, number> {
   const { auctionDuration, decayRate, decayInterval } = auctionSettings;
   const intervalCount = auctionDuration / decayInterval;
-  const prices = {};
+  const prices: Record<number, number> = {};
   for (let i = 0; i <= intervalCount; i++) {
     const intervalHeight = new BlockHeight(
       startHeight.valueOf() + i * decayInterval,
@@ -291,7 +291,7 @@ export function getAuctionPrices({
       decayInterval,
       decayRate,
     });
-    prices[intervalHeight.valueOf()] = price;
+    prices[intervalHeight.valueOf()] = price.valueOf();
   }
   return prices;
 }

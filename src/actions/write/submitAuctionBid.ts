@@ -26,7 +26,7 @@ import {
 // composed by ajv at build
 import { validateAuctionBid } from '../../validations.mjs';
 
-declare const ContractError;
+declare const ContractError: any;
 declare const SmartWeave: any;
 
 export class AuctionBid {
@@ -84,14 +84,7 @@ export const submitAuctionBid = (
   const currentBlockHeight = new BlockHeight(+SmartWeave.block.height);
 
   // TODO: check the wallet has any balance, move this an assert function
-  if (
-    !balances[caller] ||
-    balances[caller] == undefined ||
-    balances[caller] == null ||
-    isNaN(balances[caller])
-  ) {
-    throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
-  }
+
   // throws errors if the name is not available (reserved or owned)
   assertAvailableRecord({
     caller,

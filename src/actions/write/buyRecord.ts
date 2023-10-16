@@ -1,12 +1,7 @@
 import {
   ARNS_NAME_IN_AUCTION_MESSAGE,
   ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE,
-  ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_UNDERNAME_COUNT,
-  INVALID_SHORT_NAME,
-  INVALID_YEARS_MESSAGE,
-  MAX_YEARS,
-  NON_EXPIRED_ARNS_NAME_MESSAGE,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
@@ -29,7 +24,7 @@ import {
 import { validateBuyRecord } from '../../validations.mjs';
 import { submitAuctionBid } from './submitAuctionBid';
 
-declare const ContractError;
+declare const ContractError: any;
 declare const SmartWeave: any;
 
 export class BuyRecord {

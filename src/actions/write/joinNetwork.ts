@@ -6,7 +6,7 @@ import { ContractResult, IOState, PstAction } from '../../types';
 import { getInvalidAjvMessage } from '../../utilities';
 import { validateJoinNetwork } from '../../validations.mjs';
 
-declare const ContractError;
+declare const ContractError: any;
 declare const SmartWeave: any;
 
 export class JoinNetwork {
