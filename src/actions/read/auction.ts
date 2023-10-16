@@ -1,5 +1,6 @@
 import {
   BlockHeight,
+  BlockTimestamp,
   ContractResult,
   DeepReadonly,
   IOState,
@@ -26,8 +27,10 @@ export const getAuction = (
   const auctionSettings = settings.auctions;
 
   if (!auction) {
-    const currentBlockTimestamp = +SmartWeave.block.timestamp;
-    const currentBlockHeight = +SmartWeave.block.height;
+    const currentBlockTimestamp = new BlockTimestamp(
+      +SmartWeave.block.timestamp,
+    );
+    const currentBlockHeight = new BlockHeight(+SmartWeave.block.height);
 
     const initialRegistrationFee = calculateRegistrationFee({
       type,

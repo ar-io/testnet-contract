@@ -1,6 +1,6 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
-import { IOState } from '../src/types';
+import { BlockTimestamp, IOState } from '../src/types';
 import {
   ANT_CONTRACT_IDS,
   ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE,
@@ -97,7 +97,7 @@ describe('Records', () => {
         type: 'lease',
         fees: prevState.fees,
         years: namePurchase.years,
-        currentBlockTimestamp: currentBlock.timestamp,
+        currentBlockTimestamp: new BlockTimestamp(currentBlock.timestamp),
         demandFactoring: prevState.demandFactoring, // TODO: is this the right state instance to use?
       });
 
@@ -146,7 +146,7 @@ describe('Records', () => {
         fees: prevState.fees,
         years: 1,
         type: 'lease',
-        currentBlockTimestamp: currentBlock.timestamp,
+        currentBlockTimestamp: new BlockTimestamp(currentBlock.timestamp),
         demandFactoring: prevState.demandFactoring, // TODO: is this the right state instance to use?
       });
 
@@ -194,7 +194,7 @@ describe('Records', () => {
       const expectedPurchasePrice = calculatePermabuyFee({
         name: namePurchase.name,
         fees: prevState.fees,
-        currentBlockTimestamp: currentBlock.timestamp,
+        currentBlockTimestamp: new BlockTimestamp(currentBlock.timestamp),
         demandFactoring: prevState.demandFactoring, // TODO: is this the right state instance to use?
       });
 

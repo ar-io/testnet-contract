@@ -212,7 +212,7 @@ export class PositiveFiniteInteger implements Equatable<PositiveFiniteInteger> {
       !Number.isInteger(this.positiveFiniteInteger) ||
       this.positiveFiniteInteger < 0
     ) {
-      throw new Error('Byte count must be a non-negative integer value!');
+      throw new Error('Number must be a non-negative integer value!');
     }
   }
 

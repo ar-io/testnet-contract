@@ -11,6 +11,7 @@ import { tallyNamePurchase } from '../../pricing';
 import {
   AuctionSettings,
   BlockHeight,
+  BlockTimestamp,
   ContractResult,
   IOState,
   PstAction,
@@ -81,7 +82,8 @@ export const submitAuctionBid = (
     years,
   } = new AuctionBid(input);
 
-  const currentBlockTimestamp = +SmartWeave.block.timestamp;
+  const currentBlockTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
+  const currentBlockHeight = new BlockHeight(+SmartWeave.block.height);
 
   if (
     isActiveReservedName({
@@ -110,7 +112,6 @@ export const submitAuctionBid = (
   const currentAuctionSettings: AuctionSettings = settings.auctions;
 
   // all the things we need to handle an auction bid
-  const currentBlockHeight = new BlockHeight(+SmartWeave.block.height);
   const { decayInterval, decayRate, auctionDuration } = currentAuctionSettings;
 
   // calculate the registration fee taking into account demand factoring
@@ -130,7 +131,7 @@ export const submitAuctionBid = (
       auctionSettings: currentAuctionSettings,
       type,
       initialRegistrationFee: registrationFee,
-      currentBlockHeight: +SmartWeave.block.height,
+      currentBlockHeight,
       initiator: caller,
       providedFloorPrice: submittedBid,
       contractTxId,
@@ -150,11 +151,6 @@ export const submitAuctionBid = (
     auctions[name] = initialAuctionBid; // create the auction object
     // TODO: where do we put this temporarily?
     balances[caller] -= initialAuctionBid.floorPrice; // decremented based on the floor price
-
-    // delete the rename if exists
-    if (reserved[name]) {
-      delete reserved[name];
-    }
 
     // delete the rename if exists
     if (reserved[name]) {

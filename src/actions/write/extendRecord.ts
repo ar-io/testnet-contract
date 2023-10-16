@@ -6,7 +6,12 @@ import {
   SECONDS_IN_A_YEAR,
 } from '../../constants';
 import { tallyNamePurchase } from '../../pricing';
-import { ContractResult, IOState, PstAction } from '../../types';
+import {
+  BlockTimestamp,
+  ContractResult,
+  IOState,
+  PstAction,
+} from '../../types';
 import {
   calculateAnnualRenewalFee,
   getInvalidAjvMessage,
@@ -78,13 +83,13 @@ export const extendRecord = async (
   const demandFactor = state.demandFactoring.demandFactor;
   const totalExtensionAnnualFee =
     demandFactor *
-    calculateAnnualRenewalFee(
+    calculateAnnualRenewalFee({
       name,
       fees,
       years,
-      record.undernames,
-      record.endTimestamp,
-    );
+      undernames: record.undernames,
+      endTimestamp: new BlockTimestamp(record.endTimestamp),
+    });
 
   if (!walletHasSufficientBalance(balances, caller, totalExtensionAnnualFee)) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);

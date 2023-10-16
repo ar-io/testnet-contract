@@ -12,6 +12,7 @@ import {
 } from '../../constants';
 import { tallyNamePurchase } from '../../pricing';
 import {
+  BlockTimestamp,
   ContractResult,
   IOState,
   PstAction,
@@ -71,7 +72,7 @@ export const buyRecord = (
   // get all other relevant state data
   const { balances, records, reserved, fees, auctions } = state;
   const { name, contractTxId, years, type, auction } = new BuyRecord(input); // does validation on constructor
-  const currentBlockTimestamp = +SmartWeave.block.timestamp;
+  const currentBlockTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
 
   // auction logic if auction flag set
   if (auction) {
@@ -129,7 +130,7 @@ export const buyRecord = (
   // set the end lease period for this based on number of years if it's a lease
   const endTimestamp =
     type === 'lease'
-      ? currentBlockTimestamp + SECONDS_IN_A_YEAR * years
+      ? currentBlockTimestamp.valueOf() + SECONDS_IN_A_YEAR * years
       : undefined;
 
   const totalRegistrationFee = calculateRegistrationFee({
@@ -169,7 +170,7 @@ export const buyRecord = (
   state.records = records;
   state.reserved = reserved;
   state.balances = balances;
-
+  // update the demand factor
   state.demandFactoring = tallyNamePurchase(state.demandFactoring);
 
   return { state };

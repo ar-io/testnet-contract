@@ -79,8 +79,8 @@ function createRecords(count = MAX_YEARS) {
     const name = `name${i + 1}`;
     const obj = {
       contractTxID: ANT_CONTRACT_IDS[0],
-      endTimestamp: new Date('01/01/2025').getTime() / 1000,
-      startTimestamp: Date.now() / 1000 - SECONDS_IN_A_YEAR,
+      endTimestamp: Math.round(new Date('01/01/2025').getTime() / 1000),
+      startTimestamp: Math.round(Date.now() / 1000 - SECONDS_IN_A_YEAR),
       undernames: DEFAULT_UNDERNAME_COUNT,
       type: REGISTRATION_TYPES.LEASE,
     };
@@ -89,8 +89,8 @@ function createRecords(count = MAX_YEARS) {
     const gracePeriodName = `grace-period-name${i + 1}`;
     const gracePeriodObj = {
       contractTxID: ANT_CONTRACT_IDS[0],
-      endTimestamp: Date.now() / 1000,
-      startTimestamp: Date.now() / 1000 - SECONDS_IN_A_YEAR,
+      endTimestamp: Math.round(Date.now() / 1000),
+      startTimestamp: Math.round(Date.now() / 1000 - SECONDS_IN_A_YEAR),
       undernames: DEFAULT_UNDERNAME_COUNT,
       type: REGISTRATION_TYPES.LEASE,
     };
@@ -99,9 +99,10 @@ function createRecords(count = MAX_YEARS) {
     const expiredName = `expired-name${i + 1}`;
     const expiredObj = {
       contractTxID: ANT_CONTRACT_IDS[0],
-      endTimestamp: Date.now() / 1000,
-      startTimestamp:
+      endTimestamp: Math.round(Date.now() / 1000),
+      startTimestamp: Math.round(
         Date.now() / 1000 - (SECONDS_IN_A_YEAR + SECONDS_IN_GRACE_PERIOD + 1),
+      ),
       undernames: DEFAULT_UNDERNAME_COUNT,
       type: REGISTRATION_TYPES.LEASE,
     };
@@ -113,8 +114,10 @@ function createRecords(count = MAX_YEARS) {
     const leaseLengthObj = {
       contractTxID: ANT_CONTRACT_IDS[0],
       endTimestamp:
-        i > 0 ? Date.now() / 1000 + SECONDS_IN_A_YEAR * i - 1 : undefined,
-      startTimestamp: Date.now() / 1000 - 1,
+        i > 0
+          ? Math.round(Date.now() / 1000 + SECONDS_IN_A_YEAR * i - 1)
+          : undefined,
+      startTimestamp: Math.round(Date.now() / 1000 - 1),
       undernames: DEFAULT_UNDERNAME_COUNT,
       type: i > 0 ? REGISTRATION_TYPES.LEASE : REGISTRATION_TYPES.BUY,
     };
