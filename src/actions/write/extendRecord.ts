@@ -31,7 +31,7 @@ export class ExtendRecord {
   constructor(input: any) {
     if (!validateExtendRecord(input)) {
       throw new ContractError(
-        getInvalidAjvMessage(validateExtendRecord, input),
+        getInvalidAjvMessage(validateExtendRecord, input, 'extendRecord'),
       );
     }
     const { name, years } = input;

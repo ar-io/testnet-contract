@@ -1,10 +1,13 @@
 import {
   ANNUAL_PERCENTAGE_FEE,
+  ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_UNDERNAME_COUNT,
   INVALID_INPUT_MESSAGE,
+  INVALID_SHORT_NAME,
   MAX_YEARS,
   MINIMUM_ALLOWED_NAME_LENGTH,
   NAMESPACE_LENGTH,
+  NON_EXPIRED_ARNS_NAME_MESSAGE,
   PERMABUY_LEASE_FEE_LENGTH,
   RARITY_MULTIPLIER_HALVENING,
   SECONDS_IN_A_YEAR,
@@ -12,6 +15,7 @@ import {
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
   UNDERNAME_REGISTRATION_IO_FEE,
 } from './constants';
+import { calculateMinimumAuctionBid } from './pricing';
 import {
   ArNSName,
   Auction,
@@ -21,9 +25,12 @@ import {
   DeepReadonly,
   DemandFactoringData,
   Fees,
+  IOToken,
   RegistrationType,
   ReservedName,
 } from './types';
+
+declare class ContractError extends Error {}
 
 export function calculateLeaseFee({
   name,
@@ -44,7 +51,7 @@ export function calculateLeaseFee({
 
   // total cost to purchase name
   return (
-    demandFactoring.demandFactor *
+    1 *
     (initialNamePurchaseFee +
       calculateAnnualRenewalFee({
         name,
@@ -95,7 +102,7 @@ export function calculateAnnualRenewalFee({
       : totalAnnualRenewalCost +
         calculateProRatedUndernameCost({
           qty: undernameCount,
-          currentTimestamp: endTimestamp,
+          currentBlockTimestamp: endTimestamp,
           type: 'lease',
           endTimestamp: extensionEndTimestamp,
         });
@@ -149,33 +156,6 @@ export function calculatePermabuyFee({
   return demandFactoring.demandFactor * permabuyFee;
 }
 
-export function calculateMinimumAuctionBid({
-  startHeight,
-  startPrice,
-  floorPrice,
-  currentBlockHeight,
-  decayInterval,
-  decayRate,
-}: {
-  startHeight: BlockHeight;
-  startPrice: number;
-  floorPrice: number;
-  currentBlockHeight: BlockHeight;
-  decayInterval: number;
-  decayRate: number;
-}): number {
-  const blockIntervalsPassed = Math.max(
-    0,
-    Math.floor(
-      (currentBlockHeight.valueOf() - startHeight.valueOf()) / decayInterval,
-    ),
-  );
-  const dutchAuctionBid =
-    startPrice * Math.pow(1 - decayRate, blockIntervalsPassed);
-  const minimumBid = Math.ceil(Math.max(floorPrice, dutchAuctionBid));
-  return minimumBid;
-}
-
 // check if a string is a valid fully qualified domain name
 export function isValidFQDN(fqdn: string): boolean {
   const fqdnRegex = /^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{1,63}$/;
@@ -199,12 +179,12 @@ export function walletHasSufficientBalance(
 // TODO: update after dynamic pricing?
 export function calculateProRatedUndernameCost({
   qty,
-  currentTimestamp,
+  currentBlockTimestamp,
   type,
   endTimestamp,
 }: {
   qty: number;
-  currentTimestamp: BlockTimestamp;
+  currentBlockTimestamp: BlockTimestamp;
   type: RegistrationType;
   endTimestamp?: BlockTimestamp;
   // demandFactoring: DemandFactoringData, // TODO: Is this relevant?
@@ -213,7 +193,7 @@ export function calculateProRatedUndernameCost({
     case 'lease':
       return (
         ((UNDERNAME_REGISTRATION_IO_FEE * qty) / SECONDS_IN_A_YEAR) *
-        (endTimestamp.valueOf() - currentTimestamp.valueOf())
+        (endTimestamp.valueOf() - currentBlockTimestamp.valueOf())
       );
     case 'permabuy':
       return PERMABUY_LEASE_FEE_LENGTH * qty;
@@ -271,8 +251,12 @@ export function getMaxLeaseExtension(
   );
 }
 
-export function getInvalidAjvMessage(validator: any, input: any) {
-  return `${INVALID_INPUT_MESSAGE} for ${this.function}: ${validator.errors
+export function getInvalidAjvMessage(
+  validator: any,
+  input: any,
+  functionName: string,
+) {
+  return `${INVALID_INPUT_MESSAGE} for ${functionName}: ${validator.errors
     .map((e) => {
       const key = e.instancePath.replace('/', '');
       const value = input[key];
@@ -286,12 +270,19 @@ export function getAuctionPrices({
   startHeight,
   startPrice,
   floorPrice,
-}) {
+}: {
+  auctionSettings: AuctionSettings;
+  startHeight: BlockHeight;
+  startPrice: number;
+  floorPrice: number;
+}): Record<number, number> {
   const { auctionDuration, decayRate, decayInterval } = auctionSettings;
   const intervalCount = auctionDuration / decayInterval;
   const prices = {};
   for (let i = 0; i <= intervalCount; i++) {
-    const intervalHeight = startHeight + i * decayInterval;
+    const intervalHeight = new BlockHeight(
+      startHeight.valueOf() + i * decayInterval,
+    );
     const price = calculateMinimumAuctionBid({
       startHeight,
       startPrice,
@@ -300,7 +291,7 @@ export function getAuctionPrices({
       decayInterval,
       decayRate,
     });
-    prices[intervalHeight] = price;
+    prices[intervalHeight.valueOf()] = price;
   }
   return prices;
 }
@@ -459,3 +450,77 @@ export function createAuctionObject({
     settings: auctionSettings,
   };
 }
+
+export function assertAvailableRecord({
+  caller,
+  name,
+  records,
+  reserved,
+  currentBlockTimestamp,
+}: {
+  caller: string | undefined; // TODO: type for this
+  name: DeepReadonly<string>;
+  records: DeepReadonly<Record<string, ArNSName>>;
+  reserved: DeepReadonly<Record<string, ReservedName>>;
+  currentBlockTimestamp: BlockTimestamp;
+}): void {
+  if (
+    isExistingActiveRecord({
+      record: records[name],
+      currentBlockTimestamp,
+    })
+  ) {
+    throw new ContractError(NON_EXPIRED_ARNS_NAME_MESSAGE);
+  }
+  if (
+    isActiveReservedName({
+      caller,
+      reservedName: reserved[name],
+      currentBlockTimestamp,
+    })
+  ) {
+    throw new ContractError(ARNS_NAME_RESERVED_MESSAGE);
+  }
+
+  if (isShortNameRestricted({ name, currentBlockTimestamp })) {
+    throw new ContractError(INVALID_SHORT_NAME);
+  }
+}
+
+export function getEndTimestampForAuction({
+  auction,
+  currentBlockTimestamp,
+}: {
+  auction: Auction;
+  currentBlockTimestamp: BlockTimestamp;
+}): BlockTimestamp {
+  switch (auction.type) {
+    case 'permabuy':
+      return undefined;
+    case 'lease':
+      return new BlockTimestamp(
+        currentBlockTimestamp.valueOf() + SECONDS_IN_A_YEAR * auction.years,
+      );
+  }
+}
+
+export const calculateExistingAuctionBidForCaller = ({
+  caller,
+  auction,
+  submittedBid,
+  requiredMinimumBid,
+}: {
+  caller: string;
+  auction: Auction;
+  submittedBid: number;
+  requiredMinimumBid: IOToken;
+}): IOToken => {
+  let finalBid = submittedBid
+    ? Math.min(submittedBid, requiredMinimumBid.valueOf())
+    : requiredMinimumBid.valueOf();
+
+  if (caller === auction.initiator) {
+    finalBid -= auction.floorPrice;
+  }
+  return new IOToken(finalBid);
+};

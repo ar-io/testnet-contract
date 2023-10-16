@@ -8,10 +8,10 @@ import {
   NON_EXPIRED_ARNS_NAME_MESSAGE,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../src/constants';
+import { calculateMinimumAuctionBid } from '../src/pricing';
 import { Auction, BlockHeight, IOState } from '../src/types';
 import { ANT_CONTRACT_IDS } from './utils/constants';
 import {
-  calculateMinimumAuctionBid,
   getCurrentBlock,
   getLocalArNSContractId,
   getLocalWallet,
@@ -73,10 +73,10 @@ describe('Auctions', () => {
             expect(writeInteraction?.originalTxId).not.toBe(undefined);
             const { cachedValue } = await contract.readState();
             expect(Object.keys(cachedValue.errorMessages)).toContain(
-              writeInteraction!.originalTxId,
+              writeInteraction.originalTxId,
             );
             expect(
-              cachedValue.errorMessages[writeInteraction!.originalTxId],
+              cachedValue.errorMessages[writeInteraction.originalTxId],
             ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
             // TODO: check balances
           },
@@ -114,10 +114,10 @@ describe('Auctions', () => {
             expect(writeInteraction?.originalTxId).not.toBe(undefined);
             const { cachedValue } = await contract.readState();
             expect(Object.keys(cachedValue.errorMessages)).toContain(
-              writeInteraction!.originalTxId,
+              writeInteraction.originalTxId,
             );
             expect(
-              cachedValue.errorMessages[writeInteraction!.originalTxId],
+              cachedValue.errorMessages[writeInteraction.originalTxId],
             ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
             // TODO: check balances
           },
@@ -155,10 +155,10 @@ describe('Auctions', () => {
             expect(writeInteraction?.originalTxId).not.toBe(undefined);
             const { cachedValue } = await contract.readState();
             expect(Object.keys(cachedValue.errorMessages)).toContain(
-              writeInteraction!.originalTxId,
+              writeInteraction.originalTxId,
             );
             expect(
-              cachedValue.errorMessages[writeInteraction!.originalTxId],
+              cachedValue.errorMessages[writeInteraction.originalTxId],
             ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
             //  TODO: check balances
           },
@@ -212,7 +212,7 @@ describe('Auctions', () => {
               );
               // for the remaining tests
               auctionObj = auctions[auctionBid.name];
-              auctionTxId = writeInteraction!.originalTxId;
+              auctionTxId = writeInteraction.originalTxId;
               // TODO: Check for incremented state
             });
 
@@ -233,10 +233,10 @@ describe('Auctions', () => {
                 expect(writeInteraction?.originalTxId).not.toBeUndefined();
                 const { cachedValue } = await contract.readState();
                 expect(Object.keys(cachedValue.errorMessages)).toContain(
-                  writeInteraction!.originalTxId,
+                  writeInteraction.originalTxId,
                 );
                 expect(
-                  cachedValue.errorMessages[writeInteraction!.originalTxId],
+                  cachedValue.errorMessages[writeInteraction.originalTxId],
                 ).toEqual(
                   expect.stringContaining(
                     `The bid (${100} IO) is less than the current required minimum bid`,
@@ -259,7 +259,7 @@ describe('Auctions', () => {
                   currentBlockHeight: await getCurrentBlock(arweave),
                   decayInterval: AUCTION_SETTINGS.decayInterval,
                   decayRate: AUCTION_SETTINGS.decayRate,
-                });
+                }).valueOf();
                 const auctionBid = {
                   name: 'apple',
                   qty: winningBidQty,
@@ -291,16 +291,18 @@ describe('Auctions', () => {
                 expect(balances[winnerAddress]).toEqual(
                   prevState.balances[winnerAddress] - winningBidQty,
                 );
-                expect(balances[srcContractId]).toEqual(
-                  // Uses the smartweave contract ID to act as the protocol balance
-                  prevState.balances[srcContractId] + winningBidQty,
-                );
                 expect(balances[auctionObj.initiator]).toEqual(
                   prevState.balances[auctionObj.initiator] +
                     auctionObj.floorPrice,
                 );
+                expect(balances[srcContractId]).toEqual(
+                  // Uses the smartweave contract ID to act as the protocol balance
+                  prevState.balances[srcContractId] +
+                    winningBidQty -
+                    auctionObj.floorPrice,
+                );
                 // clear out the auction obj
-                auctionObj = auctions[auctionBid.name];
+                auctionObj = undefined;
               });
             });
 
@@ -320,10 +322,10 @@ describe('Auctions', () => {
               const { cachedValue } = await contract.readState();
               const { auctions, balances } = cachedValue.state as IOState;
               expect(Object.keys(cachedValue.errorMessages)).toContain(
-                writeInteraction!.originalTxId,
+                writeInteraction.originalTxId,
               );
               expect(
-                cachedValue.errorMessages[writeInteraction!.originalTxId],
+                cachedValue.errorMessages[writeInteraction.originalTxId],
               ).toEqual(NON_EXPIRED_ARNS_NAME_MESSAGE);
               expect(auctions[auctionBid.name]).toBeUndefined();
               expect(balances).toEqual(prevState.balances);
@@ -342,10 +344,10 @@ describe('Auctions', () => {
               const { cachedValue } = await contract.readState();
               const { auctions, balances } = cachedValue.state as IOState;
               expect(Object.keys(cachedValue.errorMessages)).toContain(
-                writeInteraction!.originalTxId,
+                writeInteraction.originalTxId,
               );
               expect(
-                cachedValue.errorMessages[writeInteraction!.originalTxId],
+                cachedValue.errorMessages[writeInteraction.originalTxId],
               ).toEqual(ARNS_NAME_RESERVED_MESSAGE);
               expect(auctions[auctionBid.name]).toBeUndefined();
               expect(balances).toEqual(prevState.balances);
@@ -364,10 +366,10 @@ describe('Auctions', () => {
               const { cachedValue } = await contract.readState();
               const { auctions, balances } = cachedValue.state as IOState;
               expect(Object.keys(cachedValue.errorMessages)).toContain(
-                writeInteraction!.originalTxId,
+                writeInteraction.originalTxId,
               );
               expect(
-                cachedValue.errorMessages[writeInteraction!.originalTxId],
+                cachedValue.errorMessages[writeInteraction.originalTxId],
               ).toEqual(
                 `Name is less than ${MINIMUM_ALLOWED_NAME_LENGTH} characters. It will be available for auction after ${SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP}.`,
               );
@@ -391,10 +393,10 @@ describe('Auctions', () => {
               const { cachedValue } = await contract.readState();
               const { auctions, balances } = cachedValue.state as IOState;
               expect(Object.keys(cachedValue.errorMessages)).toContain(
-                writeInteraction!.originalTxId,
+                writeInteraction.originalTxId,
               );
               expect(
-                cachedValue.errorMessages[writeInteraction!.originalTxId],
+                cachedValue.errorMessages[writeInteraction.originalTxId],
               ).toEqual(ARNS_NAME_RESERVED_MESSAGE);
               expect(auctions[auctionBid.name]).toBeUndefined();
               expect(balances).toEqual(prevState.balances);
@@ -414,7 +416,7 @@ describe('Auctions', () => {
               const { auctions, balances, reserved } =
                 cachedValue.state as IOState;
               expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-                writeInteraction!.originalTxId,
+                writeInteraction.originalTxId,
               );
               expect(auctions[auctionBid.name]).toEqual({
                 floorPrice: expect.any(Number),
@@ -479,9 +481,13 @@ describe('Auctions', () => {
             prevState.balances[nonContractOwnerAddress] -
               auctions[auctionBid.name].floorPrice,
           );
+          expect(balances[srcContractId]).toEqual(
+            prevState.balances[srcContractId] +
+              auctions[auctionBid.name].floorPrice,
+          );
           // for the remaining tests
           auctionObj = auctions[auctionBid.name];
-          auctionTxId = writeInteraction!.originalTxId;
+          auctionTxId = writeInteraction.originalTxId;
           // TODO: Check that number of purchases is incremented
         });
 
@@ -495,7 +501,7 @@ describe('Auctions', () => {
             currentBlockHeight: await getCurrentBlock(arweave),
             decayInterval: AUCTION_SETTINGS.decayInterval,
             decayRate: AUCTION_SETTINGS.decayRate,
-          });
+          }).valueOf();
           const auctionBid = {
             name: 'microsoft',
             qty: winningBidQty,
@@ -503,7 +509,7 @@ describe('Auctions', () => {
           };
           // connect using another wallet
           const separateWallet = await getLocalWallet(2);
-          await contract.connect(separateWallet);
+          contract.connect(separateWallet);
           const winnerAddress = await arweave.wallets.getAddress(
             separateWallet,
           );
@@ -529,7 +535,9 @@ describe('Auctions', () => {
             prevState.balances[auctionObj.initiator] + auctionObj.floorPrice,
           );
           expect(balances[srcContractId]).toEqual(
-            prevState.balances[srcContractId] + winningBidQty,
+            prevState.balances[srcContractId] +
+              winningBidQty -
+              auctionObj.floorPrice,
           );
         });
       });
@@ -574,9 +582,13 @@ describe('Auctions', () => {
             prevState.balances[nonContractOwnerAddress] -
               auctions[auctionBid.name].floorPrice,
           );
+          expect(balances[srcContractId]).toEqual(
+            prevState.balances[srcContractId] +
+              auctions[auctionBid.name].floorPrice,
+          );
           // for the remaining tests
           auctionObj = auctions[auctionBid.name];
-          auctionTxId = writeInteraction!.originalTxId;
+          auctionTxId = writeInteraction.originalTxId;
           // TODO: Check that number of purchases is incremented
         });
 
@@ -592,7 +604,7 @@ describe('Auctions', () => {
               currentBlockHeight: new BlockHeight(
                 auctionObj.startHeight + block,
               ),
-            });
+            }).valueOf();
 
             expect(winningBidQty).toBeLessThanOrEqual(auctionObj.startPrice);
           },
@@ -608,7 +620,7 @@ describe('Auctions', () => {
             currentBlockHeight: await getCurrentBlock(arweave),
             decayInterval: AUCTION_SETTINGS.decayInterval,
             decayRate: AUCTION_SETTINGS.decayRate,
-          });
+          }).valueOf();
           const auctionBid = {
             name: 'tesla',
             qty: winningBidQty,
@@ -630,12 +642,13 @@ describe('Auctions', () => {
             startTimestamp: expect.any(Number),
             undernames: expect.any(Number),
           });
-          const floorToBidDifference = winningBidQty - auctionObj.floorPrice;
+          const excessValueForInitiator = winningBidQty - auctionObj.floorPrice;
           expect(balances[nonContractOwnerAddress]).toEqual(
-            prevState.balances[nonContractOwnerAddress] - floorToBidDifference,
+            prevState.balances[nonContractOwnerAddress] -
+              excessValueForInitiator,
           );
           expect(balances[srcContractId]).toEqual(
-            prevState.balances[srcContractId] + winningBidQty,
+            prevState.balances[srcContractId] + excessValueForInitiator,
           );
         });
       });

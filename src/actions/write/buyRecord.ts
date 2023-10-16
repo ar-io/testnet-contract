@@ -19,12 +19,10 @@ import {
   RegistrationType,
 } from '../../types';
 import {
+  assertAvailableRecord,
   calculateRegistrationFee,
   getInvalidAjvMessage,
-  isActiveReservedName,
-  isExistingActiveRecord,
   isNameRequiredToBeAuction,
-  isShortNameRestricted,
   walletHasSufficientBalance,
 } from '../../utilities';
 // composed by ajv at build
@@ -45,7 +43,9 @@ export class BuyRecord {
   constructor(input: any) {
     // validate using ajv validator
     if (!validateBuyRecord(input)) {
-      throw new ContractError(getInvalidAjvMessage(validateBuyRecord, input));
+      throw new ContractError(
+        getInvalidAjvMessage(validateBuyRecord, input, 'buyRecord'),
+      );
     }
     const {
       name,
@@ -55,11 +55,11 @@ export class BuyRecord {
       auction = false,
     } = input;
     this.name = name.trim().toLowerCase();
-    (this.contractTxId =
+    this.contractTxId =
       contractTxId === RESERVED_ATOMIC_TX_ID
         ? SmartWeave.transaction.id
-        : contractTxId),
-      (this.years = years);
+        : contractTxId;
+    this.years = years;
     this.type = type;
     this.auction = auction;
   }
@@ -80,48 +80,20 @@ export const buyRecord = (
       caller,
       input,
     });
-  } else if (auctions[name]) {
+  }
+
+  if (auctions[name]) {
     // if auction flag not set, but auction exists, throw error
     throw new ContractError(ARNS_NAME_IN_AUCTION_MESSAGE);
   }
 
-  // Check if the user has enough tokens to purchase the name
-  if (
-    !balances[caller] ||
-    balances[caller] == undefined ||
-    balances[caller] == null ||
-    isNaN(balances[caller])
-  ) {
-    throw new ContractError(`Caller balance is not defined!`);
-  }
-
-  // Additional check if it includes a valid number of years (TODO: this may be set in contract settings)
-  if (years > MAX_YEARS) {
-    throw new ContractError(INVALID_YEARS_MESSAGE);
-  }
-
-  if (
-    isActiveReservedName({
-      caller,
-      reservedName: reserved[name],
-      currentBlockTimestamp,
-    })
-  ) {
-    throw new ContractError(ARNS_NAME_RESERVED_MESSAGE);
-  }
-
-  if (isShortNameRestricted({ name, currentBlockTimestamp })) {
-    throw new ContractError(INVALID_SHORT_NAME);
-  }
-
-  if (
-    isExistingActiveRecord({
-      record: records[name],
-      currentBlockTimestamp,
-    })
-  ) {
-    throw new ContractError(NON_EXPIRED_ARNS_NAME_MESSAGE);
-  }
+  assertAvailableRecord({
+    caller,
+    name,
+    records,
+    reserved,
+    currentBlockTimestamp,
+  });
 
   if (isNameRequiredToBeAuction({ name, type })) {
     throw new ContractError(ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE);
@@ -158,7 +130,7 @@ export const buyRecord = (
     startTimestamp: +SmartWeave.block.timestamp,
     undernames: DEFAULT_UNDERNAME_COUNT,
     // only include timestamp on lease
-    ...(type === 'lease' ? { endTimestamp } : {}),
+    ...{ endTimestamp },
   };
 
   // delete the reserved name if it exists
@@ -170,7 +142,6 @@ export const buyRecord = (
   state.records = records;
   state.reserved = reserved;
   state.balances = balances;
-  // update the demand factor
   state.demandFactoring = tallyNamePurchase(state.demandFactoring);
 
   return { state };

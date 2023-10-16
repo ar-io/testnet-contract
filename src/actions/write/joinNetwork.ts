@@ -21,7 +21,9 @@ export class JoinNetwork {
   constructor(input: any) {
     // validate using ajv validator
     if (!validateJoinNetwork(input)) {
-      throw new ContractError(getInvalidAjvMessage(validateJoinNetwork, input));
+      throw new ContractError(
+        getInvalidAjvMessage(validateJoinNetwork, input, 'joinNetwork'),
+      );
     }
 
     const { qty, label, port, fqdn, note, protocol, properties } = input;

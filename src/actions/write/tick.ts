@@ -1,5 +1,3 @@
-import { isActiveReservedName, isExistingActiveRecord } from 'src/utilities';
-
 import { DEFAULT_UNDERNAME_COUNT, SECONDS_IN_A_YEAR } from '../../constants';
 import { tallyNamePurchase, updateDemandFactor } from '../../pricing';
 import {
@@ -8,6 +6,7 @@ import {
   ContractResult,
   IOState,
 } from '../../types';
+import { isActiveReservedName, isExistingActiveRecord } from '../../utilities';
 
 declare const SmartWeave: any; // TODO: tighter type bindings
 declare const ContractError: any; // TODO: tighter type bindings

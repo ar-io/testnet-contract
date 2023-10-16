@@ -1,6 +1,7 @@
 import { PstState } from 'warp-contracts';
 
 import {
+  MAX_ALLOWED_DECIMALS,
   NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
@@ -333,3 +334,23 @@ export type DeepReadonly<Type> = Type extends Exclude<Builtin, Error>
   : IsUnknown<Type> extends true
   ? unknown
   : Readonly<Type>;
+
+// TODO: extend this class and use it for all balance/IO token logic
+export class IOToken {
+  protected value: number;
+  constructor(value: number) {
+    // do some big number casting for allowed decimals
+    this.value = +value.toFixed(MAX_ALLOWED_DECIMALS);
+  }
+
+  valueOf(): number {
+    return this.value;
+  }
+}
+
+export class mIOToken extends PositiveFiniteInteger {
+  protected value: number;
+  constructor(value: number) {
+    super(value);
+  }
+}
