@@ -6,8 +6,9 @@ import {
   periodAtHeight,
   shouldUpdateDemandFactor,
   tallyNamePurchase,
+  updateDemandFactor,
 } from '../src/pricing';
-import { BlockHeight } from '../src/types';
+import { BlockHeight, DemandFactoringData } from '../src/types';
 
 describe('Pricing functions:', () => {
   describe('periodAtHeight function', () => {
@@ -200,6 +201,90 @@ describe('Pricing functions:', () => {
             mvgAvgOfTailingNamePurchases,
           }),
         ).toEqual(expectedResult);
+      },
+    );
+  });
+
+  describe('updateDemandFactor function', () => {
+    const baselineDFData: DemandFactoringData = {
+      periodZeroBlockHeight: 0,
+      currentPeriod: 0,
+      trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
+      purchasesThisPeriod: 0,
+      demandFactor: 1,
+      consecutivePeriodsWithMinDemandFactor: 0,
+    };
+
+    it.each([
+      [
+        // Don't update the period or demand factoring data at block 0 of period 0 (special case)
+        [0, 0, 0],
+        [0, 0, [0, 0, 0, 0, 0, 0, 0], 1],
+      ],
+      [
+        // Don't update the period or demand factoring data at first block of current period, but continue tracking ongoing purchases
+        [0, 0, 1],
+        [0, 1, [0, 0, 0, 0, 0, 0, 0], 1],
+      ],
+      [
+        // Don't update the period or demand factoring data at final block of current period, but continue tracking ongoing purchases
+        [0, 719, 1],
+        [0, 1, [0, 0, 0, 0, 0, 0, 0], 1],
+      ],
+      [
+        // Update the period and demand factoring data at first block of NEXT period
+        [0, 720, 1],
+        [1, 0, [1, 0, 0, 0, 0, 0, 0], 1.05],
+      ],
+      [
+        // Don't update the period or demand factoring data at first block of CURRENT period, but continue tracking ongoing purchases
+        [1, 720, 1],
+        [1, 1, [0, 0, 0, 0, 0, 0, 0], 1],
+      ],
+      [
+        // Don't update the period or demand factoring data at last block of current period, but continue tracking ongoing purchases
+        [1, 1439, 2],
+        [1, 2, [0, 0, 0, 0, 0, 0, 0], 1],
+      ],
+      [
+        // Update the period and demand factoring data at first block of NEXT period
+        [1, 1440, 2],
+        [2, 0, [0, 2, 0, 0, 0, 0, 0], 1.05],
+      ],
+      [
+        // Demand factor reduces with low demand
+        [1, 1440, 0],
+        [2, 0, [1, 0, 0, 0, 0, 0, 0], 0.95],
+      ],
+      // [ // TODO: !
+      //   // Demand factor stays unchanged at minimum before unchanged-repeat threshold
+      //   [1, 1440, 0],
+      //   [2, 0, [0, 0, 0, 0, 0, 0, 0], 0.95],
+      // ],
+    ])(
+      'given [currentPeriod, currentHeight, purchasesThisPeriod] of %j, should return demand factoring data with [expectedCurrentPeriod, expectedPurchasesThisPeriod, expectedTrailingPurchases, expectedDemandFactor] %d',
+      (
+        [currentPeriod, currentHeight, purchasesThisPeriod],
+        [
+          expectedCurrentPeriod,
+          expectedPurchasesThisPeriod,
+          expectedTrailingPurchases,
+          expectedDemandFactor,
+        ],
+      ) => {
+        expect(
+          updateDemandFactor(new BlockHeight(currentHeight), {
+            ...baselineDFData,
+            currentPeriod,
+            purchasesThisPeriod,
+          }),
+        ).toEqual({
+          ...baselineDFData,
+          purchasesThisPeriod: expectedPurchasesThisPeriod,
+          trailingPeriodPurchases: expectedTrailingPurchases,
+          currentPeriod: expectedCurrentPeriod,
+          demandFactor: expectedDemandFactor,
+        });
       },
     );
   });
