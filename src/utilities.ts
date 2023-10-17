@@ -549,7 +549,7 @@ export const isGatewayHidden = ({
   return gateway.status === 'hidden';
 };
 
-export const shouldGatewayBeRemoved = ({
+export const isGatewayEligibleToBeRemoved = ({
   gateway,
   currentBlockHeight,
 }: {

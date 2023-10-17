@@ -20,7 +20,7 @@ import {
 import {
   isActiveReservedName,
   isExistingActiveRecord,
-  shouldGatewayBeRemoved,
+  isGatewayEligibleToBeRemoved,
 } from '../../utilities';
 
 declare const SmartWeave: any; // TODO: tighter type bindings
@@ -145,7 +145,22 @@ export function tickGatewayRegistry({
   const updatedRegistry = Object.keys(gateways).reduce(
     (acc: Record<string, Gateway>, key: string) => {
       const gateway = gateways[key];
-      // return any vaulted balances to the owner if they are expired
+      // if it's not eligible to leave, keep it in the registry
+      if (
+        isGatewayEligibleToBeRemoved({
+          gateway,
+          currentBlockHeight,
+        })
+      ) {
+        // gateway is leaving, make sure we return all the vaults to it
+        for (const vault of gateway.vaults) {
+          updatedBalances[key] += vault.balance;
+        }
+        // return any remaining operator stake
+        updatedBalances[key] += gateway.operatorStake;
+        return acc;
+      }
+      // return any vaulted balances to the owner if they are expired, but keep the gateway
       const updatedVaults = [];
       for (const vault of gateway.vaults) {
         if (vault.end <= currentBlockHeight.valueOf()) {
@@ -156,19 +171,10 @@ export function tickGatewayRegistry({
           updatedVaults.push(vault);
         }
       }
-      // if it's not eligible to leave, keep it in the registry
-      if (
-        !shouldGatewayBeRemoved({
-          gateway,
-          currentBlockHeight,
-        })
-      ) {
-        acc[key] = {
-          ...gateway,
-          vaults: updatedVaults,
-        };
-        return acc;
-      }
+      acc[key] = {
+        ...gateway,
+        vaults: updatedVaults,
+      };
       return acc;
     },
     {},

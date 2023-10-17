@@ -26,7 +26,7 @@ export const leaveNetwork = async (
     })
   ) {
     throw new ContractError(
-      `The gateway is not eligible to leave the network. It must be joined for a minimum of ${settings.minGatewayJoinLength} blocks and can not already be leaving the network.`,
+      `The gateway is not eligible to leave the network. It must be joined for a minimum of ${settings.minGatewayJoinLength} blocks and can not already be leaving the network. Current status: ${gateways[caller].status}`,
     );
   }
 
