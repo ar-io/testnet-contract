@@ -1,40 +1,48 @@
 import { NETWORK_LEAVING_STATUS } from '../../constants';
-import { ContractResult, IOState, PstAction } from '../../types';
+import { BlockHeight, ContractResult, IOState, PstAction } from '../../types';
+import { isGatewayEligibleToLeave } from '../../utilities';
 
-declare const ContractError;
+declare const ContractError: any;
 declare const SmartWeave: any;
 
 // Begins the network leave process for a gateway operator
-export const initiateLeave = async (
+export const leaveNetwork = async (
   state: IOState,
   { caller }: PstAction,
 ): Promise<ContractResult> => {
   const settings = state.settings.registry;
   const gateways = state.gateways;
+  const currentBlockHeight = new BlockHeight(+SmartWeave.block.height);
 
-  if (!(caller in gateways)) {
+  if (!gateways[caller]) {
     throw new ContractError('This target is not a registered gateway.');
   }
 
-  if (gateways[caller].status === NETWORK_LEAVING_STATUS) {
+  if (
+    !isGatewayEligibleToLeave({
+      gateway: gateways[caller],
+      currentBlockHeight,
+      registrySettings: settings,
+    })
+  ) {
     throw new ContractError(
-      'This Gateway is in the process of leaving the network',
+      `The gateway is not eligible to leave the network. It must be joined for a minimum of ${settings.minGatewayJoinLength} blocks and can not already be leaving the network.`,
     );
   }
 
-  if (
-    gateways[caller].start + settings.minGatewayJoinLength >
-    +SmartWeave.block.height
-  ) {
-    throw new ContractError('This Gateway has not been joined long enough');
-  }
+  const endHeight = +SmartWeave.block.height + settings.gatewayLeaveLength;
 
   // Add tokens to a vault that unlocks after the withdrawal period ends
   gateways[caller].vaults.push({
     balance: gateways[caller].operatorStake,
     start: +SmartWeave.block.height,
-    end: +SmartWeave.block.height + settings.gatewayLeaveLength,
+    end: endHeight,
   });
+
+  // set all the vaults to unlock at the end of the withdrawal period
+  for (const vault of gateways[caller].vaults) {
+    vault.end = endHeight;
+  }
 
   // Remove all tokens from the operator's stake
   gateways[caller].operatorStake = 0;

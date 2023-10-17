@@ -25,6 +25,8 @@ import {
   DeepReadonly,
   DemandFactoringData,
   Fees,
+  Gateway,
+  GatewayRegistrySettings,
   IOToken,
   RegistrationType,
   ReservedName,
@@ -523,4 +525,57 @@ export const calculateExistingAuctionBidForCaller = ({
     finalBid -= auction.floorPrice;
   }
   return new IOToken(finalBid);
+};
+
+export const isGatewayJoined = ({
+  gateway,
+  currentBlockHeight,
+}: {
+  gateway: DeepReadonly<Gateway> | undefined;
+  currentBlockHeight: BlockHeight;
+}): boolean => {
+  if (!gateway) return false;
+  return (
+    gateway.status === 'joined' && gateway.end > currentBlockHeight.valueOf()
+  );
+};
+
+export const isGatewayHidden = ({
+  gateway,
+}: {
+  gateway: DeepReadonly<Gateway> | undefined;
+}): boolean => {
+  if (!gateway) return false;
+  return gateway.status === 'hidden';
+};
+
+export const shouldGatewayBeRemoved = ({
+  gateway,
+  currentBlockHeight,
+}: {
+  gateway: DeepReadonly<Gateway> | undefined;
+  currentBlockHeight: BlockHeight;
+}): boolean => {
+  return (
+    gateway.status === 'leaving' && gateway.end <= currentBlockHeight.valueOf()
+  );
+};
+
+export const isGatewayEligibleToLeave = ({
+  gateway,
+  currentBlockHeight,
+  registrySettings,
+}: {
+  gateway: DeepReadonly<Gateway> | undefined;
+  currentBlockHeight: BlockHeight;
+  registrySettings: GatewayRegistrySettings;
+}): boolean => {
+  if (!gateway) return false;
+  const joinedForMinimum =
+    currentBlockHeight.valueOf() >=
+    gateway.start + registrySettings.minGatewayJoinLength;
+  const isActiveOrHidden =
+    isGatewayJoined({ gateway, currentBlockHeight }) ||
+    isGatewayHidden({ gateway });
+  return joinedForMinimum && isActiveOrHidden;
 };

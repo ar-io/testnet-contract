@@ -1,8 +1,7 @@
 import { NETWORK_LEAVING_STATUS } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
-declare const ContractError;
-declare const SmartWeave: any;
+declare const ContractError: any;
 
 // Locks tokens into a new gateway operator vault
 export const increaseOperatorStake = async (
@@ -22,10 +21,6 @@ export const increaseOperatorStake = async (
     throw new ContractError(
       'This Gateway is in the process of leaving the network and cannot have its stake adjusted',
     );
-  }
-
-  if (!Number.isInteger(qty) || qty <= 0) {
-    throw new ContractError('Quantity must be a positive integer.');
   }
 
   if (
