@@ -219,33 +219,32 @@ describe('Pricing functions:', () => {
     it.each([
       [
         // Don't update the period or demand factoring data at block 0 of period 0 (special case)
-        { currentBlock: 0, inputDfData: baselineDFData },
-        baselineDFData,
+        { currentBlock: 0, inputDfData: {} },
+        {},
       ],
       [
         // Don't update the period or demand factoring data at first block of current period, but continue tracking ongoing purchases
         {
           currentBlock: 0,
-          inputDfData: { ...baselineDFData, purchasesThisPeriod: 1 },
+          inputDfData: { purchasesThisPeriod: 1 },
         },
-        { ...baselineDFData, purchasesThisPeriod: 1 },
+        { purchasesThisPeriod: 1 },
       ],
       [
         // Don't update the period or demand factoring data at final block of current period, but continue tracking ongoing purchases
         {
           currentBlock: 719,
-          inputDfData: { ...baselineDFData, purchasesThisPeriod: 1 },
+          inputDfData: { purchasesThisPeriod: 1 },
         },
-        { ...baselineDFData, purchasesThisPeriod: 1 },
+        { purchasesThisPeriod: 1 },
       ],
       [
         // Update the period and demand factoring data at first block of NEXT period
         {
           currentBlock: 720,
-          inputDfData: { ...baselineDFData, purchasesThisPeriod: 1 },
+          inputDfData: { purchasesThisPeriod: 1 },
         },
         {
-          ...baselineDFData,
           demandFactor: 1.05,
           currentPeriod: 1,
           trailingPeriodPurchases: [1, 0, 0, 0, 0, 0, 0],
@@ -256,13 +255,11 @@ describe('Pricing functions:', () => {
         {
           currentBlock: 720,
           inputDfData: {
-            ...baselineDFData,
             purchasesThisPeriod: 1,
             currentPeriod: 1,
           },
         },
         {
-          ...baselineDFData,
           currentPeriod: 1,
           trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
           purchasesThisPeriod: 1,
@@ -273,13 +270,11 @@ describe('Pricing functions:', () => {
         {
           currentBlock: 1439,
           inputDfData: {
-            ...baselineDFData,
             purchasesThisPeriod: 2,
             currentPeriod: 1,
           },
         },
         {
-          ...baselineDFData,
           currentPeriod: 1,
           trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
           purchasesThisPeriod: 2,
@@ -290,14 +285,12 @@ describe('Pricing functions:', () => {
         {
           currentBlock: 1440,
           inputDfData: {
-            ...baselineDFData,
             purchasesThisPeriod: 5,
             trailingPeriodPurchases: [1, 2, 3, 4, 5, 6, 7],
             currentPeriod: 1,
           },
         },
         {
-          ...baselineDFData,
           currentPeriod: 2,
           trailingPeriodPurchases: [1, 5, 3, 4, 5, 6, 7],
           demandFactor: 1.05,
@@ -308,12 +301,10 @@ describe('Pricing functions:', () => {
         {
           currentBlock: 1440,
           inputDfData: {
-            ...baselineDFData,
             currentPeriod: 1,
           },
         },
         {
-          ...baselineDFData,
           currentPeriod: 2,
           demandFactor: 0.95,
         },
@@ -323,12 +314,10 @@ describe('Pricing functions:', () => {
         {
           currentBlock: 720,
           inputDfData: {
-            ...baselineDFData,
             demandFactor: 0.5,
           },
         },
         {
-          ...baselineDFData,
           currentPeriod: 1,
           demandFactor: 0.5,
           consecutivePeriodsWithMinDemandFactor: 1,
@@ -339,31 +328,37 @@ describe('Pricing functions:', () => {
         {
           currentBlock: 2160,
           inputDfData: {
-            ...baselineDFData,
             demandFactor: 0.5,
             currentPeriod: 2,
             consecutivePeriodsWithMinDemandFactor: 2,
           },
         },
         {
-          ...baselineDFData,
           currentPeriod: 3,
           demandFactor: 1,
         },
       ],
     ])(
       'given [currentBlock, inputDfData] of %j, should return demand factoring data %d',
-      (testData, expectedDfData) => {
-        const inputDfData = cloneDemandFactoringData(testData.inputDfData);
+      (testData, expectedDfDataOverrides) => {
+        const inputDfData: DemandFactoringData = {
+          ...baselineDFData,
+          ...testData.inputDfData,
+        };
+        const expectedDfData: DemandFactoringData = {
+          ...baselineDFData,
+          ...expectedDfDataOverrides,
+        };
+        const clonedInputDfData = cloneDemandFactoringData(inputDfData);
         expect(
           updateDemandFactor(
             new BlockHeight(testData.currentBlock),
-            testData.inputDfData,
+            inputDfData,
           ),
         ).toEqual(expectedDfData);
 
         // Ensure input data remains unchanged (weak guarantee due to dependence on cloneDemandFactoringData)
-        expect(testData.inputDfData).toEqual(inputDfData);
+        expect(inputDfData).toEqual(clonedInputDfData);
       },
     );
   });
