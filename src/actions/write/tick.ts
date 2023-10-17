@@ -20,13 +20,13 @@ import {
 import {
   isActiveReservedName,
   isExistingActiveRecord,
-  isGatewayEligibleToLeave,
+  shouldGatewayBeRemoved,
 } from '../../utilities';
 
 declare const SmartWeave: any; // TODO: tighter type bindings
 declare const ContractError: any; // TODO: tighter type bindings
 
-const tickInternal = ({
+export function tickInternal({
   currentBlockHeight,
   currentBlockTimestamp,
   state,
@@ -34,7 +34,7 @@ const tickInternal = ({
   currentBlockHeight: BlockHeight;
   currentBlockTimestamp: BlockTimestamp;
   state: IOState;
-}): IOState => {
+}): IOState {
   // const {
   //   records, // has per-height considerations
   //   auctions, // has per-height considerations
@@ -74,10 +74,10 @@ const tickInternal = ({
   );
 
   return updatedState;
-};
+}
 
 // Rebuilds the state's records list based on the current block's timestamp and the records' expiration timestamps
-function tickRecords({
+export function tickRecords({
   currentBlockTimestamp,
   records,
 }: {
@@ -131,11 +131,10 @@ function tickReservedNames({
   };
 }
 
-function tickGatewayRegistry({
+export function tickGatewayRegistry({
   currentBlockHeight,
   gateways,
   balances,
-  registrySettings,
 }: {
   currentBlockHeight: BlockHeight;
   gateways: DeepReadonly<Record<string, Gateway>>;
@@ -162,7 +161,6 @@ function tickGatewayRegistry({
         !shouldGatewayBeRemoved({
           gateway,
           currentBlockHeight,
-          registrySettings,
         })
       ) {
         acc[key] = {
@@ -182,7 +180,7 @@ function tickGatewayRegistry({
   };
 }
 
-function tickAuctions({
+export function tickAuctions({
   currentBlockHeight,
   currentBlockTimestamp,
   records,
@@ -202,10 +200,9 @@ function tickAuctions({
   const updatedAuctions = Object.keys(auctions).reduce(
     (acc: Record<string, Auction>, key) => {
       const auction = auctions[key];
-      const auctionSettings = auction.settings;
 
       // endHeight represents the height at which the auction is CLOSED and at which bids are no longer accepted
-      const endHeight = auction.startHeight + auctionSettings.auctionDuration;
+      const endHeight = auction.endHeight;
 
       // still an active auction
       if (endHeight > currentBlockHeight.valueOf()) {
@@ -224,7 +221,7 @@ function tickAuctions({
             return {
               endTimestamp:
                 +auction.years * SECONDS_IN_A_YEAR +
-                +SmartWeave.block.timestamp,
+                currentBlockTimestamp.valueOf(),
             };
         }
       })();
