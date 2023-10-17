@@ -3,7 +3,7 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import path from 'path';
 
-import { Gateway, IOState } from '../../src/types';
+import { IOState } from '../../src/types';
 import {
   ANT_CONTRACT_IDS,
   AUCTION_SETTINGS,
@@ -388,18 +388,27 @@ export function getLocalArNSContractId(): string {
   return contract.id;
 }
 
-export function getRandomFailedGatewaysSubset(gateways: string[]): string[] {
+export function getRandomFailedGatewaysSubset(wallets: any[]): string[] {
+  const shuffledWallets = wallets;
+  const failedGateways: string[] = [];
   const percentageToPick = Math.random() * 0.3; // Randomly pick a percentage between 0 and 0.3
-  const numberOfElements = Math.floor(gateways.length * percentageToPick); // Calculate the number of elements to pick
+  const numberOfElements = Math.floor(wallets.length * percentageToPick); // Calculate the number of elements to pick
 
   // Shuffle the array
-  for (let i = gateways.length - 1; i > 0; i--) {
+  for (let i = wallets.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [gateways[i], gateways[j]] = [gateways[j], gateways[i]];
+    [shuffledWallets[i], shuffledWallets[j]] = [
+      shuffledWallets[j],
+      shuffledWallets[i],
+    ];
+  }
+
+  for (const wallet of shuffledWallets.slice(0, numberOfElements)) {
+    failedGateways.push(wallet.addr);
   }
 
   // Return the subset of the array
-  return gateways.slice(0, numberOfElements);
+  return failedGateways;
 }
 
 export * from '../../src/utilities';

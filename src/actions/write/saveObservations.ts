@@ -18,7 +18,7 @@ declare const ContractError;
 declare const SmartWeave: any;
 
 export class SaveObservations {
-  observationReportTxId: string;
+  observerReportTxId: string;
   failedGateways: string[];
 
   constructor(input: any) {
@@ -28,8 +28,8 @@ export class SaveObservations {
         getInvalidAjvMessage(validateSaveObservations, input),
       );
     }
-    const { observationReportTxId, failedGateways } = input;
-    this.observationReportTxId = observationReportTxId;
+    const { observerReportTxId, failedGateways } = input;
+    this.observerReportTxId = observerReportTxId;
     this.failedGateways = failedGateways;
   }
 }
@@ -40,13 +40,12 @@ export const saveObservations = async (
 ): Promise<ContractResult> => {
   // get all other relevant state data
   const { observations, gateways, settings } = state;
-  const { observationReportTxId, failedGateways } = new SaveObservations(input); // does validation on constructor
+  const { observerReportTxId, failedGateways } = new SaveObservations(input); // does validation on constructor
   const currentEpochStartHeight = getEpochStart({
     startHeight: DEFAULT_START_HEIGHT,
     epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
     height: +SmartWeave.block.height,
   });
-  // console.log('%s is saving observation: ', caller);
 
   const gateway = gateways[caller];
   if (!gateway) {
@@ -115,7 +114,13 @@ export const saveObservations = async (
 
   // add this observers report tx id to this epoch
   state.observations[currentEpochStartHeight].reports[caller] =
-    observationReportTxId;
-  //console.log('Saved observation from: ', caller);
+    observerReportTxId;
+
+  //console.log(
+  //  'Epoch %s | Saved observation from: %s with tx id: %s',
+  //  currentEpochStartHeight,
+  //  caller,
+  //  observerReportTxId,
+  //);
   return { state };
 };

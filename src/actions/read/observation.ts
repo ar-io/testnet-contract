@@ -33,7 +33,7 @@ export const prescribedObserver = async (
 
   if (!prescribedObservers.includes(target)) {
     // The gateway with the specified address is not found in the prescribedObservers list
-    throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
+    return { result: false };
   }
 
   return { result: true };

@@ -21,4 +21,4 @@ export const warp = WarpFactory.forLocal(1820, arweave, {
   inMemory: true,
 }).use(new DeployPlugin());
 // disable logging in warp
-LoggerFactory.INST.logLevel('error');
+LoggerFactory.INST.logLevel('none');

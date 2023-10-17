@@ -6,7 +6,7 @@ const saveObservationsSchema = {
       type: 'string',
       const: 'saveObservations',
     },
-    observationReportTxId: {
+    observerReportTxId: {
       type: 'string',
       pattern: '^(atomic|[a-zA-Z0-9-_]{43})$',
     },
@@ -20,7 +20,7 @@ const saveObservationsSchema = {
       minItems: 0,
     },
   },
-  required: ['failedGateways', 'observationReportTxId', 'function'],
+  required: ['failedGateways', 'observerReportTxId', 'function'],
   additionalProperties: true, // allows for auction properties to be provided to buy record
 };
 

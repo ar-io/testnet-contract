@@ -1,5 +1,3 @@
-import { JWKInterface } from 'warp-contracts';
-
 import initialContractState from './initial-state.json';
 
 export enum REGISTRATION_TYPES {
@@ -28,15 +26,15 @@ export const CONTRACT_SETTINGS = {
   gatewayLeaveLength: 2,
   operatorStakeWithdrawLength: 5,
 };
-export const EXAMPLE_OBSERVATION_REPORT_TX_IDS = [
+export const EXAMPLE_OBSERVER_REPORT_TX_IDS = [
   'U35xQUnop2Oq1NwhpzRfTeXVSjC0M8H50MVlmo_cTJc',
   'TtXk8kqgGYVqTQeHaJzst3toA2qz9UO0AGX1lUeuxvc',
 ];
 
 export const EXAMPLE_LIST_OF_FAILED_GATEWAYS = [
-  EXAMPLE_OBSERVATION_REPORT_TX_IDS.concat(['fakeone']),
+  EXAMPLE_OBSERVER_REPORT_TX_IDS.concat(['fakeone']),
 ];
 // Also export all our other constants
 export * from '../../src/constants';
 
-export const WALLETS_TO_CREATE = 11;
+export const WALLETS_TO_CREATE = 10;
