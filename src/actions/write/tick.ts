@@ -1,5 +1,9 @@
 import { DEFAULT_UNDERNAME_COUNT, SECONDS_IN_A_YEAR } from '../../constants';
-import { tallyNamePurchase, updateDemandFactor } from '../../pricing';
+import {
+  cloneDemandFactoringData,
+  tallyNamePurchase,
+  updateDemandFactor,
+} from '../../pricing';
 import {
   ArNSName,
   Auction,
@@ -155,7 +159,7 @@ function tickGatewayRegistry({
       }
       // if it's not eligible to leave, keep it in the registry
       if (
-        !isGatewayEligibleToLeave({
+        !shouldGatewayBeRemoved({
           gateway,
           currentBlockHeight,
           registrySettings,
@@ -193,10 +197,8 @@ function tickAuctions({
 }): Pick<IOState, 'auctions' | 'records' | 'demandFactoring'> {
   // handle expired auctions
   const updatedRecords = { ...records };
-  let updatedDemandFactoring = {
-    ...demandFactoring,
-    trailingPeriodPurchases: demandFactoring.trailingPeriodPurchases.slice(),
-  };
+  // TODO: don't clone it until you need to
+  let updatedDemandFactoring = cloneDemandFactoringData(demandFactoring);
   const updatedAuctions = Object.keys(auctions).reduce(
     (acc: Record<string, Auction>, key) => {
       const auction = auctions[key];
