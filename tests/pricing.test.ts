@@ -1,5 +1,6 @@
 import {
   calculateMinimumAuctionBid,
+  cloneDemandFactoringData,
   demandFactorPeriodIndex,
   demandIsIncreasing,
   mvgAvgTrailingPurchaseCounts,
@@ -218,73 +219,151 @@ describe('Pricing functions:', () => {
     it.each([
       [
         // Don't update the period or demand factoring data at block 0 of period 0 (special case)
-        [0, 0, 0],
-        [0, 0, [0, 0, 0, 0, 0, 0, 0], 1],
+        { currentBlock: 0, inputDfData: baselineDFData },
+        baselineDFData,
       ],
       [
         // Don't update the period or demand factoring data at first block of current period, but continue tracking ongoing purchases
-        [0, 0, 1],
-        [0, 1, [0, 0, 0, 0, 0, 0, 0], 1],
+        {
+          currentBlock: 0,
+          inputDfData: { ...baselineDFData, purchasesThisPeriod: 1 },
+        },
+        { ...baselineDFData, purchasesThisPeriod: 1 },
       ],
       [
         // Don't update the period or demand factoring data at final block of current period, but continue tracking ongoing purchases
-        [0, 719, 1],
-        [0, 1, [0, 0, 0, 0, 0, 0, 0], 1],
+        {
+          currentBlock: 719,
+          inputDfData: { ...baselineDFData, purchasesThisPeriod: 1 },
+        },
+        { ...baselineDFData, purchasesThisPeriod: 1 },
       ],
       [
         // Update the period and demand factoring data at first block of NEXT period
-        [0, 720, 1],
-        [1, 0, [1, 0, 0, 0, 0, 0, 0], 1.05],
+        {
+          currentBlock: 720,
+          inputDfData: { ...baselineDFData, purchasesThisPeriod: 1 },
+        },
+        {
+          ...baselineDFData,
+          demandFactor: 1.05,
+          currentPeriod: 1,
+          trailingPeriodPurchases: [1, 0, 0, 0, 0, 0, 0],
+        },
       ],
       [
         // Don't update the period or demand factoring data at first block of CURRENT period, but continue tracking ongoing purchases
-        [1, 720, 1],
-        [1, 1, [0, 0, 0, 0, 0, 0, 0], 1],
+        {
+          currentBlock: 720,
+          inputDfData: {
+            ...baselineDFData,
+            purchasesThisPeriod: 1,
+            currentPeriod: 1,
+          },
+        },
+        {
+          ...baselineDFData,
+          currentPeriod: 1,
+          trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
+          purchasesThisPeriod: 1,
+        },
       ],
       [
         // Don't update the period or demand factoring data at last block of current period, but continue tracking ongoing purchases
-        [1, 1439, 2],
-        [1, 2, [0, 0, 0, 0, 0, 0, 0], 1],
+        {
+          currentBlock: 1439,
+          inputDfData: {
+            ...baselineDFData,
+            purchasesThisPeriod: 2,
+            currentPeriod: 1,
+          },
+        },
+        {
+          ...baselineDFData,
+          currentPeriod: 1,
+          trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
+          purchasesThisPeriod: 2,
+        },
       ],
       [
         // Update the period and demand factoring data at first block of NEXT period
-        [1, 1440, 2],
-        [2, 0, [0, 2, 0, 0, 0, 0, 0], 1.05],
+        {
+          currentBlock: 1440,
+          inputDfData: {
+            ...baselineDFData,
+            purchasesThisPeriod: 5,
+            trailingPeriodPurchases: [1, 2, 3, 4, 5, 6, 7],
+            currentPeriod: 1,
+          },
+        },
+        {
+          ...baselineDFData,
+          currentPeriod: 2,
+          trailingPeriodPurchases: [1, 5, 3, 4, 5, 6, 7],
+          demandFactor: 1.05,
+        },
       ],
       [
         // Demand factor reduces with low demand
-        [1, 1440, 0],
-        [2, 0, [1, 0, 0, 0, 0, 0, 0], 0.95],
-      ],
-      // [ // TODO: !
-      //   // Demand factor stays unchanged at minimum before unchanged-repeat threshold
-      //   [1, 1440, 0],
-      //   [2, 0, [0, 0, 0, 0, 0, 0, 0], 0.95],
-      // ],
-    ])(
-      'given [currentPeriod, currentHeight, purchasesThisPeriod] of %j, should return demand factoring data with [expectedCurrentPeriod, expectedPurchasesThisPeriod, expectedTrailingPurchases, expectedDemandFactor] %d',
-      (
-        [currentPeriod, currentHeight, purchasesThisPeriod],
-        [
-          expectedCurrentPeriod,
-          expectedPurchasesThisPeriod,
-          expectedTrailingPurchases,
-          expectedDemandFactor,
-        ],
-      ) => {
-        expect(
-          updateDemandFactor(new BlockHeight(currentHeight), {
+        {
+          currentBlock: 1440,
+          inputDfData: {
             ...baselineDFData,
-            currentPeriod,
-            purchasesThisPeriod,
-          }),
-        ).toEqual({
+            currentPeriod: 1,
+          },
+        },
+        {
           ...baselineDFData,
-          purchasesThisPeriod: expectedPurchasesThisPeriod,
-          trailingPeriodPurchases: expectedTrailingPurchases,
-          currentPeriod: expectedCurrentPeriod,
-          demandFactor: expectedDemandFactor,
-        });
+          currentPeriod: 2,
+          demandFactor: 0.95,
+        },
+      ],
+      [
+        // Demand factor stays unchanged at minimum before unchanged-repeat threshold
+        {
+          currentBlock: 720,
+          inputDfData: {
+            ...baselineDFData,
+            demandFactor: 0.5,
+          },
+        },
+        {
+          ...baselineDFData,
+          currentPeriod: 1,
+          demandFactor: 0.5,
+          consecutivePeriodsWithMinDemandFactor: 1,
+        },
+      ],
+      [
+        // Demand factor resets after repeated low demand reaches repeat threshold
+        {
+          currentBlock: 2160,
+          inputDfData: {
+            ...baselineDFData,
+            demandFactor: 0.5,
+            currentPeriod: 2,
+            consecutivePeriodsWithMinDemandFactor: 2,
+          },
+        },
+        {
+          ...baselineDFData,
+          currentPeriod: 3,
+          demandFactor: 1,
+        },
+      ],
+    ])(
+      'given [currentBlock, inputDfData] of %j, should return demand factoring data %d',
+      (testData, expectedDfData) => {
+        const inputDfData = cloneDemandFactoringData(testData.inputDfData);
+        expect(
+          updateDemandFactor(
+            new BlockHeight(testData.currentBlock),
+            testData.inputDfData,
+          ),
+        ).toEqual(expectedDfData);
+
+        // Ensure input data remains unchanged (weak guarantee due to dependence on cloneDemandFactoringData)
+        expect(testData.inputDfData).toEqual(inputDfData);
       },
     );
   });
