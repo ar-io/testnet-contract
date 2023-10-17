@@ -3,6 +3,8 @@ import {
   BlockHeight,
   DeepReadonly,
   DemandFactoringData,
+  Fees,
+  IOState,
   IOToken,
 } from './types';
 
@@ -17,12 +19,17 @@ export function tallyNamePurchase(
 export function updateDemandFactor(
   currentHeight: BlockHeight,
   dfData: DeepReadonly<DemandFactoringData>,
-): DemandFactoringData {
+  fees: DeepReadonly<Fees>,
+): Pick<IOState, 'demandFactoring' | 'fees'> {
   if (!shouldUpdateDemandFactor(currentHeight, dfData)) {
-    return dfData as DemandFactoringData;
+    return {
+      demandFactoring: dfData as DemandFactoringData,
+      fees: fees as Fees,
+    };
   }
 
   const newDemandFactoringData = cloneDemandFactoringData(dfData);
+  let updatedFees: Fees | undefined;
 
   const numNamesPurchasedInLastPeriod = dfData.purchasesThisPeriod;
   const mvgAvgOfTrailingNamePurchases = mvgAvgTrailingPurchaseCounts(dfData);
@@ -44,17 +51,26 @@ export function updateDemandFactor(
     newDemandFactoringData.demandFactor ===
     DEMAND_FACTORING_SETTINGS.demandFactorMin
   ) {
-    newDemandFactoringData.consecutivePeriodsWithMinDemandFactor++;
+    if (
+      ++newDemandFactoringData.consecutivePeriodsWithMinDemandFactor >=
+      DEMAND_FACTORING_SETTINGS.stepDownThreshold
+    ) {
+      newDemandFactoringData.consecutivePeriodsWithMinDemandFactor = 0;
+      newDemandFactoringData.demandFactor =
+        DEMAND_FACTORING_SETTINGS.demandFactorBaseValue;
+      // Rebase fees on their values at the minimum demand factor
+      // TODO: FLOOR PRICING
+      updatedFees = Object.keys(fees).reduce(
+        (acc: Fees, nameLength: string) => {
+          acc[nameLength] =
+            fees[nameLength] * DEMAND_FACTORING_SETTINGS.demandFactorMin;
+          return acc;
+        },
+        {},
+      );
+    }
   } else {
     newDemandFactoringData.consecutivePeriodsWithMinDemandFactor = 0;
-  }
-  if (
-    newDemandFactoringData.consecutivePeriodsWithMinDemandFactor >=
-    DEMAND_FACTORING_SETTINGS.stepDownThreshold
-  ) {
-    newDemandFactoringData.consecutivePeriodsWithMinDemandFactor = 0;
-    newDemandFactoringData.demandFactor =
-      DEMAND_FACTORING_SETTINGS.demandFactorBaseValue;
   }
 
   // Stash the number of purchases for this period in the trailing metrics
@@ -66,7 +82,10 @@ export function updateDemandFactor(
   newDemandFactoringData.currentPeriod++;
   newDemandFactoringData.purchasesThisPeriod = 0;
 
-  return newDemandFactoringData;
+  return {
+    demandFactoring: newDemandFactoringData,
+    fees: updatedFees || fees,
+  };
 }
 
 export function shouldUpdateDemandFactor(

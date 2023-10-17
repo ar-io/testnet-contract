@@ -31,12 +31,14 @@ const tickInternal = ({
   // } = state;
 
   let updatedState = state;
+  const { demandFactoring: prevDemandFactoring, fees: prevFees } = state;
 
   // Update the current demand factor if necessary
-  updatedState.demandFactoring = updateDemandFactor(
-    currentBlockHeight,
-    updatedState.demandFactoring,
+  Object.assign(
+    updatedState,
+    updateDemandFactor(currentBlockHeight, prevDemandFactoring, prevFees),
   );
+
   updatedState = tickAuctions({
     currentBlockHeight,
     currentBlockTimestamp,

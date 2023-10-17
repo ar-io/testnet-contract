@@ -9,7 +9,7 @@ import {
   tallyNamePurchase,
   updateDemandFactor,
 } from '../src/pricing';
-import { BlockHeight, DemandFactoringData } from '../src/types';
+import { BlockHeight, DemandFactoringData, Fees } from '../src/types';
 
 describe('Pricing functions:', () => {
   describe('periodAtHeight function', () => {
@@ -215,12 +215,16 @@ describe('Pricing functions:', () => {
       demandFactor: 1,
       consecutivePeriodsWithMinDemandFactor: 0,
     };
+    const baselineFees: Fees = {
+      '1': 1000,
+      '2': 500,
+    };
 
     it.each([
       [
         // Don't update the period or demand factoring data at block 0 of period 0 (special case)
         { currentBlock: 0, inputDfData: {} },
-        {},
+        { expectedDFOverrides: {} },
       ],
       [
         // Don't update the period or demand factoring data at first block of current period, but continue tracking ongoing purchases
@@ -228,7 +232,9 @@ describe('Pricing functions:', () => {
           currentBlock: 0,
           inputDfData: { purchasesThisPeriod: 1 },
         },
-        { purchasesThisPeriod: 1 },
+        {
+          expectedDFOverrides: { purchasesThisPeriod: 1 },
+        },
       ],
       [
         // Don't update the period or demand factoring data at final block of current period, but continue tracking ongoing purchases
@@ -236,7 +242,9 @@ describe('Pricing functions:', () => {
           currentBlock: 719,
           inputDfData: { purchasesThisPeriod: 1 },
         },
-        { purchasesThisPeriod: 1 },
+        {
+          expectedDFOverrides: { purchasesThisPeriod: 1 },
+        },
       ],
       [
         // Update the period and demand factoring data at first block of NEXT period
@@ -245,9 +253,11 @@ describe('Pricing functions:', () => {
           inputDfData: { purchasesThisPeriod: 1 },
         },
         {
-          demandFactor: 1.05,
-          currentPeriod: 1,
-          trailingPeriodPurchases: [1, 0, 0, 0, 0, 0, 0],
+          expectedDFOverrides: {
+            demandFactor: 1.05,
+            currentPeriod: 1,
+            trailingPeriodPurchases: [1, 0, 0, 0, 0, 0, 0],
+          },
         },
       ],
       [
@@ -260,9 +270,11 @@ describe('Pricing functions:', () => {
           },
         },
         {
-          currentPeriod: 1,
-          trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
-          purchasesThisPeriod: 1,
+          expectedDFOverrides: {
+            currentPeriod: 1,
+            trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
+            purchasesThisPeriod: 1,
+          },
         },
       ],
       [
@@ -275,9 +287,11 @@ describe('Pricing functions:', () => {
           },
         },
         {
-          currentPeriod: 1,
-          trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
-          purchasesThisPeriod: 2,
+          expectedDFOverrides: {
+            currentPeriod: 1,
+            trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
+            purchasesThisPeriod: 2,
+          },
         },
       ],
       [
@@ -291,9 +305,11 @@ describe('Pricing functions:', () => {
           },
         },
         {
-          currentPeriod: 2,
-          trailingPeriodPurchases: [1, 5, 3, 4, 5, 6, 7],
-          demandFactor: 1.05,
+          expectedDFOverrides: {
+            currentPeriod: 2,
+            trailingPeriodPurchases: [1, 5, 3, 4, 5, 6, 7],
+            demandFactor: 1.05,
+          },
         },
       ],
       [
@@ -305,8 +321,10 @@ describe('Pricing functions:', () => {
           },
         },
         {
-          currentPeriod: 2,
-          demandFactor: 0.95,
+          expectedDFOverrides: {
+            currentPeriod: 2,
+            demandFactor: 0.95,
+          },
         },
       ],
       [
@@ -318,9 +336,11 @@ describe('Pricing functions:', () => {
           },
         },
         {
-          currentPeriod: 1,
-          demandFactor: 0.5,
-          consecutivePeriodsWithMinDemandFactor: 1,
+          expectedDFOverrides: {
+            currentPeriod: 1,
+            demandFactor: 0.5,
+            consecutivePeriodsWithMinDemandFactor: 1,
+          },
         },
       ],
       [
@@ -334,28 +354,54 @@ describe('Pricing functions:', () => {
           },
         },
         {
-          currentPeriod: 3,
-          demandFactor: 1,
+          expectedDFOverrides: {
+            currentPeriod: 3,
+            demandFactor: 1,
+          },
+          expectedFeesOverrides: {
+            '1': 500,
+            '2': 250,
+          },
         },
       ],
     ])(
       'given [currentBlock, inputDfData] of %j, should return demand factoring data %d',
-      (testData, expectedDfDataOverrides) => {
+      (
+        testData: {
+          currentBlock: number;
+          inputDfData: Partial<DemandFactoringData>;
+        },
+        {
+          expectedDFOverrides,
+          expectedFeesOverrides,
+        }: {
+          expectedDFOverrides: Partial<DemandFactoringData>;
+          expectedFeesOverrides?: Fees;
+        },
+      ) => {
         const inputDfData: DemandFactoringData = {
           ...baselineDFData,
           ...testData.inputDfData,
         };
         const expectedDfData: DemandFactoringData = {
           ...baselineDFData,
-          ...expectedDfDataOverrides,
+          ...expectedDFOverrides,
+        };
+        const expectedFees: Fees = {
+          ...baselineFees,
+          ...(expectedFeesOverrides || {}),
         };
         const clonedInputDfData = cloneDemandFactoringData(inputDfData);
         expect(
           updateDemandFactor(
             new BlockHeight(testData.currentBlock),
             inputDfData,
+            baselineFees,
           ),
-        ).toEqual(expectedDfData);
+        ).toEqual({
+          demandFactoring: expectedDfData,
+          fees: expectedFees,
+        });
 
         // Ensure input data remains unchanged (weak guarantee due to dependence on cloneDemandFactoringData)
         expect(inputDfData).toEqual(clonedInputDfData);
