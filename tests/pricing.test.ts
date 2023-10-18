@@ -364,12 +364,38 @@ describe('Pricing functions:', () => {
           },
         },
       ],
+      [
+        // Prices bottom out at 1 mIO during a demand factor reset
+        {
+          currentBlock: 2160,
+          inputDfData: {
+            demandFactor: 0.5,
+            currentPeriod: 2,
+            consecutivePeriodsWithMinDemandFactor: 2,
+          },
+          inputFees: {
+            '1': 1 / 1_000_000,
+            '2': 1 / 1_000_000,
+          },
+        },
+        {
+          expectedDFOverrides: {
+            currentPeriod: 3,
+            demandFactor: 1,
+          },
+          expectedFeesOverrides: {
+            '1': 1 / 1_000_000,
+            '2': 1 / 1_000_000,
+          },
+        },
+      ],
     ])(
       'given [currentBlock, inputDfData] of %j, should return demand factoring data %d',
       (
         testData: {
           currentBlock: number;
           inputDfData: Partial<DemandFactoringData>;
+          inputFees?: Fees;
         },
         {
           expectedDFOverrides,
@@ -382,6 +408,10 @@ describe('Pricing functions:', () => {
         const inputDfData: DemandFactoringData = {
           ...baselineDFData,
           ...testData.inputDfData,
+        };
+        const inputFees: Fees = {
+          ...baselineFees,
+          ...(testData.inputFees || {}),
         };
         const expectedDfData: DemandFactoringData = {
           ...baselineDFData,
@@ -396,7 +426,7 @@ describe('Pricing functions:', () => {
           updateDemandFactor(
             new BlockHeight(testData.currentBlock),
             inputDfData,
-            baselineFees,
+            inputFees,
           ),
         ).toEqual({
           demandFactoring: expectedDfData,

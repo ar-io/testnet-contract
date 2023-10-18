@@ -117,3 +117,6 @@ export const DEMAND_FACTORING_SETTINGS = {
   demandFactorDownAdjustment: 0.05,
   stepDownThreshold: 3,
 };
+
+export const MIO_PER_IO = 1_000_000;
+export const ONE_MIO = 1 / MIO_PER_IO;

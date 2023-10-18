@@ -1,4 +1,4 @@
-import { DEMAND_FACTORING_SETTINGS } from './constants';
+import { DEMAND_FACTORING_SETTINGS, ONE_MIO } from './constants';
 import {
   BlockHeight,
   DeepReadonly,
@@ -59,11 +59,12 @@ export function updateDemandFactor(
       newDemandFactoringData.demandFactor =
         DEMAND_FACTORING_SETTINGS.demandFactorBaseValue;
       // Rebase fees on their values at the minimum demand factor
-      // TODO: FLOOR PRICING
       updatedFees = Object.keys(fees).reduce(
         (acc: Fees, nameLength: string) => {
-          acc[nameLength] =
-            fees[nameLength] * DEMAND_FACTORING_SETTINGS.demandFactorMin;
+          acc[nameLength] = Math.max(
+            fees[nameLength] * DEMAND_FACTORING_SETTINGS.demandFactorMin,
+            ONE_MIO,
+          );
           return acc;
         },
         {},
