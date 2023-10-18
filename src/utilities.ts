@@ -506,7 +506,7 @@ export function getEndTimestampForAuction({
   }
 }
 
-export const calculateExistingAuctionBidForCaller = ({
+export function calculateExistingAuctionBidForCaller({
   caller,
   auction,
   submittedBid,
@@ -516,7 +516,7 @@ export const calculateExistingAuctionBidForCaller = ({
   auction: Auction;
   submittedBid: number;
   requiredMinimumBid: IOToken;
-}): IOToken => {
+}): IOToken {
   let finalBid = submittedBid
     ? Math.min(submittedBid, requiredMinimumBid.valueOf())
     : requiredMinimumBid.valueOf();
@@ -525,43 +525,43 @@ export const calculateExistingAuctionBidForCaller = ({
     finalBid -= auction.floorPrice;
   }
   return new IOToken(finalBid);
-};
+}
 
-export const isGatewayJoined = ({
+export function isGatewayJoined({
   gateway,
   currentBlockHeight,
 }: {
   gateway: DeepReadonly<Gateway> | undefined;
   currentBlockHeight: BlockHeight;
-}): boolean => {
+}): boolean {
   if (!gateway) return false;
   return (
     gateway.status === 'joined' && gateway.end > currentBlockHeight.valueOf()
   );
-};
+}
 
-export const isGatewayHidden = ({
+export function isGatewayHidden({
   gateway,
 }: {
   gateway: DeepReadonly<Gateway> | undefined;
-}): boolean => {
+}): boolean {
   if (!gateway) return false;
   return gateway.status === 'hidden';
-};
+}
 
-export const isGatewayEligibleToBeRemoved = ({
+export function isGatewayEligibleToBeRemoved({
   gateway,
   currentBlockHeight,
 }: {
   gateway: DeepReadonly<Gateway> | undefined;
   currentBlockHeight: BlockHeight;
-}): boolean => {
+}): boolean {
   return (
     gateway.status === 'leaving' && gateway.end <= currentBlockHeight.valueOf()
   );
-};
+}
 
-export const isGatewayEligibleToLeave = ({
+export function isGatewayEligibleToLeave({
   gateway,
   currentBlockHeight,
   registrySettings,
@@ -569,7 +569,7 @@ export const isGatewayEligibleToLeave = ({
   gateway: DeepReadonly<Gateway> | undefined;
   currentBlockHeight: BlockHeight;
   registrySettings: GatewayRegistrySettings;
-}): boolean => {
+}): boolean {
   if (!gateway) return false;
   const joinedForMinimum =
     currentBlockHeight.valueOf() >=
@@ -578,4 +578,4 @@ export const isGatewayEligibleToLeave = ({
     isGatewayJoined({ gateway, currentBlockHeight }) ||
     isGatewayHidden({ gateway });
   return joinedForMinimum && isActiveOrHidden;
-};
+}

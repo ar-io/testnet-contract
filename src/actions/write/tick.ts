@@ -25,7 +25,7 @@ import {
 declare const SmartWeave: any; // TODO: tighter type bindings
 declare const ContractError: any; // TODO: tighter type bindings
 
-export function tickInternal({
+function tickInternal({
   currentBlockHeight,
   currentBlockTimestamp,
   state,
