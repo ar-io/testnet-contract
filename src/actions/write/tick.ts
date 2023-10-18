@@ -13,7 +13,6 @@ import {
   DeepReadonly,
   DemandFactoringData,
   Gateway,
-  GatewayRegistrySettings,
   IOState,
   ReservedName,
 } from '../../types';
@@ -69,7 +68,6 @@ export function tickInternal({
       currentBlockHeight,
       gateways: updatedState.gateways,
       balances: updatedState.balances,
-      registrySettings: updatedState.settings.registry,
     }),
   );
 
@@ -139,7 +137,6 @@ export function tickGatewayRegistry({
   currentBlockHeight: BlockHeight;
   gateways: DeepReadonly<Record<string, Gateway>>;
   balances: DeepReadonly<Record<string, number>>;
-  registrySettings: DeepReadonly<GatewayRegistrySettings>;
 }): Pick<IOState, 'gateways' | 'balances'> {
   const updatedBalances = { ...balances };
   const updatedRegistry = Object.keys(gateways).reduce(

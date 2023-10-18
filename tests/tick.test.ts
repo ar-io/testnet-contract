@@ -216,7 +216,7 @@ describe('tickRecords', () => {
       },
     ],
   ])('%s', (_, inputData, expectedData) => {
-    const records = tickRecords({
+    const { records } = tickRecords({
       currentBlockTimestamp: new BlockTimestamp(blockEndTimestamp),
       records: inputData.records as DeepReadonly<Record<string, ArNSName>>,
     });
