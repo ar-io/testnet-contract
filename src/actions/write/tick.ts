@@ -99,7 +99,7 @@ export function tickRecords({
 }
 
 // Removes expired reserved names from the reserved names list
-function tickReservedNames({
+export function tickReservedNames({
   currentBlockTimestamp,
   reservedNames,
 }: {

@@ -2,6 +2,7 @@ import {
   tickAuctions,
   tickGatewayRegistry,
   tickRecords,
+  tickReservedNames,
 } from '../src/actions/write/tick';
 import { SECONDS_IN_A_YEAR, SECONDS_IN_GRACE_PERIOD } from '../src/constants';
 import {
@@ -13,6 +14,7 @@ import {
   DemandFactoringData,
   Gateway,
   GatewaySettings,
+  ReservedName,
 } from '../src/types';
 
 const defaultAuctionSettings = {
@@ -348,5 +350,96 @@ describe('tickGatewayRegistry', () => {
     });
     expect(balances).toEqual(expectedData.balances);
     expect(gateways).toEqual(expectedData.gateways);
+  });
+});
+
+describe('tickReservedNames', () => {
+  const currentBlockTimestamp = Date.now();
+
+  it.each([
+    [
+      'should tick a reserved name that has not target but is expired',
+      {
+        reserved: {
+          'expired-reserved-name': {
+            endTimestamp: currentBlockTimestamp - 1,
+          },
+        },
+      },
+      {
+        reserved: {},
+      },
+    ],
+    [
+      'should tick a reserved name that has a target but is expired',
+      {
+        reserved: {
+          'expired-with-target': {
+            endTimestamp: currentBlockTimestamp - 1,
+            target: 'test-target',
+          },
+        },
+      },
+      {
+        reserved: {},
+      },
+    ],
+    [
+      'should not tick a reserved name that has a target and is not expired',
+      {
+        reserved: {
+          'not-expired-with-target': {
+            endTimestamp: currentBlockTimestamp + 1,
+            target: 'test-target',
+          },
+        },
+      },
+      {
+        reserved: {
+          'not-expired-with-target': {
+            endTimestamp: currentBlockTimestamp + 1,
+            target: 'test-target',
+          },
+        },
+      },
+    ],
+    [
+      'should not tick a reserved name that has no target and is not expired',
+      {
+        reserved: {
+          'not-expired-no-target': {
+            endTimestamp: currentBlockTimestamp + 1,
+          },
+        },
+      },
+      {
+        reserved: {
+          'not-expired-no-target': {
+            endTimestamp: currentBlockTimestamp + 1,
+          },
+        },
+      },
+    ],
+    [
+      'should not tick a reserved name that has no target and no endTimestamp',
+      {
+        reserved: {
+          'forever-reserved': {},
+        },
+      },
+      {
+        reserved: {
+          'forever-reserved': {},
+        },
+      },
+    ],
+  ])('%s', (_, inputData, expectedData) => {
+    const { reserved } = tickReservedNames({
+      currentBlockTimestamp: new BlockTimestamp(currentBlockTimestamp),
+      reservedNames: inputData.reserved as DeepReadonly<
+        Record<string, ReservedName>
+      >,
+    });
+    expect(reserved).toEqual(expectedData.reserved);
   });
 });
