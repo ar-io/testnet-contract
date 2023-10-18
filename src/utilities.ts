@@ -17,8 +17,8 @@ import {
 } from './constants';
 import { calculateMinimumAuctionBid } from './pricing';
 import {
-  ArNSName,
-  Auction,
+  ArNSNameData,
+  AuctionData,
   AuctionSettings,
   BlockHeight,
   BlockTimestamp,
@@ -28,8 +28,10 @@ import {
   Gateway,
   GatewayRegistrySettings,
   IOToken,
+  Records,
   RegistrationType,
-  ReservedName,
+  ReservedNameData,
+  ReservedNames,
 } from './types';
 
 declare class ContractError extends Error {}
@@ -336,7 +338,7 @@ export function isExistingActiveRecord({
   record,
   currentBlockTimestamp,
 }: {
-  record: ArNSName;
+  record: ArNSNameData;
   currentBlockTimestamp: BlockTimestamp;
 }): boolean {
   return (
@@ -366,7 +368,7 @@ export function isActiveReservedName({
   currentBlockTimestamp,
 }: {
   caller: string | undefined;
-  reservedName: ReservedName | undefined;
+  reservedName: ReservedNameData | undefined;
   currentBlockTimestamp: BlockTimestamp;
 }): boolean {
   if (!reservedName) return false;
@@ -390,9 +392,9 @@ export function isNameAvailableForAuction({
   currentBlockTimestamp,
 }: {
   name: string;
-  record: ArNSName | undefined;
+  record: ArNSNameData | undefined;
   caller: string;
-  reservedName: ReservedName | undefined;
+  reservedName: ReservedNameData | undefined;
   currentBlockTimestamp: BlockTimestamp;
 }): boolean {
   return (
@@ -428,7 +430,7 @@ export function createAuctionObject({
   initiator: string | undefined;
   years?: number;
   providedFloorPrice?: number;
-}): Auction {
+}): AuctionData {
   const calculatedFloor =
     initialRegistrationFee * auctionSettings.floorPriceMultiplier;
   // if someone submits a high floor price, we'll take it
@@ -462,8 +464,8 @@ export function assertAvailableRecord({
 }: {
   caller: string | undefined; // TODO: type for this
   name: DeepReadonly<string>;
-  records: DeepReadonly<Record<string, ArNSName>>;
-  reserved: DeepReadonly<Record<string, ReservedName>>;
+  records: DeepReadonly<Records>;
+  reserved: DeepReadonly<ReservedNames>;
   currentBlockTimestamp: BlockTimestamp;
 }): void {
   if (
@@ -493,7 +495,7 @@ export function getEndTimestampForAuction({
   auction,
   currentBlockTimestamp,
 }: {
-  auction: Auction;
+  auction: AuctionData;
   currentBlockTimestamp: BlockTimestamp;
 }): BlockTimestamp {
   switch (auction.type) {
@@ -513,7 +515,7 @@ export function calculateExistingAuctionBidForCaller({
   requiredMinimumBid,
 }: {
   caller: string;
-  auction: Auction;
+  auction: AuctionData;
   submittedBid: number;
   requiredMinimumBid: IOToken;
 }): IOToken {

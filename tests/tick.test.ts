@@ -6,15 +6,17 @@ import {
 } from '../src/actions/write/tick';
 import { SECONDS_IN_A_YEAR, SECONDS_IN_GRACE_PERIOD } from '../src/constants';
 import {
-  ArNSName,
-  Auction,
+  AuctionData,
+  Auctions,
+  Balances,
   BlockHeight,
   BlockTimestamp,
   DeepReadonly,
   DemandFactoringData,
-  Gateway,
   GatewaySettings,
-  ReservedName,
+  Gateways,
+  Records,
+  ReservedNames,
 } from '../src/types';
 
 const defaultAuctionSettings = {
@@ -25,7 +27,7 @@ const defaultAuctionSettings = {
   startPriceMultiplier: 10,
 };
 
-const testAuction: Auction = {
+const testAuction: AuctionData = {
   startPrice: 100,
   floorPrice: 10,
   startHeight: 0,
@@ -134,7 +136,7 @@ describe('tickAuctions', () => {
       currentBlockHeight: new BlockHeight(5),
       currentBlockTimestamp: new BlockTimestamp(blockTimestamp),
       records: {},
-      auctions: inputData.auctions as DeepReadonly<Record<string, Auction>>,
+      auctions: inputData.auctions as DeepReadonly<Auctions>,
       demandFactoring: inputData.demandFactoring,
     });
     expect(auctions).toEqual(expectedData.auctions);
@@ -220,7 +222,7 @@ describe('tickRecords', () => {
   ])('%s', (_, inputData, expectedData) => {
     const { records } = tickRecords({
       currentBlockTimestamp: new BlockTimestamp(blockEndTimestamp),
-      records: inputData.records as DeepReadonly<Record<string, ArNSName>>,
+      records: inputData.records as DeepReadonly<Records>,
     });
     expect(records).toEqual(expectedData.records);
   });
@@ -345,8 +347,8 @@ describe('tickGatewayRegistry', () => {
   ])('%s', (_, inputData, expectedData) => {
     const { balances, gateways } = tickGatewayRegistry({
       currentBlockHeight: new BlockHeight(5),
-      balances: inputData.balances as DeepReadonly<Record<string, number>>,
-      gateways: inputData.gateways as DeepReadonly<Record<string, Gateway>>,
+      balances: inputData.balances as DeepReadonly<Balances>,
+      gateways: inputData.gateways as DeepReadonly<Gateways>,
     });
     expect(balances).toEqual(expectedData.balances);
     expect(gateways).toEqual(expectedData.gateways);
@@ -436,9 +438,7 @@ describe('tickReservedNames', () => {
   ])('%s', (_, inputData, expectedData) => {
     const { reserved } = tickReservedNames({
       currentBlockTimestamp: new BlockTimestamp(currentBlockTimestamp),
-      reservedNames: inputData.reserved as DeepReadonly<
-        Record<string, ReservedName>
-      >,
+      reservedNames: inputData.reserved as DeepReadonly<ReservedNames>,
     });
     expect(reserved).toEqual(expectedData.reserved);
   });

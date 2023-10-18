@@ -5,16 +5,17 @@ import {
   updateDemandFactor,
 } from '../../pricing';
 import {
-  ArNSName,
-  Auction,
+  Auctions,
+  Balances,
   BlockHeight,
   BlockTimestamp,
   ContractResult,
   DeepReadonly,
   DemandFactoringData,
-  Gateway,
+  Gateways,
   IOState,
-  ReservedName,
+  Records,
+  ReservedNames,
 } from '../../types';
 import {
   isActiveReservedName,
@@ -49,6 +50,7 @@ function tickInternal({
     updatedState,
     updateDemandFactor(currentBlockHeight, prevDemandFactoring, prevFees),
   );
+
   // Update auctions, records, and demand factor if necessary
   Object.assign(
     updatedState,
@@ -80,10 +82,10 @@ export function tickRecords({
   records,
 }: {
   currentBlockTimestamp: BlockTimestamp;
-  records: DeepReadonly<Record<string, ArNSName>>;
+  records: DeepReadonly<Records>;
 }): Pick<IOState, 'records'> {
   const updatedRecords = Object.keys(records).reduce(
-    (acc: Record<string, ArNSName>, key: string) => {
+    (acc: Records, key: string) => {
       const record = records[key];
       if (isExistingActiveRecord({ record, currentBlockTimestamp })) {
         acc[key] = record;
@@ -104,10 +106,10 @@ export function tickReservedNames({
   reservedNames,
 }: {
   currentBlockTimestamp: BlockTimestamp;
-  reservedNames: Record<string, ReservedName>;
+  reservedNames: DeepReadonly<ReservedNames>;
 }): Pick<IOState, 'reserved'> {
   const activeReservedNames = Object.keys(reservedNames).reduce(
-    (acc: Record<string, ReservedName>, key: string) => {
+    (acc: ReservedNames, key: string) => {
       const reservedName = reservedNames[key];
       // still active reservation
       if (
@@ -135,13 +137,14 @@ export function tickGatewayRegistry({
   balances,
 }: {
   currentBlockHeight: BlockHeight;
-  gateways: DeepReadonly<Record<string, Gateway>>;
-  balances: DeepReadonly<Record<string, number>>;
+  gateways: DeepReadonly<Gateways>;
+  balances: DeepReadonly<Balances>;
 }): Pick<IOState, 'gateways' | 'balances'> {
-  const updatedBalances = { ...balances };
+  const updatedBalances: Balances = {};
   const updatedRegistry = Object.keys(gateways).reduce(
-    (acc: Record<string, Gateway>, key: string) => {
+    (acc: Gateways, key: string) => {
       const gateway = gateways[key];
+
       // if it's not eligible to leave, keep it in the registry
       if (
         isGatewayEligibleToBeRemoved({
@@ -149,6 +152,9 @@ export function tickGatewayRegistry({
           currentBlockHeight,
         })
       ) {
+        if (!updatedBalances[key]) {
+          updatedBalances[key] = balances[key] ?? 0;
+        }
         // gateway is leaving, make sure we return all the vaults to it
         for (const vault of gateway.vaults) {
           updatedBalances[key] += vault.balance;
@@ -161,6 +167,9 @@ export function tickGatewayRegistry({
       const updatedVaults = [];
       for (const vault of gateway.vaults) {
         if (vault.end <= currentBlockHeight.valueOf()) {
+          if (!updatedBalances[key]) {
+            updatedBalances[key] = balances[key] ?? 0;
+          }
           // return the vault balance to the owner and do not add back vault
           updatedBalances[key] += vault.balance;
         } else {
@@ -177,9 +186,14 @@ export function tickGatewayRegistry({
     {},
   );
 
+  // avoids copying balances if not necessary
+  const newBalances: Balances = Object.keys(updatedBalances).length
+    ? { ...balances, ...updatedBalances }
+    : balances;
+
   return {
     gateways: updatedRegistry,
-    balances: updatedBalances,
+    balances: newBalances,
   };
 }
 
@@ -192,57 +206,54 @@ export function tickAuctions({
 }: {
   currentBlockHeight: BlockHeight;
   currentBlockTimestamp: BlockTimestamp;
-  records: DeepReadonly<Record<string, ArNSName>>;
-  auctions: DeepReadonly<Record<string, Auction>>;
+  records: DeepReadonly<Records>;
+  auctions: DeepReadonly<Auctions>;
   demandFactoring: DeepReadonly<DemandFactoringData>;
 }): Pick<IOState, 'auctions' | 'records' | 'demandFactoring'> {
   // handle expired auctions
   const updatedRecords = { ...records };
   // TODO: don't clone it until you need to
   let updatedDemandFactoring = cloneDemandFactoringData(demandFactoring);
-  const updatedAuctions = Object.keys(auctions).reduce(
-    (acc: Record<string, Auction>, key) => {
-      const auction = auctions[key];
+  const updatedAuctions = Object.keys(auctions).reduce((acc: Auctions, key) => {
+    const auction = auctions[key];
 
-      // endHeight represents the height at which the auction is CLOSED and at which bids are no longer accepted
-      const endHeight = auction.endHeight;
+    // endHeight represents the height at which the auction is CLOSED and at which bids are no longer accepted
+    const endHeight = auction.endHeight;
 
-      // still an active auction
-      if (endHeight > currentBlockHeight.valueOf()) {
-        acc[key] = auction;
-        return acc;
-      }
-
-      // create the new record object
-      const maybeEndTimestamp = (() => {
-        switch (auction.type) {
-          case 'permabuy':
-            return {};
-          case 'lease':
-            // TODO: Block timestamps is broken here - user could be getting bonus time here when the next write interaction occurs
-            // update the records field but do not decrement balance from the initiator as that happens on auction initiation
-            return {
-              endTimestamp:
-                +auction.years * SECONDS_IN_A_YEAR +
-                currentBlockTimestamp.valueOf(),
-            };
-        }
-      })();
-      updatedRecords[key] = {
-        type: auction.type,
-        contractTxId: auction.contractTxId,
-        // TODO: get the end timestamp of the auction based on what block it ended at, not the timestamp of the current interaction timestamp
-        startTimestamp: currentBlockTimestamp.valueOf(),
-        undernames: DEFAULT_UNDERNAME_COUNT,
-        ...maybeEndTimestamp,
-      };
-
-      updatedDemandFactoring = tallyNamePurchase(updatedDemandFactoring);
-      // now return the auction object
+    // still an active auction
+    if (endHeight > currentBlockHeight.valueOf()) {
+      acc[key] = auction;
       return acc;
-    },
-    {},
-  );
+    }
+
+    // create the new record object
+    const maybeEndTimestamp = (() => {
+      switch (auction.type) {
+        case 'permabuy':
+          return {};
+        case 'lease':
+          // TODO: Block timestamps is broken here - user could be getting bonus time here when the next write interaction occurs
+          // update the records field but do not decrement balance from the initiator as that happens on auction initiation
+          return {
+            endTimestamp:
+              +auction.years * SECONDS_IN_A_YEAR +
+              currentBlockTimestamp.valueOf(),
+          };
+      }
+    })();
+    updatedRecords[key] = {
+      type: auction.type,
+      contractTxId: auction.contractTxId,
+      // TODO: get the end timestamp of the auction based on what block it ended at, not the timestamp of the current interaction timestamp
+      startTimestamp: currentBlockTimestamp.valueOf(),
+      undernames: DEFAULT_UNDERNAME_COUNT,
+      ...maybeEndTimestamp,
+    };
+
+    updatedDemandFactoring = tallyNamePurchase(updatedDemandFactoring);
+    // now return the auction object
+    return acc;
+  }, {});
   // update auctions (records was already modified)
   return {
     auctions: updatedAuctions,

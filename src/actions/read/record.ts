@@ -1,4 +1,4 @@
-import { ArNSName, ContractResult, IOState, PstAction } from '../../types';
+import { ArNSNameData, ContractResult, IOState, PstAction } from '../../types';
 
 declare const ContractError;
 
@@ -17,7 +17,7 @@ export const getRecord = async (
     throw new ContractError('This name does not exist');
   }
 
-  const arnsName: ArNSName = records[name];
+  const arnsName: ArNSNameData = records[name];
   return {
     result: {
       name,

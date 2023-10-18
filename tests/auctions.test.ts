@@ -9,7 +9,7 @@ import {
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../src/constants';
 import { calculateMinimumAuctionBid } from '../src/pricing';
-import { Auction, BlockHeight, IOState } from '../src/types';
+import { AuctionData, BlockHeight, IOState } from '../src/types';
 import { ANT_CONTRACT_IDS } from './utils/constants';
 import {
   getCurrentBlock,
@@ -169,7 +169,7 @@ describe('Auctions', () => {
         describe('for a lease', () => {
           describe('for a non-existent auction', () => {
             let auctionTxId: string;
-            let auctionObj: Auction;
+            let auctionObj: AuctionData;
             let prevState: IOState;
             const auctionBid = {
               name: 'apple',
@@ -443,7 +443,7 @@ describe('Auctions', () => {
 
       describe('for a permabuy', () => {
         let auctionTxId: string;
-        let auctionObj: Auction;
+        let auctionObj: AuctionData;
         let prevState: IOState;
         const auctionBid = {
           name: 'microsoft',
@@ -544,7 +544,7 @@ describe('Auctions', () => {
 
       describe('for an eager initiator', () => {
         let auctionTxId: string;
-        let auctionObj: Auction;
+        let auctionObj: AuctionData;
         let prevState: IOState;
         const auctionBid = {
           name: 'tesla',
