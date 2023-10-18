@@ -211,17 +211,13 @@ export function tickAuctions({
   demandFactoring: DeepReadonly<DemandFactoringData>;
 }): Pick<IOState, 'auctions' | 'records' | 'demandFactoring'> {
   // handle expired auctions
-  const updatedRecords = { ...records };
-  // TODO: don't clone it until you need to
+  const updatedRecords: Records = {};
   let updatedDemandFactoring = cloneDemandFactoringData(demandFactoring);
   const updatedAuctions = Object.keys(auctions).reduce((acc: Auctions, key) => {
     const auction = auctions[key];
 
     // endHeight represents the height at which the auction is CLOSED and at which bids are no longer accepted
-    const endHeight = auction.endHeight;
-
-    // still an active auction
-    if (endHeight > currentBlockHeight.valueOf()) {
+    if (auction.endHeight > currentBlockHeight.valueOf()) {
       acc[key] = auction;
       return acc;
     }
@@ -254,10 +250,18 @@ export function tickAuctions({
     // now return the auction object
     return acc;
   }, {});
-  // update auctions (records was already modified)
+
+  // avoid copying records if not necessary
+  const newRecords = Object.keys(updatedRecords).length
+    ? {
+        ...records,
+        ...updatedRecords,
+      }
+    : records;
+  // update auctions
   return {
     auctions: updatedAuctions,
-    records: updatedRecords,
+    records: newRecords,
     demandFactoring: updatedDemandFactoring,
   };
 }
