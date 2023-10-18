@@ -123,32 +123,41 @@ describe('Network', () => {
         },
       );
 
-      it.each(['', undefined, 1])(
-        'should fail for invalid label',
-        async (badLabel) => {
-          const { cachedValue: prevCachedValue } = await contract.readState();
-          const joinGatewayPayload = {
-            qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
-            label: badLabel, // friendly label
-            fqdn: 'jest.io',
-            port: 3000,
-            protocol: 'http',
-            properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44',
-            note: 'The best test gateway',
-          };
-          const writeInteraction = await contract.writeInteraction({
-            function: 'joinNetwork',
-            ...joinGatewayPayload,
-          });
-          const { cachedValue: newCachedValue } = await contract.readState();
-          expect(Object.keys(newCachedValue.errorMessages)).toContain(
-            writeInteraction!.originalTxId,
-          );
-          expect(newCachedValue.state).toEqual(prevCachedValue.state);
-        },
-      );
+      it.each([
+        '',
+        undefined,
+        1,
+        'SUUUUUUUUUUUUUUUUUUUUUUUUUUPER LONG LABEL LONGER THAN 64 CHARS!!!!!!!!!',
+      ])('should fail for invalid label', async (badLabel) => {
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const joinGatewayPayload = {
+          qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
+          label: badLabel, // friendly label
+          fqdn: 'jest.io',
+          port: 3000,
+          protocol: 'http',
+          properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44',
+          note: 'The best test gateway',
+        };
+        const writeInteraction = await contract.writeInteraction({
+          function: 'joinNetwork',
+          ...joinGatewayPayload,
+        });
+        const { cachedValue: newCachedValue } = await contract.readState();
+        expect(Object.keys(newCachedValue.errorMessages)).toContain(
+          writeInteraction!.originalTxId,
+        );
+        expect(newCachedValue.state).toEqual(prevCachedValue.state);
+      });
 
       it.each([
+        '',
+        '*&*##$%#',
+        '-leading',
+        'trailing-',
+        'bananas.one two three',
+        'this-is-a-looong-name-a-verrrryyyyy-loooooong-name-that-is-too-long',
+        '192.168.1.1',
         'https://full-domain.net',
         undefined,
         'abcde',
@@ -271,6 +280,7 @@ describe('Network', () => {
         const prevBalance =
           prevCachedValue.state.balances[newGatewayOperatorAddress];
         const joinGatewayPayload = {
+          observerWallet: '',
           qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
           label: 'Test Gateway', // friendly label
           fqdn: 'jest.io',
@@ -532,9 +542,9 @@ describe('Network', () => {
       );
 
       it.each([
-        'SUUUUUUUUUUUUUUUUUUUUUUUUUUPER LONG LABEL LONGER THAN 64 CHARS!!!!!!!!!',
-        0,
         '',
+        1,
+        'SUUUUUUUUUUUUUUUUUUUUUUUUUUPER LONG LABEL LONGER THAN 64 CHARS!!!!!!!!!',
       ])(
         'should not modify gateway settings with invalid label',
         async (badLabel) => {
@@ -587,7 +597,19 @@ describe('Network', () => {
         'bananas.one two three',
         'this-is-a-looong-name-a-verrrryyyyy-loooooong-name-that-is-too-long',
         '192.168.1.1',
-        12345,
+        'https://full-domain.net',
+        undefined,
+        'abcde',
+        'test domain.com',
+        'jons.cool.site.',
+        'a-very-really-long-domain-name-that-is-longer-than-63-characters.com',
+        'website.a-very-really-long-top-level-domain-name-that-is-longer-than-63-characters',
+        '-startingdash.com',
+        'trailingdash-.com',
+        '---.com',
+        ' ',
+        100,
+        '%percent.com',
       ])(
         'should not modify gateway settings with invalid fqdn',
         async (badFQDN) => {
