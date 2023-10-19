@@ -1,6 +1,6 @@
 import { ContractResult, IOState, PstAction } from '../../types';
 
-declare const ContractError;
+declare const ContractError: any;
 
 export const balance = async (
   state: IOState,

@@ -13,7 +13,7 @@ const increaseUndernameCountSchema = {
     qty: {
       type: 'number',
       minimum: 1,
-      maximum: 9990, // should be updated with contants "DEFAULT_UNDERNAME_COUNT" and "MAX_ALLOWED_UNDERNAMES"
+      maximum: 9990,
     },
   },
   required: ['name', 'qty'],
