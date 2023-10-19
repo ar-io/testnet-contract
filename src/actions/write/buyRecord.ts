@@ -93,11 +93,6 @@ export const buyRecord = (
     throw new ContractError(`Caller balance is not defined!`);
   }
 
-  // Additional check if it includes a valid number of years (TODO: this may be set in contract settings)
-  if (years > MAX_YEARS) {
-    throw new ContractError(INVALID_YEARS_MESSAGE);
-  }
-
   if (
     isActiveReservedName({
       caller,
