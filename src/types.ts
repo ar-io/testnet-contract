@@ -51,6 +51,14 @@ export type Observations = {
   };
 };
 
+export type WeightedObserver = {
+  stake: number;
+  stakeWeight: number;
+  tenureWeight: number;
+  gatewayRewardRatioWeight: number;
+  observerRewardRatioWeight: number;
+};
+
 export type Fees = {
   [nameLength: string]: number;
 };

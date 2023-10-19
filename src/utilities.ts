@@ -1,5 +1,6 @@
 import {
   ANNUAL_PERCENTAGE_FEE,
+  BLOCKS_PER_DAY,
   DEFAULT_NUM_SAMPLED_BLOCKS,
   DEFAULT_SAMPLED_BLOCKS_OFFSET,
   DEFAULT_UNDERNAME_COUNT,
@@ -21,6 +22,7 @@ import {
   Gateway,
   RegistrationType,
   ReservedName,
+  WeightedObserver,
 } from './types';
 
 declare const ContractError: any;
@@ -335,8 +337,8 @@ export function getEligibleObservers(
   },
   gatewayLeaveLength: number,
   height: number,
-): string[] {
-  const eligibleObservers: string[] = [];
+): Gateway[] {
+  const eligibleObservers: Gateway[] = [];
   for (const address in gateways) {
     const gateway = gateways[address];
 
@@ -347,7 +349,7 @@ export function getEligibleObservers(
 
     // Keep the gateway if it meets the conditions
     if (isWithinStartRange && isWithinEndRange) {
-      eligibleObservers.push(address);
+      eligibleObservers.push(gateways[address]);
     }
   }
   return eligibleObservers;
@@ -357,10 +359,15 @@ export async function getPrescribedObservers(
   gateways: {
     [address: string]: Gateway;
   },
+  minNetworkJoinStakeAmount: number,
   gatewayLeaveLength: number,
   height: number,
 ): Promise<string[]> {
   const prescribedObservers: string[] = [];
+  const weightedObservers: {
+    [address: string]: number;
+  } = {};
+  let totalCompositeWeight = 0;
   const usedIndexes = new Set<number>();
   const eligibleObservers = getEligibleObservers(
     gateways,
@@ -371,7 +378,40 @@ export async function getPrescribedObservers(
   // If we want to source more observers than exist in the list, just return all eligible observers
   const eligibleObserversCount = eligibleObservers.length;
   if (NUM_OBSERVERS_PER_EPOCH >= eligibleObserversCount) {
-    return eligibleObservers;
+    for (const address in eligibleObservers) {
+      prescribedObservers.push(address);
+    }
+    return prescribedObservers;
+  }
+
+  // calculate composite weight of remaining eligible observers
+  for (const address in eligibleObservers) {
+    const stake = gateways[address].operatorStake;
+    const stakeWeight = stake / minNetworkJoinStakeAmount;
+    let tenureWeight =
+      (+SmartWeave.block.height - gateways[address].start) /
+      (180 * BLOCKS_PER_DAY);
+
+    if (tenureWeight > 2) {
+      tenureWeight = 2;
+    }
+
+    const gatewayRewardRatioWeight = 1;
+    const observerRewardRatioWeight = 1;
+    const compositeWeight =
+      stakeWeight *
+      tenureWeight *
+      gatewayRewardRatioWeight *
+      observerRewardRatioWeight;
+
+    weightedObservers[address] = compositeWeight;
+    totalCompositeWeight += compositeWeight;
+  }
+
+  // calculate the normalized composite weight for each observer
+  for (const address in weightedObservers) {
+    weightedObservers[address] =
+      weightedObservers[address] / totalCompositeWeight;
   }
 
   const entropy = await getEntropy(height);
@@ -384,7 +424,7 @@ export async function getPrescribedObservers(
     }
 
     usedIndexes.add(index);
-    prescribedObservers.push(eligibleObservers[index]);
+    prescribedObservers.push(eligibleObservers[index].status);
 
     hash = await SmartWeave.arweave.crypto.hash(hash, 'SHA-256');
   }
