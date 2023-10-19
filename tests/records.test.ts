@@ -3,17 +3,17 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts';
 import { IOState } from '../src/types';
 import {
   ANT_CONTRACT_IDS,
+  ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE,
   ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_UNDERNAME_COUNT,
   INVALID_INPUT_MESSAGE,
   INVALID_SHORT_NAME,
-  INVALID_YEARS_MESSAGE,
   MAX_YEARS,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
 } from './utils/constants';
 import {
   calculatePermabuyFee,
-  calculateTotalRegistrationFee,
+  calculateRegistrationFee,
   getLocalArNSContractId,
   getLocalWallet,
 } from './utils/helper';
@@ -91,12 +91,13 @@ describe('Records', () => {
       );
 
       const currentBlock = await arweave.blocks.getCurrent();
-      const expectedPurchasePrice = calculateTotalRegistrationFee(
-        namePurchase.name,
-        prevState.fees,
-        namePurchase.years,
-        currentBlock.timestamp,
-      );
+      const expectedPurchasePrice = calculateRegistrationFee({
+        name: namePurchase.name,
+        type: 'lease',
+        fees: prevState.fees,
+        years: namePurchase.years,
+        currentBlockTimestamp: currentBlock.timestamp,
+      });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
@@ -138,12 +139,13 @@ describe('Records', () => {
       );
 
       const currentBlock = await arweave.blocks.getCurrent();
-      const expectedPurchasePrice = calculateTotalRegistrationFee(
-        namePurchase.name!,
-        prevState.fees,
-        1,
-        currentBlock.timestamp,
-      );
+      const expectedPurchasePrice = calculateRegistrationFee({
+        name: namePurchase.name!,
+        fees: prevState.fees,
+        years: 1,
+        type: 'lease',
+        currentBlockTimestamp: currentBlock.timestamp,
+      });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
@@ -166,7 +168,7 @@ describe('Records', () => {
       );
     });
 
-    it('should be able to permabuy name', async () => {
+    it('should be able to permabuy name longer than 12 characters', async () => {
       const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
       const prevBalance = prevState.balances[nonContractOwnerAddress];
@@ -373,7 +375,7 @@ describe('Records', () => {
         );
         expect(
           cachedValue.errorMessages[writeInteraction!.originalTxId],
-        ).toEqual(INVALID_YEARS_MESSAGE);
+        ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
         expect(cachedValue.state).toEqual(prevState);
       },
     );
@@ -428,12 +430,12 @@ describe('Records', () => {
 
     it('should not be able to buy reserved name when the caller is not the target of the reserved name', async () => {
       const nonNameOwner = getLocalWallet(2);
+      contract.connect(nonNameOwner);
       const namePurchase = {
         name: 'twitter',
         contractTxId: ANT_CONTRACT_IDS[0],
         years: 1,
       };
-      contract.connect(nonNameOwner);
       const writeInteraction = await contract.writeInteraction(
         {
           function: 'buyRecord',
@@ -508,6 +510,31 @@ describe('Records', () => {
         undefined,
       );
       expect(reserved[namePurchase.name.toLowerCase()]).toEqual(undefined);
+    });
+
+    it('should not be able to buy a name if it is a permabuy and less than 12 characters long', async () => {
+      const namePurchase = {
+        name: 'mustauction',
+        contractTxId: ANT_CONTRACT_IDS[0],
+        years: 1,
+        type: 'permabuy',
+      };
+      const writeInteraction = await contract.writeInteraction(
+        {
+          function: 'buyRecord',
+          ...namePurchase,
+        },
+        {
+          disableBundling: true,
+        },
+      );
+
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue } = await contract.readState();
+      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(
+        ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE,
+      );
+      expect(cachedValue.state).toEqual(prevState);
     });
   });
 });

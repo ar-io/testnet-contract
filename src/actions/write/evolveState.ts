@@ -1,8 +1,7 @@
 import { NON_CONTRACT_OWNER_MESSAGE } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
-declare const ContractError;
-declare const SmartWeave;
+declare const ContractError: any;
 
 // Updates this contract to new source code
 export const evolveState = async (
@@ -15,10 +14,22 @@ export const evolveState = async (
     throw new ContractError(NON_CONTRACT_OWNER_MESSAGE);
   }
 
-  // Set each gateway to have an empty array of vaults
+  // set each gateway to have an empty array of vaults
   for (const address in state.gateways) {
     state.gateways[address].observerWallet = address;
   }
+
+  // remove existing auctions
+  state.auctions = {};
+
+  // update the auction settings object
+  state.settings.auctions = {
+    floorPriceMultiplier: 1,
+    startPriceMultiplier: 50,
+    auctionDuration: 5040,
+    decayRate: 0.0225,
+    decayInterval: 30,
+  };
 
   return { state };
 };

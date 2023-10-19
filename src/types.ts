@@ -45,15 +45,15 @@ export type Auction = {
   startPrice: number;
   floorPrice: number;
   startHeight: number;
-  auctionSettingsId: string;
+  endHeight: number;
   type: 'lease' | 'permabuy';
   initiator: string;
   contractTxId: string;
   years?: number;
+  settings: AuctionSettings;
 };
 
 export type AuctionSettings = {
-  id: string;
   floorPriceMultiplier: number; // if we ever want to drop prices
   startPriceMultiplier: number;
   auctionDuration: number;
@@ -61,20 +61,19 @@ export type AuctionSettings = {
   decayInterval: number;
 };
 
+export type GatewayRegistrySettings = {
+  minLockLength: number; // the minimum amount of blocks tokens can be locked in a community vault
+  maxLockLength: number; // the maximum amount of blocks tokens can be locked in a community vault
+  minNetworkJoinStakeAmount: number; // the minimum amount of tokens needed to stake to join the ar.io network as a gateway
+  minGatewayJoinLength: number; // the minimum amount of blocks a gateway can be joined to the ar.io network
+  gatewayLeaveLength: number; // the amount of blocks that have to elapse before a gateway leaves the network
+  operatorStakeWithdrawLength: number; // the amount of blocks that have to elapse before a gateway operator's stake is returned
+};
+
 export type ContractSettings = {
   // these settings control the various capabilities in the contract
-  registry: {
-    minLockLength: number; // the minimum amount of blocks tokens can be locked in a community vault
-    maxLockLength: number; // the maximum amount of blocks tokens can be locked in a community vault
-    minNetworkJoinStakeAmount: number; // the minimum amount of tokens needed to stake to join the ar.io network as a gateway
-    minGatewayJoinLength: number; // the minimum amount of blocks a gateway can be joined to the ar.io network
-    gatewayLeaveLength: number; // the amount of blocks that have to elapse before a gateway leaves the network
-    operatorStakeWithdrawLength: number; // the amount of blocks that have to elapse before a gateway operator's stake is returned
-  };
-  auctions: {
-    current: string;
-    history: AuctionSettings[];
-  };
+  registry: GatewayRegistrySettings;
+  auctions: AuctionSettings;
 };
 
 const gatewayStatus = [
@@ -105,12 +104,13 @@ export type GatewaySettings = {
 };
 
 export type AllowedProtocols = 'http' | 'https';
+export type RegistrationType = 'lease' | 'permabuy';
 
 export type ArNSName = {
   contractTxId: string; // The ANT Contract used to manage this name
   startTimestamp: number; // At what unix time (seconds since epoch) the lease starts
   endTimestamp?: number; // At what unix time (seconds since epoch) the lease ends
-  type: 'lease' | 'permabuy';
+  type: RegistrationType;
   undernames: number;
 };
 

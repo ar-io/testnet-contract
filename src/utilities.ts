@@ -9,13 +9,21 @@ import {
   RARITY_MULTIPLIER_HALVENING,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
+  SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
   UNDERNAME_REGISTRATION_IO_FEE,
 } from './constants';
-import { Fees } from './types';
+import {
+  ArNSName,
+  Auction,
+  AuctionSettings,
+  Fees,
+  RegistrationType,
+  ReservedName,
+} from './types';
 
 declare const ContractError: any;
 
-export function calculateTotalRegistrationFee(
+export function calculateLeaseFee(
   name: string,
   fees: Fees,
   years: number,
@@ -162,7 +170,7 @@ export function walletHasSufficientBalance(
 export function calculateProRatedUndernameCost(
   qty: number,
   currentTimestamp: number,
-  type: 'lease' | 'permabuy',
+  type: RegistrationType,
   endTimestamp?: number,
 ): number {
   const fullCost =
@@ -259,4 +267,143 @@ export function getAuctionPrices({
     prices[intervalHeight] = price;
   }
   return prices;
+}
+
+export function calculateRegistrationFee({
+  type,
+  name,
+  fees,
+  years,
+  currentBlockTimestamp,
+}: {
+  type: RegistrationType;
+  name: string;
+  fees: Fees;
+  years: number;
+  currentBlockTimestamp: number;
+}): number {
+  switch (type) {
+    case 'lease':
+      return calculateLeaseFee(name, fees, years, currentBlockTimestamp);
+    case 'permabuy':
+      return calculatePermabuyFee(name, fees, currentBlockTimestamp);
+  }
+}
+
+export function isExistingActiveRecord({
+  record,
+  currentBlockTimestamp,
+}: {
+  record: ArNSName;
+  currentBlockTimestamp: number;
+}): boolean {
+  return (
+    record &&
+    record.endTimestamp &&
+    record.endTimestamp + SECONDS_IN_GRACE_PERIOD > currentBlockTimestamp
+  );
+}
+
+export function isShortNameRestricted({
+  name,
+  currentBlockTimestamp,
+}: {
+  name: string;
+  currentBlockTimestamp: number;
+}): boolean {
+  return (
+    name.length < MINIMUM_ALLOWED_NAME_LENGTH &&
+    currentBlockTimestamp < SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP
+  );
+}
+
+export function isActiveReservedName({
+  caller,
+  reservedName,
+  currentBlockTimestamp,
+}: {
+  caller: string;
+  reservedName: ReservedName | undefined;
+  currentBlockTimestamp: number;
+}): boolean {
+  if (!reservedName) return false;
+  const target = reservedName.target;
+  const endTimestamp = reservedName.endTimestamp;
+  const permanentlyReserved = !target && !endTimestamp;
+  const callerNotTarget = target !== caller;
+  const notExpired = endTimestamp && endTimestamp > currentBlockTimestamp;
+  if (permanentlyReserved || (callerNotTarget && notExpired)) {
+    return true;
+  }
+  return false;
+}
+
+export function isNameAvailableForAuction({
+  name,
+  record,
+  reservedName,
+  caller,
+  currentBlockTimestamp,
+}: {
+  name: string;
+  record: ArNSName | undefined;
+  caller: string;
+  reservedName: ReservedName | undefined;
+  currentBlockTimestamp: number;
+}): boolean {
+  return (
+    !isExistingActiveRecord({ record, currentBlockTimestamp }) &&
+    !isActiveReservedName({ reservedName, caller, currentBlockTimestamp }) &&
+    !isShortNameRestricted({ name, currentBlockTimestamp })
+  );
+}
+
+export function isNameRequiredToBeAuction({
+  name,
+  type,
+}: {
+  name: string;
+  type: RegistrationType;
+}): boolean {
+  return type === 'permabuy' && name.length < 12;
+}
+export function createAuctionObject({
+  auctionSettings,
+  initialRegistrationFee,
+  contractTxId,
+  currentBlockHeight,
+  type,
+  initiator,
+  providedFloorPrice,
+}: {
+  auctionSettings: AuctionSettings;
+  initialRegistrationFee: number;
+  contractTxId: string | undefined;
+  currentBlockHeight: number;
+  type: RegistrationType;
+  initiator: string | undefined;
+  years?: number;
+  providedFloorPrice?: number;
+}): Auction {
+  const calculatedFloor =
+    initialRegistrationFee * auctionSettings.floorPriceMultiplier;
+  // if someone submits a high floor price, we'll take it
+  const floorPrice = providedFloorPrice
+    ? Math.max(providedFloorPrice, calculatedFloor)
+    : calculatedFloor;
+
+  const startPrice = floorPrice * auctionSettings.startPriceMultiplier;
+  const endHeight = currentBlockHeight + auctionSettings.auctionDuration;
+  const years = type === 'lease' ? 1 : undefined;
+  return {
+    initiator, // the balance that the floor price is decremented from
+    contractTxId,
+    startPrice,
+    floorPrice, // this is decremented from the initiators wallet, and could be higher than the precalculated floor
+    startHeight: currentBlockHeight, // auction starts right away
+    endHeight, // auction ends after the set duration
+    type,
+    ...(years ? { years } : {}),
+    settings: auctionSettings,
+  };
 }
