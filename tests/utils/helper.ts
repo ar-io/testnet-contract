@@ -159,7 +159,7 @@ function createGateways(wallets: string[]) {
   };
 
   gateways[wallets[2]] = {
-    operatorStake: 500_000,
+    operatorStake: 250_000,
     status: NETWORK_JOIN_STATUS,
     start: 0,
     end: 0,
@@ -175,7 +175,7 @@ function createGateways(wallets: string[]) {
   };
 
   gateways[wallets[3]] = {
-    operatorStake: 10_000,
+    operatorStake: 15_000,
     status: NETWORK_HIDDEN_STATUS,
     start: 0,
     end: 0,
@@ -191,7 +191,7 @@ function createGateways(wallets: string[]) {
   };
 
   gateways[wallets[4]] = {
-    operatorStake: 666_000,
+    operatorStake: 100_000,
     status: NETWORK_JOIN_STATUS,
     start: 0,
     end: 0,

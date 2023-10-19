@@ -1,6 +1,6 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts/lib/types';
 
-import { IOState } from '../src/types';
+import { IOState, WeightedObserver } from '../src/types';
 import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_START_HEIGHT,
@@ -26,7 +26,7 @@ describe('Observation', () => {
   let currentGatewayWalletAddress: string;
   let contract: Contract<PstState>;
   let srcContractId: string;
-  let currentPrescribedObservers: string[];
+  let currentPrescribedObservers: WeightedObserver[];
   const wallets: {
     addr: string;
     jwk: JWKInterface;
@@ -76,13 +76,17 @@ describe('Observation', () => {
         const height = await getCurrentBlock(arweave);
         const { result: prescribedObserver } = (await contract.viewState({
           function: 'prescribedObserver',
-          target: currentPrescribedObservers[0],
+          target: currentPrescribedObservers[0].address,
           height,
         })) as any;
         expect(prescribedObserver).toBe(true);
         // Must find a gateway that is not prescribed
         for (let i = 0; i < WALLETS_TO_CREATE; i++) {
-          if (!currentPrescribedObservers.includes(wallets[i].addr)) {
+          if (
+            !currentPrescribedObservers.some(
+              (observer) => observer.address === wallets[i].addr,
+            )
+          ) {
             const { result: prescribedObserver2 } = (await contract.viewState({
               function: 'prescribedObserver',
               target: wallets[i].addr,
@@ -109,7 +113,11 @@ describe('Observation', () => {
         //  currentPrescribedObservers,
         //);
         for (const { addr: walletAddress, jwk: wallet } of wallets) {
-          if (currentPrescribedObservers.includes(walletAddress)) {
+          if (
+            currentPrescribedObservers.some(
+              (observer) => observer.address === walletAddress,
+            )
+          ) {
             // console.log('%s submitting report', walletAddress);
             currentGatewayWalletAddress = walletAddress;
             contract = warp
@@ -185,7 +193,11 @@ describe('Observation', () => {
         //  currentPrescribedObservers,
         //);
         for (const { addr: walletAddress, jwk: wallet } of wallets) {
-          if (currentPrescribedObservers.includes(walletAddress)) {
+          if (
+            currentPrescribedObservers.some(
+              (observer) => observer.address === walletAddress,
+            )
+          ) {
             // console.log('%s submitting report', walletAddress);
             currentGatewayWalletAddress = walletAddress;
             contract = warp
@@ -237,7 +249,11 @@ describe('Observation', () => {
         //  currentPrescribedObservers,
         //);
         for (const { addr: walletAddress, jwk: wallet } of wallets) {
-          if (currentPrescribedObservers.includes(walletAddress)) {
+          if (
+            currentPrescribedObservers.some(
+              (observer) => observer.address === walletAddress,
+            )
+          ) {
             //console.log('%s submitting report', walletAddress);
             currentGatewayWalletAddress = walletAddress;
             contract = warp
@@ -327,7 +343,11 @@ describe('Observation', () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         // Connect as an invalid observer
         for (let i = 0; i < WALLETS_TO_CREATE; i++) {
-          if (!currentPrescribedObservers.includes(wallets[i].addr)) {
+          if (
+            !currentPrescribedObservers.some(
+              (observer) => observer.address === wallets[i].addr,
+            )
+          ) {
             contract = warp
               .pst(srcContractId)
               .connect(wallets[i].jwk)

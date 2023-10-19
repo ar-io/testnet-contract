@@ -118,3 +118,4 @@ export const AUCTION_SETTINGS: AuctionSettings = {
 
 export const DEFAULT_EPOCH_BLOCK_LENGTH = 50; // 5000 for mainnet
 export const DEFAULT_START_HEIGHT = 0;
+export const MAX_TENURE_WEIGHT = 2;

@@ -1,5 +1,4 @@
 import {
-  CALLER_NOT_VALID_OBSERVER_MESSAGE,
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_START_HEIGHT,
 } from '../../constants';
@@ -27,11 +26,12 @@ export const prescribedObserver = async (
 
   const prescribedObservers = await getPrescribedObservers(
     gateways,
+    settings.registry.minNetworkJoinStakeAmount,
     settings.registry.gatewayLeaveLength,
     currentEpochStartHeight,
   );
 
-  if (!prescribedObservers.includes(target)) {
+  if (!prescribedObservers.some((observer) => observer.address === target)) {
     // The gateway with the specified address is not found in the prescribedObservers list
     return { result: false };
   }
@@ -52,6 +52,7 @@ export const prescribedObservers = async (
 
   const prescribedObservers = await getPrescribedObservers(
     gateways,
+    settings.registry.minNetworkJoinStakeAmount,
     settings.registry.gatewayLeaveLength,
     currentEpochStartHeight,
   );

@@ -21,7 +21,7 @@ export const TRANSFER_QTY = 100_000;
 export const CONTRACT_SETTINGS = {
   minLockLength: 5,
   maxLockLength: 720 * 365 * 3,
-  minNetworkJoinStakeAmount: 5_000,
+  minNetworkJoinStakeAmount: 10_000,
   minGatewayJoinLength: 2,
   gatewayLeaveLength: 2,
   operatorStakeWithdrawLength: 5,

@@ -56,11 +56,12 @@ export const saveObservations = async (
 
   const prescribedObservers = await getPrescribedObservers(
     gateways,
+    settings.registry.minNetworkJoinStakeAmount,
     settings.registry.gatewayLeaveLength,
     currentEpochStartHeight,
   );
 
-  if (!prescribedObservers.includes(caller)) {
+  if (!prescribedObservers.some((observer) => observer.address === caller)) {
     // The gateway with the specified address is not found in the eligibleObservers list
     throw new ContractError(`${caller} not a prescribed observer`);
     // throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
