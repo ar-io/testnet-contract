@@ -7,6 +7,7 @@ import {
   NETWORK_LEAVING_STATUS,
 } from './constants';
 
+export type WalletAddress = string;
 export type DemandFactoringData = {
   periodZeroBlockHeight: number; // TODO: The block height at which the contract was initialized
   currentPeriod: number;
@@ -17,31 +18,28 @@ export type DemandFactoringData = {
 };
 
 // TODO: add InputValidator class that can be extended for specific methods
-
+export type ArNSName = string;
+export type Balances = Record<WalletAddress, number>;
+export type Gateways = Record<WalletAddress, Gateway>;
+export type Records = Record<ArNSName, ArNSNameData>; // TODO: create ArNS Name type
+export type ReservedNames = Record<ArNSName, ReservedNameData>;
+export type Auctions = Record<ArNSName, AuctionData>;
+export type Fees = Record<string, number>;
 export type IOState = PstState & {
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
-  records: Record<string, ArNSName>;
-  gateways: Record<string, Gateway>; // each gateway uses its public arweave wallet address to identify it in the gateway registry
-  // A list of all fees for purchasing ArNS names
-  fees: Fees;
+  records: Records; // The list of all ArNS names and their associated data
+  gateways: Gateways; // each gateway uses its public arweave wallet address to identify it in the gateway registry
+  fees: Fees; // starting list of all fees for purchasing ArNS names
   settings: ContractSettings; // protocol settings and parameters
-  reserved: Record<string, ReservedName>; // A list of all reserved names that are not allowed to be purchased at this time
-  vaults: Record<string, TokenVault[]>; // a wallet can have multiple vaults
-  // auctions
-  auctions: Record<string, Auction>;
-  // periodicity management
-  lastTickedHeight: number;
+  reserved: ReservedNames; // list of all reserved names that are not allowed to be purchased at this time
+  auctions: Auctions;
+  lastTickedHeight: number; // periodicity management
   // TODO: epoch tracking - relevant to GAR observers
-  // demand factoring
   demandFactoring: DemandFactoringData;
 };
 
-export type Fees = {
-  [nameLength: string]: number;
-};
-
-export type Auction = {
+export type AuctionData = {
   startPrice: number;
   floorPrice: number;
   startHeight: number;
@@ -106,7 +104,7 @@ export type GatewaySettings = {
 export type AllowedProtocols = 'http' | 'https';
 export type RegistrationType = 'lease' | 'permabuy';
 
-export type ArNSName = {
+export type ArNSNameData = {
   contractTxId: string; // The ANT Contract used to manage this name
   startTimestamp: number; // At what unix time (seconds since epoch) the lease starts
   endTimestamp?: number; // At what unix time (seconds since epoch) the lease ends
@@ -114,12 +112,10 @@ export type ArNSName = {
   undernames: number;
 };
 
-export type ReservedName = {
+export type ReservedNameData = {
   target?: string; // The target wallet address this name is reserved for
   endTimestamp?: number; // At what unix time (seconds since epoch) this reserved name becomes available
 };
-
-export type WalletAddress = string;
 
 export type TokenVault = {
   balance: number; // Positive integer, the amount locked

@@ -17,17 +17,21 @@ import {
 } from './constants';
 import { calculateMinimumAuctionBid } from './pricing';
 import {
-  ArNSName,
-  Auction,
+  ArNSNameData,
+  AuctionData,
   AuctionSettings,
   BlockHeight,
   BlockTimestamp,
   DeepReadonly,
   DemandFactoringData,
   Fees,
+  Gateway,
+  GatewayRegistrySettings,
   IOToken,
+  Records,
   RegistrationType,
-  ReservedName,
+  ReservedNameData,
+  ReservedNames,
 } from './types';
 
 declare class ContractError extends Error {}
@@ -176,7 +180,6 @@ export function walletHasSufficientBalance(
   return !!balances[wallet] && balances[wallet] >= qty;
 }
 
-// TODO: update after dynamic pricing?
 export function calculateProRatedUndernameCost({
   qty,
   currentBlockTimestamp,
@@ -187,7 +190,6 @@ export function calculateProRatedUndernameCost({
   currentBlockTimestamp: BlockTimestamp;
   type: RegistrationType;
   endTimestamp?: BlockTimestamp;
-  // demandFactoring: DemandFactoringData, // TODO: Is this relevant?
 }): number {
   switch (type) {
     case 'lease':
@@ -222,33 +224,52 @@ export function calculateUndernamePermutations(domain: string): number {
   return numberOfPossibleUndernames;
 }
 
-export function isNameInGracePeriod(currentTime: number, endTimestamp: number) {
-  return endTimestamp + SECONDS_IN_GRACE_PERIOD >= currentTime;
+export function isNameInGracePeriod({
+  currentBlockTimestamp,
+  record,
+}: {
+  currentBlockTimestamp: BlockTimestamp;
+  record: ArNSNameData;
+}): boolean {
+  if (!record.endTimestamp) return false;
+  const recordIsExpired = currentBlockTimestamp.valueOf() > record.endTimestamp;
+  return (
+    recordIsExpired &&
+    record.endTimestamp + SECONDS_IN_GRACE_PERIOD >
+      currentBlockTimestamp.valueOf()
+  );
 }
 
-export function getLeaseDurationFromEndTimestamp(start: number, end: number) {
-  const differenceInYears = Math.ceil((end - start) / SECONDS_IN_A_YEAR);
-  const years = Math.max(1, differenceInYears);
-
-  return years;
-}
-
-export function getMaxLeaseExtension(
-  currentTimestamp: number,
-  endTimestamp: number,
-): number {
+export function getMaxAllowedYearsExtensionForRecord({
+  currentBlockTimestamp,
+  record,
+}: {
+  currentBlockTimestamp: BlockTimestamp;
+  record: ArNSNameData;
+}): number {
+  if (!record.endTimestamp) {
+    return 0;
+  }
   // if expired return 0 because it cannot be extended and must be re-bought
-  if (currentTimestamp > endTimestamp + SECONDS_IN_GRACE_PERIOD) {
+  if (
+    currentBlockTimestamp.valueOf() >
+    record.endTimestamp + SECONDS_IN_GRACE_PERIOD
+  ) {
     return 0;
   }
 
-  if (isNameInGracePeriod(currentTimestamp, endTimestamp)) {
+  if (isNameInGracePeriod({ currentBlockTimestamp, record })) {
     return MAX_YEARS;
   }
-  // a number between 0 and 5 (MAX_YEARS)
-  return (
-    MAX_YEARS - getLeaseDurationFromEndTimestamp(currentTimestamp, endTimestamp)
+
+  // TODO: should we put this as the ceiling? or should we allow people to extend as soon as it is purchased
+  const yearsRemainingOnLease = Math.ceil(
+    (record.endTimestamp.valueOf() - currentBlockTimestamp.valueOf()) /
+      SECONDS_IN_A_YEAR,
   );
+
+  // a number between 0 and 5 (MAX_YEARS)
+  return MAX_YEARS - yearsRemainingOnLease;
 }
 
 export function getInvalidAjvMessage(
@@ -334,7 +355,7 @@ export function isExistingActiveRecord({
   record,
   currentBlockTimestamp,
 }: {
-  record: ArNSName;
+  record: ArNSNameData;
   currentBlockTimestamp: BlockTimestamp;
 }): boolean {
   return (
@@ -364,7 +385,7 @@ export function isActiveReservedName({
   currentBlockTimestamp,
 }: {
   caller: string | undefined;
-  reservedName: ReservedName | undefined;
+  reservedName: ReservedNameData | undefined;
   currentBlockTimestamp: BlockTimestamp;
 }): boolean {
   if (!reservedName) return false;
@@ -388,9 +409,9 @@ export function isNameAvailableForAuction({
   currentBlockTimestamp,
 }: {
   name: string;
-  record: ArNSName | undefined;
+  record: ArNSNameData | undefined;
   caller: string;
-  reservedName: ReservedName | undefined;
+  reservedName: ReservedNameData | undefined;
   currentBlockTimestamp: BlockTimestamp;
 }): boolean {
   return (
@@ -426,7 +447,7 @@ export function createAuctionObject({
   initiator: string | undefined;
   years?: number;
   providedFloorPrice?: number;
-}): Auction {
+}): AuctionData {
   const calculatedFloor =
     initialRegistrationFee * auctionSettings.floorPriceMultiplier;
   // if someone submits a high floor price, we'll take it
@@ -460,8 +481,8 @@ export function assertAvailableRecord({
 }: {
   caller: string | undefined; // TODO: type for this
   name: DeepReadonly<string>;
-  records: DeepReadonly<Record<string, ArNSName>>;
-  reserved: DeepReadonly<Record<string, ReservedName>>;
+  records: DeepReadonly<Records>;
+  reserved: DeepReadonly<ReservedNames>;
   currentBlockTimestamp: BlockTimestamp;
 }): void {
   if (
@@ -491,7 +512,7 @@ export function getEndTimestampForAuction({
   auction,
   currentBlockTimestamp,
 }: {
-  auction: Auction;
+  auction: AuctionData;
   currentBlockTimestamp: BlockTimestamp;
 }): BlockTimestamp {
   switch (auction.type) {
@@ -504,17 +525,17 @@ export function getEndTimestampForAuction({
   }
 }
 
-export const calculateExistingAuctionBidForCaller = ({
+export function calculateExistingAuctionBidForCaller({
   caller,
   auction,
   submittedBid,
   requiredMinimumBid,
 }: {
   caller: string;
-  auction: Auction;
+  auction: AuctionData;
   submittedBid: number;
   requiredMinimumBid: IOToken;
-}): IOToken => {
+}): IOToken {
   let finalBid = submittedBid
     ? Math.min(submittedBid, requiredMinimumBid.valueOf())
     : requiredMinimumBid.valueOf();
@@ -523,4 +544,57 @@ export const calculateExistingAuctionBidForCaller = ({
     finalBid -= auction.floorPrice;
   }
   return new IOToken(finalBid);
-};
+}
+
+export function isGatewayJoined({
+  gateway,
+  currentBlockHeight,
+}: {
+  gateway: DeepReadonly<Gateway> | undefined;
+  currentBlockHeight: BlockHeight;
+}): boolean {
+  if (!gateway) return false;
+  return (
+    gateway.status === 'joined' && gateway.end > currentBlockHeight.valueOf()
+  );
+}
+
+export function isGatewayHidden({
+  gateway,
+}: {
+  gateway: DeepReadonly<Gateway> | undefined;
+}): boolean {
+  if (!gateway) return false;
+  return gateway.status === 'hidden';
+}
+
+export function isGatewayEligibleToBeRemoved({
+  gateway,
+  currentBlockHeight,
+}: {
+  gateway: DeepReadonly<Gateway> | undefined;
+  currentBlockHeight: BlockHeight;
+}): boolean {
+  return (
+    gateway.status === 'leaving' && gateway.end <= currentBlockHeight.valueOf()
+  );
+}
+
+export function isGatewayEligibleToLeave({
+  gateway,
+  currentBlockHeight,
+  registrySettings,
+}: {
+  gateway: DeepReadonly<Gateway> | undefined;
+  currentBlockHeight: BlockHeight;
+  registrySettings: GatewayRegistrySettings;
+}): boolean {
+  if (!gateway) return false;
+  const joinedForMinimum =
+    currentBlockHeight.valueOf() >=
+    gateway.start + registrySettings.minGatewayJoinLength;
+  const isActiveOrHidden =
+    isGatewayJoined({ gateway, currentBlockHeight }) ||
+    isGatewayHidden({ gateway });
+  return joinedForMinimum && isActiveOrHidden;
+}

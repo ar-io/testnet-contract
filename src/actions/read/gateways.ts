@@ -1,7 +1,7 @@
 import { NETWORK_JOIN_STATUS } from '../../constants';
 import { ContractResult, Gateway, IOState, PstAction } from '../../types';
 
-declare const ContractError;
+declare const ContractError: any;
 
 export const getGateway = async (
   state: IOState,

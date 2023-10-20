@@ -8,7 +8,7 @@ import {
 import { ContractResult, IOState, PstAction } from '../../types';
 import { isValidArweaveBase64URL, isValidFQDN } from '../../utilities';
 
-declare const ContractError;
+declare const ContractError: any;
 
 // Updates any of the settings of an existing gateway
 export const updateGatewaySettings = async (

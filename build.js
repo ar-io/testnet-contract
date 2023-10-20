@@ -50,6 +50,7 @@ build({
   bundle: true,
   format: 'iife',
   packages: 'external',
+  tsconfig: 'tsconfig.json',
 })
   .catch(() => process.exit(1))
   // note: SmartWeave SDK currently does not support files in IIFE bundle format, so we need to remove the "iife" part ;-)
