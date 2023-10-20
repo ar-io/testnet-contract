@@ -180,7 +180,6 @@ export function walletHasSufficientBalance(
   return !!balances[wallet] && balances[wallet] >= qty;
 }
 
-// TODO: update after dynamic pricing?
 export function calculateProRatedUndernameCost({
   qty,
   currentBlockTimestamp,
@@ -191,7 +190,6 @@ export function calculateProRatedUndernameCost({
   currentBlockTimestamp: BlockTimestamp;
   type: RegistrationType;
   endTimestamp?: BlockTimestamp;
-  // demandFactoring: DemandFactoringData, // TODO: Is this relevant?
 }): number {
   switch (type) {
     case 'lease':

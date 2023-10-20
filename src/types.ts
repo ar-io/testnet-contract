@@ -24,7 +24,7 @@ export type Gateways = Record<WalletAddress, Gateway>;
 export type Records = Record<ArNSName, ArNSNameData>; // TODO: create ArNS Name type
 export type ReservedNames = Record<ArNSName, ReservedNameData>;
 export type Auctions = Record<ArNSName, AuctionData>;
-export type Fees = Record<number, number>;
+export type Fees = Record<string, number>;
 export type IOState = PstState & {
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to

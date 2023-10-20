@@ -3,7 +3,6 @@ import {
   INSUFFICIENT_FUNDS_MESSAGE,
   MAX_ALLOWED_UNDERNAMES,
   MAX_UNDERNAME_MESSAGE,
-  SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
 import {
   BlockTimestamp,
@@ -14,6 +13,7 @@ import {
 import {
   calculateProRatedUndernameCost,
   getInvalidAjvMessage,
+  isExistingActiveRecord,
   walletHasSufficientBalance,
 } from '../../utilities';
 import { validateIncreaseUndernameCount } from '../../validations.mjs';
@@ -50,35 +50,38 @@ export const increaseUndernameCount = async (
   const { name, qty } = new IncreaseUndernameCount(input);
   const { balances, records } = state;
   const record = records[name];
+  const currentBlockTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
 
-  // check if record exists
-  if (!record) {
-    throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
+  // This name's lease has expired and cannot be extended
+  if (
+    !isExistingActiveRecord({
+      record,
+      currentBlockTimestamp,
+    })
+  ) {
+    if (!record) {
+      throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
+    }
+    throw new ContractError(
+      `This name has expired and must renewed before its undername support can be extended.`,
+    );
   }
 
   const { undernames = 10, type, endTimestamp } = record;
-  const currentBlockTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
-  const undernameCost = calculateProRatedUndernameCost({
-    qty,
-    currentBlockTimestamp,
-    type,
-    endTimestamp: new BlockTimestamp(endTimestamp),
-  });
-
   // the new total qty
   const incrementedUndernames = undernames + qty;
   if (incrementedUndernames > MAX_ALLOWED_UNDERNAMES) {
     throw new ContractError(MAX_UNDERNAME_MESSAGE);
   }
-  // This name's lease has expired and cannot be extended
-  if (
-    endTimestamp + SECONDS_IN_GRACE_PERIOD <=
-    currentBlockTimestamp.valueOf()
-  ) {
-    throw new ContractError(
-      `This name has expired and must renewed before its undername support can be extended.`,
-    );
-  }
+
+  const undernameCost =
+    state.demandFactoring.demandFactor *
+    calculateProRatedUndernameCost({
+      qty,
+      currentBlockTimestamp,
+      type,
+      endTimestamp: new BlockTimestamp(endTimestamp),
+    });
 
   // Check if the user has enough tokens to increase the undername count
   if (!walletHasSufficientBalance(balances, caller, undernameCost)) {
@@ -89,7 +92,6 @@ export const increaseUndernameCount = async (
     );
   }
 
-  // TODO: move cost to protocol balance
   state.records[name].undernames = incrementedUndernames;
   state.balances[caller] -= undernameCost;
   state.balances[SmartWeave.contract.id] += undernameCost;
