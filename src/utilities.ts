@@ -224,33 +224,52 @@ export function calculateUndernamePermutations(domain: string): number {
   return numberOfPossibleUndernames;
 }
 
-export function isNameInGracePeriod(currentTime: number, endTimestamp: number) {
-  return endTimestamp + SECONDS_IN_GRACE_PERIOD >= currentTime;
+export function isNameInGracePeriod({
+  currentBlockTimestamp,
+  record,
+}: {
+  currentBlockTimestamp: BlockTimestamp;
+  record: ArNSNameData;
+}): boolean {
+  if (!record.endTimestamp) return false;
+  const recordIsExpired = currentBlockTimestamp.valueOf() > record.endTimestamp;
+  return (
+    recordIsExpired &&
+    record.endTimestamp + SECONDS_IN_GRACE_PERIOD >
+      currentBlockTimestamp.valueOf()
+  );
 }
 
-export function getLeaseDurationFromEndTimestamp(start: number, end: number) {
-  const differenceInYears = Math.ceil((end - start) / SECONDS_IN_A_YEAR);
-  const years = Math.max(1, differenceInYears);
-
-  return years;
-}
-
-export function getMaxLeaseExtension(
-  currentTimestamp: number,
-  endTimestamp: number,
-): number {
+export function getMaxAllowedYearsExtensionForRecord({
+  currentBlockTimestamp,
+  record,
+}: {
+  currentBlockTimestamp: BlockTimestamp;
+  record: ArNSNameData;
+}): number {
+  if (!record.endTimestamp) {
+    return 0;
+  }
   // if expired return 0 because it cannot be extended and must be re-bought
-  if (currentTimestamp > endTimestamp + SECONDS_IN_GRACE_PERIOD) {
+  if (
+    currentBlockTimestamp.valueOf() >
+    record.endTimestamp + SECONDS_IN_GRACE_PERIOD
+  ) {
     return 0;
   }
 
-  if (isNameInGracePeriod(currentTimestamp, endTimestamp)) {
+  if (isNameInGracePeriod({ currentBlockTimestamp, record })) {
     return MAX_YEARS;
   }
-  // a number between 0 and 5 (MAX_YEARS)
-  return (
-    MAX_YEARS - getLeaseDurationFromEndTimestamp(currentTimestamp, endTimestamp)
+
+  // TODO: should we put this as the ceiling? or should we allow people to extend as soon as it is purchased
+  const yearsRemainingOnLease = Math.ceil(
+    (record.endTimestamp.valueOf() - currentBlockTimestamp.valueOf()) /
+      SECONDS_IN_A_YEAR,
   );
+
+  // a number between 0 and 5 (MAX_YEARS)
+  return MAX_YEARS - yearsRemainingOnLease;
 }
 
 export function getInvalidAjvMessage(
