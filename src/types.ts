@@ -24,28 +24,19 @@ export type Gateways = Record<WalletAddress, Gateway>;
 export type Records = Record<ArNSName, ArNSNameData>; // TODO: create ArNS Name type
 export type ReservedNames = Record<ArNSName, ReservedNameData>;
 export type Auctions = Record<ArNSName, AuctionData>;
+export type Fees = Record<number, number>;
 export type IOState = PstState & {
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
-  records: Records;
+  records: Records; // The list of all ArNS names and their associated data
   gateways: Gateways; // each gateway uses its public arweave wallet address to identify it in the gateway registry
-  // A list of all fees for purchasing ArNS names
-  fees: Fees;
+  fees: Fees; // starting list of all fees for purchasing ArNS names
   settings: ContractSettings; // protocol settings and parameters
-  reserved: ReservedNames; // A list of all reserved names that are not allowed to be purchased at this time
-  // TODO: remove vaults from top level contract state
-  vaults: Record<string, TokenVault[]>; // a wallet can have multiple vaults
-  // auctions
+  reserved: ReservedNames; // list of all reserved names that are not allowed to be purchased at this time
   auctions: Auctions;
-  // periodicity management
-  lastTickedHeight: number;
+  lastTickedHeight: number; // periodicity management
   // TODO: epoch tracking - relevant to GAR observers
-  // demand factoring
   demandFactoring: DemandFactoringData;
-};
-
-export type Fees = {
-  [nameLength: string]: number;
 };
 
 export type AuctionData = {

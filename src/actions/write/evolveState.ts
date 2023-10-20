@@ -17,5 +17,14 @@ export const evolveState = async (
   // remove existing auctions
   state.auctions = {};
 
+  // update the auction settings object
+  state.settings.auctions = {
+    floorPriceMultiplier: 1,
+    startPriceMultiplier: 50,
+    auctionDuration: 5040,
+    decayRate: 0.0225,
+    decayInterval: 30,
+  };
+
   return { state };
 };

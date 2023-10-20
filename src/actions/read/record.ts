@@ -1,6 +1,6 @@
 import { ArNSNameData, ContractResult, IOState, PstAction } from '../../types';
 
-declare const ContractError;
+declare const ContractError: any;
 
 export const getRecord = async (
   state: IOState,
