@@ -51,14 +51,7 @@ describe('Observation', () => {
   describe('valid observer', () => {
     beforeAll(async () => {
       const firstWallet = wallets[0].jwk;
-      contract = warp
-        .pst(srcContractId)
-        .connect(firstWallet)
-        .setEvaluationOptions({
-          internalWrites: true,
-          unsafeClient: 'allow', // set to 'skip' to ignore unsafe
-          updateCacheForEachInteraction: true,
-        });
+      contract = warp.pst(srcContractId).connect(firstWallet);
     });
 
     describe('read operations', () => {
@@ -120,21 +113,15 @@ describe('Observation', () => {
           ) {
             // console.log('%s submitting report', walletAddress);
             currentGatewayWalletAddress = walletAddress;
-            contract = warp
-              .pst(srcContractId)
-              .connect(wallet)
-              .setEvaluationOptions({
-                internalWrites: true,
-                unsafeClient: 'allow', // set to 'skip' to ignore unsafe
-                updateCacheForEachInteraction: true,
-              });
+            contract = warp.pst(srcContractId).connect(wallet);
+
             const writeInteraction = await contract.writeInteraction({
               function: 'saveObservations',
               observerReportTxId: EXAMPLE_OBSERVER_REPORT_TX_IDS[0],
               failedGateways: getRandomFailedGatewaysSubset(wallets),
             });
             expect(writeInteraction?.originalTxId).not.toBe(undefined);
-            mineBlock(arweave);
+            await mineBlock(arweave);
           }
         }
         height = await getCurrentBlock(arweave);
@@ -200,21 +187,15 @@ describe('Observation', () => {
           ) {
             // console.log('%s submitting report', walletAddress);
             currentGatewayWalletAddress = walletAddress;
-            contract = warp
-              .pst(srcContractId)
-              .connect(wallet)
-              .setEvaluationOptions({
-                internalWrites: true,
-                unsafeClient: 'allow', // set to 'skip' to ignore unsafe
-                updateCacheForEachInteraction: true,
-              });
+            contract = warp.pst(srcContractId).connect(wallet);
+
             const writeInteraction = await contract.writeInteraction({
               function: 'saveObservations',
               observerReportTxId: EXAMPLE_OBSERVER_REPORT_TX_IDS[0],
               failedGateways: getRandomFailedGatewaysSubset(wallets),
             });
             expect(writeInteraction?.originalTxId).not.toBe(undefined);
-            mineBlock(arweave);
+            await mineBlock(arweave);
           }
         }
         height = await getCurrentBlock(arweave);
@@ -256,21 +237,15 @@ describe('Observation', () => {
           ) {
             //console.log('%s submitting report', walletAddress);
             currentGatewayWalletAddress = walletAddress;
-            contract = warp
-              .pst(srcContractId)
-              .connect(wallet)
-              .setEvaluationOptions({
-                internalWrites: true,
-                unsafeClient: 'allow', // set to 'skip' to ignore unsafe
-                updateCacheForEachInteraction: true,
-              });
+            contract = warp.pst(srcContractId).connect(wallet);
+
             const writeInteraction = await contract.writeInteraction({
               function: 'saveObservations',
               observerReportTxId: EXAMPLE_OBSERVER_REPORT_TX_IDS[0],
               failedGateways: getRandomFailedGatewaysSubset(wallets),
             });
             expect(writeInteraction?.originalTxId).not.toBe(undefined);
-            mineBlock(arweave);
+            await mineBlock(arweave);
           }
         }
         height = await getCurrentBlock(arweave);
@@ -348,14 +323,8 @@ describe('Observation', () => {
               (observer) => observer.address === wallets[i].addr,
             )
           ) {
-            contract = warp
-              .pst(srcContractId)
-              .connect(wallets[i].jwk)
-              .setEvaluationOptions({
-                internalWrites: true,
-                unsafeClient: 'allow', // set to 'skip' to ignore unsafe
-                updateCacheForEachInteraction: true,
-              });
+            contract = warp.pst(srcContractId).connect(wallets[i].jwk);
+
             break;
           }
         }
@@ -374,14 +343,7 @@ describe('Observation', () => {
       it('should not save observation report if not in the GAR', async () => {
         const notJoinedGateway = await createLocalWallet(arweave);
         const { cachedValue: prevCachedValue } = await contract.readState();
-        contract = warp
-          .pst(srcContractId)
-          .connect(notJoinedGateway.wallet) // The last wallet in the array is not in the GAR
-          .setEvaluationOptions({
-            internalWrites: true,
-            unsafeClient: 'allow', // set to 'skip' to ignore unsafe
-            updateCacheForEachInteraction: true,
-          });
+        contract = warp.pst(srcContractId).connect(notJoinedGateway.wallet); // The last wallet in the array is not in the GAR
         const writeInteraction = await contract.writeInteraction({
           function: 'saveObservations',
           observerReportTxId: EXAMPLE_OBSERVER_REPORT_TX_IDS[0],

@@ -318,7 +318,7 @@ export async function getEntropy(height: number): Promise<Buffer> {
         ? 0
         : height - DEFAULT_SAMPLED_BLOCKS_OFFSET - i;
     const path = `/block/height/${offsetHeight}`;
-    const { data } = await SmartWeave.unsafeClient.api.get(path);
+    const data = await SmartWeave.safeArweaveGet(path);
     const indep_hash = data.indep_hash;
     if (!indep_hash || typeof indep_hash !== 'string') {
       throw new ContractError(`Block ${height - i} has no indep_hash`);
