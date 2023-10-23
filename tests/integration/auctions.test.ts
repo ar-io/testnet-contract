@@ -7,17 +7,17 @@ import {
   MINIMUM_ALLOWED_NAME_LENGTH,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
-} from '../src/constants';
-import { calculateMinimumAuctionBid } from '../src/pricing';
-import { AuctionData, BlockHeight, IOState } from '../src/types';
-import { ANT_CONTRACT_IDS } from './utils/constants';
+} from '../../src/constants';
+import { calculateMinimumAuctionBid } from '../../src/pricing';
+import { AuctionData, BlockHeight, IOState } from '../../src/types';
+import { ANT_CONTRACT_IDS } from '../utils/constants';
 import {
   getCurrentBlock,
   getLocalArNSContractId,
   getLocalWallet,
   mineBlocks,
-} from './utils/helper';
-import { arweave, warp } from './utils/services';
+} from '../utils/helper';
+import { arweave, warp } from '../utils/services';
 
 describe('Auctions', () => {
   let contract: Contract<PstState>;

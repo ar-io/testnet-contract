@@ -9,6 +9,8 @@
     "format:fix": "prettier . --write",
     "lint:check": "eslint .",
     "lint:fix": "eslint . --fix",
+    "test:unit": "jest --testPathPattern=tests/unit",
+    "test:integration": "jest --testPathPattern=tests/integration",
     "test": "yarn build && jest --runInBand",
     "evolve": "yarn ts-node ./tools/evolve-contract.ts",
     "prepare": "husky install",

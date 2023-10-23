@@ -3,8 +3,11 @@ import {
   tickGatewayRegistry,
   tickRecords,
   tickReservedNames,
-} from '../src/actions/write/tick';
-import { SECONDS_IN_A_YEAR, SECONDS_IN_GRACE_PERIOD } from '../src/constants';
+} from '../../src/actions/write/tick';
+import {
+  SECONDS_IN_A_YEAR,
+  SECONDS_IN_GRACE_PERIOD,
+} from '../../src/constants';
 import {
   AuctionData,
   Auctions,
@@ -17,7 +20,7 @@ import {
   Gateways,
   Records,
   ReservedNames,
-} from '../src/types';
+} from '../../src/types';
 
 const defaultAuctionSettings = {
   auctionDuration: 2,

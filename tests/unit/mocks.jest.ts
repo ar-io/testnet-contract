@@ -1,12 +1,11 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../src/globals.d.ts" />
+/// <reference path="../../src/globals.d.ts" />
 
 // mock implementation for unit tests
-
-(SmartWeave as any) = {
+SmartWeave = {
   block: {
-    height: 0,
-    timestamp: 0,
+    height: 1,
+    timestamp: 1,
   },
   contract: {
     id: 'stubbed-contract-id',
@@ -15,5 +14,6 @@
     id: 'stubbed-transaction-id',
   },
 };
+
 // map it to a standard error
 ContractError = Error;

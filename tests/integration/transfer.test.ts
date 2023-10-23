@@ -1,14 +1,14 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
-import { IOState } from '../src/types';
+import { IOState } from '../../src/types';
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
   INVALID_TARGET_MESSAGE,
   TRANSFER_QTY,
-} from './utils/constants';
-import { getLocalArNSContractId, getLocalWallet } from './utils/helper';
-import { arweave, warp } from './utils/services';
+} from '../utils/constants';
+import { getLocalArNSContractId, getLocalWallet } from '../utils/helper';
+import { arweave, warp } from '../utils/services';
 
 describe('Transfers', () => {
   let contract: Contract<PstState>;

@@ -99,10 +99,7 @@ export const submitAuctionBid = (
     // all the things we need to handle an auction bid
     const existingAuction = auctions[name];
 
-    if (
-      existingAuction.startHeight > currentBlockHeight.valueOf() ||
-      currentBlockHeight.valueOf() > existingAuction.endHeight
-    ) {
+    if (currentBlockHeight.valueOf() > existingAuction.endHeight) {
       // TODO: tick state should correct this from happening
       throw new ContractError(ARNS_NAME_AUCTION_EXPIRED_MESSAGE);
     }
@@ -120,7 +117,7 @@ export const submitAuctionBid = (
     // we could throw an error if qty wasn't provided
     if (submittedBid && submittedBid < currentRequiredMinimumBid.valueOf()) {
       throw new ContractError(
-        `The bid (${submittedBid} IO) is less than the current required minimum bid of ${currentRequiredMinimumBid} IO.`,
+        `The bid (${submittedBid} IO) is less than the current required minimum bid of ${currentRequiredMinimumBid.valueOf()} IO.`,
       );
     }
 
@@ -167,15 +164,14 @@ export const submitAuctionBid = (
     delete auctions[name];
 
     /**
-     * TODO: make this a function and unit test the shit out of it
-     *
-     * Give the unsettled value to the protocol
-     * Deduct the unsettled value from the caller
+     * Give the unsettled value to the protocol (it should already have the floor price from the initiated auction)
+     * Deduct the unsettled final bid value from the caller
      * Return floor price from the protocol balance to the initiator, if necessary
      */
     balances[SmartWeave.contract.id] =
       (balances[SmartWeave.contract.id] || 0) + finalBidForCaller.valueOf();
     balances[caller] = (balances[caller] || 0) - finalBidForCaller.valueOf();
+
     if (caller !== existingAuction.initiator) {
       balances[existingAuction.initiator] =
         (balances[existingAuction.initiator] || 0) + existingAuction.floorPrice;

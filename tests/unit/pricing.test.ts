@@ -8,8 +8,8 @@ import {
   shouldUpdateDemandFactor,
   tallyNamePurchase,
   updateDemandFactor,
-} from '../src/pricing';
-import { BlockHeight, DemandFactoringData, Fees } from '../src/types';
+} from '../../src/pricing';
+import { BlockHeight, DemandFactoringData, Fees } from '../../src/types';
 
 describe('Pricing functions:', () => {
   describe('periodAtHeight function', () => {
