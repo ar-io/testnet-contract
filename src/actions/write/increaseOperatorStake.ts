@@ -1,13 +1,11 @@
 import { NETWORK_LEAVING_STATUS } from '../../constants';
-import { ContractResult, IOState, PstAction } from '../../types';
-
-declare const ContractError: any;
+import { ContractWriteResult, IOState, PstAction } from '../../types';
 
 // Locks tokens into a new gateway operator vault
 export const increaseOperatorStake = async (
   state: IOState,
   { caller, input }: PstAction,
-): Promise<ContractResult> => {
+): Promise<ContractWriteResult> => {
   const { gateways = {}, balances } = state;
 
   // TODO: object type validation

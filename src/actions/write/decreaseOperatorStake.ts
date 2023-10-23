@@ -1,14 +1,11 @@
 import { NETWORK_LEAVING_STATUS } from '../../constants';
-import { ContractResult, IOState, PstAction } from '../../types';
-
-declare const ContractError: any;
-declare const SmartWeave: any;
+import { ContractWriteResult, IOState, PstAction } from '../../types';
 
 // Begins the process to unlocks the vault of a gateway operator
 export const decreaseOperatorStake = async (
   state: IOState,
   { caller, input }: PstAction,
-): Promise<ContractResult> => {
+): Promise<ContractWriteResult> => {
   const { settings, gateways = {} } = state;
   const { registry: registrySettings } = settings;
   // TODO: object parse validation

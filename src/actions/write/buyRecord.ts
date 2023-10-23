@@ -8,7 +8,7 @@ import {
 import { tallyNamePurchase } from '../../pricing';
 import {
   BlockTimestamp,
-  ContractResult,
+  ContractWriteResult,
   IOState,
   PstAction,
   RegistrationType,
@@ -21,11 +21,8 @@ import {
   walletHasSufficientBalance,
 } from '../../utilities';
 // composed by ajv at build
-import { validateBuyRecord } from '../../validations.mjs';
+import { validateBuyRecord } from '../../validations';
 import { submitAuctionBid } from './submitAuctionBid';
-
-declare const ContractError: any;
-declare const SmartWeave: any;
 
 export class BuyRecord {
   name: string;
@@ -63,7 +60,7 @@ export class BuyRecord {
 export const buyRecord = (
   state: IOState,
   { caller, input }: PstAction,
-): ContractResult => {
+): ContractWriteResult => {
   // get all other relevant state data
   const { balances, records, reserved, fees, auctions } = state;
   const { name, contractTxId, years, type, auction } = new BuyRecord(input); // does validation on constructor

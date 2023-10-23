@@ -22,7 +22,8 @@ import { submitAuctionBid } from './actions/write/submitAuctionBid';
 import { transferTokens } from './actions/write/transferTokens';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
 import {
-  ContractResult,
+  ContractReadResult,
+  ContractWriteResult,
   IOContractFunctions,
   IOState,
   PstAction,
@@ -33,7 +34,7 @@ declare const ContractError: any;
 export async function handle(
   state: IOState,
   action: PstAction,
-): Promise<ContractResult> {
+): Promise<ContractReadResult | ContractWriteResult> {
   const input = action.input;
 
   switch (input.function as IOContractFunctions) {

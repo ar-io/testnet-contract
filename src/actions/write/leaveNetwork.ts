@@ -1,15 +1,17 @@
 import { NETWORK_LEAVING_STATUS } from '../../constants';
-import { BlockHeight, ContractResult, IOState, PstAction } from '../../types';
+import {
+  BlockHeight,
+  ContractWriteResult,
+  IOState,
+  PstAction,
+} from '../../types';
 import { isGatewayEligibleToLeave } from '../../utilities';
-
-declare const ContractError: any;
-declare const SmartWeave: any;
 
 // Begins the network leave process for a gateway operator
 export const leaveNetwork = async (
   state: IOState,
   { caller }: PstAction,
-): Promise<ContractResult> => {
+): Promise<ContractWriteResult> => {
   const settings = state.settings.registry;
   const gateways = state.gateways;
   const currentBlockHeight = new BlockHeight(+SmartWeave.block.height);

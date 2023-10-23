@@ -2,12 +2,9 @@ import {
   INSUFFICIENT_FUNDS_MESSAGE,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
-import { ContractResult, IOState, PstAction } from '../../types';
+import { ContractWriteResult, IOState, PstAction } from '../../types';
 import { getInvalidAjvMessage } from '../../utilities';
-import { validateJoinNetwork } from '../../validations.mjs';
-
-declare const ContractError: any;
-declare const SmartWeave: any;
+import { validateJoinNetwork } from '../../validations';
 
 export class JoinNetwork {
   qty: number;
@@ -41,7 +38,7 @@ export class JoinNetwork {
 export const joinNetwork = async (
   state: IOState,
   { caller, input }: PstAction,
-): Promise<ContractResult> => {
+): Promise<ContractWriteResult> => {
   const { balances, gateways = {}, settings } = state;
   const { registry: registrySettings } = settings;
 

@@ -9,7 +9,7 @@ import {
   AuctionSettings,
   BlockHeight,
   BlockTimestamp,
-  ContractResult,
+  ContractWriteResult,
   IOState,
   PstAction,
   RegistrationType,
@@ -24,10 +24,7 @@ import {
   walletHasSufficientBalance,
 } from '../../utilities';
 // composed by ajv at build
-import { validateAuctionBid } from '../../validations.mjs';
-
-declare const ContractError: any;
-declare const SmartWeave: any;
+import { validateAuctionBid } from '../../validations';
 
 export class AuctionBid {
   name: string;
@@ -60,7 +57,7 @@ export class AuctionBid {
 export const submitAuctionBid = (
   state: IOState,
   { caller, input }: PstAction,
-): ContractResult => {
+): ContractWriteResult => {
   const {
     auctions,
     fees,
@@ -176,11 +173,14 @@ export const submitAuctionBid = (
      * Deduct the unsettled value from the caller
      * Return floor price from the protocol balance to the initiator, if necessary
      */
-    balances[SmartWeave.contract.id] += finalBidForCaller.valueOf();
-    balances[caller] -= finalBidForCaller.valueOf();
+    balances[SmartWeave.contract.id] =
+      (balances[SmartWeave.contract.id] || 0) + finalBidForCaller.valueOf();
+    balances[caller] = (balances[caller] || 0) - finalBidForCaller.valueOf();
     if (caller !== existingAuction.initiator) {
-      balances[existingAuction.initiator] += existingAuction.floorPrice;
-      balances[SmartWeave.contract.id] -= existingAuction.floorPrice;
+      balances[existingAuction.initiator] =
+        (balances[existingAuction.initiator] || 0) + existingAuction.floorPrice;
+      balances[SmartWeave.contract.id] =
+        (balances[SmartWeave.contract.id] || 0) - existingAuction.floorPrice;
     }
 
     // update the state
@@ -223,8 +223,9 @@ export const submitAuctionBid = (
   }
 
   auctions[name] = initialAuctionBid; // create the auction object
-  balances[SmartWeave.contract.id] += initialAuctionBid.floorPrice; // vault the balance
-  balances[caller] -= initialAuctionBid.floorPrice; // decremented based on the floor price
+  balances[SmartWeave.contract.id] =
+    (balances[SmartWeave.contract.id] || 0) + initialAuctionBid.floorPrice; // vault the balance
+  balances[caller] = (balances[caller] || 0) - initialAuctionBid.floorPrice; // decremented based on the floor price
 
   // delete the rename if exists in reserved
   if (reserved[name]) {

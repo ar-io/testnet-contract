@@ -6,7 +6,7 @@ import {
 } from '../../constants';
 import {
   BlockTimestamp,
-  ContractResult,
+  ContractWriteResult,
   IOState,
   PstAction,
 } from '../../types';
@@ -16,10 +16,7 @@ import {
   isExistingActiveRecord,
   walletHasSufficientBalance,
 } from '../../utilities';
-import { validateIncreaseUndernameCount } from '../../validations.mjs';
-
-declare const ContractError: any;
-declare const SmartWeave: any;
+import { validateIncreaseUndernameCount } from '../../validations';
 
 export class IncreaseUndernameCount {
   function = 'increaseUndernameCount';
@@ -46,7 +43,7 @@ export class IncreaseUndernameCount {
 export const increaseUndernameCount = async (
   state: IOState,
   { caller, input }: PstAction,
-): Promise<ContractResult> => {
+): Promise<ContractWriteResult> => {
   const { name, qty } = new IncreaseUndernameCount(input);
   const { balances, records } = state;
   const record = records[name];

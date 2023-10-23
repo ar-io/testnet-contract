@@ -2,14 +2,12 @@ import {
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_TARGET_MESSAGE,
 } from '../../constants';
-import { ContractResult, IOState, PstAction } from '../../types';
+import { ContractWriteResult, IOState, PstAction } from '../../types';
 import {
   getInvalidAjvMessage,
   walletHasSufficientBalance,
 } from '../../utilities';
-import { validateTransferToken } from '../../validations.mjs';
-
-declare const ContractError: any;
+import { validateTransferToken } from '../../validations';
 
 // TODO: use top level class
 export class TransferToken {
@@ -31,7 +29,7 @@ export class TransferToken {
 export const transferTokens = async (
   state: IOState,
   { caller, input }: PstAction,
-): Promise<ContractResult> => {
+): Promise<ContractWriteResult> => {
   const { balances } = state;
   const { target, qty } = new TransferToken(input);
 

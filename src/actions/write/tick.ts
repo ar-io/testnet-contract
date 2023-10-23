@@ -9,7 +9,7 @@ import {
   Balances,
   BlockHeight,
   BlockTimestamp,
-  ContractResult,
+  ContractWriteResult,
   DeepReadonly,
   DemandFactoringData,
   Gateways,
@@ -22,9 +22,6 @@ import {
   isExistingActiveRecord,
   isGatewayEligibleToBeRemoved,
 } from '../../utilities';
-
-declare const SmartWeave: any; // TODO: tighter type bindings
-declare const ContractError: any; // TODO: tighter type bindings
 
 function tickInternal({
   currentBlockHeight,
@@ -267,7 +264,7 @@ export function tickAuctions({
 }
 
 // Removes gateway from the gateway address registry after the leave period completes
-export const tick = (state: IOState): ContractResult => {
+export const tick = (state: IOState): ContractWriteResult => {
   const interactionHeight = new BlockHeight(+SmartWeave.block.height);
   const interactionTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
 

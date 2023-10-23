@@ -1,11 +1,11 @@
-import { ContractResult, IOState, PstAction } from '../../types';
+import { ContractReadResult, IOState, PstAction } from '../../types';
 
 declare const ContractError: any;
 
 export const balance = async (
   state: IOState,
   { input: { target } }: PstAction,
-): Promise<ContractResult> => {
+): Promise<ContractReadResult> => {
   const balances = state.balances;
 
   if (typeof target !== 'string') {
