@@ -2,9 +2,10 @@ import { submitAuctionBid } from '../../src/actions/write/submitAuctionBid';
 import {
   ARNS_NAME_AUCTION_EXPIRED_MESSAGE,
   INSUFFICIENT_FUNDS_MESSAGE,
+  RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
 } from '../../src/constants';
-import { IOState } from '../../src/types';
+import { AuctionData, IOState } from '../../src/types';
 import { FEE_STRUCTURE } from '../utils/constants';
 
 describe('submitAuctionBid', () => {
@@ -33,7 +34,6 @@ describe('submitAuctionBid', () => {
     evolve: null,
     records: {},
     balances: {},
-
     reserved: {},
     fees: {
       ...FEE_STRUCTURE,
@@ -59,18 +59,22 @@ describe('submitAuctionBid', () => {
     },
   });
 
+  const baselineAuctionData: AuctionData = {
+    startHeight: 1,
+    startPrice: 1_000,
+    endHeight: 101,
+    floorPrice: 100,
+    type: 'lease',
+    initiator: 'initiator',
+    contractTxId: 'contractTxId',
+    years: 1,
+    settings: baselineAuctionSettings,
+  };
+
   const baselineAuctionState: Partial<IOState> = {
     auctions: {
       'test-auction-close': {
-        startHeight: 1,
-        startPrice: 1_000,
-        endHeight: 101,
-        floorPrice: 100,
-        type: 'lease',
-        initiator: 'initiator',
-        contractTxId: 'contractTxId',
-        years: 1,
-        settings: baselineAuctionSettings,
+        ...baselineAuctionData,
       },
     },
   };
@@ -84,7 +88,7 @@ describe('submitAuctionBid', () => {
       },
       {
         name: '_invalid_name',
-        contractTxId: 'atomic',
+        contractTxId: RESERVED_ATOMIC_TX_ID,
       },
     ],
   ])(
@@ -114,54 +118,106 @@ describe('submitAuctionBid', () => {
         caller: 'initiator',
         input: {
           name: 'test-new-auction',
-          contractTxId: 'atomic',
+          contractTxId: RESERVED_ATOMIC_TX_ID,
         },
       });
     }).toThrowError(new Error(INSUFFICIENT_FUNDS_MESSAGE));
   });
 
-  it('should create a new auction and decrement the initiators balance, increase the protocol balance, and remove the reserved name', () => {
-    const priceForName = 220_000; // TODO: stub this out
-    const inputData = {
-      ...getBaselineState(),
-      reserved: {
-        'test-new-auction': {
-          target: 'initiator',
-        },
+  it.each([
+    [
+      {
+        contractTxId: RESERVED_ATOMIC_TX_ID,
+        type: 'lease',
       },
-      balances: { initiator: priceForName, 'stubbed-contract-id': 0 },
-    };
-    const { state } = submitAuctionBid(inputData, {
-      caller: 'initiator',
-      input: {
-        name: 'test-new-auction',
-        contractTxId: 'atomic',
+      {
+        contractTxId: 'stubbed-transaction-id',
+        type: 'lease',
+        floorPrice: 220_000,
       },
-    });
-    expect(state).toEqual({
-      ...getBaselineState(),
-      balances: {
-        initiator: 0,
-        'stubbed-contract-id': priceForName,
+    ],
+    [
+      {
+        contractTxId: RESERVED_ATOMIC_TX_ID,
+        type: 'lease',
+        years: 5,
       },
-      auctions: {
-        'test-new-auction': {
-          contractTxId: 'stubbed-transaction-id',
-          endHeight: 101,
-          type: 'lease',
-          startHeight: 1,
-          initiator: 'initiator',
-          startPrice:
-            priceForName * baselineAuctionSettings.startPriceMultiplier,
-          floorPrice: priceForName,
-          years: 1,
-          settings: {
-            ...baselineAuctionSettings,
+      {
+        contractTxId: 'stubbed-transaction-id',
+        type: 'lease',
+        floorPrice: 220_000,
+      },
+    ],
+    [
+      {
+        contractTxId: RESERVED_ATOMIC_TX_ID,
+        type: 'permabuy',
+      },
+      {
+        contractTxId: 'stubbed-transaction-id',
+        type: 'permabuy',
+        floorPrice: 200_000,
+      },
+    ],
+    [
+      {
+        contractTxId: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc',
+        type: 'permabuy',
+      },
+      {
+        contractTxId: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc',
+        type: 'permabuy',
+        floorPrice: 200_000,
+      },
+    ],
+  ])(
+    'should create a new auction and decrement the initiators balance, increase the protocol balance, and remove the reserved name for valid contractTxIds',
+    (interactionInput, expectedData) => {
+      const inputData = {
+        ...getBaselineState(),
+        reserved: {
+          'test-new-auction': {
+            target: 'initiator',
           },
         },
-      },
-    });
-  });
+        balances: {
+          initiator: expectedData.floorPrice,
+          'stubbed-contract-id': 0,
+        },
+      };
+      const { state } = submitAuctionBid(inputData, {
+        caller: 'initiator',
+        input: {
+          name: 'test-new-auction',
+          ...interactionInput,
+        },
+      });
+      expect(state).toEqual({
+        ...getBaselineState(),
+        balances: {
+          initiator: 0,
+          'stubbed-contract-id': expectedData.floorPrice,
+        },
+        auctions: {
+          'test-new-auction': {
+            contractTxId: expectedData.contractTxId,
+            endHeight: 101,
+            type: expectedData.type,
+            startHeight: 1,
+            initiator: 'initiator',
+            startPrice:
+              expectedData.floorPrice *
+              baselineAuctionSettings.startPriceMultiplier,
+            floorPrice: expectedData.floorPrice,
+            ...(interactionInput.type === 'lease' ? { years: 1 } : {}),
+            settings: {
+              ...baselineAuctionSettings,
+            },
+          },
+        },
+      });
+    },
+  );
 
   it('should throw an insufficient balance error when a second bidder attempts to bid on an auction with insufficient funds', () => {
     const inputData: IOState = {
@@ -232,45 +288,88 @@ describe('submitAuctionBid', () => {
     }).toThrowError(new Error(ARNS_NAME_AUCTION_EXPIRED_MESSAGE));
   });
 
-  it.only('should close out an auction, update records, return balance to initiator, update protocol balance and increase demand factor for the period when a second bidder wins the auction', () => {
-    const inputData: IOState = {
-      ...getBaselineState(),
-      ...baselineAuctionState,
-      balances: {
-        'stubbed-contract-id': 100, // assumes the floor price was already given to the protocol balance
-        'new-bidder': 1000,
+  it.each([
+    [
+      {
+        contractTxId: 'stubbed-transaction-id',
+        type: 'lease',
+        floorPrice: 100,
+        startPrice: 1000,
       },
-    };
-    const { state } = submitAuctionBid(inputData, {
-      caller: 'new-bidder',
-      input: {
-        name: 'test-auction-close',
-        contractTxId: 'atomic',
+      {
+        contractTxId: 'stubbed-transaction-id',
+        type: 'lease',
+        undernames: 10,
+        startTimestamp: 1,
       },
-    });
-    expect(state).toEqual({
-      ...getBaselineState(),
-      auctions: {},
-      records: {
-        'test-auction-close': {
-          contractTxId: 'stubbed-transaction-id',
-          endTimestamp: SECONDS_IN_A_YEAR + 1,
-          type: 'lease',
-          startTimestamp: 1,
-          undernames: 10,
+    ],
+    [
+      {
+        contractTxId: 'stubbed-transaction-id',
+        type: 'permabuy',
+        floorPrice: 100,
+        startPrice: 1000,
+      },
+      {
+        contractTxId: 'stubbed-transaction-id',
+        type: 'permabuy',
+        undernames: 10,
+        startTimestamp: 1,
+      },
+    ],
+  ])(
+    'should close out an auction, update records, return balance to initiator, update protocol balance and increase demand factor for the period when a second bidder wins the auction',
+    (inputAuctionData, expectedData) => {
+      const auction = {
+        ...baselineAuctionData,
+        ...inputAuctionData,
+      } as AuctionData;
+      const inputData: IOState = {
+        ...getBaselineState(),
+        auctions: {
+          'test-auction-close': auction,
         },
-      },
-      demandFactoring: {
-        ...baselineDemandFactorData,
-        purchasesThisPeriod: 1,
-      },
-      balances: {
-        initiator: 100,
-        'stubbed-contract-id': 1000,
-        'new-bidder': 0,
-      },
-    });
-  });
+        balances: {
+          'stubbed-contract-id': 100, // assumes the floor price was already given to the protocol balance
+          'new-bidder': 1000,
+        },
+      };
+      const { state } = submitAuctionBid(inputData, {
+        caller: 'new-bidder',
+        input: {
+          name: 'test-auction-close',
+          contractTxId: 'atomic',
+        },
+      });
+      expect(state).toEqual({
+        ...getBaselineState(),
+        auctions: {},
+        records: {
+          'test-auction-close': {
+            contractTxId: expectedData.contractTxId,
+            ...{
+              endTimestamp:
+                expectedData.type === 'lease'
+                  ? 1 + SECONDS_IN_A_YEAR
+                  : undefined,
+            },
+            type: expectedData.type,
+            startTimestamp: expectedData.startTimestamp,
+            undernames: expectedData.undernames,
+          },
+        },
+        demandFactoring: {
+          ...baselineDemandFactorData,
+          purchasesThisPeriod: 1,
+        },
+        balances: {
+          initiator: 100,
+          'stubbed-contract-id': 1000,
+          'new-bidder': 0,
+        },
+      });
+    },
+  );
 
   it('should close out an auction, update records, return balance to initiator, update protocol balance and increase demand factor for the period when the initiator bids twice and wins the auction', () => {
     const inputData: IOState = {
@@ -286,7 +385,7 @@ describe('submitAuctionBid', () => {
       caller: 'initiator',
       input: {
         name: 'test-auction-close',
-        contractTxId: 'atomic',
+        contractTxId: RESERVED_ATOMIC_TX_ID,
       },
     });
     expect(state).toEqual({
