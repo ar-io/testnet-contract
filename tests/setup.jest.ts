@@ -35,7 +35,7 @@ module.exports = async () => {
   console.log('Successfully created wallets!'); // eslint-disable-line
 
   // create initial contract
-  const initialContractState = setupInitialContractState(
+  const initialContractState = await setupInitialContractState(
     wallets[0].address,
     wallets.map((w) => w.address),
   );
