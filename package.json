@@ -9,7 +9,7 @@
     "format:fix": "prettier . --write",
     "lint:check": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test:unit": "jest --testPathPattern=tests/unit",
+    "test:unit": "jest --testPathPattern=tests/unit --coverage",
     "test:integration": "jest --testPathPattern=tests/integration",
     "test": "yarn build && jest --runInBand",
     "evolve": "yarn ts-node ./tools/evolve-contract.ts",

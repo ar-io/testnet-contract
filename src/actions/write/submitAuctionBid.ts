@@ -7,11 +7,14 @@ import {
 import { calculateMinimumAuctionBid, tallyNamePurchase } from '../../pricing';
 import {
   AuctionSettings,
+  Balances,
   BlockHeight,
   BlockTimestamp,
   ContractWriteResult,
+  DeepReadonly,
   IOState,
   PstAction,
+  Records,
   RegistrationType,
 } from '../../types';
 import {
@@ -55,18 +58,14 @@ export class AuctionBid {
 }
 
 export const submitAuctionBid = (
-  state: IOState,
+  state: DeepReadonly<IOState>,
   { caller, input }: PstAction,
 ): ContractWriteResult => {
-  const {
-    auctions,
-    fees,
-    records,
-    reserved,
-    settings,
-    balances,
-    demandFactoring,
-  } = state;
+  const updatedBalances: Balances = {
+    [SmartWeave.contract.id]: state.balances[SmartWeave.contract.id] || 0,
+    [caller]: state.balances[caller] || 0,
+  };
+  const updatedRecords: Records = {};
 
   // does validation on constructor
   const {
@@ -86,18 +85,18 @@ export const submitAuctionBid = (
   assertAvailableRecord({
     caller,
     name,
-    records,
-    reserved,
+    records: state.records,
+    reserved: state.reserved,
     currentBlockTimestamp,
   });
 
   // get the current auction settings, create one of it doesn't exist yet
-  const currentAuctionSettings: AuctionSettings = settings.auctions;
+  const currentAuctionSettings: AuctionSettings = state.settings.auctions;
 
   // existing auction, handle the bid
-  if (auctions[name]) {
+  if (state.auctions[name]) {
     // all the things we need to handle an auction bid
-    const existingAuction = auctions[name];
+    const existingAuction = state.auctions[name];
 
     if (currentBlockHeight.valueOf() > existingAuction.endHeight) {
       // TODO: tick state should correct this from happening
@@ -138,7 +137,11 @@ export const submitAuctionBid = (
 
     // throw an error if the wallet doesn't have the balance for the bid
     if (
-      !walletHasSufficientBalance(balances, caller, finalBidForCaller.valueOf())
+      !walletHasSufficientBalance(
+        state.balances,
+        caller,
+        finalBidForCaller.valueOf(),
+      )
     ) {
       throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
     }
@@ -149,7 +152,7 @@ export const submitAuctionBid = (
     });
 
     // the bid has been won, update the records
-    records[name] = {
+    updatedRecords[name] = {
       contractTxId: contractTxId, // only update the new contract tx id
       type: existingAuction.type,
       startTimestamp: +SmartWeave.block.timestamp, // overwrite initial start timestamp
@@ -160,31 +163,45 @@ export const submitAuctionBid = (
       },
     };
 
-    // delete the auction
-    delete auctions[name];
-
     /**
      * Give the unsettled value to the protocol (it should already have the floor price from the initiated auction)
      * Deduct the unsettled final bid value from the caller
      * Return floor price from the protocol balance to the initiator, if necessary
      */
-    balances[SmartWeave.contract.id] =
-      (balances[SmartWeave.contract.id] || 0) + finalBidForCaller.valueOf();
-    balances[caller] = (balances[caller] || 0) - finalBidForCaller.valueOf();
+    updatedBalances[SmartWeave.contract.id] += finalBidForCaller.valueOf();
+    updatedBalances[caller] -= finalBidForCaller.valueOf();
 
     if (caller !== existingAuction.initiator) {
-      balances[existingAuction.initiator] =
-        (balances[existingAuction.initiator] || 0) + existingAuction.floorPrice;
-      balances[SmartWeave.contract.id] =
-        (balances[SmartWeave.contract.id] || 0) - existingAuction.floorPrice;
+      // pull in the intiators existing balance and update it
+      updatedBalances[existingAuction.initiator] =
+        (state.balances[existingAuction.initiator] || 0) +
+        existingAuction.floorPrice;
+      // use the most recent protocol balance and update it
+      updatedBalances[SmartWeave.contract.id] -= existingAuction.floorPrice;
     }
 
     // update the state
-    state.auctions = auctions; // NOTE: we don't need to reassign here as auctions is a reference
-    state.balances = balances; // NOTE: we don't need to reassign here as auctions is a reference
-    state.records = records; // NOTE: we don't need to reassign here as auctions is a reference
-    state.reserved = reserved; // NOTE: we don't need to reassign here as auctions is a reference
-    state.demandFactoring = tallyNamePurchase(demandFactoring);
+    const balances = {
+      ...state.balances,
+      ...updatedBalances,
+    };
+
+    // update our records
+    const records = {
+      ...state.records,
+      ...updatedRecords,
+    };
+
+    // remove the current name from auction
+    const { [name]: _, ...auctions } = state.auctions;
+
+    // update our state
+    Object.assign(state, {
+      auctions,
+      balances,
+      records,
+      demandFactoring: tallyNamePurchase(state.demandFactoring),
+    });
     // return updated state
     return { state };
   }
@@ -193,11 +210,11 @@ export const submitAuctionBid = (
   // calculate the registration fee taking into account demand factoring
   const registrationFee = calculateRegistrationFee({
     name,
-    fees,
+    fees: state.fees,
     years,
     type,
     currentBlockTimestamp,
-    demandFactoring,
+    demandFactoring: state.demandFactoring,
   });
 
   // create the initial auction bid
@@ -213,25 +230,40 @@ export const submitAuctionBid = (
 
   // throw an error on invalid balance
   if (
-    !walletHasSufficientBalance(balances, caller, initialAuctionBid.floorPrice)
+    !walletHasSufficientBalance(
+      state.balances,
+      caller,
+      initialAuctionBid.floorPrice,
+    )
   ) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  auctions[name] = initialAuctionBid; // create the auction object
-  balances[SmartWeave.contract.id] =
-    (balances[SmartWeave.contract.id] || 0) + initialAuctionBid.floorPrice; // vault the balance
-  balances[caller] = (balances[caller] || 0) - initialAuctionBid.floorPrice; // decremented based on the floor price
+  updatedBalances[SmartWeave.contract.id] += initialAuctionBid.floorPrice; // vault the balance
+  updatedBalances[caller] -= initialAuctionBid.floorPrice; // decremented based on the floor price
 
   // delete the rename if exists in reserved
-  if (reserved[name]) {
-    delete reserved[name]; // TODO: is this necessary
-  }
+  const { [name]: _, ...reserved } = state.reserved;
+
+  // update auctions
+  const auctions = {
+    ...state.auctions,
+    [name]: initialAuctionBid,
+  };
+
+  // update balances
+  const balances = {
+    ...state.balances,
+    ...updatedBalances,
+  };
 
   // update the state
-  state.auctions = auctions; // NOTE: we don't need to reassign here as auctions is a reference
-  state.balances = balances; // NOTE: we don't need to reassign here as balances is a reference
-  state.reserved = reserved; // NOTE: we don't need to reassign here as reserved is a reference
+  Object.assign(state, {
+    auctions,
+    balances,
+    reserved,
+  });
+
   // we do not update demand factor here, as it is not a purchase yet
   return { state };
 };
