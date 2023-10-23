@@ -1,15 +1,17 @@
-import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
-import { WarpFactory, defaultCacheOptions } from 'warp-contracts';
 
 import { keyfile } from './constants';
+import { arweave, getContractManifest, initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
 // This script will initiate leaving the network for a gateway that is already joined
 // All tokens will be returned after the gateway waits through the withdrawal period
 // Only the gateway's wallet owner is authorized to adjust these settings
 (async () => {
+  // simple setup script
+  initialize();
+
   // there are no gateway parameters to fill out for this interaction
 
   // Get the key file used for the distribution
@@ -22,27 +24,21 @@ import { keyfile } from './constants';
     process.env.ARNS_CONTRACT_TX_ID ??
     'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
-  // Initialize Arweave
-  const arweave = Arweave.init({
-    host: 'arweave.net',
-    port: 443,
-    protocol: 'https',
-  });
-
-  const warp = WarpFactory.forMainnet(
-    {
-      ...defaultCacheOptions,
-    },
-    true,
-  );
-
   // wallet address
   const walletAddress = await arweave.wallets.getAddress(wallet);
 
-  // Read the ANT Registry Contract
-  const pst = warp.pst(arnsContractTxId).connect(wallet);
+  // get contract manifest
+  const { evaluationOptions = {} } = await getContractManifest({
+    contractTxId: arnsContractTxId,
+  });
 
-  const txId = await pst.writeInteraction(
+  // Read the ANT Registry Contract
+  const contract = warp
+    .pst(arnsContractTxId)
+    .connect(wallet)
+    .setEvaluationOptions(evaluationOptions);
+
+  const txId = await contract.writeInteraction(
     {
       function: 'initiateLeave',
     },

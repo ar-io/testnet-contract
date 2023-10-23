@@ -4,7 +4,7 @@
   "editor.formatOnPaste": true,
   "editor.formatOnSaveMode": "file",
   "prettier.configPath": ".prettierrc",
-  "prettier.prettierPath": "./node_modules/prettier/index.cjs",
+  "prettier.prettierPath": "./node_modules/prettier/index.js",
   "[typescript]": {
     "editor.formatOnSave": true
   },

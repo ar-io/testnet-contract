@@ -1,7 +1,6 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import { IOState } from '../src/types';
-import { arweave, warp } from './setup.jest';
 import {
   ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
   INSUFFICIENT_FUNDS_MESSAGE,
@@ -17,6 +16,7 @@ import {
   getLocalArNSContractId,
   getLocalWallet,
 } from './utils/helper';
+import { arweave, warp } from './utils/services';
 
 describe('Extend', () => {
   let contract: Contract<PstState>;
@@ -29,13 +29,9 @@ describe('Extend', () => {
   describe('contract owner', () => {
     let nonContractOwner: JWKInterface;
     let nonContractOwnerAddress: string;
-    let contractOwner: JWKInterface;
-    let contractOwnerAddress: string;
     let emptyWalletCaller: JWKInterface;
 
     beforeAll(async () => {
-      contractOwner = getLocalWallet(0);
-      contractOwnerAddress = await arweave.wallets.getAddress(contractOwner);
       nonContractOwner = getLocalWallet(1);
       nonContractOwnerAddress = await arweave.wallets.getAddress(
         nonContractOwner,
@@ -202,8 +198,8 @@ describe('Extend', () => {
         expect(state.balances[nonContractOwnerAddress]).toEqual(
           prevBalance - totalExtensionAnnualFee,
         );
-        expect(state.balances[contractOwnerAddress]).toEqual(
-          prevState.balances[contractOwnerAddress] + totalExtensionAnnualFee,
+        expect(state.balances[srcContractId]).toEqual(
+          prevState.balances[srcContractId] + totalExtensionAnnualFee,
         );
       },
     );
@@ -245,8 +241,8 @@ describe('Extend', () => {
         expect(state.balances[nonContractOwnerAddress]).toEqual(
           prevBalance - totalExtensionAnnualFee,
         );
-        expect(state.balances[contractOwnerAddress]).toEqual(
-          prevState.balances[contractOwnerAddress] + totalExtensionAnnualFee,
+        expect(state.balances[srcContractId]).toEqual(
+          prevState.balances[srcContractId] + totalExtensionAnnualFee,
         );
       },
     );

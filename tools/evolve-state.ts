@@ -1,16 +1,14 @@
-import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import fs from 'fs';
-import {
-  LoggerFactory,
-  WarpFactory,
-  defaultCacheOptions,
-} from 'warp-contracts';
 
 import { keyfile } from './constants';
+import { getContractManifest, initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
+  // simple setup script
+  initialize();
+
   // load state of contract
   const arnsContractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
@@ -21,26 +19,16 @@ import { keyfile } from './constants';
     process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
   );
 
-  LoggerFactory.INST.logLevel('error');
-
-  const arweave = new Arweave({
-    host: 'ar-io.dev',
-    port: 443,
-    protocol: 'https',
+  // get contract manifest
+  const { evaluationOptions = {} } = await getContractManifest({
+    contractTxId: arnsContractTxId,
   });
 
-  // ~~ Initialize SmartWeave ~~
-  const warp = WarpFactory.forMainnet(
-    {
-      ...defaultCacheOptions,
-      inMemory: true,
-    },
-    true,
-    arweave,
-  );
-
-  // Connect to the ArNS Registry Contract
-  const contract = warp.pst(arnsContractTxId).connect(wallet);
+  // Read the ANT Registry Contract
+  const contract = warp
+    .pst(arnsContractTxId)
+    .connect(wallet)
+    .setEvaluationOptions(evaluationOptions);
 
   const writeInteraction = await contract.writeInteraction(
     {

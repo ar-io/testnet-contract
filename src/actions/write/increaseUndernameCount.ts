@@ -1,7 +1,6 @@
 import {
   ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
   INSUFFICIENT_FUNDS_MESSAGE,
-  INVALID_INPUT_MESSAGE,
   MAX_ALLOWED_UNDERNAMES,
   MAX_UNDERNAME_MESSAGE,
   SECONDS_IN_GRACE_PERIOD,
@@ -40,7 +39,7 @@ export const increaseUndernameCount = async (
   { caller, input }: PstAction,
 ): Promise<ContractResult> => {
   const { name, qty } = new IncreaseUndernameCount(input);
-  const { balances, records, owner } = state;
+  const { balances, records } = state;
   const record = records[name];
 
   // check if record exists
@@ -62,6 +61,12 @@ export const increaseUndernameCount = async (
   if (incrementedUndernames > MAX_ALLOWED_UNDERNAMES) {
     throw new ContractError(MAX_UNDERNAME_MESSAGE);
   }
+  // This name's lease has expired and cannot be extended
+  if (endTimestamp + SECONDS_IN_GRACE_PERIOD <= currentBlockTime) {
+    throw new ContractError(
+      `This name has expired and must renewed before its undername support can be extended.`,
+    );
+  }
 
   // Check if the user has enough tokens to increase the undername count
   if (!walletHasSufficientBalance(balances, caller, undernameCost)) {
@@ -72,16 +77,10 @@ export const increaseUndernameCount = async (
     );
   }
 
-  // This name's lease has expired and cannot be extended
-  if (endTimestamp + SECONDS_IN_GRACE_PERIOD <= currentBlockTime) {
-    throw new ContractError(
-      `This name has expired and must renewed before its undername support can be extended.`,
-    );
-  }
   // TODO: move cost to protocol balance
   state.records[name].undernames = incrementedUndernames;
   state.balances[caller] -= undernameCost;
-  state.balances[owner] += undernameCost;
+  state.balances[SmartWeave.contract.id] += undernameCost;
 
   return { state };
 };

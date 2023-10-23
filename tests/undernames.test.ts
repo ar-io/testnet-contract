@@ -6,12 +6,12 @@ import {
   MAX_ALLOWED_UNDERNAMES,
 } from '../src/constants';
 import { IOState } from '../src/types';
-import { arweave, warp } from './setup.jest';
 import {
   calculateUndernamePermutations,
   getLocalArNSContractId,
   getLocalWallet,
 } from './utils/helper';
+import { arweave, warp } from './utils/services';
 
 describe('undernames', () => {
   let contract: Contract<IOState>;

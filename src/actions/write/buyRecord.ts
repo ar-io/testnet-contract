@@ -1,22 +1,28 @@
 import {
   ARNS_NAME_IN_AUCTION_MESSAGE,
+  ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE,
   ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_UNDERNAME_COUNT,
   INVALID_SHORT_NAME,
   INVALID_YEARS_MESSAGE,
   MAX_YEARS,
-  MINIMUM_ALLOWED_NAME_LENGTH,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
-  SECONDS_IN_GRACE_PERIOD,
-  SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../../constants';
-import { ContractResult, IOState, PstAction } from '../../types';
 import {
-  calculatePermabuyFee,
-  calculateTotalRegistrationFee,
+  ContractResult,
+  IOState,
+  PstAction,
+  RegistrationType,
+} from '../../types';
+import {
+  calculateRegistrationFee,
   getInvalidAjvMessage,
+  isActiveReservedName,
+  isExistingActiveRecord,
+  isNameRequiredToBeAuction,
+  isShortNameRestricted,
   walletHasSufficientBalance,
 } from '../../utilities';
 // composed by ajv at build
@@ -30,7 +36,7 @@ export class BuyRecord {
   name: string;
   contractTxId: string;
   years: number;
-  type: 'lease' | 'permabuy';
+  type: RegistrationType;
   auction: boolean;
   qty: number;
 
@@ -62,9 +68,9 @@ export const buyRecord = (
   { caller, input }: PstAction,
 ): ContractResult => {
   // get all other relevant state data
-  const { balances, records, reserved, fees, auctions, owner } = state;
+  const { balances, records, reserved, fees, auctions } = state;
   const { name, contractTxId, years, type, auction } = new BuyRecord(input); // does validation on constructor
-  const currentBlockTime = +SmartWeave.block.timestamp;
+  const currentBlockTimestamp = +SmartWeave.block.timestamp;
 
   // auction logic if auction flag set
   if (auction) {
@@ -87,67 +93,47 @@ export const buyRecord = (
     throw new ContractError(`Caller balance is not defined!`);
   }
 
-  // Additional check if it includes a valid number of years (TODO: this may be set in contract settings)
-  if (years > MAX_YEARS) {
-    throw new ContractError(INVALID_YEARS_MESSAGE);
+  if (
+    isActiveReservedName({
+      caller,
+      reservedName: reserved[name],
+      currentBlockTimestamp,
+    })
+  ) {
+    throw new ContractError(ARNS_NAME_RESERVED_MESSAGE);
   }
 
-  if (reserved[name]) {
-    const { target, endTimestamp: reservedEndTimestamp } = reserved[name];
+  if (isShortNameRestricted({ name, currentBlockTimestamp })) {
+    throw new ContractError(INVALID_SHORT_NAME);
+  }
 
-    /**
-     * Three scenarios:
-     *
-     * 1. name is reserved, regardless of length can be purchased only by target, unless expired
-     * 2. name is reserved, but only for a certain amount of time
-     * 3. name is reserved, with no target and no timestamp (i.e. target and timestamp are empty)
-     */
-    const handleReservedName = () => {
-      const reservedByCaller = target === caller;
-      const reservedExpired =
-        reservedEndTimestamp &&
-        reservedEndTimestamp <= +SmartWeave.block.timestamp;
-      if (!reservedByCaller && !reservedExpired) {
-        throw new ContractError(ARNS_NAME_RESERVED_MESSAGE);
-      }
+  if (
+    isExistingActiveRecord({
+      record: records[name],
+      currentBlockTimestamp,
+    })
+  ) {
+    throw new ContractError(NON_EXPIRED_ARNS_NAME_MESSAGE);
+  }
 
-      delete reserved[name];
-      return;
-    };
-    handleReservedName();
-  } else {
-    // not reserved but it's a short name, it can only be auctioned after the short name auction expiration date has passed
-    const handleShortName = () => {
-      /**
-       * If a name is 1-4 characters, it can only be auctioned and after the set expiration.
-       */
-      if (
-        name.length < MINIMUM_ALLOWED_NAME_LENGTH &&
-        +SmartWeave.block.timestamp < SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP &&
-        !auction
-      ) {
-        throw new ContractError(INVALID_SHORT_NAME);
-      }
-      return;
-    };
-    handleShortName();
+  if (isNameRequiredToBeAuction({ name, type })) {
+    throw new ContractError(ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE);
   }
 
   // set the end lease period for this based on number of years if it's a lease
   const endTimestamp =
-    type === 'lease' ? currentBlockTime + SECONDS_IN_A_YEAR * years : undefined;
+    type === 'lease'
+      ? currentBlockTimestamp + SECONDS_IN_A_YEAR * years
+      : undefined;
 
   // TODO: add dynamic pricing
-  // calculate the total fee (initial registration + annual)
-  const totalRegistrationFee =
-    type === 'lease'
-      ? calculateTotalRegistrationFee(
-          name,
-          fees,
-          years,
-          +SmartWeave.block.timestamp,
-        )
-      : calculatePermabuyFee(name, fees, +SmartWeave.block.timestamp);
+  const totalRegistrationFee = calculateRegistrationFee({
+    name,
+    fees,
+    years,
+    type,
+    currentBlockTimestamp: +SmartWeave.block.timestamp,
+  });
 
   if (!walletHasSufficientBalance(balances, caller, totalRegistrationFee)) {
     throw new ContractError(
@@ -155,25 +141,9 @@ export const buyRecord = (
     );
   }
 
-  // Check if the requested name exists on a lease and in a grace period
-  if (
-    records[name] &&
-    records[name].type === 'lease' &&
-    records[name].endTimestamp
-  ) {
-    const { endTimestamp } = records[name];
-    if (
-      endTimestamp &&
-      endTimestamp + SECONDS_IN_GRACE_PERIOD > +SmartWeave.block.timestamp
-    ) {
-      // name is still on active lease during grace period
-      throw new ContractError(NON_EXPIRED_ARNS_NAME_MESSAGE);
-    }
-  }
-
   // TODO: replace with protocol balance
   balances[caller] -= totalRegistrationFee;
-  balances[owner] += totalRegistrationFee;
+  balances[SmartWeave.contract.id] += totalRegistrationFee;
 
   records[name] = {
     contractTxId,
@@ -183,6 +153,11 @@ export const buyRecord = (
     // only include timestamp on lease
     ...(type === 'lease' ? { endTimestamp } : {}),
   };
+
+  // delete the reserved name if it exists
+  if (reserved[name]) {
+    delete state.reserved[name];
+  }
 
   // update the records object
   state.records = records;

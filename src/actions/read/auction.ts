@@ -1,66 +1,126 @@
 import { ContractResult, IOState, PstAction } from '../../types';
-import { calculateMinimumAuctionBid } from '../../utilities';
+import {
+  calculateMinimumAuctionBid,
+  calculateRegistrationFee,
+  createAuctionObject,
+  getAuctionPrices,
+  isNameAvailableForAuction,
+  isNameRequiredToBeAuction,
+} from '../../utilities';
 
 declare const SmartWeave: any;
-declare const ContractError;
 
 export const getAuction = (
   state: IOState,
-  { input: { name } }: PstAction,
+  { caller, input: { name, type = 'lease' } }: PstAction,
 ): ContractResult => {
-  const { auctions, settings } = state;
-  const auction = auctions[name.toLowerCase().trim()];
+  const { records, auctions, settings, fees, reserved } = state;
+  const formattedName = name.toLowerCase().trim();
+  const auction = auctions[formattedName];
+  const auctionSettings = settings.auctions;
 
   if (!auction) {
-    throw new ContractError(`No live auction exists for ${auction}`);
-  }
+    const currentBlockTimestamp = +SmartWeave.block.timestamp;
+    const currentBlockHeight = +SmartWeave.block.height;
 
-  const { auctionSettingsId, startHeight, floorPrice, startPrice } = auction;
-  const auctionSettings = settings.auctions.history.find(
-    (a) => a.id === auctionSettingsId,
-  );
+    const initialRegistrationFee = calculateRegistrationFee({
+      type,
+      name,
+      fees,
+      years: 1,
+      currentBlockTimestamp,
+    });
 
-  if (!auctionSettings) {
-    throw new ContractError(
-      `Auction settings with id ${auctionSettingsId} does not exist.`,
-    );
-  }
+    // existing record
+    const record = records[formattedName];
 
-  const expirationHeight = startHeight + auctionSettings.auctionDuration;
+    // reserved name
+    const reservedName = reserved[formattedName];
 
-  if (expirationHeight < +SmartWeave.block.height) {
-    throw new ContractError('Auction is expired!');
-  }
+    // check if name is available for auction
+    const isAvailableForAuction = isNameAvailableForAuction({
+      caller,
+      name: formattedName,
+      record,
+      reservedName,
+      currentBlockTimestamp,
+    });
 
-  const { auctionDuration, decayRate, decayInterval } = auctionSettings;
-  const intervalCount = auctionDuration / decayInterval;
-  const prices = {};
-  for (let i = 0; i <= intervalCount; i++) {
-    const intervalHeight = startHeight + i * decayInterval;
-    const price = calculateMinimumAuctionBid({
-      startHeight,
+    // some names must be auctioned depending on the type
+    const isRequiredToBeAuctioned = isNameRequiredToBeAuction({
+      name: formattedName,
+      type,
+    });
+
+    // a stubbed auction object
+    const auctionObject = createAuctionObject({
+      auctionSettings,
+      type,
+      initialRegistrationFee: initialRegistrationFee,
+      currentBlockHeight,
+      contractTxId: undefined,
+      initiator: undefined,
+    });
+
+    const floorPrice =
+      initialRegistrationFee * auctionObject.settings.floorPriceMultiplier;
+    const startPrice = floorPrice * auctionObject.settings.startPriceMultiplier;
+
+    const prices = getAuctionPrices({
+      auctionSettings,
+      startHeight: currentBlockHeight, // set it to the current block height
       startPrice,
       floorPrice,
-      currentBlockHeight: intervalHeight,
-      decayInterval,
-      decayRate,
     });
-    prices[intervalHeight] = price;
+
+    return {
+      result: {
+        name: formattedName,
+        isActive: false,
+        isAvailableForAuction: isAvailableForAuction,
+        isRequiredToBeAuctioned: isRequiredToBeAuctioned,
+        minimumBid: floorPrice, // since its not active yet, the minimum bid is the floor price
+        ...auctionObject,
+        prices,
+      },
+    };
   }
 
-  const { auctionSettingsId: _, ...auctionWithoutSettingsId } = auction;
+  const { startHeight, floorPrice, startPrice } = auction;
+  const expirationHeight = startHeight + auctionSettings.auctionDuration;
+  const isRequiredToBeAuctioned = isNameRequiredToBeAuction({
+    name: formattedName,
+    type: auction.type,
+  });
+
+  // get all the prices for the auction
+  const prices = getAuctionPrices({
+    auctionSettings,
+    startHeight,
+    startPrice,
+    floorPrice,
+  });
+
+  // calculate the minimum bid
+  const minimumBid = calculateMinimumAuctionBid({
+    startHeight,
+    startPrice,
+    floorPrice,
+    currentBlockHeight: +SmartWeave.block.height,
+    decayInterval: auctionSettings.decayInterval,
+    decayRate: auctionSettings.decayRate,
+  });
 
   return {
     result: {
-      auction: {
-        ...auctionWithoutSettingsId,
-        endHeight: expirationHeight,
-        settings: {
-          id: auctionSettingsId,
-          ...auctionSettings,
-        },
-        prices,
-      },
+      name: formattedName,
+      // TODO: inclusive or exclusive here
+      isActive: expirationHeight > +SmartWeave.block.height,
+      isAvailableForAuction: false,
+      isRequiredToBeAuctioned: isRequiredToBeAuctioned,
+      minimumBid,
+      ...auction,
+      prices,
     },
   };
 };

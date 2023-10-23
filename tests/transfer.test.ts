@@ -1,7 +1,6 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import { IOState } from '../src/types';
-import { arweave, warp } from './setup.jest';
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
@@ -9,6 +8,7 @@ import {
   TRANSFER_QTY,
 } from './utils/constants';
 import { getLocalArNSContractId, getLocalWallet } from './utils/helper';
+import { arweave, warp } from './utils/services';
 
 describe('Transfers', () => {
   let contract: Contract<PstState>;
@@ -50,6 +50,32 @@ describe('Transfers', () => {
         prevOwnerBalance - TRANSFER_QTY,
       );
       expect(newState.balances[targetAddress]).toEqual(
+        prevTargetBalance + TRANSFER_QTY,
+      );
+    });
+
+    it('should be able to transfer tokens to the protocol balance', async () => {
+      const ownerAddress = await arweave.wallets.getAddress(owner);
+      const { cachedValue: prevCachedValue } = await contract.readState();
+      const prevState = prevCachedValue.state as IOState;
+      const prevOwnerBalance = prevState.balances[ownerAddress];
+      const prevTargetBalance = prevState.balances[srcContractId] ?? 0;
+      const writeInteraction = await contract.writeInteraction({
+        function: 'transfer',
+        target: srcContractId, // The smartweave contract id acts as the protocol balance
+        qty: TRANSFER_QTY,
+      });
+
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      const { cachedValue: newCachedValue } = await contract.readState();
+      const newState = newCachedValue.state as IOState;
+      expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
+        writeInteraction!.originalTxId,
+      );
+      expect(newState.balances[ownerAddress]).toEqual(
+        prevOwnerBalance - TRANSFER_QTY,
+      );
+      expect(newState.balances[srcContractId]).toEqual(
         prevTargetBalance + TRANSFER_QTY,
       );
     });
