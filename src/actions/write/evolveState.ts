@@ -14,6 +14,11 @@ export const evolveState = async (
     throw new ContractError(NON_CONTRACT_OWNER_MESSAGE);
   }
 
+  // set each gateway to have an empty array of vaults
+  for (const address in state.gateways) {
+    state.gateways[address].observerWallet = address;
+  }
+
   // remove existing auctions
   state.auctions = {};
 
