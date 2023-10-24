@@ -1,6 +1,6 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts/lib/types';
 
-import { IOState, WeightedObserver } from '../src/types';
+import { IOState } from '../src/types';
 import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_START_HEIGHT,
@@ -23,10 +23,8 @@ import { arweave, warp } from './utils/services';
 
 describe('Observation', () => {
   const gatewayWalletAddresses: string[] = [];
-  let currentGatewayWalletAddress: string;
   let contract: Contract<PstState>;
   let srcContractId: string;
-  let currentPrescribedObservers: WeightedObserver[];
   const wallets: {
     addr: string;
     jwk: JWKInterface;
@@ -56,31 +54,58 @@ describe('Observation', () => {
           function: 'prescribedObservers',
           height,
         })) as any;
-        currentPrescribedObservers = prescribedObservers;
         expect(prescribedObservers).toHaveLength(NUM_OBSERVERS_PER_EPOCH);
       });
 
-      it('should be able to check if target is valid observer for a given epoch', async () => {
+      it('should be able to check if target gateway wallet is valid observer for a given epoch', async () => {
         const height = await getCurrentBlock(arweave);
-        const { result: prescribedObserver } = (await contract.viewState({
-          function: 'prescribedObserver',
-          target: currentPrescribedObservers[0].address,
+        const { result: prescribedObservers } = (await contract.viewState({
+          function: 'prescribedObservers',
           height,
         })) as any;
-        expect(prescribedObserver).toBe(true);
+        const { result: prescribedGatewayWallet } = (await contract.viewState({
+          function: 'prescribedObserver',
+          target: prescribedObservers[0].gatewayAddress,
+          height,
+        })) as any;
+        expect(prescribedGatewayWallet).toBe(true);
+      });
+
+      it('should be able to check if target observer wallet is valid observer for a given epoch', async () => {
+        const height = await getCurrentBlock(arweave);
+        const { result: prescribedObservers } = (await contract.viewState({
+          function: 'prescribedObservers',
+          height,
+        })) as any;
+        const { result: prescribedObserverWallet } = (await contract.viewState({
+          function: 'prescribedObserver',
+          target: prescribedObservers[0].observerAddress,
+          height,
+        })) as any;
+        expect(prescribedObserverWallet).toBe(true);
+      });
+
+      it('should be able to check if target wallet is not a valid observer for a given epoch', async () => {
+        const height = await getCurrentBlock(arweave);
+        const { result: prescribedObservers } = (await contract.viewState({
+          function: 'prescribedObservers',
+          height,
+        })) as any;
         // Must find a gateway that is not prescribed
         for (let i = 0; i < WALLETS_TO_CREATE; i++) {
           if (
-            !currentPrescribedObservers.some(
-              (observer) => observer.address === wallets[i].addr,
+            prescribedObservers.some(
+              (observer) =>
+                observer.gatewayAddress !== wallets[i].addr &&
+                observer.observerAddress !== wallets[i].addr,
             )
           ) {
-            const { result: prescribedObserver2 } = (await contract.viewState({
+            const { result: notPrescribedWallet } = (await contract.viewState({
               function: 'prescribedObserver',
               target: wallets[i].addr,
               height,
             })) as any;
-            expect(prescribedObserver2).toBe(false);
+            expect(notPrescribedWallet).toBe(false);
             break;
           }
         }
@@ -101,7 +126,7 @@ describe('Observation', () => {
         })) as any;
         const prescribedObserverWallets = wallets.filter((wallet) =>
           prescribedObservers.find(
-            (observer) => observer.address === wallet.addr,
+            (observer) => observer.gatewayAddress === wallet.addr,
           ),
         );
         const writeInteractions = await Promise.all(
@@ -154,7 +179,7 @@ describe('Observation', () => {
         })) as any;
         const prescribedObserverWallets = wallets.filter((wallet) =>
           prescribedObservers.find(
-            (observer) => observer.address === wallet.addr,
+            (observer) => observer.gatewayAddress === wallet.addr,
           ),
         );
         contract = warp
@@ -192,7 +217,7 @@ describe('Observation', () => {
         })) as any;
         const prescribedObserverWallets = wallets.filter((wallet) =>
           prescribedObservers.find(
-            (observer) => observer.address === wallet.addr,
+            (observer) => observer.gatewayAddress === wallet.addr,
           ),
         );
         const failedGateways = getRandomFailedGatewaysSubset(
@@ -249,11 +274,68 @@ describe('Observation', () => {
         })) as any;
         const prescribedObserverWallets = wallets.filter((wallet) =>
           prescribedObservers.find(
-            (observer) => observer.address === wallet.addr,
+            (observer) => observer.gatewayAddress === wallet.addr,
           ),
         );
         const writeInteractions = await Promise.all(
           prescribedObserverWallets.map((wallet) => {
+            const failedGateways = getRandomFailedGatewaysSubset(
+              gatewayWalletAddresses,
+            );
+            contract = warp.pst(srcContractId).connect(wallet.jwk);
+            return contract.writeInteraction({
+              function: 'saveObservations',
+              observerReportTxId: EXAMPLE_OBSERVER_REPORT_TX_IDS[0],
+              failedGateways: failedGateways,
+            });
+          }),
+        );
+
+        height = await getCurrentBlock(arweave);
+        currentEpochStartHeight = getEpochStart({
+          startHeight: DEFAULT_START_HEIGHT,
+          epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
+          height,
+        });
+        const { cachedValue: newCachedValue } = await contract.readState();
+        const newState = newCachedValue.state as IOState;
+        const reportLength = Object.keys(
+          newState.observations[currentEpochStartHeight].reports,
+        ).length;
+        expect(
+          writeInteractions.every((interaction) => interaction?.originalTxId),
+        ).toEqual(true);
+
+        expect(
+          writeInteractions.every(
+            (interaction) =>
+              !Object.keys(newCachedValue.errorMessages).includes(
+                interaction!.originalTxId,
+              ),
+          ),
+        ).toEqual(true);
+        expect(reportLength).toEqual(NUM_OBSERVERS_PER_EPOCH);
+      });
+
+      it('should change epoch and save observations again if prescribed observer using observer wallet address', async () => {
+        await mineBlocks(arweave, DEFAULT_EPOCH_BLOCK_LENGTH);
+        let height = await getCurrentBlock(arweave);
+        let currentEpochStartHeight = getEpochStart({
+          startHeight: DEFAULT_START_HEIGHT,
+          epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
+          height,
+        });
+        const { result: prescribedObservers } = (await contract.viewState({
+          function: 'prescribedObservers',
+          height,
+        })) as any;
+        const prescribedObserverWallets = wallets.filter((wallet) =>
+          prescribedObservers.find(
+            (observer) => observer.observerAddress === wallet.addr,
+          ),
+        );
+        const writeInteractions = await Promise.all(
+          prescribedObserverWallets.map(async (wallet) => {
             const failedGateways = getRandomFailedGatewaysSubset(
               gatewayWalletAddresses,
             );
@@ -313,7 +395,7 @@ describe('Observation', () => {
 
       it.each([
         undefined,
-        currentGatewayWalletAddress, // should reject this because it is not an array
+        gatewayWalletAddresses[0], // should reject this because it is not an array
         ['bad-tx-id'],
         [100],
         [EXAMPLE_LIST_OF_FAILED_GATEWAYS],
@@ -337,23 +419,19 @@ describe('Observation', () => {
   });
 
   describe('non-prescribed observer', () => {
-    beforeAll(async () => {
-      const height = await getCurrentBlock(arweave);
-      const { result: prescribedObservers } = (await contract.viewState({
-        function: 'prescribedObservers',
-        height,
-      })) as any;
-      currentPrescribedObservers = prescribedObservers;
-    });
-
     describe('write interactions', () => {
       it('should not save observation report if not prescribed observer', async () => {
+        const height = await getCurrentBlock(arweave);
+        const { result: prescribedObservers } = (await contract.viewState({
+          function: 'prescribedObservers',
+          height,
+        })) as any;
         const { cachedValue: prevCachedValue } = await contract.readState();
         // Connect as an invalid observer
         for (let i = 0; i < WALLETS_TO_CREATE; i++) {
           if (
-            !currentPrescribedObservers.some(
-              (observer) => observer.address === wallets[i].addr,
+            !prescribedObservers.some(
+              (observer) => observer.gatewayAddress === wallets[i].addr,
             )
           ) {
             contract = warp.pst(srcContractId).connect(wallets[i].jwk);
@@ -373,7 +451,7 @@ describe('Observation', () => {
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
 
-      it('should not save observation report if not in the GAR', async () => {
+      it('should not save observation report if not in the GAR and not Observer Wallet', async () => {
         const notJoinedGateway = await createLocalWallet(arweave);
         const { cachedValue: prevCachedValue } = await contract.readState();
         contract = warp.pst(srcContractId).connect(notJoinedGateway.wallet); // The last wallet in the array is not in the GAR

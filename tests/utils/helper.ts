@@ -140,6 +140,7 @@ function createGateways(wallets: string[]) {
       properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
       note: 'The friendliest gateway to the whole permaweb',
     },
+    observerWallet: wallets[10],
   };
 
   gateways[wallets[1]] = {
@@ -156,6 +157,7 @@ function createGateways(wallets: string[]) {
       properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
       note: 'i do bad things',
     },
+    observerWallet: wallets[11],
   };
 
   gateways[wallets[2]] = {
@@ -172,6 +174,7 @@ function createGateways(wallets: string[]) {
       properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
       note: '',
     },
+    observerWallet: wallets[12],
   };
 
   gateways[wallets[3]] = {
@@ -188,6 +191,7 @@ function createGateways(wallets: string[]) {
       properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
       note: '',
     },
+    observerWallet: wallets[13],
   };
 
   gateways[wallets[4]] = {
@@ -204,6 +208,7 @@ function createGateways(wallets: string[]) {
       properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
       note: 'Observation testing',
     },
+    observerWallet: wallets[14],
   };
 
   gateways[wallets[5]] = {
@@ -220,6 +225,7 @@ function createGateways(wallets: string[]) {
       properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
       note: 'More observervation testing',
     },
+    observerWallet: wallets[5],
   };
 
   gateways[wallets[6]] = {
@@ -236,6 +242,7 @@ function createGateways(wallets: string[]) {
       properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
       note: 'Leaving after epoch 0',
     },
+    observerWallet: wallets[6],
   };
 
   gateways[wallets[7]] = {
@@ -258,6 +265,7 @@ function createGateways(wallets: string[]) {
       properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
       note: 'Leaving the network',
     },
+    observerWallet: wallets[7],
   };
 
   gateways[wallets[8]] = {
@@ -280,6 +288,7 @@ function createGateways(wallets: string[]) {
       properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
       note: 'Leaving the network',
     },
+    observerWallet: wallets[8],
   };
 
   gateways[wallets[9]] = {
@@ -302,6 +311,7 @@ function createGateways(wallets: string[]) {
       properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
       note: 'Leaving the network',
     },
+    observerWallet: wallets[9],
   };
 
   return gateways;

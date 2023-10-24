@@ -37,4 +37,4 @@ export const EXAMPLE_LIST_OF_FAILED_GATEWAYS = [
 // Also export all our other constants
 export * from '../../src/constants';
 
-export const WALLETS_TO_CREATE = 10;
+export const WALLETS_TO_CREATE = 15;
