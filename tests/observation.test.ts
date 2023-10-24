@@ -48,13 +48,33 @@ describe('Observation', () => {
 
   describe('valid observer', () => {
     describe('read operations', () => {
-      it('should get prescribed observers', async () => {
+      it('should get prescribed observers with height', async () => {
         const height = await getCurrentBlock(arweave);
         const { result: prescribedObservers } = (await contract.viewState({
           function: 'prescribedObservers',
           height,
         })) as any;
         expect(prescribedObservers).toHaveLength(NUM_OBSERVERS_PER_EPOCH);
+      });
+
+      it('should get prescribed observers without height', async () => {
+        const { result: prescribedObservers } = (await contract.viewState({
+          function: 'prescribedObservers',
+        })) as any;
+        expect(prescribedObservers).toHaveLength(NUM_OBSERVERS_PER_EPOCH);
+      });
+
+      it('prescribed observers must be the same within an epoch', async () => {
+        const { result: prescribedObservers } = (await contract.viewState({
+          function: 'prescribedObservers',
+        })) as any;
+        expect(prescribedObservers).toHaveLength(NUM_OBSERVERS_PER_EPOCH);
+        await mineBlock;
+        const { result: prescribedObservers2 } = (await contract.viewState({
+          function: 'prescribedObservers',
+        })) as any;
+        expect(prescribedObservers2).toHaveLength(NUM_OBSERVERS_PER_EPOCH);
+        expect(prescribedObservers).toEqual(prescribedObservers2);
       });
 
       it('should be able to check if target gateway wallet is valid observer for a given epoch', async () => {
@@ -67,6 +87,17 @@ describe('Observation', () => {
           function: 'prescribedObserver',
           target: prescribedObservers[0].gatewayAddress,
           height,
+        })) as any;
+        expect(prescribedGatewayWallet).toBe(true);
+      });
+
+      it('should be able to check if target gateway wallet is valid observer for a given epoch without height', async () => {
+        const { result: prescribedObservers } = (await contract.viewState({
+          function: 'prescribedObservers',
+        })) as any;
+        const { result: prescribedGatewayWallet } = (await contract.viewState({
+          function: 'prescribedObserver',
+          target: prescribedObservers[0].gatewayAddress,
         })) as any;
         expect(prescribedGatewayWallet).toBe(true);
       });
@@ -86,29 +117,14 @@ describe('Observation', () => {
       });
 
       it('should be able to check if target wallet is not a valid observer for a given epoch', async () => {
+        const notJoinedGateway = await createLocalWallet(arweave);
         const height = await getCurrentBlock(arweave);
-        const { result: prescribedObservers } = (await contract.viewState({
-          function: 'prescribedObservers',
+        const { result: notPrescribedWallet } = (await contract.viewState({
+          function: 'prescribedObserver',
+          target: notJoinedGateway.address,
           height,
         })) as any;
-        // Must find a gateway that is not prescribed
-        for (let i = 0; i < WALLETS_TO_CREATE; i++) {
-          if (
-            prescribedObservers.some(
-              (observer) =>
-                observer.gatewayAddress !== wallets[i].addr &&
-                observer.observerAddress !== wallets[i].addr,
-            )
-          ) {
-            const { result: notPrescribedWallet } = (await contract.viewState({
-              function: 'prescribedObserver',
-              target: wallets[i].addr,
-              height,
-            })) as any;
-            expect(notPrescribedWallet).toBe(false);
-            break;
-          }
-        }
+        expect(notPrescribedWallet).toBe(false);
       });
     });
 

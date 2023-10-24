@@ -15,6 +15,7 @@ import {
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
+  TENURE_WEIGHT_DAYS,
   UNDERNAME_REGISTRATION_IO_FEE,
 } from './constants';
 import {
@@ -361,7 +362,7 @@ export async function getPrescribedObservers(
       const stakeWeight = stake / minNetworkJoinStakeAmount;
       let tenureWeight =
         (+SmartWeave.block.height - gateways[address].start) /
-        (180 * BLOCKS_PER_DAY);
+        (TENURE_WEIGHT_DAYS * BLOCKS_PER_DAY);
 
       if (tenureWeight > MAX_TENURE_WEIGHT) {
         tenureWeight = MAX_TENURE_WEIGHT;
@@ -400,7 +401,6 @@ export async function getPrescribedObservers(
     weightedObserver.normalizedCompositeWeight =
       weightedObserver.compositeWeight / totalCompositeWeight;
   }
-  //console.log('Epoch: %s - got weighted observers!', height, weightedObservers);
 
   // If we want to source more observers than exist in the list, just return all eligible observers
   if (NUM_OBSERVERS_PER_EPOCH >= Object.keys(weightedObservers).length) {
@@ -429,11 +429,6 @@ export async function getPrescribedObservers(
       hash = await SmartWeave.arweave.crypto.hash(hash, 'SHA-256');
     }
   }
-  /*console.log(
-    'Epoch: %s - got prescribed observers!',
-    height,
-    prescribedObservers,
-  );*/
   return prescribedObservers;
 }
 
