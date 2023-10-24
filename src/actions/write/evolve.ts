@@ -1,7 +1,7 @@
 import { NON_CONTRACT_OWNER_MESSAGE } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 
-declare const ContractError;
+declare const ContractError: any;
 
 // Updates this contract to new source code
 export const evolve = async (

@@ -17,6 +17,7 @@ export class JoinNetwork {
   properties: string;
   protocol: 'http' | 'https';
   port: number;
+  observerWallet: string;
 
   constructor(input: any) {
     // validate using ajv validator
@@ -24,7 +25,16 @@ export class JoinNetwork {
       throw new ContractError(getInvalidAjvMessage(validateJoinNetwork, input));
     }
 
-    const { qty, label, port, fqdn, note, protocol, properties } = input;
+    const {
+      qty,
+      label,
+      port,
+      fqdn,
+      note,
+      protocol,
+      properties,
+      observerWallet,
+    } = input;
     this.qty = qty;
     this.label = label;
     this.port = port;
@@ -32,6 +42,7 @@ export class JoinNetwork {
     this.properties = properties;
     this.fqdn = fqdn;
     this.note = note;
+    this.observerWallet = observerWallet;
   }
 }
 
@@ -43,7 +54,7 @@ export const joinNetwork = async (
   const { balances, gateways = {}, settings } = state;
   const { registry: registrySettings } = settings;
 
-  const { qty, ...gatewaySettings } = new JoinNetwork(input);
+  const { qty, observerWallet, ...gatewaySettings } = new JoinNetwork(input);
 
   if (
     !balances[caller] ||
@@ -72,6 +83,7 @@ export const joinNetwork = async (
   state.balances[caller] -= qty;
   state.gateways[caller] = {
     operatorStake: qty,
+    observerWallet: observerWallet || caller, // if no observer wallet is provided, we add the caller by default
     vaults: [],
     settings: {
       ...gatewaySettings,

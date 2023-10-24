@@ -19,6 +19,8 @@ import {
 } from './constants';
 import {
   ArNSName,
+  Auction,
+  AuctionSettings,
   Fees,
   Gateway,
   RegistrationType,
@@ -531,4 +533,44 @@ export function isNameRequiredToBeAuction({
   type: RegistrationType;
 }): boolean {
   return type === 'permabuy' && name.length < 12;
+}
+export function createAuctionObject({
+  auctionSettings,
+  initialRegistrationFee,
+  contractTxId,
+  currentBlockHeight,
+  type,
+  initiator,
+  providedFloorPrice,
+}: {
+  auctionSettings: AuctionSettings;
+  initialRegistrationFee: number;
+  contractTxId: string | undefined;
+  currentBlockHeight: number;
+  type: RegistrationType;
+  initiator: string | undefined;
+  years?: number;
+  providedFloorPrice?: number;
+}): Auction {
+  const calculatedFloor =
+    initialRegistrationFee * auctionSettings.floorPriceMultiplier;
+  // if someone submits a high floor price, we'll take it
+  const floorPrice = providedFloorPrice
+    ? Math.max(providedFloorPrice, calculatedFloor)
+    : calculatedFloor;
+
+  const startPrice = floorPrice * auctionSettings.startPriceMultiplier;
+  const endHeight = currentBlockHeight + auctionSettings.auctionDuration;
+  const years = type === 'lease' ? 1 : undefined;
+  return {
+    initiator, // the balance that the floor price is decremented from
+    contractTxId,
+    startPrice,
+    floorPrice, // this is decremented from the initiators wallet, and could be higher than the precalculated floor
+    startHeight: currentBlockHeight, // auction starts right away
+    endHeight, // auction ends after the set duration
+    type,
+    ...(years ? { years } : {}),
+    settings: auctionSettings,
+  };
 }

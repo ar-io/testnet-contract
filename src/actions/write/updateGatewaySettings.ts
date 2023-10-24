@@ -18,8 +18,16 @@ export const updateGatewaySettings = async (
   const { gateways = {} } = state;
 
   // TODO: add object parsing validation
-  const { label, fqdn, port, protocol, properties, note, status } =
-    input as any;
+  const {
+    label,
+    fqdn,
+    port,
+    protocol,
+    properties,
+    note,
+    status,
+    observerWallet,
+  } = input as any;
 
   // TODO: consistent checks
   if (!(caller in gateways)) {
@@ -93,6 +101,16 @@ export const updateGatewaySettings = async (
       );
     } else {
       gateways[caller].status = status;
+    }
+  }
+
+  if (observerWallet) {
+    if (!isValidArweaveBase64URL(observerWallet)) {
+      throw new ContractError(
+        'Invalid observer wallet address.  Must be a valid Arweave Wallet Address.',
+      );
+    } else {
+      gateways[caller].observerWallet = observerWallet;
     }
   }
 

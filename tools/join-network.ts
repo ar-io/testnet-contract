@@ -17,6 +17,14 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
   // simple setup script
   initialize();
 
+  // Get the key file used for the distribution
+  const wallet: JWKInterface = JSON.parse(
+    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
+  );
+
+  // wallet address
+  const walletAddress = await arweave.wallets.getAddress(wallet);
+
   // the quantity of tokens to stake.  Must be greater than the minimum
   const qty = 100_000;
 
@@ -38,18 +46,13 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
   // an optional, short note to further describe this gateway and its status
   const note = 'Owned and operated by DTF.';
 
-  // Get the key file used for the distribution
-  const wallet: JWKInterface = JSON.parse(
-    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
-  );
+  // The observer wallet public address eg.iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA which is used to upload observation reports
+  const observerWallet = '';
 
   // gate the contract txId
   const arnsContractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
     'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
-
-  // wallet address
-  const walletAddress = await arweave.wallets.getAddress(wallet);
 
   // get contract manifest
   const { evaluationOptions = {} } = await getContractManifest({
@@ -66,6 +69,7 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
   const txId = await contract.writeInteraction(
     {
       function: 'joinNetwork',
+      observerWallet,
       qty,
       label,
       fqdn,
