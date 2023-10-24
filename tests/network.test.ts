@@ -34,7 +34,7 @@ describe('Network', () => {
 
     beforeAll(async () => {
       owner = getLocalWallet(0);
-      newGatewayOperator = getLocalWallet(9);
+      newGatewayOperator = getLocalWallet(15);
       newGatewayOperatorAddress = await arweave.wallets.getAddress(
         newGatewayOperator,
       );
@@ -768,7 +768,7 @@ describe('Network', () => {
     beforeAll(async () => {
       owner = getLocalWallet(0);
       ownerAddress = await arweave.wallets.getAddress(owner);
-      nonGatewayOperator = getLocalWallet(10);
+      nonGatewayOperator = getLocalWallet(16);
       contract = warp.pst(srcContractId).connect(nonGatewayOperator);
       nonGatewayOperatorAddress = await arweave.wallets.getAddress(
         nonGatewayOperator,
