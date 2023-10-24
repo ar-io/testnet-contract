@@ -52,7 +52,8 @@ export type Observations = {
 };
 
 export type WeightedObserver = {
-  address: string;
+  gatewayAddress: string;
+  observerAddress: string;
   stake: number;
   start: number;
   stakeWeight: number;

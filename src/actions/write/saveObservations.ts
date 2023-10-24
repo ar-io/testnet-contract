@@ -45,10 +45,24 @@ export const saveObservations = async (
     height: +SmartWeave.block.height,
   });
 
-  const gateway = gateways[caller];
-  if (!gateway) {
-    throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
-  } else if (gateway.start > currentEpochStartHeight) {
+  let gatewayAddress: string;
+  if (gateways[caller]) {
+    // This caller is a known gateway
+    gatewayAddress = caller;
+  } else {
+    // This caller is not a known gateway, so check if it matches an observer wallet
+    for (const address in gateways) {
+      if (gateways[address].observerWallet === caller) {
+        gatewayAddress = address;
+      }
+    }
+    if (!gatewayAddress) {
+      throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
+    }
+  }
+
+  const gateway = gateways[gatewayAddress];
+  if (gateway.start > currentEpochStartHeight) {
     throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
   }
 
@@ -59,9 +73,16 @@ export const saveObservations = async (
     currentEpochStartHeight,
   );
 
-  if (!prescribedObservers.find((observer) => observer.address === caller)) {
-    // The gateway with the specified address is not found in the eligibleObservers list
-    throw new ContractError(`${caller} not a prescribed observer`);
+  if (
+    !prescribedObservers.some(
+      (observer) =>
+        observer.gatewayAddress === gatewayAddress ||
+        observer.observerAddress === gateway.observerWallet,
+    )
+  ) {
+    throw new ContractError(
+      `${Object.keys(gateway)} is not a prescribed observer`,
+    );
   }
 
   // check if this is the first report filed in this epoch
@@ -89,17 +110,17 @@ export const saveObservations = async (
       ) {
         observations[currentEpochStartHeight].failureSummaries[
           failedGateways[i]
-        ] = [caller];
+        ] = [gatewayAddress];
       } else {
         //check if this observer has already marked this gateway as failed, and if not, mark it as failed
         if (
           observations[currentEpochStartHeight].failureSummaries[
             failedGateways[i]
-          ].indexOf(caller) === -1
+          ].indexOf(gatewayAddress) === -1
         ) {
           observations[currentEpochStartHeight].failureSummaries[
             failedGateways[i]
-          ].push(caller);
+          ].push(gatewayAddress);
         }
       }
     } else {
@@ -109,7 +130,7 @@ export const saveObservations = async (
   }
 
   // add this observers report tx id to this epoch
-  state.observations[currentEpochStartHeight].reports[caller] =
+  state.observations[currentEpochStartHeight].reports[gatewayAddress] =
     observerReportTxId;
 
   return { state };

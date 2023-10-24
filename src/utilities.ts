@@ -380,7 +380,8 @@ export async function getPrescribedObservers(
         observerRewardRatioWeight;
 
       weightedObservers.push({
-        address,
+        gatewayAddress: address,
+        observerAddress: gateway.observerWallet,
         stake,
         start: gateway.start,
         stakeWeight,

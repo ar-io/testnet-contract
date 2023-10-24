@@ -12,17 +12,11 @@ export const prescribedObserver = async (
   { input: { target, height } }: PstAction,
 ): Promise<ContractResult> => {
   const { settings, gateways } = state;
-  const gateway = gateways[target];
   const currentEpochStartHeight = getEpochStart({
     startHeight: DEFAULT_START_HEIGHT,
     epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
     height: height,
   });
-  if (!gateway) {
-    return { result: false };
-  } else if (gateway.start > currentEpochStartHeight) {
-    return { result: false };
-  }
 
   const prescribedObservers = await getPrescribedObservers(
     gateways,
@@ -31,12 +25,18 @@ export const prescribedObserver = async (
     currentEpochStartHeight,
   );
 
-  if (!prescribedObservers.some((observer) => observer.address === target)) {
-    // The gateway with the specified address is not found in the prescribedObservers list
+  if (
+    prescribedObservers.some(
+      (observer) =>
+        observer.gatewayAddress === target ||
+        observer.observerAddress === target,
+    )
+  ) {
+    // The target with the specified address is found in the prescribedObservers list
+    return { result: true };
+  } else {
     return { result: false };
   }
-
-  return { result: true };
 };
 
 export const prescribedObservers = async (
