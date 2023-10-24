@@ -2,6 +2,7 @@ import { submitAuctionBid } from '../../src/actions/write/submitAuctionBid';
 import {
   ARNS_NAME_AUCTION_EXPIRED_MESSAGE,
   INSUFFICIENT_FUNDS_MESSAGE,
+  MAX_YEARS,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
 } from '../../src/constants';
@@ -81,31 +82,60 @@ describe('submitAuctionBid', () => {
 
   it.each([
     [
-      baselineAuctionState,
+      'should throw an error when contractTxId is invalid',
       {
         name: 'test-auction-close',
         contractTxId: 'invalid',
       },
+    ],
+    [
+      'should throw an error when auction name is invalid',
       {
         name: '_invalid_name',
         contractTxId: RESERVED_ATOMIC_TX_ID,
       },
     ],
-  ])(
-    'should fail input validation',
-    (inputOverrides: Partial<IOState>, badInput: Partial<IOState>) => {
-      const inputData: IOState = {
-        ...getBaselineState(),
-        ...inputOverrides,
-      };
-      expect(() => {
-        submitAuctionBid(inputData, {
-          caller: 'new-bidder',
-          input: badInput,
-        });
-      }).toThrowError();
-    },
-  );
+    [
+      'should throw an error when name is missing',
+      {
+        contractTxId: RESERVED_ATOMIC_TX_ID,
+      },
+    ],
+    [
+      'should throw an error when type is invalid',
+      {
+        name: 'valid-name',
+        contractTxId: RESERVED_ATOMIC_TX_ID,
+        type: 'invalid',
+      },
+    ],
+    [
+      'should throw an error when years is over the maximum',
+      {
+        name: 'valid-name',
+        contractTxId: RESERVED_ATOMIC_TX_ID,
+        type: 'lease',
+        years: MAX_YEARS + 1,
+      },
+    ],
+    [
+      'should throw an error when years is less than 1',
+      {
+        name: 'valid-name',
+        contractTxId: RESERVED_ATOMIC_TX_ID,
+        type: 'lease',
+        years: 0,
+      },
+    ],
+  ])('%s', (_, badInput: unknown) => {
+    const inputData: IOState = getBaselineState();
+    expect(() => {
+      submitAuctionBid(inputData, {
+        caller: 'new-bidder',
+        input: badInput,
+      });
+    }).toThrowError();
+  });
 
   it('should throw insufficient balance error when the initiator does not have enough balance when trying to start an auction', () => {
     const priceForName = 220_000;
@@ -269,7 +299,7 @@ describe('submitAuctionBid', () => {
       ...getBaselineState(),
       auctions: {
         'test-auction-close': {
-          ...baselineAuctionState['auctions']['test-auction-close'],
+          ...baselineAuctionData,
           endHeight: 0,
         },
       },
