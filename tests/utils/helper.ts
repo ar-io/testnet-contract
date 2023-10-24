@@ -388,23 +388,27 @@ export function getLocalArNSContractId(): string {
   return contract.id;
 }
 
-export function getRandomFailedGatewaysSubset(wallets: any[]): string[] {
-  const shuffledWallets = wallets;
+export function getRandomFailedGatewaysSubset(
+  gatewayAddresses: string[],
+): string[] {
+  const shuffledAddresses = gatewayAddresses;
   const failedGateways: string[] = [];
-  const percentageToPick = Math.random() * 0.3; // Randomly pick a percentage between 0 and 0.3
-  const numberOfElements = Math.floor(wallets.length * percentageToPick); // Calculate the number of elements to pick
+  const percentageToPick = Math.random() * 0.6; // Randomly pick a percentage between 0 and 0.6
+  const numberOfElements = Math.floor(
+    shuffledAddresses.length * percentageToPick,
+  ); // Calculate the number of elements to pick
 
   // Shuffle the array
-  for (let i = wallets.length - 1; i > 0; i--) {
+  for (let i = shuffledAddresses.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [shuffledWallets[i], shuffledWallets[j]] = [
-      shuffledWallets[j],
-      shuffledWallets[i],
+    [shuffledAddresses[i], shuffledAddresses[j]] = [
+      shuffledAddresses[j],
+      shuffledAddresses[i],
     ];
   }
 
-  for (const wallet of shuffledWallets.slice(0, numberOfElements)) {
-    failedGateways.push(wallet.addr);
+  for (const wallet of shuffledAddresses.slice(0, numberOfElements)) {
+    failedGateways.push(wallet);
   }
 
   // Return the subset of the array

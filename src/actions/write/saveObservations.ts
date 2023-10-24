@@ -2,8 +2,6 @@ import {
   CALLER_NOT_VALID_OBSERVER_MESSAGE,
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_START_HEIGHT,
-  INVALID_OBSERVATION_TARGET,
-  TARGET_GATEWAY_NOT_REGISTERED,
 } from '../../constants';
 import { ContractResult, IOState, PstAction } from '../../types';
 import {
@@ -61,14 +59,12 @@ export const saveObservations = async (
     currentEpochStartHeight,
   );
 
-  if (!prescribedObservers.some((observer) => observer.address === caller)) {
+  if (!prescribedObservers.find((observer) => observer.address === caller)) {
     // The gateway with the specified address is not found in the eligibleObservers list
     throw new ContractError(`${caller} not a prescribed observer`);
-    // throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
   }
 
   // check if this is the first report filed in this epoch
-  // TODO: THIS MAKES IT SO TWO OBSERVERS CANNOT SUBMIT THE FIRST REPORT IN THE SAME BLOCK
   if (!observations[currentEpochStartHeight]) {
     observations[currentEpochStartHeight] = {
       failureSummaries: {},
@@ -86,7 +82,6 @@ export const saveObservations = async (
 
     if (gateways[failedGateways[i]].start <= currentEpochStartHeight) {
       // Check if any observer has failed this gateway, and if not, mark it as failed
-      // TODO: THIS MAKES SO TWO OBSERVERS CANNOT SUBMIT A FAILURE REPORT FOR THE SAME GATEWAY IN THE SAME BLOCK
       if (
         !observations[currentEpochStartHeight].failureSummaries[
           failedGateways[i]
@@ -117,11 +112,5 @@ export const saveObservations = async (
   state.observations[currentEpochStartHeight].reports[caller] =
     observerReportTxId;
 
-  //console.log(
-  //  'Epoch %s | Saved observation from: %s with tx id: %s',
-  //  currentEpochStartHeight,
-  //  caller,
-  //  observerReportTxId,
-  //);
   return { state };
 };
