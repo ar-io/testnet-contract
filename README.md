@@ -17,14 +17,15 @@ Unit tests and integration tests are located in the [tests] directory. Both unit
 Runs integration tests against deployed Smartweave contract using [Warp SDK].
 
 - `yarn test:integration` - runs full test suite
-- `yarn test:integration -t 'auctions'` - runs tests that match this spec name (e.g. `auctions.test.ts`)
+- `yarn test:integration -t 'Auctions'` - runs integration tests that match this spec name (e.g. `Auctions`)
+- `yarn test tests/records.test.ts` - runs a specific test file (e.g. `records.test.ts`)
 
 ### Unit Tests
 
 Runs unit tests against contract source code located in [src] directory.
 
 - `yarn test:unit` - runs full unit test suite located in [tests/unit]
-- `yarn test:unit -t 'auctions'` - runs unit tests that match this spec name (e.g. `auctions.test.ts`)
+- `yarn test:unit -t 'submitAuctionBid'` - runs unit tests that match this spec name (e.g. `submitAuctionBid`)
 
 ## Linting & Formatting
 
