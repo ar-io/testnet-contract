@@ -4,6 +4,7 @@ import {
   MAX_ALLOWED_UNDERNAMES,
   MAX_UNDERNAME_MESSAGE,
 } from '../../constants';
+import { calculateProRatedUndernameCost } from '../../pricing';
 import {
   BlockTimestamp,
   ContractWriteResult,
@@ -11,7 +12,6 @@ import {
   PstAction,
 } from '../../types';
 import {
-  calculateProRatedUndernameCost,
   getInvalidAjvMessage,
   isExistingActiveRecord,
   walletHasSufficientBalance,

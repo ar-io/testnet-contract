@@ -1,10 +1,15 @@
 import {
+  calculateMinimumAuctionBid,
+  createAuctionObject,
+  getEndTimestampForAuction,
+} from '../../auctions';
+import {
   ARNS_NAME_AUCTION_EXPIRED_MESSAGE,
   DEFAULT_UNDERNAME_COUNT,
   INSUFFICIENT_FUNDS_MESSAGE,
   RESERVED_ATOMIC_TX_ID,
 } from '../../constants';
-import { calculateMinimumAuctionBid, tallyNamePurchase } from '../../pricing';
+import { calculateRegistrationFee, tallyNamePurchase } from '../../pricing';
 import {
   AuctionSettings,
   Balances,
@@ -20,9 +25,6 @@ import {
 import {
   assertAvailableRecord,
   calculateExistingAuctionBidForCaller,
-  calculateRegistrationFee,
-  createAuctionObject,
-  getEndTimestampForAuction,
   getInvalidAjvMessage,
   walletHasSufficientBalance,
 } from '../../utilities';

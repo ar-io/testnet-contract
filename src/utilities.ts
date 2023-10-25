@@ -1,31 +1,22 @@
 import {
-  ANNUAL_PERCENTAGE_FEE,
   ARNS_NAME_RESERVED_MESSAGE,
-  DEFAULT_UNDERNAME_COUNT,
   INVALID_INPUT_MESSAGE,
   INVALID_SHORT_NAME,
   MAX_YEARS,
   MINIMUM_ALLOWED_NAME_LENGTH,
   NAMESPACE_LENGTH,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
-  PERMABUY_LEASE_FEE_LENGTH,
-  RARITY_MULTIPLIER_HALVENING,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
-  UNDERNAME_REGISTRATION_IO_FEE,
 } from './constants';
-import { calculateMinimumAuctionBid } from './pricing';
 import {
   ArNSNameData,
   AuctionData,
-  AuctionSettings,
   Balances,
   BlockHeight,
   BlockTimestamp,
   DeepReadonly,
-  DemandFactoringData,
-  Fees,
   Gateway,
   GatewayRegistrySettings,
   IOToken,
@@ -34,132 +25,6 @@ import {
   ReservedNameData,
   ReservedNames,
 } from './types';
-
-declare class ContractError extends Error {}
-
-export function calculateLeaseFee({
-  name,
-  fees,
-  years,
-  currentBlockTimestamp,
-  demandFactoring,
-}: {
-  name: string;
-  fees: Fees;
-  years: number;
-  currentBlockTimestamp: BlockTimestamp;
-  demandFactoring: DeepReadonly<DemandFactoringData>;
-}): number {
-  // Initial cost to register a name
-  // TODO: Harden the types here to make fees[name.length] an error
-  const initialNamePurchaseFee = fees[name.length.toString()];
-
-  // total cost to purchase name
-  return (
-    demandFactoring.demandFactor *
-    (initialNamePurchaseFee +
-      calculateAnnualRenewalFee({
-        name,
-        fees,
-        years,
-        undernames: DEFAULT_UNDERNAME_COUNT,
-        endTimestamp: new BlockTimestamp(
-          currentBlockTimestamp.valueOf() + SECONDS_IN_A_YEAR * years,
-        ),
-      }))
-  );
-}
-
-export function calculateAnnualRenewalFee({
-  name,
-  fees,
-  years,
-  undernames,
-  endTimestamp,
-}: {
-  name: string;
-  fees: Fees;
-  years: number;
-  undernames: number;
-  endTimestamp: BlockTimestamp;
-}): number {
-  // Determine annual registration price of name
-  const initialNamePurchaseFee = fees[name.length.toString()];
-
-  // Annual fee is specific % of initial purchase cost
-  const nameAnnualRegistrationFee =
-    initialNamePurchaseFee * ANNUAL_PERCENTAGE_FEE;
-
-  const totalAnnualRenewalCost = nameAnnualRegistrationFee * years;
-
-  const extensionEndTimestamp = new BlockTimestamp(
-    endTimestamp.valueOf() + years * SECONDS_IN_A_YEAR,
-  );
-  // Do not charge for undernames if there are less or equal than the default
-  const undernameCount =
-    undernames > DEFAULT_UNDERNAME_COUNT
-      ? undernames - DEFAULT_UNDERNAME_COUNT
-      : undernames;
-
-  const totalCost =
-    undernameCount === DEFAULT_UNDERNAME_COUNT
-      ? totalAnnualRenewalCost
-      : totalAnnualRenewalCost +
-        calculateProRatedUndernameCost({
-          qty: undernameCount,
-          currentBlockTimestamp: endTimestamp,
-          type: 'lease',
-          endTimestamp: extensionEndTimestamp,
-        });
-
-  return totalCost;
-}
-
-export function getRarityMultiplier({ name }: { name: string }): number {
-  if (name.length >= RARITY_MULTIPLIER_HALVENING) {
-    return 0.5; // cut the price in half
-  }
-  // names between 5 and 24 characters (inclusive)
-  if (
-    name.length >= MINIMUM_ALLOWED_NAME_LENGTH &&
-    name.length < RARITY_MULTIPLIER_HALVENING
-  ) {
-    return 1; // e.g. it's the cost of a 10 year lease
-  }
-  // short names
-  if (name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
-    const shortNameMultiplier = 1 + ((10 - name.length) * 10) / 100;
-    return shortNameMultiplier;
-  }
-  return 1;
-}
-
-export function calculatePermabuyFee({
-  name,
-  fees,
-  currentBlockTimestamp,
-  demandFactoring,
-}: {
-  name: string;
-  fees: Fees;
-  currentBlockTimestamp: BlockTimestamp;
-  demandFactoring: DeepReadonly<DemandFactoringData>;
-}): number {
-  // calculate the annual fee for the name for default of 10 years
-  const permabuyLeasePrice = calculateAnnualRenewalFee({
-    name,
-    fees,
-    years: PERMABUY_LEASE_FEE_LENGTH,
-    undernames: DEFAULT_UNDERNAME_COUNT,
-    endTimestamp: new BlockTimestamp(
-      currentBlockTimestamp.valueOf() +
-        SECONDS_IN_A_YEAR * PERMABUY_LEASE_FEE_LENGTH,
-    ),
-  });
-  const rarityMultiplier = getRarityMultiplier({ name });
-  const permabuyFee = permabuyLeasePrice * rarityMultiplier;
-  return demandFactoring.demandFactor * permabuyFee;
-}
 
 // check if a string is a valid fully qualified domain name
 export function isValidFQDN(fqdn: string): boolean {
@@ -179,28 +44,6 @@ export function walletHasSufficientBalance(
   qty: number,
 ): boolean {
   return !!balances[wallet] && balances[wallet] >= qty;
-}
-
-export function calculateProRatedUndernameCost({
-  qty,
-  currentBlockTimestamp,
-  type,
-  endTimestamp,
-}: {
-  qty: number;
-  currentBlockTimestamp: BlockTimestamp;
-  type: RegistrationType;
-  endTimestamp?: BlockTimestamp;
-}): number {
-  switch (type) {
-    case 'lease':
-      return (
-        ((UNDERNAME_REGISTRATION_IO_FEE * qty) / SECONDS_IN_A_YEAR) *
-        (endTimestamp.valueOf() - currentBlockTimestamp.valueOf())
-      );
-    case 'permabuy':
-      return PERMABUY_LEASE_FEE_LENGTH * qty;
-  }
 }
 
 export function calculateUndernamePermutations(domain: string): number {
@@ -287,71 +130,6 @@ export function getInvalidAjvMessage(
     .join(', ')}`;
 }
 
-export function getAuctionPrices({
-  auctionSettings,
-  startHeight,
-  startPrice,
-  floorPrice,
-}: {
-  auctionSettings: AuctionSettings;
-  startHeight: BlockHeight;
-  startPrice: number;
-  floorPrice: number;
-}): Record<number, number> {
-  const { auctionDuration, decayRate, decayInterval } = auctionSettings;
-  const intervalCount = auctionDuration / decayInterval;
-  const prices: Record<number, number> = {};
-  for (let i = 0; i <= intervalCount; i++) {
-    const intervalHeight = new BlockHeight(
-      startHeight.valueOf() + i * decayInterval,
-    );
-    const price = calculateMinimumAuctionBid({
-      startHeight,
-      startPrice,
-      floorPrice,
-      currentBlockHeight: intervalHeight,
-      decayInterval,
-      decayRate,
-    });
-    prices[intervalHeight.valueOf()] = price.valueOf();
-  }
-  return prices;
-}
-
-export function calculateRegistrationFee({
-  type,
-  name,
-  fees,
-  years,
-  currentBlockTimestamp,
-  demandFactoring,
-}: {
-  type: RegistrationType;
-  name: string;
-  fees: Fees;
-  years: number;
-  currentBlockTimestamp: BlockTimestamp;
-  demandFactoring: DeepReadonly<DemandFactoringData>;
-}): number {
-  switch (type) {
-    case 'lease':
-      return calculateLeaseFee({
-        name,
-        fees,
-        years,
-        currentBlockTimestamp,
-        demandFactoring,
-      });
-    case 'permabuy':
-      return calculatePermabuyFee({
-        name,
-        fees,
-        currentBlockTimestamp,
-        demandFactoring,
-      });
-  }
-}
-
 export function isExistingActiveRecord({
   record,
   currentBlockTimestamp,
@@ -431,47 +209,6 @@ export function isNameRequiredToBeAuction({
 }): boolean {
   return type === 'permabuy' && name.length < 12;
 }
-export function createAuctionObject({
-  auctionSettings,
-  initialRegistrationFee,
-  contractTxId,
-  currentBlockHeight,
-  type,
-  initiator,
-  providedFloorPrice,
-}: {
-  auctionSettings: AuctionSettings;
-  initialRegistrationFee: number;
-  contractTxId: string | undefined;
-  currentBlockHeight: BlockHeight;
-  type: RegistrationType;
-  initiator: string | undefined;
-  years?: number;
-  providedFloorPrice?: number;
-}): AuctionData {
-  const calculatedFloor =
-    initialRegistrationFee * auctionSettings.floorPriceMultiplier;
-  // if someone submits a high floor price, we'll take it
-  const floorPrice = providedFloorPrice
-    ? Math.max(providedFloorPrice, calculatedFloor)
-    : calculatedFloor;
-
-  const startPrice = floorPrice * auctionSettings.startPriceMultiplier;
-  const endHeight =
-    currentBlockHeight.valueOf() + auctionSettings.auctionDuration;
-  const years = type === 'lease' ? 1 : undefined;
-  return {
-    initiator, // the balance that the floor price is decremented from
-    contractTxId,
-    startPrice,
-    floorPrice, // this is decremented from the initiators wallet, and could be higher than the precalculated floor
-    startHeight: currentBlockHeight.valueOf(), // auction starts right away
-    endHeight, // auction ends after the set duration
-    type,
-    ...(years ? { years } : {}),
-    settings: auctionSettings,
-  };
-}
 
 export function assertAvailableRecord({
   caller,
@@ -506,23 +243,6 @@ export function assertAvailableRecord({
 
   if (isShortNameRestricted({ name, currentBlockTimestamp })) {
     throw new ContractError(INVALID_SHORT_NAME);
-  }
-}
-
-export function getEndTimestampForAuction({
-  auction,
-  currentBlockTimestamp,
-}: {
-  auction: AuctionData;
-  currentBlockTimestamp: BlockTimestamp;
-}): BlockTimestamp {
-  switch (auction.type) {
-    case 'permabuy':
-      return undefined;
-    case 'lease':
-      return new BlockTimestamp(
-        currentBlockTimestamp.valueOf() + SECONDS_IN_A_YEAR * auction.years,
-      );
   }
 }
 

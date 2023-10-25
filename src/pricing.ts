@@ -1,11 +1,22 @@
-import { DEMAND_FACTORING_SETTINGS, ONE_MIO } from './constants';
+import {
+  ANNUAL_PERCENTAGE_FEE,
+  DEFAULT_UNDERNAME_COUNT,
+  DEMAND_FACTORING_SETTINGS,
+  MINIMUM_ALLOWED_NAME_LENGTH,
+  ONE_MIO,
+  PERMABUY_LEASE_FEE_LENGTH,
+  RARITY_MULTIPLIER_HALVENING,
+  SECONDS_IN_A_YEAR,
+  UNDERNAME_REGISTRATION_IO_FEE,
+} from './constants';
 import {
   BlockHeight,
+  BlockTimestamp,
   DeepReadonly,
   DemandFactoringData,
   Fees,
   IOState,
-  IOToken,
+  RegistrationType,
 } from './types';
 
 export function tallyNamePurchase(
@@ -152,29 +163,182 @@ export function cloneDemandFactoringData(
   };
 }
 
-export function calculateMinimumAuctionBid({
-  startHeight,
-  startPrice,
-  floorPrice,
-  currentBlockHeight,
-  decayInterval,
-  decayRate,
+export function calculateLeaseFee({
+  name,
+  fees,
+  years,
+  currentBlockTimestamp,
+  demandFactoring,
 }: {
-  startHeight: BlockHeight;
-  startPrice: number;
-  floorPrice: number;
-  currentBlockHeight: BlockHeight;
-  decayInterval: number;
-  decayRate: number;
-}): IOToken {
-  const blockIntervalsPassed = Math.max(
-    0,
-    Math.floor(
-      (currentBlockHeight.valueOf() - startHeight.valueOf()) / decayInterval,
-    ),
+  name: string;
+  fees: Fees;
+  years: number;
+  currentBlockTimestamp: BlockTimestamp;
+  demandFactoring: DeepReadonly<DemandFactoringData>;
+}): number {
+  // Initial cost to register a name
+  // TODO: Harden the types here to make fees[name.length] an error
+  const initialNamePurchaseFee = fees[name.length.toString()];
+
+  // total cost to purchase name
+  return (
+    demandFactoring.demandFactor *
+    (initialNamePurchaseFee +
+      calculateAnnualRenewalFee({
+        name,
+        fees,
+        years,
+        undernames: DEFAULT_UNDERNAME_COUNT,
+        endTimestamp: new BlockTimestamp(
+          currentBlockTimestamp.valueOf() + SECONDS_IN_A_YEAR * years,
+        ),
+      }))
   );
-  const dutchAuctionBid =
-    startPrice * Math.pow(1 - decayRate, blockIntervalsPassed);
-  // TODO: we shouldn't be rounding like this, use a separate class to handle the number of allowed decimals for IO values and use them here
-  return new IOToken(Math.max(floorPrice, dutchAuctionBid));
+}
+
+export function calculateAnnualRenewalFee({
+  name,
+  fees,
+  years,
+  undernames,
+  endTimestamp,
+}: {
+  name: string;
+  fees: Fees;
+  years: number;
+  undernames: number;
+  endTimestamp: BlockTimestamp;
+}): number {
+  // Determine annual registration price of name
+  const initialNamePurchaseFee = fees[name.length.toString()];
+
+  // Annual fee is specific % of initial purchase cost
+  const nameAnnualRegistrationFee =
+    initialNamePurchaseFee * ANNUAL_PERCENTAGE_FEE;
+
+  const totalAnnualRenewalCost = nameAnnualRegistrationFee * years;
+
+  const extensionEndTimestamp = new BlockTimestamp(
+    endTimestamp.valueOf() + years * SECONDS_IN_A_YEAR,
+  );
+  // Do not charge for undernames if there are less or equal than the default
+  const undernameCount =
+    undernames > DEFAULT_UNDERNAME_COUNT
+      ? undernames - DEFAULT_UNDERNAME_COUNT
+      : undernames;
+
+  const totalCost =
+    undernameCount === DEFAULT_UNDERNAME_COUNT
+      ? totalAnnualRenewalCost
+      : totalAnnualRenewalCost +
+        calculateProRatedUndernameCost({
+          qty: undernameCount,
+          currentBlockTimestamp: endTimestamp,
+          type: 'lease',
+          endTimestamp: extensionEndTimestamp,
+        });
+
+  return totalCost;
+}
+
+export function getRarityMultiplier({ name }: { name: string }): number {
+  if (name.length >= RARITY_MULTIPLIER_HALVENING) {
+    return 0.5; // cut the price in half
+  }
+  // names between 5 and 24 characters (inclusive)
+  if (
+    name.length >= MINIMUM_ALLOWED_NAME_LENGTH &&
+    name.length < RARITY_MULTIPLIER_HALVENING
+  ) {
+    return 1; // e.g. it's the cost of a 10 year lease
+  }
+  // short names
+  if (name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
+    const shortNameMultiplier = 1 + ((10 - name.length) * 10) / 100;
+    return shortNameMultiplier;
+  }
+  return 1;
+}
+
+export function calculatePermabuyFee({
+  name,
+  fees,
+  currentBlockTimestamp,
+  demandFactoring,
+}: {
+  name: string;
+  fees: Fees;
+  currentBlockTimestamp: BlockTimestamp;
+  demandFactoring: DeepReadonly<DemandFactoringData>;
+}): number {
+  // calculate the annual fee for the name for default of 10 years
+  const permabuyLeasePrice = calculateAnnualRenewalFee({
+    name,
+    fees,
+    years: PERMABUY_LEASE_FEE_LENGTH,
+    undernames: DEFAULT_UNDERNAME_COUNT,
+    endTimestamp: new BlockTimestamp(
+      currentBlockTimestamp.valueOf() +
+        SECONDS_IN_A_YEAR * PERMABUY_LEASE_FEE_LENGTH,
+    ),
+  });
+  const rarityMultiplier = getRarityMultiplier({ name });
+  const permabuyFee = permabuyLeasePrice * rarityMultiplier;
+  return demandFactoring.demandFactor * permabuyFee;
+}
+
+export function calculateRegistrationFee({
+  type,
+  name,
+  fees,
+  years,
+  currentBlockTimestamp,
+  demandFactoring,
+}: {
+  type: RegistrationType;
+  name: string;
+  fees: Fees;
+  years: number;
+  currentBlockTimestamp: BlockTimestamp;
+  demandFactoring: DeepReadonly<DemandFactoringData>;
+}): number {
+  switch (type) {
+    case 'lease':
+      return calculateLeaseFee({
+        name,
+        fees,
+        years,
+        currentBlockTimestamp,
+        demandFactoring,
+      });
+    case 'permabuy':
+      return calculatePermabuyFee({
+        name,
+        fees,
+        currentBlockTimestamp,
+        demandFactoring,
+      });
+  }
+}
+
+export function calculateProRatedUndernameCost({
+  qty,
+  currentBlockTimestamp,
+  type,
+  endTimestamp,
+}: {
+  qty: number;
+  currentBlockTimestamp: BlockTimestamp;
+  type: RegistrationType;
+  endTimestamp?: BlockTimestamp;
+}): number {
+  switch (type) {
+    case 'lease':
+      return (
+        ((UNDERNAME_REGISTRATION_IO_FEE * qty) / SECONDS_IN_A_YEAR) *
+        (endTimestamp.valueOf() - currentBlockTimestamp.valueOf())
+      );
+    case 'permabuy':
+      return PERMABUY_LEASE_FEE_LENGTH * qty;
+  }
 }

@@ -1,4 +1,9 @@
-import { calculateMinimumAuctionBid } from '../../pricing';
+import {
+  calculateMinimumAuctionBid,
+  createAuctionObject,
+  getAuctionPrices,
+} from '../../auctions';
+import { calculateRegistrationFee } from '../../pricing';
 import {
   BlockHeight,
   BlockTimestamp,
@@ -8,9 +13,6 @@ import {
   PstAction,
 } from '../../types';
 import {
-  calculateRegistrationFee,
-  createAuctionObject,
-  getAuctionPrices,
   isNameAvailableForAuction,
   isNameRequiredToBeAuction,
 } from '../../utilities';

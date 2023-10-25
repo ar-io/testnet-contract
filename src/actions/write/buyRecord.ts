@@ -5,7 +5,7 @@ import {
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
-import { tallyNamePurchase } from '../../pricing';
+import { calculateRegistrationFee, tallyNamePurchase } from '../../pricing';
 import {
   BlockTimestamp,
   ContractWriteResult,
@@ -15,7 +15,6 @@ import {
 } from '../../types';
 import {
   assertAvailableRecord,
-  calculateRegistrationFee,
   getInvalidAjvMessage,
   isNameRequiredToBeAuction,
   walletHasSufficientBalance,

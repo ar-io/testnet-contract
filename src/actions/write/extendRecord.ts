@@ -5,7 +5,7 @@ import {
   INVALID_YEARS_MESSAGE,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
-import { tallyNamePurchase } from '../../pricing';
+import { calculateAnnualRenewalFee, tallyNamePurchase } from '../../pricing';
 import {
   BlockTimestamp,
   ContractWriteResult,
@@ -13,7 +13,6 @@ import {
   PstAction,
 } from '../../types';
 import {
-  calculateAnnualRenewalFee,
   getInvalidAjvMessage,
   getMaxAllowedYearsExtensionForRecord,
   isExistingActiveRecord,

@@ -1,5 +1,6 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
+import { calculateMinimumAuctionBid } from '../src/auctions';
 import {
   ARNS_NAME_RESERVED_MESSAGE,
   AUCTION_SETTINGS,
@@ -8,7 +9,6 @@ import {
   NON_EXPIRED_ARNS_NAME_MESSAGE,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../src/constants';
-import { calculateMinimumAuctionBid } from '../src/pricing';
 import { AuctionData, BlockHeight, IOState } from '../src/types';
 import { ANT_CONTRACT_IDS } from './utils/constants';
 import {
