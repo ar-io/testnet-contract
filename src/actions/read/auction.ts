@@ -15,8 +15,6 @@ import {
   isNameRequiredToBeAuction,
 } from '../../utilities';
 
-declare const SmartWeave: any;
-
 export const getAuction = (
   state: DeepReadonly<IOState>,
   { caller, input: { name, type = 'lease' } }: PstAction,

@@ -5,8 +5,6 @@ import {
   PstAction,
 } from '../../types';
 
-declare const ContractError: any;
-
 export const getRecord = async (
   state: IOState,
   { input: { name } }: PstAction,
