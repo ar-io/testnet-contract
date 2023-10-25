@@ -10,11 +10,11 @@ Clone this repository and install the dependencies.
 
 ## Testing
 
-Unit tests and integration tests are located in the [tests] directory. Both unit and integration tests are written using [Jest].
+Unit and integration tests are written using [Jest]. Setup files are located in [tests] directory.
 
 ### Integration Tests
 
-Runs integration tests against deployed Smartweave contract using [Warp SDK].
+Integration tests are located in the [tests] directory and run against ArLocal. They deploy multiple Smartweave contract using [Warp SDK].
 
 - `yarn test:integration` - runs full test suite
 - `yarn test:integration -t 'Auctions'` - runs integration tests that match this spec name (e.g. `Auctions`)
@@ -22,7 +22,7 @@ Runs integration tests against deployed Smartweave contract using [Warp SDK].
 
 ### Unit Tests
 
-Runs unit tests against contract source code located in [src] directory.
+Unit tests are located in the [src] directory and run against the source code directly.
 
 - `yarn test:unit` - runs full unit test suite located in [tests/unit]
 - `yarn test:unit -t 'submitAuctionBid'` - runs unit tests that match this spec name (e.g. `submitAuctionBid`)

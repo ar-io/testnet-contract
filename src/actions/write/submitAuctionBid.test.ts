@@ -1,13 +1,13 @@
-import { submitAuctionBid } from '../../src/actions/write/submitAuctionBid';
+import { submitAuctionBid } from '../../actions/write/submitAuctionBid';
 import {
   ARNS_NAME_AUCTION_EXPIRED_MESSAGE,
   INSUFFICIENT_FUNDS_MESSAGE,
   MAX_YEARS,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
-} from '../../src/constants';
-import { AuctionData, IOState } from '../../src/types';
-import { FEE_STRUCTURE } from '../utils/constants';
+} from '../../constants';
+import { FEE_STRUCTURE } from '../../constants';
+import { AuctionData, IOState } from '../../types';
 
 describe('submitAuctionBid', () => {
   const baselineDemandFactorData = {

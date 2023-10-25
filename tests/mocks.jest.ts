@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../../src/globals.d.ts" />
+/// <reference path="../src/globals.d.ts" />
 
 // mock implementation for unit tests
 SmartWeave = {

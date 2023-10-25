@@ -4,14 +4,14 @@ import {
   DEFAULT_UNDERNAME_COUNT,
   INVALID_INPUT_MESSAGE,
   MAX_ALLOWED_UNDERNAMES,
-} from '../../src/constants';
-import { IOState } from '../../src/types';
+} from '../src/constants';
+import { IOState } from '../src/types';
 import {
   calculateUndernamePermutations,
   getLocalArNSContractId,
   getLocalWallet,
-} from '../utils/helper';
-import { warp } from '../utils/services';
+} from './utils/helper';
+import { warp } from './utils/services';
 
 describe('undernames', () => {
   let contract: Contract<IOState>;

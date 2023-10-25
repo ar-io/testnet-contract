@@ -1,6 +1,6 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
-import { BlockTimestamp, IOState } from '../../src/types';
+import { BlockTimestamp, IOState } from '../src/types';
 import {
   ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
   INSUFFICIENT_FUNDS_MESSAGE,
@@ -9,14 +9,14 @@ import {
   MAX_YEARS,
   REGISTRATION_TYPES,
   SECONDS_IN_A_YEAR,
-} from '../utils/constants';
+} from './utils/constants';
 import {
   addFunds,
   calculateAnnualRenewalFee,
   getLocalArNSContractId,
   getLocalWallet,
-} from '../utils/helper';
-import { arweave, warp } from '../utils/services';
+} from './utils/helper';
+import { arweave, warp } from './utils/services';
 
 describe('Extend', () => {
   let contract: Contract<PstState>;

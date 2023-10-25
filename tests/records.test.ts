@@ -1,6 +1,6 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
-import { BlockTimestamp, IOState } from '../../src/types';
+import { BlockTimestamp, IOState } from '../src/types';
 import {
   ANT_CONTRACT_IDS,
   ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE,
@@ -10,14 +10,14 @@ import {
   INVALID_SHORT_NAME,
   MAX_YEARS,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
-} from '../utils/constants';
+} from './utils/constants';
 import {
   calculatePermabuyFee,
   calculateRegistrationFee,
   getLocalArNSContractId,
   getLocalWallet,
-} from '../utils/helper';
-import { arweave, warp } from '../utils/services';
+} from './utils/helper';
+import { arweave, warp } from './utils/services';
 
 describe('Records', () => {
   let contract: Contract<PstState>;

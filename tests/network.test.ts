@@ -1,20 +1,20 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
-import { IOState } from '../../src/types';
+import { IOState } from '../src/types';
 import {
   CONTRACT_SETTINGS,
   NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
   WALLET_FUND_AMOUNT,
-} from '../utils/constants';
+} from './utils/constants';
 import {
   getCurrentBlock,
   getLocalArNSContractId,
   getLocalWallet,
   mineBlocks,
-} from '../utils/helper';
-import { arweave, warp } from '../utils/services';
+} from './utils/helper';
+import { arweave, warp } from './utils/services';
 
 describe('Network', () => {
   let contract: Contract<PstState>;
