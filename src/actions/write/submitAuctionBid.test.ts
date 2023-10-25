@@ -32,7 +32,7 @@ describe('submitAuctionBid', () => {
     name: 'Arweave Name System Test',
     canEvolve: true,
     owner: '',
-    evolve: null,
+    evolve: '',
     records: {},
     balances: {},
     reserved: {},
