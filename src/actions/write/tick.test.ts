@@ -236,6 +236,7 @@ describe('tickGatewayRegistry', () => {
         gateways: {
           'leaving-operator': {
             operatorStake: 100,
+            observerWallet: 'existing-operator',
             start: 0,
             end: 5,
             vaults: [
@@ -266,6 +267,7 @@ describe('tickGatewayRegistry', () => {
         gateways: {
           'existing-operator': {
             operatorStake: 100,
+            observerWallet: 'existing-operator',
             start: 0,
             end: 10,
             vaults: [
@@ -287,6 +289,7 @@ describe('tickGatewayRegistry', () => {
         gateways: {
           'existing-operator': {
             operatorStake: 100,
+            observerWallet: 'existing-operator',
             start: 0,
             end: 10,
             vaults: [],
@@ -305,6 +308,7 @@ describe('tickGatewayRegistry', () => {
         gateways: {
           'existing-operator': {
             operatorStake: 100,
+            observerWallet: 'existing-operator',
             start: 0,
             end: 10,
             vaults: [
@@ -326,6 +330,7 @@ describe('tickGatewayRegistry', () => {
         gateways: {
           'existing-operator': {
             operatorStake: 100,
+            observerWallet: 'existing-operator',
             start: 0,
             end: 10,
             vaults: [

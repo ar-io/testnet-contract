@@ -84,6 +84,7 @@ export type GatewayStatus = (typeof gatewayStatus)[number];
 
 export type Gateway = {
   operatorStake: number; // the total stake of this gateway's operator.
+  observerWallet: string; // the wallet address used to save observation reports
   start: number; // At what block the gateway joined the network.
   end: number; // At what block the gateway can leave the network.  0 means no end date.
   status: GatewayStatus; // hidden represents not leaving, but not participating

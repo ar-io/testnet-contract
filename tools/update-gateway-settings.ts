@@ -29,6 +29,9 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
   // an optional, short note to further describe this gateway and its status
   // const note = 'Give me feedback about this gateway at my Xwitter @testgatewayguy'
 
+  // The observer wallet public address eg.iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA which is used to upload observation reports
+  // const observerWallet = '';
+
   // Get the key file used for the distribution
   const wallet: JWKInterface = JSON.parse(
     process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
@@ -59,6 +62,7 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
       function: 'updateGatewaySettings',
       label,
       fqdn,
+      // observerWallet,
       // port,
       // protocol,
       // properties,
