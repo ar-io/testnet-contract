@@ -8,7 +8,7 @@ import {
 import { tallyNamePurchase } from '../../pricing';
 import {
   BlockTimestamp,
-  ContractResult,
+  ContractWriteResult,
   IOState,
   PstAction,
 } from '../../types';
@@ -19,10 +19,7 @@ import {
   isExistingActiveRecord,
   walletHasSufficientBalance,
 } from '../../utilities';
-import { validateExtendRecord } from '../../validations.mjs';
-
-declare const ContractError: any;
-declare const SmartWeave: any;
+import { validateExtendRecord } from '../../validations';
 
 export class ExtendRecord {
   function = 'extendRecord';
@@ -52,7 +49,7 @@ export class ExtendRecord {
 export const extendRecord = async (
   state: IOState,
   { caller, input }: PstAction,
-): Promise<ContractResult> => {
+): Promise<ContractWriteResult> => {
   const { balances, records, fees } = state;
   const currentBlockTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
   const { name, years } = new ExtendRecord(input);

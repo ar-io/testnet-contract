@@ -12,7 +12,7 @@
   "settings": {},
   "gateways": {},
   "demandFactoring": {
-    "periodStartBlockHeight": 0,
+    "periodZeroBlockHeight": 0,
     "currentPeriod": 0,
     "trailingPeriodPurchases": [0, 0, 0, 0, 0, 0, 0],
     "purchasesThisPeriod": 0,

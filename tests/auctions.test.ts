@@ -491,9 +491,14 @@ describe('Auctions', () => {
           // TODO: Check that number of purchases is incremented
         });
 
-        it('should update the records object when a winning bid comes in', async () => {
+        it('should update the records object and increment demand factor for the current period when a winning bid comes in', async () => {
           // fast forward a few blocks, then construct winning bid
-          await mineBlocks(arweave, 3504);
+          const { cachedValue: prevCachedValue } = await contract.readState();
+          const { demandFactoring: prevDemandFactoringData } =
+            prevCachedValue.state as IOState;
+          const prevDemandFactorPurchasesForPeriod =
+            prevDemandFactoringData.purchasesThisPeriod;
+          await mineBlocks(arweave, 3504); // fast forward to a boundry
           const winningBidQty = calculateMinimumAuctionBid({
             startHeight: new BlockHeight(auctionObj.startHeight),
             startPrice: auctionObj.startPrice,
@@ -520,7 +525,12 @@ describe('Auctions', () => {
           expect(writeInteraction?.originalTxId).not.toBeUndefined();
           const { cachedValue } = await contract.readState();
           expect(cachedValue.errorMessages).not.toContain(auctionTxId);
-          const { auctions, records, balances } = cachedValue.state as IOState;
+          const {
+            auctions,
+            records,
+            balances,
+            demandFactoring: newDemandFactoringData,
+          } = cachedValue.state as IOState;
           expect(records[auctionBid.name]).toEqual({
             contractTxId: ANT_CONTRACT_IDS[1],
             type: 'permabuy',
@@ -538,6 +548,9 @@ describe('Auctions', () => {
             prevState.balances[srcContractId] +
               winningBidQty -
               auctionObj.floorPrice,
+          );
+          expect(newDemandFactoringData.purchasesThisPeriod).toEqual(
+            prevDemandFactorPurchasesForPeriod + 1,
           );
         });
       });

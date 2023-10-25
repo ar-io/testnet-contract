@@ -22,6 +22,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["src"],
+  "include": ["src", "src/globals.d.ts"],
   "exclude": ["node_modules", "tests", "src/*.js"]
 }

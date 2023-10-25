@@ -37,7 +37,7 @@ const moduleCode = standaloneCode(ajv, {
 });
 
 // Now you can write the module code to file
-fs.writeFileSync(path.join(__dirname, '/src/validations.mjs'), moduleCode);
+fs.writeFileSync(path.join(__dirname, '/src/validations.js'), moduleCode);
 
 const contract = ['/contract.ts'];
 

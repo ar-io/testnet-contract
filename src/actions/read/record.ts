@@ -1,11 +1,16 @@
-import { ArNSNameData, ContractResult, IOState, PstAction } from '../../types';
+import {
+  ArNSNameData,
+  ContractReadResult,
+  IOState,
+  PstAction,
+} from '../../types';
 
 declare const ContractError: any;
 
 export const getRecord = async (
   state: IOState,
   { input: { name } }: PstAction,
-): Promise<ContractResult> => {
+): Promise<ContractReadResult> => {
   const records = state.records;
 
   if (typeof name !== 'string') {

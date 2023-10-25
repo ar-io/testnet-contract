@@ -10,10 +10,22 @@ Clone this repository and install the dependencies.
 
 ## Testing
 
-Runs integration tests using arlocal. Note - these test write temporary files to your local disc.
+Unit and integration tests are written using [Jest]. Setup files are located in [tests] directory.
 
-- `yarn test` - runs full test suite
-- `yarn test -t 'auctions'` - runs tests that match this spec name (e.g. `auctions.test.ts`)
+### Integration Tests
+
+Integration tests are located in the [tests] directory and run against ArLocal. They deploy multiple Smartweave contract using [Warp SDK].
+
+- `yarn test:integration` - runs full test suite
+- `yarn test:integration -t 'Auctions'` - runs integration tests that match this spec name (e.g. `Auctions`)
+- `yarn test tests/records.test.ts` - runs a specific test file (e.g. `records.test.ts`)
+
+### Unit Tests
+
+Unit tests are located in the [src] directory and run against the source code directly.
+
+- `yarn test:unit` - runs full unit test suite located in [tests/unit]
+- `yarn test:unit -t 'submitAuctionBid'` - runs unit tests that match this spec name (e.g. `submitAuctionBid`)
 
 ## Linting & Formatting
 
@@ -109,3 +121,8 @@ The following tools can be used to perform basic AR.IO Network operations, such 
 [finalize-leave-network]: tools/finalize-leave-network.ts
 [buy-arns-name]: tools/buy-arns-name.ts
 [buy-arns-name-atomic-ant]: /tools/buy-arns-name-atomic-ant.ts
+[tests/unit]: /tests/unit
+[src]: /src
+[tests]: /tests
+[Warp SDK]: https://github.com/warp-contracts/warp
+[Jest]: https://jestjs.io/

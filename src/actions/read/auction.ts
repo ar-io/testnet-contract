@@ -2,7 +2,7 @@ import { calculateMinimumAuctionBid } from '../../pricing';
 import {
   BlockHeight,
   BlockTimestamp,
-  ContractResult,
+  ContractReadResult,
   DeepReadonly,
   IOState,
   PstAction,
@@ -20,7 +20,7 @@ declare const SmartWeave: any;
 export const getAuction = (
   state: DeepReadonly<IOState>,
   { caller, input: { name, type = 'lease' } }: PstAction,
-): ContractResult => {
+): ContractReadResult => {
   const { records, auctions, settings, fees, reserved } = state;
   const formattedName = name.toLowerCase().trim();
   const auction = auctions[formattedName];

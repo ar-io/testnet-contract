@@ -20,6 +20,7 @@ import {
   ArNSNameData,
   AuctionData,
   AuctionSettings,
+  Balances,
   BlockHeight,
   BlockTimestamp,
   DeepReadonly,
@@ -173,7 +174,7 @@ export function isValidArweaveBase64URL(base64URL: string): boolean {
 }
 
 export function walletHasSufficientBalance(
-  balances: { [x: string]: number },
+  balances: DeepReadonly<Balances>,
   wallet: string,
   qty: number,
 ): boolean {

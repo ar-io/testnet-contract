@@ -19,6 +19,7 @@ import {
   SECONDS_IN_GRACE_PERIOD,
   WALLET_FUND_AMOUNT,
 } from './constants';
+import { arweave } from './services';
 
 // ~~ Write function responsible for adding funds to the generated wallet ~~
 export async function addFunds(
@@ -262,10 +263,10 @@ function createGateways(wallets: string[]) {
   return gateways;
 }
 
-export function setupInitialContractState(
+export async function setupInitialContractState(
   owner: string,
   wallets: string[],
-): IOState {
+): Promise<IOState> {
   const state: IOState = INITIAL_STATE as unknown as IOState;
 
   // set the fees
@@ -276,11 +277,17 @@ export function setupInitialContractState(
     current[wallet] = WALLET_FUND_AMOUNT;
     return current;
   }, {});
+
   // add balance to the owner
   state.balances = {
     ...state.balances,
     [owner]: WALLET_FUND_AMOUNT, // TODO: transfer this to the protocol balance
   };
+
+  // setup demand factor based from the current block height
+  state.demandFactoring.periodZeroBlockHeight = (
+    await getCurrentBlock(arweave)
+  ).valueOf();
 
   // setup auctions
   state.auctions = {};

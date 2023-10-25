@@ -9,6 +9,8 @@
     "format:fix": "prettier . --write",
     "lint:check": "eslint .",
     "lint:fix": "eslint . --fix",
+    "test:unit": "jest --testPathPattern=src --coverage",
+    "test:integration": "jest --testPathPattern=tests --runInBand",
     "test": "yarn build && jest --runInBand",
     "evolve": "yarn ts-node ./tools/evolve-contract.ts",
     "prepare": "husky install",
@@ -48,7 +50,7 @@
     "arlocal@1.1.61": "patch:arlocal@npm%3A1.1.61#./.yarn/patches/arlocal-npm-1.1.61-aecd7b9946.patch"
   },
   "lint-staged": {
-    "**/*.{ts,js,md,json}": [
+    "**/*.{ts,js,json}": [
       "eslint --fix .",
       "prettier --write ."
     ]

@@ -173,8 +173,8 @@ export type GARFunctions =
 
 export type IOContractFunctions = GARFunctions & ArNSFunctions & PstFunctions;
 
-export type ContractResult =
-  | { state: IOState }
+export type ContractWriteResult = { state: DeepReadonly<IOState> | IOState };
+export type ContractReadResult =
   | { result: PstResult }
   | { result: ArNSNameResult }
   | {
