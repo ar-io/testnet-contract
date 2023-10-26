@@ -490,6 +490,6 @@ describe('Observation', () => {
     const { cachedValue: newCachedValue } = await contract.readState();
     const newState = newCachedValue.state as IOState;
     // console.log(JSON.stringify(newState.gateways, null, 3)); // eslint-disable-line
-    console.log(JSON.stringify(newState.observations, null, 3)); // eslint-disable-line
+    // console.log(JSON.stringify(newState.observations, null, 3)); // eslint-disable-line
   });
 });
