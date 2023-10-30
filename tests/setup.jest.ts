@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import path from 'path';
 
 import { WALLETS_TO_CREATE } from './utils/constants';
-// import { WALLETS_TO_CREATE } from './utils/constants';
 import { createLocalWallet, setupInitialContractState } from './utils/helper';
 import { arlocal, arweave, warp } from './utils/services';
 
