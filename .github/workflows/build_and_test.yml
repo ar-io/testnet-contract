@@ -12,12 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        step: ['format:check', 'lint:check', 'build', 'test --verbose']
+        step: ['format:check', 'lint:check', 'build', 'test']
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
-        with:
-          node-version-file: .nvmrc
-          cache: 'yarn'
+        # with:
+        #   node-version-file: .nvmrc
+        #   cache: 'yarn'
       - run: yarn install
       - run: yarn ${{ matrix.step }}
