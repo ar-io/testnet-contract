@@ -9,6 +9,7 @@ import {
   AUCTION_SETTINGS,
   CONTRACT_SETTINGS,
   DEFAULT_UNDERNAME_COUNT,
+  FEE_STRUCTURE,
   INITIAL_STATE,
   MAX_YEARS,
   NETWORK_HIDDEN_STATUS,
@@ -62,15 +63,6 @@ export async function createLocalWallet(
     wallet,
     address,
   };
-}
-
-function createFees(count = 32, start = WALLET_FUND_AMOUNT) {
-  const fees: any = {};
-  for (let i = 1; i <= count; i++) {
-    // TODO: write a better algo
-    fees[i] = Math.round(start * ((count - i) / 100000));
-  }
-  return fees;
 }
 
 function createRecords(count = MAX_YEARS) {
@@ -324,7 +316,7 @@ export function setupInitialContractState(
   const state: IOState = INITIAL_STATE as unknown as IOState;
 
   // set the fees
-  state.fees = createFees();
+  state.fees = FEE_STRUCTURE;
 
   // create wallets and set balances
   state.balances = wallets.reduce((current: any, wallet) => {
