@@ -25,11 +25,10 @@ import { arweave } from './services';
 // ~~ Write function responsible for adding funds to the generated wallet ~~
 export async function addFunds(
   arweave: Arweave,
-  wallet: JWKInterface,
+  address: string,
   amount: number = WALLET_FUND_AMOUNT,
 ): Promise<boolean> {
-  const walletAddress = await arweave.wallets.getAddress(wallet);
-  await arweave.api.get(`/mint/${walletAddress}/${amount}`);
+  await arweave.api.get(`/mint/${address}/${amount}`);
   return true;
 }
 
@@ -58,7 +57,7 @@ export async function createLocalWallet(
   // ~~ Generate wallet and add funds ~~
   const wallet = await arweave.wallets.generate();
   const address = await arweave.wallets.jwkToAddress(wallet);
-  await addFunds(arweave, wallet);
+  await addFunds(arweave, address);
 
   return {
     wallet,
