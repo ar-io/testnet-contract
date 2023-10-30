@@ -22,7 +22,7 @@
     "@typescript-eslint/eslint-plugin": "^4.18.0",
     "@typescript-eslint/parser": "^4.18.0",
     "ajv": "^8.12.0",
-    "arlocal": "1.1.61",
+    "arlocal": "^1.1.62",
     "arweave": "1.13.7",
     "commitlint": "^17.7.1",
     "dotenv": "^16.3.1",
@@ -43,8 +43,7 @@
     "warp-contracts-plugin-deploy": "^1.0.1"
   },
   "resolutions": {
-    "arweave": "1.13.7",
-    "arlocal@1.1.61": "patch:arlocal@npm%3A1.1.61#./.yarn/patches/arlocal-npm-1.1.61-aecd7b9946.patch"
+    "arweave": "1.13.7"
   },
   "lint-staged": {
     "**/*.{ts,js,md,json}": [
