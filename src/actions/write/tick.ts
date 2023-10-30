@@ -63,6 +63,29 @@ function tickInternal({
     }),
   );
 
+  // tick records
+  Object.assign(
+    updatedState,
+    tickRecords({
+      currentBlockTimestamp,
+      records: updatedState.records,
+    }),
+  );
+
+  // tick reserved names
+  Object.assign(
+    updatedState,
+    tickReservedNames({
+      currentBlockTimestamp,
+      reservedNames: updatedState.reserved,
+    }),
+  );
+
+  // update last ticked height
+  Object.assign(updatedState, {
+    lastTickedHeight: currentBlockHeight.valueOf(),
+  });
+
   return updatedState;
 }
 
@@ -258,7 +281,6 @@ export function tickAuctions({
 // Removes gateway from the gateway address registry after the leave period completes
 export const tick = async (state: IOState): Promise<ContractWriteResult> => {
   const interactionHeight = new BlockHeight(+SmartWeave.block.height);
-  const interactionTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
 
   if (interactionHeight.valueOf() === state.lastTickedHeight) {
     return { state };
@@ -289,24 +311,6 @@ export const tick = async (state: IOState): Promise<ContractWriteResult> => {
       state: updatedState,
     });
   }
-
-  // tick records
-  Object.assign(
-    updatedState,
-    tickRecords({
-      currentBlockTimestamp: interactionTimestamp,
-      records: updatedState.records,
-    }),
-  );
-
-  // tick reserved names
-  Object.assign(
-    updatedState,
-    tickReservedNames({
-      currentBlockTimestamp: interactionTimestamp,
-      reservedNames: updatedState.reserved,
-    }),
-  );
 
   return { state: updatedState };
 };
