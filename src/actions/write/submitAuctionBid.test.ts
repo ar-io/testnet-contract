@@ -163,7 +163,7 @@ describe('submitAuctionBid', () => {
       {
         contractTxId: 'stubbed-transaction-id',
         type: 'lease',
-        floorPrice: 220_000,
+        floorPrice: 240000,
       },
     ],
     [
@@ -175,7 +175,7 @@ describe('submitAuctionBid', () => {
       {
         contractTxId: 'stubbed-transaction-id',
         type: 'lease',
-        floorPrice: 220_000,
+        floorPrice: 240000,
       },
     ],
     [
@@ -186,7 +186,7 @@ describe('submitAuctionBid', () => {
       {
         contractTxId: 'stubbed-transaction-id',
         type: 'permabuy',
-        floorPrice: 200_000,
+        floorPrice: 400000,
       },
     ],
     [
@@ -197,7 +197,7 @@ describe('submitAuctionBid', () => {
       {
         contractTxId: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc',
         type: 'permabuy',
-        floorPrice: 200_000,
+        floorPrice: 400000,
       },
     ],
   ])(
