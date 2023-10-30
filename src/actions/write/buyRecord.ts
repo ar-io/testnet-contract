@@ -1,36 +1,27 @@
 import {
   ARNS_NAME_IN_AUCTION_MESSAGE,
   ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE,
-  ARNS_NAME_RESERVED_MESSAGE,
   DEFAULT_UNDERNAME_COUNT,
-  INVALID_SHORT_NAME,
-  INVALID_YEARS_MESSAGE,
-  MAX_YEARS,
-  NON_EXPIRED_ARNS_NAME_MESSAGE,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
+import { calculateRegistrationFee, tallyNamePurchase } from '../../pricing';
 import {
-  ContractResult,
+  BlockTimestamp,
+  ContractWriteResult,
   IOState,
   PstAction,
   RegistrationType,
 } from '../../types';
 import {
-  calculateRegistrationFee,
+  assertAvailableRecord,
   getInvalidAjvMessage,
-  isActiveReservedName,
-  isExistingActiveRecord,
   isNameRequiredToBeAuction,
-  isShortNameRestricted,
   walletHasSufficientBalance,
 } from '../../utilities';
 // composed by ajv at build
-import { validateBuyRecord } from '../../validations.mjs';
+import { validateBuyRecord } from '../../validations';
 import { submitAuctionBid } from './submitAuctionBid';
-
-declare const ContractError;
-declare const SmartWeave: any;
 
 export class BuyRecord {
   name: string;
@@ -43,7 +34,9 @@ export class BuyRecord {
   constructor(input: any) {
     // validate using ajv validator
     if (!validateBuyRecord(input)) {
-      throw new ContractError(getInvalidAjvMessage(validateBuyRecord, input));
+      throw new ContractError(
+        getInvalidAjvMessage(validateBuyRecord, input, 'buyRecord'),
+      );
     }
     const {
       name,
@@ -53,11 +46,11 @@ export class BuyRecord {
       auction = false,
     } = input;
     this.name = name.trim().toLowerCase();
-    (this.contractTxId =
+    this.contractTxId =
       contractTxId === RESERVED_ATOMIC_TX_ID
         ? SmartWeave.transaction.id
-        : contractTxId),
-      (this.years = years);
+        : contractTxId;
+    this.years = years;
     this.type = type;
     this.auction = auction;
   }
@@ -66,11 +59,11 @@ export class BuyRecord {
 export const buyRecord = (
   state: IOState,
   { caller, input }: PstAction,
-): ContractResult => {
+): ContractWriteResult => {
   // get all other relevant state data
   const { balances, records, reserved, fees, auctions } = state;
   const { name, contractTxId, years, type, auction } = new BuyRecord(input); // does validation on constructor
-  const currentBlockTimestamp = +SmartWeave.block.timestamp;
+  const currentBlockTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
 
   // auction logic if auction flag set
   if (auction) {
@@ -78,43 +71,20 @@ export const buyRecord = (
       caller,
       input,
     });
-  } else if (auctions[name]) {
+  }
+
+  if (auctions[name]) {
     // if auction flag not set, but auction exists, throw error
     throw new ContractError(ARNS_NAME_IN_AUCTION_MESSAGE);
   }
 
-  // Check if the user has enough tokens to purchase the name
-  if (
-    !balances[caller] ||
-    balances[caller] == undefined ||
-    balances[caller] == null ||
-    isNaN(balances[caller])
-  ) {
-    throw new ContractError(`Caller balance is not defined!`);
-  }
-
-  if (
-    isActiveReservedName({
-      caller,
-      reservedName: reserved[name],
-      currentBlockTimestamp,
-    })
-  ) {
-    throw new ContractError(ARNS_NAME_RESERVED_MESSAGE);
-  }
-
-  if (isShortNameRestricted({ name, currentBlockTimestamp })) {
-    throw new ContractError(INVALID_SHORT_NAME);
-  }
-
-  if (
-    isExistingActiveRecord({
-      record: records[name],
-      currentBlockTimestamp,
-    })
-  ) {
-    throw new ContractError(NON_EXPIRED_ARNS_NAME_MESSAGE);
-  }
+  assertAvailableRecord({
+    caller,
+    name,
+    records,
+    reserved,
+    currentBlockTimestamp,
+  });
 
   if (isNameRequiredToBeAuction({ name, type })) {
     throw new ContractError(ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE);
@@ -123,16 +93,16 @@ export const buyRecord = (
   // set the end lease period for this based on number of years if it's a lease
   const endTimestamp =
     type === 'lease'
-      ? currentBlockTimestamp + SECONDS_IN_A_YEAR * years
+      ? currentBlockTimestamp.valueOf() + SECONDS_IN_A_YEAR * years
       : undefined;
 
-  // TODO: add dynamic pricing
   const totalRegistrationFee = calculateRegistrationFee({
     name,
     fees,
     years,
     type,
-    currentBlockTimestamp: +SmartWeave.block.timestamp,
+    currentBlockTimestamp,
+    demandFactoring: state.demandFactoring,
   });
 
   if (!walletHasSufficientBalance(balances, caller, totalRegistrationFee)) {
@@ -150,8 +120,9 @@ export const buyRecord = (
     type,
     startTimestamp: +SmartWeave.block.timestamp,
     undernames: DEFAULT_UNDERNAME_COUNT,
+    purchasePrice: totalRegistrationFee,
     // only include timestamp on lease
-    ...(type === 'lease' ? { endTimestamp } : {}),
+    ...{ endTimestamp },
   };
 
   // delete the reserved name if it exists
@@ -163,5 +134,7 @@ export const buyRecord = (
   state.records = records;
   state.reserved = reserved;
   state.balances = balances;
+  state.demandFactoring = tallyNamePurchase(state.demandFactoring);
+
   return { state };
 };

@@ -7,7 +7,7 @@ logs
 coverage
 
 # ajv
-src/validations.mjs
+src/validations.js
 
 # source
 
@@ -42,3 +42,6 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# tests
+arns_contract.json

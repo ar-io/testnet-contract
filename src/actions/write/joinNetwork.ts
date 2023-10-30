@@ -2,12 +2,9 @@ import {
   INSUFFICIENT_FUNDS_MESSAGE,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
-import { ContractResult, IOState, PstAction } from '../../types';
+import { ContractWriteResult, IOState, PstAction } from '../../types';
 import { getInvalidAjvMessage } from '../../utilities';
-import { validateJoinNetwork } from '../../validations.mjs';
-
-declare const ContractError;
-declare const SmartWeave: any;
+import { validateJoinNetwork } from '../../validations';
 
 export class JoinNetwork {
   qty: number;
@@ -22,7 +19,9 @@ export class JoinNetwork {
   constructor(input: any) {
     // validate using ajv validator
     if (!validateJoinNetwork(input)) {
-      throw new ContractError(getInvalidAjvMessage(validateJoinNetwork, input));
+      throw new ContractError(
+        getInvalidAjvMessage(validateJoinNetwork, input, 'joinNetwork'),
+      );
     }
 
     const {
@@ -50,7 +49,7 @@ export class JoinNetwork {
 export const joinNetwork = async (
   state: IOState,
   { caller, input }: PstAction,
-): Promise<ContractResult> => {
+): Promise<ContractWriteResult> => {
   const { balances, gateways = {}, settings } = state;
   const { registry: registrySettings } = settings;
 

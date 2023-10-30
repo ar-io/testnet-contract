@@ -49,7 +49,7 @@ describe('Observation', () => {
   describe('valid observer', () => {
     describe('read operations', () => {
       it('should get prescribed observers with height', async () => {
-        const height = await getCurrentBlock(arweave);
+        const height = (await getCurrentBlock(arweave)).valueOf();
         const { result: prescribedObservers } = (await contract.viewState({
           function: 'prescribedObservers',
           height,
@@ -78,7 +78,7 @@ describe('Observation', () => {
       });
 
       it('should be able to check if target gateway wallet is valid observer for a given epoch', async () => {
-        const height = await getCurrentBlock(arweave);
+        const height = (await getCurrentBlock(arweave)).valueOf();
         const { result: prescribedObservers } = (await contract.viewState({
           function: 'prescribedObservers',
           height,
@@ -103,7 +103,7 @@ describe('Observation', () => {
       });
 
       it('should be able to check if target observer wallet is valid observer for a given epoch', async () => {
-        const height = await getCurrentBlock(arweave);
+        const height = (await getCurrentBlock(arweave)).valueOf();
         const { result: prescribedObservers } = (await contract.viewState({
           function: 'prescribedObservers',
           height,
@@ -118,7 +118,7 @@ describe('Observation', () => {
 
       it('should be able to check if target wallet is not a valid observer for a given epoch', async () => {
         const notJoinedGateway = await createLocalWallet(arweave);
-        const height = await getCurrentBlock(arweave);
+        const height = (await getCurrentBlock(arweave)).valueOf();
         const { result: notPrescribedWallet } = (await contract.viewState({
           function: 'prescribedObserver',
           target: notJoinedGateway.address,
@@ -130,7 +130,7 @@ describe('Observation', () => {
 
     describe('valid observer', () => {
       it('should save observations in epoch if prescribed observer with single failed gateway', async () => {
-        let height = await getCurrentBlock(arweave);
+        let height = (await getCurrentBlock(arweave)).valueOf();
         let currentEpochStartHeight = getEpochStart({
           startHeight: DEFAULT_START_HEIGHT,
           epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
@@ -142,7 +142,8 @@ describe('Observation', () => {
         })) as any;
         const prescribedObserverWallets = wallets.filter((wallet) =>
           prescribedObservers.find(
-            (observer) => observer.gatewayAddress === wallet.addr,
+            (observer: { gatewayAddress: string }) =>
+              observer.gatewayAddress === wallet.addr,
           ),
         );
         const writeInteractions = await Promise.all(
@@ -156,7 +157,7 @@ describe('Observation', () => {
           }),
         );
 
-        height = await getCurrentBlock(arweave);
+        height = (await getCurrentBlock(arweave)).valueOf();
         currentEpochStartHeight = getEpochStart({
           startHeight: DEFAULT_START_HEIGHT,
           epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
@@ -183,7 +184,7 @@ describe('Observation', () => {
       });
 
       it('should allow an observer to update their observation with new failures/report if selected as observer', async () => {
-        const height = await getCurrentBlock(arweave);
+        const height = (await getCurrentBlock(arweave)).valueOf();
         const currentEpochStartHeight = getEpochStart({
           startHeight: DEFAULT_START_HEIGHT,
           epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
@@ -195,7 +196,8 @@ describe('Observation', () => {
         })) as any;
         const prescribedObserverWallets = wallets.filter((wallet) =>
           prescribedObservers.find(
-            (observer) => observer.gatewayAddress === wallet.addr,
+            (observer: { gatewayAddress: string }) =>
+              observer.gatewayAddress === wallet.addr,
           ),
         );
         contract = warp
@@ -221,7 +223,7 @@ describe('Observation', () => {
 
       it('should change epoch and save observations if prescribed observer with all using multiple failed gateways', async () => {
         await mineBlocks(arweave, DEFAULT_EPOCH_BLOCK_LENGTH);
-        let height = await getCurrentBlock(arweave);
+        let height = (await getCurrentBlock(arweave)).valueOf();
         let currentEpochStartHeight = getEpochStart({
           startHeight: DEFAULT_START_HEIGHT,
           epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
@@ -233,7 +235,8 @@ describe('Observation', () => {
         })) as any;
         const prescribedObserverWallets = wallets.filter((wallet) =>
           prescribedObservers.find(
-            (observer) => observer.gatewayAddress === wallet.addr,
+            (observer: { gatewayAddress: string }) =>
+              observer.gatewayAddress === wallet.addr,
           ),
         );
         const failedGateways = getRandomFailedGatewaysSubset(
@@ -250,7 +253,7 @@ describe('Observation', () => {
           }),
         );
 
-        height = await getCurrentBlock(arweave);
+        height = (await getCurrentBlock(arweave)).valueOf();
         currentEpochStartHeight = getEpochStart({
           startHeight: DEFAULT_START_HEIGHT,
           epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
@@ -278,7 +281,7 @@ describe('Observation', () => {
 
       it('should change epoch and save observations again if prescribed observer with random failed gateways', async () => {
         await mineBlocks(arweave, DEFAULT_EPOCH_BLOCK_LENGTH);
-        let height = await getCurrentBlock(arweave);
+        let height = (await getCurrentBlock(arweave)).valueOf();
         let currentEpochStartHeight = getEpochStart({
           startHeight: DEFAULT_START_HEIGHT,
           epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
@@ -290,7 +293,8 @@ describe('Observation', () => {
         })) as any;
         const prescribedObserverWallets = wallets.filter((wallet) =>
           prescribedObservers.find(
-            (observer) => observer.gatewayAddress === wallet.addr,
+            (observer: { gatewayAddress: string }) =>
+              observer.gatewayAddress === wallet.addr,
           ),
         );
         const writeInteractions = await Promise.all(
@@ -307,7 +311,7 @@ describe('Observation', () => {
           }),
         );
 
-        height = await getCurrentBlock(arweave);
+        height = (await getCurrentBlock(arweave)).valueOf();
         currentEpochStartHeight = getEpochStart({
           startHeight: DEFAULT_START_HEIGHT,
           epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
@@ -335,7 +339,7 @@ describe('Observation', () => {
 
       it('should change epoch and save observations again if prescribed observer using observer wallet address', async () => {
         await mineBlocks(arweave, DEFAULT_EPOCH_BLOCK_LENGTH);
-        let height = await getCurrentBlock(arweave);
+        let height = (await getCurrentBlock(arweave)).valueOf();
         let currentEpochStartHeight = getEpochStart({
           startHeight: DEFAULT_START_HEIGHT,
           epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
@@ -347,7 +351,8 @@ describe('Observation', () => {
         })) as any;
         const prescribedObserverWallets = wallets.filter((wallet) =>
           prescribedObservers.find(
-            (observer) => observer.observerAddress === wallet.addr,
+            (observer: { observerAddress: string }) =>
+              observer.observerAddress === wallet.addr,
           ),
         );
         const writeInteractions = await Promise.all(
@@ -364,7 +369,7 @@ describe('Observation', () => {
           }),
         );
 
-        height = await getCurrentBlock(arweave);
+        height = (await getCurrentBlock(arweave)).valueOf();
         currentEpochStartHeight = getEpochStart({
           startHeight: DEFAULT_START_HEIGHT,
           epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
@@ -437,7 +442,7 @@ describe('Observation', () => {
   describe('non-prescribed observer', () => {
     describe('write interactions', () => {
       it('should not save observation report if not prescribed observer', async () => {
-        const height = await getCurrentBlock(arweave);
+        const height = (await getCurrentBlock(arweave)).valueOf();
         const { result: prescribedObservers } = (await contract.viewState({
           function: 'prescribedObservers',
           height,
@@ -447,7 +452,8 @@ describe('Observation', () => {
         for (let i = 0; i < WALLETS_TO_CREATE; i++) {
           if (
             !prescribedObservers.some(
-              (observer) => observer.gatewayAddress === wallets[i].addr,
+              (observer: { gatewayAddress: string }) =>
+                observer.gatewayAddress === wallets[i].addr,
             )
           ) {
             contract = warp.pst(srcContractId).connect(wallets[i].jwk);
@@ -483,13 +489,5 @@ describe('Observation', () => {
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
     });
-  });
-
-  afterAll(async () => {
-    await mineBlock(arweave);
-    const { cachedValue: newCachedValue } = await contract.readState();
-    const newState = newCachedValue.state as IOState;
-    // console.log(JSON.stringify(newState.gateways, null, 3)); // eslint-disable-line
-    // console.log(JSON.stringify(newState.observations, null, 3)); // eslint-disable-line
   });
 });

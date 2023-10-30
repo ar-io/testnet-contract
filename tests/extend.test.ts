@@ -58,12 +58,12 @@ describe('Extend', () => {
         years: extendYears,
       });
 
-      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      expect(writeInteraction.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       expect(Object.keys(cachedValue.errorMessages)).toContain(
-        writeInteraction!.originalTxId,
+        writeInteraction.originalTxId,
       );
-      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
+      expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toEqual(
         INSUFFICIENT_FUNDS_MESSAGE,
       );
       expect(cachedValue.state).toEqual(prevState);
@@ -82,13 +82,13 @@ describe('Extend', () => {
           years: extendYears,
         });
 
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        expect(writeInteraction.originalTxId).not.toBe(undefined);
         const { cachedValue } = await contract.readState();
         expect(Object.keys(cachedValue.errorMessages)).toContain(
-          writeInteraction!.originalTxId,
+          writeInteraction.originalTxId,
         );
         expect(
-          cachedValue.errorMessages[writeInteraction!.originalTxId],
+          cachedValue.errorMessages[writeInteraction.originalTxId],
         ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
         expect(cachedValue.state).toEqual(prevState);
       },
@@ -106,12 +106,12 @@ describe('Extend', () => {
         years: extendYears,
       });
 
-      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      expect(writeInteraction.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       expect(Object.keys(cachedValue.errorMessages)).toContain(
-        writeInteraction!.originalTxId,
+        writeInteraction.originalTxId,
       );
-      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
+      expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toEqual(
         expect.stringContaining(INVALID_INPUT_MESSAGE),
       );
       expect(cachedValue.state).toEqual(prevState);
@@ -128,12 +128,12 @@ describe('Extend', () => {
         years: extendYears,
       });
 
-      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      expect(writeInteraction.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       expect(Object.keys(cachedValue.errorMessages)).toContain(
-        writeInteraction!.originalTxId,
+        writeInteraction.originalTxId,
       );
-      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
+      expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toEqual(
         ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
       );
     });
@@ -151,12 +151,12 @@ describe('Extend', () => {
         years: extendYears,
       });
 
-      expect(writeInteraction?.originalTxId).not.toBe(undefined);
+      expect(writeInteraction.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       expect(Object.keys(cachedValue.errorMessages)).toContain(
-        writeInteraction!.originalTxId,
+        writeInteraction.originalTxId,
       );
-      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
+      expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toEqual(
         INVALID_NAME_EXTENSION_TYPE_MESSAGE,
       );
       expect(cachedValue.state).toEqual(prevState);
@@ -169,16 +169,14 @@ describe('Extend', () => {
         const name = `grace-period-name${years}`;
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevState = prevCachedValue.state as IOState;
-        const record = prevState.records[name]!;
+        const record = prevState.records[name];
         const prevBalance = prevState.balances[nonContractOwnerAddress];
         const fees = prevState.fees;
-        const totalExtensionAnnualFee = calculateAnnualRenewalFee(
+        const totalExtensionAnnualFee = calculateAnnualRenewalFee({
           name,
           fees,
           years,
-          record.undernames,
-          record.endTimestamp!,
-        );
+        });
 
         const writeInteraction = await contract.writeInteraction({
           function: 'extendRecord',
@@ -186,14 +184,14 @@ describe('Extend', () => {
           years: years,
         });
 
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        expect(writeInteraction.originalTxId).not.toBe(undefined);
         const { cachedValue } = await contract.readState();
         const state = cachedValue.state as IOState;
         expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-          writeInteraction!.originalTxId,
+          writeInteraction.originalTxId,
         );
         expect(state.records[name].endTimestamp).toEqual(
-          record.endTimestamp! + years * SECONDS_IN_A_YEAR,
+          record.endTimestamp + years * SECONDS_IN_A_YEAR,
         );
         expect(state.balances[nonContractOwnerAddress]).toEqual(
           prevBalance - totalExtensionAnnualFee,
@@ -210,18 +208,15 @@ describe('Extend', () => {
         const name = `lease-length-name${MAX_YEARS - years}`; // should select the name correctly based on how the helper function generates names
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevState = prevCachedValue.state as IOState;
-        const prevEndTimestamp = prevState.records[name].endTimestamp!;
         const prevBalance = prevState.balances[nonContractOwnerAddress];
-        const record = prevState.records[name]!;
+        const record = prevState.records[name];
         const fees = prevState.fees;
 
-        const totalExtensionAnnualFee = calculateAnnualRenewalFee(
+        const totalExtensionAnnualFee = calculateAnnualRenewalFee({
           name,
           fees,
           years,
-          record.undernames,
-          record.endTimestamp!,
-        );
+        });
 
         const writeInteraction = await contract.writeInteraction({
           function: 'extendRecord',
@@ -229,14 +224,14 @@ describe('Extend', () => {
           years: years,
         });
 
-        expect(writeInteraction?.originalTxId).not.toBe(undefined);
+        expect(writeInteraction.originalTxId).not.toBe(undefined);
         const { cachedValue } = await contract.readState();
         const state = cachedValue.state as IOState;
         expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-          writeInteraction!.originalTxId,
+          writeInteraction.originalTxId,
         );
         expect(state.records[name].endTimestamp).toEqual(
-          prevEndTimestamp + years * SECONDS_IN_A_YEAR,
+          record.endTimestamp + years * SECONDS_IN_A_YEAR,
         );
         expect(state.balances[nonContractOwnerAddress]).toEqual(
           prevBalance - totalExtensionAnnualFee,

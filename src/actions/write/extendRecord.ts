@@ -5,17 +5,20 @@ import {
   INVALID_YEARS_MESSAGE,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
-import { ContractResult, IOState, PstAction } from '../../types';
+import { calculateAnnualRenewalFee, tallyNamePurchase } from '../../pricing';
 import {
-  calculateAnnualRenewalFee,
+  BlockTimestamp,
+  ContractWriteResult,
+  IOState,
+  PstAction,
+} from '../../types';
+import {
   getInvalidAjvMessage,
-  getMaxLeaseExtension,
+  getMaxAllowedYearsExtensionForRecord,
+  isExistingActiveRecord,
   walletHasSufficientBalance,
 } from '../../utilities';
-import { validateExtendRecord } from '../../validations.mjs';
-
-declare const ContractError;
-declare const SmartWeave: any;
+import { validateExtendRecord } from '../../validations';
 
 export class ExtendRecord {
   function = 'extendRecord';
@@ -25,7 +28,7 @@ export class ExtendRecord {
   constructor(input: any) {
     if (!validateExtendRecord(input)) {
       throw new ContractError(
-        getInvalidAjvMessage(validateExtendRecord, input),
+        getInvalidAjvMessage(validateExtendRecord, input, 'extendRecord'),
       );
     }
     const { name, years } = input;
@@ -45,9 +48,9 @@ export class ExtendRecord {
 export const extendRecord = async (
   state: IOState,
   { caller, input }: PstAction,
-): Promise<ContractResult> => {
+): Promise<ContractWriteResult> => {
   const { balances, records, fees } = state;
-  const currentBlockTime = +SmartWeave.block.timestamp;
+  const currentBlockTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
   const { name, years } = new ExtendRecord(input);
   const record = records[name];
 
@@ -60,35 +63,48 @@ export const extendRecord = async (
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  if (!record) {
-    throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
+  // This name's lease has expired and cannot be extended
+  if (
+    !isExistingActiveRecord({
+      record,
+      currentBlockTimestamp,
+    })
+  ) {
+    if (!record) {
+      throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
+    }
+    if (record.type === 'permabuy') {
+      throw new ContractError(INVALID_NAME_EXTENSION_TYPE_MESSAGE);
+    }
+    throw new ContractError(
+      `This name has expired and must renewed before its undername support can be extended.`,
+    );
   }
 
-  if (!record.endTimestamp) {
-    throw new ContractError(INVALID_NAME_EXTENSION_TYPE_MESSAGE);
-  }
-
-  if (getMaxLeaseExtension(currentBlockTime, record.endTimestamp) === 0) {
+  if (
+    years >
+    getMaxAllowedYearsExtensionForRecord({ currentBlockTimestamp, record })
+  ) {
     throw new ContractError(INVALID_YEARS_MESSAGE);
   }
 
-  // total cost to extend a record
-  const totalExtensionAnnualFee = calculateAnnualRenewalFee(
-    name,
-    fees,
-    years,
-    record.undernames,
-    record.endTimestamp,
-  );
+  const demandFactor = state.demandFactoring.demandFactor;
+  const totalExtensionAnnualFee =
+    demandFactor *
+    calculateAnnualRenewalFee({
+      name,
+      fees,
+      years,
+    });
 
   if (!walletHasSufficientBalance(balances, caller, totalExtensionAnnualFee)) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  // TODO: implement protocol balance transfer for this charge.
   state.balances[caller] -= totalExtensionAnnualFee;
   state.balances[SmartWeave.contract.id] += totalExtensionAnnualFee;
-
   state.records[name].endTimestamp += SECONDS_IN_A_YEAR * years;
+  state.demandFactoring = tallyNamePurchase(state.demandFactoring);
+
   return { state };
 };

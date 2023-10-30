@@ -11,5 +11,13 @@
   "auctions": {},
   "settings": {},
   "gateways": {},
-  "observations": {}
+  "observations": {},
+  "demandFactoring": {
+    "periodZeroBlockHeight": 0,
+    "currentPeriod": 0,
+    "trailingPeriodPurchases": [0, 0, 0, 0, 0, 0, 0],
+    "purchasesThisPeriod": 0,
+    "demandFactor": 1,
+    "consecutivePeriodsWithMinDemandFactor": 0
+  }
 }

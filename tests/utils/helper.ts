@@ -3,7 +3,7 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import path from 'path';
 
-import { IOState } from '../../src/types';
+import { BlockHeight, IOState } from '../../src/types';
 import {
   ANT_CONTRACT_IDS,
   AUCTION_SETTINGS,
@@ -20,6 +20,7 @@ import {
   SECONDS_IN_GRACE_PERIOD,
   WALLET_FUND_AMOUNT,
 } from './constants';
+import { arweave } from './services';
 
 // ~~ Write function responsible for adding funds to the generated wallet ~~
 export async function addFunds(
@@ -38,8 +39,8 @@ export async function mineBlock(arweave: Arweave): Promise<boolean> {
   return true;
 }
 
-export async function getCurrentBlock(arweave: Arweave): Promise<number> {
-  return (await arweave.blocks.getCurrent()).height;
+export async function getCurrentBlock(arweave: Arweave): Promise<BlockHeight> {
+  return new BlockHeight((await arweave.blocks.getCurrent()).height);
 }
 
 export async function mineBlocks(
@@ -71,8 +72,8 @@ function createRecords(count = MAX_YEARS) {
     const name = `name${i + 1}`;
     const obj = {
       contractTxID: ANT_CONTRACT_IDS[0],
-      endTimestamp: new Date('01/01/2025').getTime() / 1000,
-      startTimestamp: Date.now() / 1000 - SECONDS_IN_A_YEAR,
+      endTimestamp: Math.round(new Date('01/01/2025').getTime() / 1000),
+      startTimestamp: Math.round(Date.now() / 1000 - SECONDS_IN_A_YEAR),
       undernames: DEFAULT_UNDERNAME_COUNT,
       type: REGISTRATION_TYPES.LEASE,
     };
@@ -81,8 +82,8 @@ function createRecords(count = MAX_YEARS) {
     const gracePeriodName = `grace-period-name${i + 1}`;
     const gracePeriodObj = {
       contractTxID: ANT_CONTRACT_IDS[0],
-      endTimestamp: Date.now() / 1000,
-      startTimestamp: Date.now() / 1000 - SECONDS_IN_A_YEAR,
+      endTimestamp: Math.round(Date.now() / 1000),
+      startTimestamp: Math.round(Date.now() / 1000 - SECONDS_IN_A_YEAR),
       undernames: DEFAULT_UNDERNAME_COUNT,
       type: REGISTRATION_TYPES.LEASE,
     };
@@ -91,9 +92,10 @@ function createRecords(count = MAX_YEARS) {
     const expiredName = `expired-name${i + 1}`;
     const expiredObj = {
       contractTxID: ANT_CONTRACT_IDS[0],
-      endTimestamp: Date.now() / 1000,
-      startTimestamp:
+      endTimestamp: Math.round(Date.now() / 1000),
+      startTimestamp: Math.round(
         Date.now() / 1000 - (SECONDS_IN_A_YEAR + SECONDS_IN_GRACE_PERIOD + 1),
+      ),
       undernames: DEFAULT_UNDERNAME_COUNT,
       type: REGISTRATION_TYPES.LEASE,
     };
@@ -105,8 +107,10 @@ function createRecords(count = MAX_YEARS) {
     const leaseLengthObj = {
       contractTxID: ANT_CONTRACT_IDS[0],
       endTimestamp:
-        i > 0 ? Date.now() / 1000 + SECONDS_IN_A_YEAR * i - 1 : undefined,
-      startTimestamp: Date.now() / 1000 - 1,
+        i > 0
+          ? Math.round(Date.now() / 1000 + SECONDS_IN_A_YEAR * i - 1)
+          : undefined,
+      startTimestamp: Math.round(Date.now() / 1000 - 1),
       undernames: DEFAULT_UNDERNAME_COUNT,
       type: i > 0 ? REGISTRATION_TYPES.LEASE : REGISTRATION_TYPES.BUY,
     };
@@ -309,10 +313,10 @@ function createGateways(wallets: string[]) {
   return gateways;
 }
 
-export function setupInitialContractState(
+export async function setupInitialContractState(
   owner: string,
   wallets: string[],
-): IOState {
+): Promise<IOState> {
   const state: IOState = INITIAL_STATE as unknown as IOState;
 
   // set the fees
@@ -323,11 +327,17 @@ export function setupInitialContractState(
     current[wallet] = WALLET_FUND_AMOUNT;
     return current;
   }, {});
+
   // add balance to the owner
   state.balances = {
     ...state.balances,
     [owner]: WALLET_FUND_AMOUNT, // TODO: transfer this to the protocol balance
   };
+
+  // setup demand factor based from the current block height
+  state.demandFactoring.periodZeroBlockHeight = (
+    await getCurrentBlock(arweave)
+  ).valueOf();
 
   // setup auctions
   state.auctions = {};
@@ -418,4 +428,6 @@ export function getRandomFailedGatewaysSubset(
 }
 
 export * from '../../src/utilities';
+export * from '../../src/pricing';
+export * from '../../src/auctions';
 export * from '../../tools/utilities';

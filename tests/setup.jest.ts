@@ -26,6 +26,8 @@ module.exports = async () => {
     ),
   );
   // save wallets to disk
+  console.log('Saving wallets to disk!'); // eslint-disable-line
+
   wallets.forEach((w, index) => {
     fs.writeFileSync(
       path.join(__dirname, `./wallets/${index}.json`),
@@ -35,8 +37,8 @@ module.exports = async () => {
 
   console.log('Successfully created wallets!'); // eslint-disable-line
 
-  // // // create initial contract
-  const initialContractState = setupInitialContractState(
+  // create initial contract
+  const initialContractState = await setupInitialContractState(
     wallets[0].address,
     wallets.map((w) => w.address),
   );

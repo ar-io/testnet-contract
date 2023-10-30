@@ -3,7 +3,7 @@ import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_START_HEIGHT,
 } from '../../constants';
-import { ContractResult, IOState, PstAction } from '../../types';
+import { ContractWriteResult, IOState, PstAction } from '../../types';
 import {
   getEpochStart,
   getInvalidAjvMessage,
@@ -11,9 +11,6 @@ import {
 } from '../../utilities';
 // composed by ajv at build
 import { validateSaveObservations } from '../../validations.mjs';
-
-declare const ContractError;
-declare const SmartWeave: any;
 
 export class SaveObservations {
   observerReportTxId: string;
@@ -23,7 +20,11 @@ export class SaveObservations {
     // validate using ajv validator
     if (!validateSaveObservations(input)) {
       throw new ContractError(
-        getInvalidAjvMessage(validateSaveObservations, input),
+        getInvalidAjvMessage(
+          validateSaveObservations,
+          input,
+          'saveObservations',
+        ),
       );
     }
     const { observerReportTxId, failedGateways } = input;
@@ -35,7 +36,7 @@ export class SaveObservations {
 export const saveObservations = async (
   state: IOState,
   { caller, input }: PstAction,
-): Promise<ContractResult> => {
+): Promise<ContractWriteResult> => {
   // get all other relevant state data
   const { observations, gateways, settings } = state;
   const { observerReportTxId, failedGateways } = new SaveObservations(input); // does validation on constructor

@@ -1,27 +1,36 @@
-import { ContractResult, IOState, PstAction } from '../../types';
 import {
   calculateMinimumAuctionBid,
-  calculateRegistrationFee,
   createAuctionObject,
   getAuctionPrices,
+} from '../../auctions';
+import { calculateRegistrationFee } from '../../pricing';
+import {
+  BlockHeight,
+  BlockTimestamp,
+  ContractReadResult,
+  DeepReadonly,
+  IOState,
+  PstAction,
+} from '../../types';
+import {
   isNameAvailableForAuction,
   isNameRequiredToBeAuction,
 } from '../../utilities';
 
-declare const SmartWeave: any;
-
 export const getAuction = (
-  state: IOState,
+  state: DeepReadonly<IOState>,
   { caller, input: { name, type = 'lease' } }: PstAction,
-): ContractResult => {
+): ContractReadResult => {
   const { records, auctions, settings, fees, reserved } = state;
   const formattedName = name.toLowerCase().trim();
   const auction = auctions[formattedName];
   const auctionSettings = settings.auctions;
 
   if (!auction) {
-    const currentBlockTimestamp = +SmartWeave.block.timestamp;
-    const currentBlockHeight = +SmartWeave.block.height;
+    const currentBlockTimestamp = new BlockTimestamp(
+      +SmartWeave.block.timestamp,
+    );
+    const currentBlockHeight = new BlockHeight(+SmartWeave.block.height);
 
     const initialRegistrationFee = calculateRegistrationFee({
       type,
@@ -29,6 +38,32 @@ export const getAuction = (
       fees,
       years: 1,
       currentBlockTimestamp,
+      demandFactoring: state.demandFactoring,
+    });
+
+    // a stubbed auction object
+    const auctionObject = createAuctionObject({
+      auctionSettings,
+      type,
+      name,
+      fees,
+      years: 1,
+      currentBlockTimestamp,
+      demandFactoring: state.demandFactoring,
+      currentBlockHeight,
+      contractTxId: undefined,
+      initiator: undefined,
+    });
+
+    const floorPrice =
+      initialRegistrationFee * auctionObject.settings.floorPriceMultiplier;
+    const startPrice = floorPrice * auctionObject.settings.startPriceMultiplier;
+
+    const prices = getAuctionPrices({
+      auctionSettings,
+      startHeight: currentBlockHeight, // set it to the current block height
+      startPrice,
+      floorPrice,
     });
 
     // existing record
@@ -50,27 +85,6 @@ export const getAuction = (
     const isRequiredToBeAuctioned = isNameRequiredToBeAuction({
       name: formattedName,
       type,
-    });
-
-    // a stubbed auction object
-    const auctionObject = createAuctionObject({
-      auctionSettings,
-      type,
-      initialRegistrationFee: initialRegistrationFee,
-      currentBlockHeight,
-      contractTxId: undefined,
-      initiator: undefined,
-    });
-
-    const floorPrice =
-      initialRegistrationFee * auctionObject.settings.floorPriceMultiplier;
-    const startPrice = floorPrice * auctionObject.settings.startPriceMultiplier;
-
-    const prices = getAuctionPrices({
-      auctionSettings,
-      startHeight: currentBlockHeight, // set it to the current block height
-      startPrice,
-      floorPrice,
     });
 
     return {
@@ -96,17 +110,17 @@ export const getAuction = (
   // get all the prices for the auction
   const prices = getAuctionPrices({
     auctionSettings,
-    startHeight,
-    startPrice,
+    startHeight: new BlockHeight(startHeight),
+    startPrice, // TODO: use IOTOken class
     floorPrice,
   });
 
   // calculate the minimum bid
   const minimumBid = calculateMinimumAuctionBid({
-    startHeight,
+    startHeight: new BlockHeight(startHeight),
     startPrice,
     floorPrice,
-    currentBlockHeight: +SmartWeave.block.height,
+    currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
     decayInterval: auctionSettings.decayInterval,
     decayRate: auctionSettings.decayRate,
   });
@@ -118,7 +132,7 @@ export const getAuction = (
       isActive: expirationHeight > +SmartWeave.block.height,
       isAvailableForAuction: false,
       isRequiredToBeAuctioned: isRequiredToBeAuctioned,
-      minimumBid,
+      minimumBid: minimumBid.valueOf(),
       ...auction,
       prices,
     },
