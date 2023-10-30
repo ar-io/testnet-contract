@@ -1,9 +1,13 @@
 import { SECONDS_IN_A_YEAR } from './constants';
+import { calculateRegistrationFee } from './pricing';
 import {
   AuctionData,
   AuctionSettings,
   BlockHeight,
   BlockTimestamp,
+  DeepReadonly,
+  DemandFactoringData,
+  Fees,
   IOToken,
   RegistrationType,
 } from './types';
@@ -68,38 +72,46 @@ export function getAuctionPrices({
 
 export function createAuctionObject({
   auctionSettings,
-  initialRegistrationFee,
+  years,
+  fees,
   contractTxId,
   currentBlockHeight,
+  currentBlockTimestamp,
   type,
   initiator,
-  providedFloorPrice,
+  demandFactoring,
+  name,
 }: {
+  name: string;
+  fees: Fees;
+  years: number;
   auctionSettings: AuctionSettings;
-  initialRegistrationFee: number;
   contractTxId: string | undefined;
   currentBlockHeight: BlockHeight;
+  currentBlockTimestamp: BlockTimestamp;
   type: RegistrationType;
   initiator: string | undefined;
-  years?: number;
-  providedFloorPrice?: number;
+  demandFactoring: DeepReadonly<DemandFactoringData>;
 }): AuctionData {
-  const calculatedFloor =
+  const initialRegistrationFee = calculateRegistrationFee({
+    name,
+    fees,
+    years,
+    type,
+    currentBlockTimestamp,
+    demandFactoring,
+  });
+  const calculatedFloorPrice =
     initialRegistrationFee * auctionSettings.floorPriceMultiplier;
-  // if someone submits a high floor price, we'll take it
-  const floorPrice = providedFloorPrice
-    ? Math.max(providedFloorPrice, calculatedFloor)
-    : calculatedFloor;
-
-  const startPrice = floorPrice * auctionSettings.startPriceMultiplier;
+  const startPrice =
+    calculatedFloorPrice * auctionSettings.startPriceMultiplier;
   const endHeight =
     currentBlockHeight.valueOf() + auctionSettings.auctionDuration;
-  const years = type === 'lease' ? 1 : undefined;
   return {
     initiator, // the balance that the floor price is decremented from
     contractTxId,
     startPrice,
-    floorPrice, // this is decremented from the initiators wallet, and could be higher than the precalculated floor
+    floorPrice: calculatedFloorPrice, // this is decremented from the initiators wallet, and could be higher than the precalculated floor
     startHeight: currentBlockHeight.valueOf(), // auction starts right away
     endHeight, // auction ends after the set duration
     type,
@@ -114,7 +126,7 @@ export function getEndTimestampForAuction({
 }: {
   auction: AuctionData;
   currentBlockTimestamp: BlockTimestamp;
-}): BlockTimestamp {
+}): BlockTimestamp | undefined {
   switch (auction.type) {
     case 'permabuy':
       return undefined;
@@ -122,5 +134,7 @@ export function getEndTimestampForAuction({
       return new BlockTimestamp(
         currentBlockTimestamp.valueOf() + SECONDS_IN_A_YEAR * auction.years,
       );
+    default:
+      throw new ContractError('Invalid auction type');
   }
 }

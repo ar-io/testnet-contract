@@ -319,3 +319,15 @@ export function isGatewayEligibleToLeave({
     isGatewayHidden({ gateway });
   return joinedForMinimum && isActiveOrHidden;
 }
+
+export function calculateYearsBetweenTimestamps({
+  startTimestamp,
+  endTimestamp,
+}: {
+  startTimestamp: BlockTimestamp;
+  endTimestamp: BlockTimestamp;
+}): number {
+  const yearsRemainingFloat =
+    (endTimestamp.valueOf() - startTimestamp.valueOf()) / SECONDS_IN_A_YEAR;
+  return +yearsRemainingFloat.toFixed(2);
+}

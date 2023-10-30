@@ -32,13 +32,6 @@ function tickInternal({
   currentBlockTimestamp: BlockTimestamp;
   state: IOState;
 }): IOState {
-  // const {
-  //   records, // has per-height considerations
-  //   auctions, // has per-height considerations
-  //   reserved, // has per-height considerations by way of timestamps
-  //   settings, // MAY NOT HAVE RELEVANCE - just used to pull auction settings
-  // } = state;
-
   const updatedState = state;
   const { demandFactoring: prevDemandFactoring, fees: prevFees } = state;
 
@@ -214,7 +207,7 @@ export function tickAuctions({
     const auction = auctions[key];
 
     // endHeight represents the height at which the auction is CLOSED and at which bids are no longer accepted
-    if (auction.endHeight > currentBlockHeight.valueOf()) {
+    if (auction.endHeight >= currentBlockHeight.valueOf()) {
       acc[key] = auction;
       return acc;
     }
@@ -241,6 +234,7 @@ export function tickAuctions({
       startTimestamp: currentBlockTimestamp.valueOf(),
       undernames: DEFAULT_UNDERNAME_COUNT,
       ...maybeEndTimestamp,
+      purchasePrice: auction.floorPrice,
     };
 
     updatedDemandFactoring = tallyNamePurchase(updatedDemandFactoring);

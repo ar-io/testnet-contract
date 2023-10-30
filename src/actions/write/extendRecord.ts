@@ -95,8 +95,6 @@ export const extendRecord = async (
       name,
       fees,
       years,
-      undernames: record.undernames,
-      endTimestamp: new BlockTimestamp(record.endTimestamp),
     });
 
   if (!walletHasSufficientBalance(balances, caller, totalExtensionAnnualFee)) {

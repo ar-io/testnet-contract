@@ -1,6 +1,6 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
-import { BlockTimestamp, IOState } from '../src/types';
+import { IOState } from '../src/types';
 import {
   ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
   INSUFFICIENT_FUNDS_MESSAGE,
@@ -176,8 +176,6 @@ describe('Extend', () => {
           name,
           fees,
           years,
-          undernames: record.undernames,
-          endTimestamp: new BlockTimestamp(record.endTimestamp),
         });
 
         const writeInteraction = await contract.writeInteraction({
@@ -218,8 +216,6 @@ describe('Extend', () => {
           name,
           fees,
           years,
-          undernames: record.undernames,
-          endTimestamp: new BlockTimestamp(record.endTimestamp),
         });
 
         const writeInteraction = await contract.writeInteraction({

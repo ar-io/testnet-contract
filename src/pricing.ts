@@ -1,15 +1,13 @@
 import {
   ANNUAL_PERCENTAGE_FEE,
-  DEFAULT_UNDERNAME_COUNT,
   DEMAND_FACTORING_SETTINGS,
-  MINIMUM_ALLOWED_NAME_LENGTH,
   ONE_MIO,
   PERMABUY_LEASE_FEE_LENGTH,
-  RARITY_MULTIPLIER_HALVENING,
-  SECONDS_IN_A_YEAR,
-  UNDERNAME_REGISTRATION_IO_FEE,
+  UNDERNAME_LEASE_FEE_PERCENTAGE,
+  UNDERNAME_PERMABUY_FEE_PERCENTAGE,
 } from './constants';
 import {
+  ArNSName,
   BlockHeight,
   BlockTimestamp,
   DeepReadonly,
@@ -167,7 +165,6 @@ export function calculateLeaseFee({
   name,
   fees,
   years,
-  currentBlockTimestamp,
   demandFactoring,
 }: {
   name: string;
@@ -188,10 +185,6 @@ export function calculateLeaseFee({
         name,
         fees,
         years,
-        undernames: DEFAULT_UNDERNAME_COUNT,
-        endTimestamp: new BlockTimestamp(
-          currentBlockTimestamp.valueOf() + SECONDS_IN_A_YEAR * years,
-        ),
       }))
   );
 }
@@ -200,14 +193,10 @@ export function calculateAnnualRenewalFee({
   name,
   fees,
   years,
-  undernames,
-  endTimestamp,
 }: {
   name: string;
   fees: Fees;
   years: number;
-  undernames: number;
-  endTimestamp: BlockTimestamp;
 }): number {
   // Determine annual registration price of name
   const initialNamePurchaseFee = fees[name.length.toString()];
@@ -218,52 +207,12 @@ export function calculateAnnualRenewalFee({
 
   const totalAnnualRenewalCost = nameAnnualRegistrationFee * years;
 
-  const extensionEndTimestamp = new BlockTimestamp(
-    endTimestamp.valueOf() + years * SECONDS_IN_A_YEAR,
-  );
-  // Do not charge for undernames if there are less or equal than the default
-  const undernameCount =
-    undernames > DEFAULT_UNDERNAME_COUNT
-      ? undernames - DEFAULT_UNDERNAME_COUNT
-      : undernames;
-
-  const totalCost =
-    undernameCount === DEFAULT_UNDERNAME_COUNT
-      ? totalAnnualRenewalCost
-      : totalAnnualRenewalCost +
-        calculateProRatedUndernameCost({
-          qty: undernameCount,
-          currentBlockTimestamp: endTimestamp,
-          type: 'lease',
-          endTimestamp: extensionEndTimestamp,
-        });
-
-  return totalCost;
-}
-
-export function getRarityMultiplier({ name }: { name: string }): number {
-  if (name.length >= RARITY_MULTIPLIER_HALVENING) {
-    return 0.5; // cut the price in half
-  }
-  // names between 5 and 24 characters (inclusive)
-  if (
-    name.length >= MINIMUM_ALLOWED_NAME_LENGTH &&
-    name.length < RARITY_MULTIPLIER_HALVENING
-  ) {
-    return 1; // e.g. it's the cost of a 10 year lease
-  }
-  // short names
-  if (name.length < MINIMUM_ALLOWED_NAME_LENGTH) {
-    const shortNameMultiplier = 1 + ((10 - name.length) * 10) / 100;
-    return shortNameMultiplier;
-  }
-  return 1;
+  return totalAnnualRenewalCost;
 }
 
 export function calculatePermabuyFee({
   name,
   fees,
-  currentBlockTimestamp,
   demandFactoring,
 }: {
   name: string;
@@ -276,15 +225,8 @@ export function calculatePermabuyFee({
     name,
     fees,
     years: PERMABUY_LEASE_FEE_LENGTH,
-    undernames: DEFAULT_UNDERNAME_COUNT,
-    endTimestamp: new BlockTimestamp(
-      currentBlockTimestamp.valueOf() +
-        SECONDS_IN_A_YEAR * PERMABUY_LEASE_FEE_LENGTH,
-    ),
   });
-  const rarityMultiplier = getRarityMultiplier({ name });
-  const permabuyFee = permabuyLeasePrice * rarityMultiplier;
-  return demandFactoring.demandFactor * permabuyFee;
+  return demandFactoring.demandFactor * permabuyLeasePrice;
 }
 
 export function calculateRegistrationFee({
@@ -321,24 +263,32 @@ export function calculateRegistrationFee({
   }
 }
 
-export function calculateProRatedUndernameCost({
-  qty,
-  currentBlockTimestamp,
+export function calculateUndernameCost({
+  name,
+  fees,
+  increaseQty,
   type,
-  endTimestamp,
+  demandFactoring,
+  years,
 }: {
-  qty: number;
-  currentBlockTimestamp: BlockTimestamp;
+  name: ArNSName;
+  fees: Fees;
+  increaseQty: number;
   type: RegistrationType;
-  endTimestamp?: BlockTimestamp;
+  years: number;
+  demandFactoring: DemandFactoringData;
 }): number {
-  switch (type) {
-    case 'lease':
-      return (
-        ((UNDERNAME_REGISTRATION_IO_FEE * qty) / SECONDS_IN_A_YEAR) *
-        (endTimestamp.valueOf() - currentBlockTimestamp.valueOf())
-      );
-    case 'permabuy':
-      return PERMABUY_LEASE_FEE_LENGTH * qty;
-  }
+  const initialNameFee = fees[name.length.toString()];
+  const getUndernameFeePercentage = () => {
+    switch (type) {
+      case 'lease':
+        return UNDERNAME_LEASE_FEE_PERCENTAGE;
+      case 'permabuy':
+        return UNDERNAME_PERMABUY_FEE_PERCENTAGE;
+    }
+  };
+  const undernamePercentageFee = getUndernameFeePercentage();
+  const totalFeeForQtyAndYears =
+    initialNameFee * (1 + undernamePercentageFee) * increaseQty * years;
+  return demandFactoring.demandFactor * totalFeeForQtyAndYears;
 }

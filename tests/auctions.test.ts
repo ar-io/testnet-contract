@@ -4,6 +4,7 @@ import { calculateMinimumAuctionBid } from '../src/auctions';
 import {
   ARNS_NAME_RESERVED_MESSAGE,
   AUCTION_SETTINGS,
+  DEFAULT_UNDERNAME_COUNT,
   INVALID_INPUT_MESSAGE,
   MINIMUM_ALLOWED_NAME_LENGTH,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
@@ -250,8 +251,11 @@ describe('Auctions', () => {
               });
 
               it('should update the records object when a winning bid comes in', async () => {
-                // fast forward a few blocks, then construct winning bid
-                await mineBlocks(arweave, 3504);
+                // fast forward to the last allowed block for the auction bid
+                await mineBlocks(
+                  arweave,
+                  AUCTION_SETTINGS.auctionDuration - 10,
+                );
                 const winningBidQty = calculateMinimumAuctionBid({
                   startHeight: new BlockHeight(auctionObj.startHeight),
                   startPrice: auctionObj.startPrice,
@@ -286,6 +290,7 @@ describe('Auctions', () => {
                   endTimestamp: expect.any(Number),
                   startTimestamp: expect.any(Number),
                   undernames: expect.any(Number),
+                  purchasePrice: winningBidQty,
                   type: 'lease',
                 });
                 expect(balances[winnerAddress]).toEqual(
@@ -492,13 +497,14 @@ describe('Auctions', () => {
         });
 
         it('should update the records object and increment demand factor for the current period when a winning bid comes in', async () => {
-          // fast forward a few blocks, then construct winning bid
           const { cachedValue: prevCachedValue } = await contract.readState();
           const { demandFactoring: prevDemandFactoringData } =
             prevCachedValue.state as IOState;
           const prevDemandFactorPurchasesForPeriod =
             prevDemandFactoringData.purchasesThisPeriod;
-          await mineBlocks(arweave, 3504); // fast forward to a boundry
+
+          // fast forward towards the end of the auction
+          await mineBlocks(arweave, AUCTION_SETTINGS.auctionDuration - 10);
           const winningBidQty = calculateMinimumAuctionBid({
             startHeight: new BlockHeight(auctionObj.startHeight),
             startPrice: auctionObj.startPrice,
@@ -536,6 +542,7 @@ describe('Auctions', () => {
             type: 'permabuy',
             startTimestamp: expect.any(Number),
             undernames: expect.any(Number),
+            purchasePrice: winningBidQty,
           });
           expect(auctions[auctionBid.name]).toBeUndefined();
           expect(balances[winnerAddress]).toEqual(
@@ -602,7 +609,6 @@ describe('Auctions', () => {
           // for the remaining tests
           auctionObj = auctions[auctionBid.name];
           auctionTxId = writeInteraction.originalTxId;
-          // TODO: Check that number of purchases is incremented
         });
 
         it.each([-10, -1, 10, 19, 20, 69])(
@@ -625,7 +631,7 @@ describe('Auctions', () => {
 
         it('should update the records when the caller is the initiator, and only withdraw the difference of the current bid to the original floor price that was already withdrawn from the initiator', async () => {
           // fast forward a few blocks, then construct winning bid
-          await mineBlocks(arweave, 3504);
+          await mineBlocks(arweave, AUCTION_SETTINGS.auctionDuration - 10);
           const winningBidQty = calculateMinimumAuctionBid({
             startHeight: new BlockHeight(auctionObj.startHeight),
             startPrice: auctionObj.startPrice,
@@ -653,7 +659,8 @@ describe('Auctions', () => {
             type: 'lease',
             endTimestamp: expect.any(Number),
             startTimestamp: expect.any(Number),
-            undernames: expect.any(Number),
+            undernames: DEFAULT_UNDERNAME_COUNT,
+            purchasePrice: winningBidQty,
           });
           const excessValueForInitiator = winningBidQty - auctionObj.floorPrice;
           expect(balances[nonContractOwnerAddress]).toEqual(

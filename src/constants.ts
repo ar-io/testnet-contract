@@ -23,6 +23,8 @@ export const RARITY_MULTIPLIER_HALVENING = 25;
 export const PERMABUY_LEASE_FEE_LENGTH = 10;
 export const ANNUAL_PERCENTAGE_FEE = 0.1; // 10% of cost of name
 export const DEFAULT_UNDERNAME_COUNT = 10;
+export const UNDERNAME_LEASE_FEE_PERCENTAGE = 0.01; // .1% of cost of name
+export const UNDERNAME_PERMABUY_FEE_PERCENTAGE = 0.1; // 1% of cost of name
 export const MAX_ALLOWED_UNDERNAMES = 10_000; // when modifying these, update the undernames schema
 export const UNDERNAME_REGISTRATION_IO_FEE = 1; // 1 IO token per undername
 export const NON_CONTRACT_OWNER_MESSAGE = `Caller is not the owner of the ArNS!`;
@@ -102,10 +104,10 @@ export const FEE_STRUCTURE = {
 };
 export const AUCTION_SETTINGS: AuctionSettings = {
   floorPriceMultiplier: 1,
-  startPriceMultiplier: 50,
+  startPriceMultiplier: 100,
   decayInterval: 30, // decrement every 30 blocks - approx every 1 hour
-  decayRate: 0.0225, // 5% decay
-  auctionDuration: 5040, // approx 7 days long
+  decayRate: 0.0225, // 2.25% decay per interval
+  auctionDuration: 1080, // approx 14 days long
 };
 
 export const DEMAND_FACTORING_SETTINGS = {
@@ -114,8 +116,8 @@ export const DEMAND_FACTORING_SETTINGS = {
   demandFactorBaseValue: 1,
   demandFactorMin: 0.5,
   demandFactorUpAdjustment: 0.05,
-  demandFactorDownAdjustment: 0.05,
-  stepDownThreshold: 3,
+  demandFactorDownAdjustment: 0.05, // TODO: spec has this at 2.5%
+  stepDownThreshold: 3, // number of times at minimum allowed before resetting genesis fees (ultimately leads to 4 periods at the new fee, including the reset period)
 };
 
 export const MIO_PER_IO = 1_000_000;

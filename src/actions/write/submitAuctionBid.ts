@@ -9,7 +9,7 @@ import {
   INSUFFICIENT_FUNDS_MESSAGE,
   RESERVED_ATOMIC_TX_ID,
 } from '../../constants';
-import { calculateRegistrationFee, tallyNamePurchase } from '../../pricing';
+import { tallyNamePurchase } from '../../pricing';
 import {
   AuctionSettings,
   Balances,
@@ -101,7 +101,6 @@ export const submitAuctionBid = (
     const existingAuction = state.auctions[name];
 
     if (currentBlockHeight.valueOf() > existingAuction.endHeight) {
-      // TODO: tick state should correct this from happening
       throw new ContractError(ARNS_NAME_AUCTION_EXPIRED_MESSAGE);
     }
 
@@ -160,9 +159,10 @@ export const submitAuctionBid = (
       startTimestamp: +SmartWeave.block.timestamp, // overwrite initial start timestamp
       undernames: DEFAULT_UNDERNAME_COUNT,
       // only include timestamp on lease, endTimestamp is easy in this situation since it was a second interaction that won it
-      ...{
-        endTimestamp: endTimestamp ? endTimestamp.valueOf() : undefined,
-      },
+      ...(endTimestamp && {
+        endTimestamp: endTimestamp.valueOf(),
+      }),
+      purchasePrice: currentRequiredMinimumBid.valueOf(), // the total amount paid for the name
     };
 
     /**
@@ -174,7 +174,7 @@ export const submitAuctionBid = (
     updatedBalances[caller] -= finalBidForCaller.valueOf();
 
     if (caller !== existingAuction.initiator) {
-      // pull in the intiators existing balance and update it
+      // pull in the initiators existing balance and update it
       updatedBalances[existingAuction.initiator] =
         (state.balances[existingAuction.initiator] || 0) +
         existingAuction.floorPrice;
@@ -210,23 +210,18 @@ export const submitAuctionBid = (
 
   // no current auction, create one and vault the balance from the user
   // calculate the registration fee taking into account demand factoring
-  const registrationFee = calculateRegistrationFee({
-    name,
-    fees: state.fees,
-    years,
-    type,
-    currentBlockTimestamp,
-    demandFactoring: state.demandFactoring,
-  });
 
   // create the initial auction bid
   const initialAuctionBid = createAuctionObject({
-    auctionSettings: currentAuctionSettings,
+    name,
     type,
-    initialRegistrationFee: registrationFee,
+    fees: state.fees,
+    auctionSettings: currentAuctionSettings,
+    years,
+    currentBlockTimestamp,
+    demandFactoring: state.demandFactoring,
     currentBlockHeight,
     initiator: caller,
-    providedFloorPrice: submittedBid,
     contractTxId,
   });
 

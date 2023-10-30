@@ -120,6 +120,7 @@ export const buyRecord = (
     type,
     startTimestamp: +SmartWeave.block.timestamp,
     undernames: DEFAULT_UNDERNAME_COUNT,
+    purchasePrice: totalRegistrationFee,
     // only include timestamp on lease
     ...{ endTimestamp },
   };

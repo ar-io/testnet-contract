@@ -110,6 +110,7 @@ describe('Records', () => {
         contractTxId: ANT_CONTRACT_IDS[0],
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
+        purchasePrice: expectedPurchasePrice,
         undernames: DEFAULT_UNDERNAME_COUNT,
         type: 'lease',
       });
@@ -160,6 +161,7 @@ describe('Records', () => {
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
         undernames: DEFAULT_UNDERNAME_COUNT,
+        purchasePrice: expectedPurchasePrice,
         type: 'lease',
       });
       expect(balances[nonContractOwnerAddress]).toEqual(
@@ -208,6 +210,7 @@ describe('Records', () => {
         type: 'permabuy',
         startTimestamp: expect.any(Number),
         undernames: DEFAULT_UNDERNAME_COUNT,
+        purchasePrice: expectedPurchasePrice,
       });
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevBalance - expectedPurchasePrice,
@@ -498,6 +501,16 @@ describe('Records', () => {
         },
       );
 
+      const currentBlock = await arweave.blocks.getCurrent();
+      const expectedPurchasePrice = calculateRegistrationFee({
+        name: namePurchase.name,
+        type: 'lease',
+        fees: prevState.fees,
+        years: namePurchase.years,
+        currentBlockTimestamp: new BlockTimestamp(currentBlock.timestamp),
+        demandFactoring: prevState.demandFactoring, // TODO: is this the right state instance to use?
+      });
+
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       const { records, reserved } = cachedValue.state as IOState;
@@ -507,6 +520,7 @@ describe('Records', () => {
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
         undernames: DEFAULT_UNDERNAME_COUNT,
+        purchasePrice: expectedPurchasePrice,
         type: 'lease',
       });
       expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toBe(

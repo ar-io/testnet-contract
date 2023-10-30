@@ -45,7 +45,11 @@ export const getAuction = (
     const auctionObject = createAuctionObject({
       auctionSettings,
       type,
-      initialRegistrationFee: initialRegistrationFee,
+      name,
+      fees,
+      years: 1,
+      currentBlockTimestamp,
+      demandFactoring: state.demandFactoring,
       currentBlockHeight,
       contractTxId: undefined,
       initiator: undefined,

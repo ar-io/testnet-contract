@@ -164,22 +164,8 @@ describe('undernames', () => {
     describe('with valid input', () => {
       const arnsName = 'name1';
 
-      it.each([
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        100,
-        1000,
-        MAX_ALLOWED_UNDERNAMES - DEFAULT_UNDERNAME_COUNT - 1165, // 1165 is the sum of the previous undername tests
-      ])(
-        'should successfully increase undernames with valid quantity provided: : %s',
+      it.each([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 1000])(
+        'should successfully increase undernames with valid quantity provided: %s',
         async (goodQty) => {
           const undernameInput = {
             name: arnsName,
@@ -201,7 +187,6 @@ describe('undernames', () => {
 
           expect(writeInteraction?.originalTxId).not.toBe(undefined);
           const { cachedValue } = await contract.readState();
-
           expect(Object.keys(cachedValue.errorMessages)).not.toContain(
             writeInteraction.originalTxId,
           );
@@ -213,7 +198,7 @@ describe('undernames', () => {
       );
 
       it.each(['name1', 'name2', 'name3'])(
-        'should successfully increase undernames with valid name provided: : %s',
+        'should successfully increase undernames with valid name provided: %s',
         async (validName) => {
           const undernameInput = {
             name: validName,

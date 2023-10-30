@@ -4,7 +4,7 @@ import {
   MAX_ALLOWED_UNDERNAMES,
   MAX_UNDERNAME_MESSAGE,
 } from '../../constants';
-import { calculateProRatedUndernameCost } from '../../pricing';
+import { calculateUndernameCost } from '../../pricing';
 import {
   BlockTimestamp,
   ContractWriteResult,
@@ -12,6 +12,7 @@ import {
   PstAction,
 } from '../../types';
 import {
+  calculateYearsBetweenTimestamps,
   getInvalidAjvMessage,
   isExistingActiveRecord,
   walletHasSufficientBalance,
@@ -64,34 +65,39 @@ export const increaseUndernameCount = async (
     );
   }
 
-  const { undernames = 10, type, endTimestamp } = record;
+  const { undernames: existingUndernames = 10, type, endTimestamp } = record;
   // the new total qty
-  const incrementedUndernames = undernames + qty;
+  const incrementedUndernames = existingUndernames + qty;
   if (incrementedUndernames > MAX_ALLOWED_UNDERNAMES) {
     throw new ContractError(MAX_UNDERNAME_MESSAGE);
   }
 
-  const undernameCost =
-    state.demandFactoring.demandFactor *
-    calculateProRatedUndernameCost({
-      qty,
-      currentBlockTimestamp,
-      type,
-      endTimestamp: new BlockTimestamp(endTimestamp),
-    });
+  const yearsRemaining = calculateYearsBetweenTimestamps({
+    startTimestamp: currentBlockTimestamp,
+    endTimestamp: new BlockTimestamp(endTimestamp),
+  });
+
+  const additionalUndernameCost = calculateUndernameCost({
+    name,
+    fees: state.fees,
+    increaseQty: qty,
+    type,
+    demandFactoring: state.demandFactoring,
+    years: yearsRemaining,
+  });
 
   // Check if the user has enough tokens to increase the undername count
-  if (!walletHasSufficientBalance(balances, caller, undernameCost)) {
+  if (!walletHasSufficientBalance(balances, caller, additionalUndernameCost)) {
     throw new ContractError(
       `${INSUFFICIENT_FUNDS_MESSAGE}: caller has ${balances[
         caller
-      ].toLocaleString()} but needs to have ${undernameCost.toLocaleString()} to pay for this undername increase of ${qty} for ${name}.`,
+      ].toLocaleString()} but needs to have ${additionalUndernameCost.toLocaleString()} to pay for this undername increase of ${qty} for ${name}.`,
     );
   }
 
   state.records[name].undernames = incrementedUndernames;
-  state.balances[caller] -= undernameCost;
-  state.balances[SmartWeave.contract.id] += undernameCost;
+  state.balances[caller] -= additionalUndernameCost;
+  state.balances[SmartWeave.contract.id] += additionalUndernameCost;
 
   return { state };
 };

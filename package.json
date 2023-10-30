@@ -10,7 +10,7 @@
     "lint:check": "eslint .",
     "lint:fix": "eslint . --fix",
     "test:unit": "jest --testPathPattern=src --coverage",
-    "test:integration": "jest --testPathPattern=tests --runInBand",
+    "test:integration": "yarn build && jest --testPathPattern=tests --runInBand",
     "test": "yarn build && jest --runInBand",
     "evolve": "yarn ts-node ./tools/evolve-contract.ts",
     "prepare": "husky install",

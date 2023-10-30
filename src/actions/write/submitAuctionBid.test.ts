@@ -386,6 +386,7 @@ describe('submitAuctionBid', () => {
             type: expectedData.type,
             startTimestamp: expectedData.startTimestamp,
             undernames: expectedData.undernames,
+            purchasePrice: 1000,
           },
         },
         demandFactoring: {
@@ -428,6 +429,7 @@ describe('submitAuctionBid', () => {
           type: 'lease',
           startTimestamp: 1,
           undernames: 10,
+          purchasePrice: 1000,
         },
       },
       demandFactoring: {

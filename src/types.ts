@@ -111,6 +111,7 @@ export type ArNSNameData = {
   endTimestamp?: number; // At what unix time (seconds since epoch) the lease ends
   type: RegistrationType;
   undernames: number;
+  purchasePrice: number;
 };
 
 export type ReservedNameData = {
