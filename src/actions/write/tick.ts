@@ -211,7 +211,6 @@ export function tickAuctions({
       acc[key] = auction;
       return acc;
     }
-
     // create the new record object
     const maybeEndTimestamp = (() => {
       switch (auction.type) {
@@ -230,7 +229,6 @@ export function tickAuctions({
     updatedRecords[key] = {
       type: auction.type,
       contractTxId: auction.contractTxId,
-      // TODO: get the end timestamp of the auction based on what block it ended at, not the timestamp of the current interaction timestamp
       startTimestamp: currentBlockTimestamp.valueOf(),
       undernames: DEFAULT_UNDERNAME_COUNT,
       ...maybeEndTimestamp,
@@ -258,7 +256,7 @@ export function tickAuctions({
 }
 
 // Removes gateway from the gateway address registry after the leave period completes
-export const tick = (state: IOState): ContractWriteResult => {
+export const tick = async (state: IOState): Promise<ContractWriteResult> => {
   const interactionHeight = new BlockHeight(+SmartWeave.block.height);
   const interactionTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
 
@@ -282,10 +280,12 @@ export const tick = (state: IOState): ContractWriteResult => {
     tickHeight++
   ) {
     const currentBlockHeight = new BlockHeight(tickHeight);
-    // TODO: calculate block timestamp from SmartWeave API for each block increment
+    const currentBlockTimestamp = new BlockTimestamp(
+      await SmartWeave.safeArweaveGet(`/block/height/${tickHeight}`).timestamp,
+    );
     updatedState = tickInternal({
       currentBlockHeight,
-      currentBlockTimestamp: interactionTimestamp,
+      currentBlockTimestamp,
       state: updatedState,
     });
   }
