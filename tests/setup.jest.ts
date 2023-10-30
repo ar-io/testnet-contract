@@ -21,7 +21,7 @@ module.exports = async () => {
 
   // create owner wallet
   const wallets = await Promise.all(
-    Array.from({ length: 10 }).map(() => createLocalWallet(arweave)),
+    Array.from({ length: 12 }).map(() => createLocalWallet(arweave)),
   );
   // save wallets to disk
   console.log('Saving wallets to disk!'); // eslint-disable-line
