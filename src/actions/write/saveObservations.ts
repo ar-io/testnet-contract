@@ -10,7 +10,7 @@ import {
   getPrescribedObservers,
 } from '../../utilities';
 // composed by ajv at build
-import { validateSaveObservations } from '../../validations.mjs';
+import { validateSaveObservations } from '../../validations';
 
 export class SaveObservations {
   observerReportTxId: string;
