@@ -235,7 +235,7 @@ export function tickAuctions({
       return acc;
     }
     // create the new record object
-    const maybeEndTimestamp = (() => {
+    const getEndTimestamp = () => {
       switch (auction.type) {
         case 'permabuy':
           return {};
@@ -248,13 +248,14 @@ export function tickAuctions({
               currentBlockTimestamp.valueOf(),
           };
       }
-    })();
+    };
+    const endTimestamp = getEndTimestamp();
     updatedRecords[key] = {
       type: auction.type,
       contractTxId: auction.contractTxId,
       startTimestamp: currentBlockTimestamp.valueOf(),
       undernames: DEFAULT_UNDERNAME_COUNT,
-      ...maybeEndTimestamp,
+      ...endTimestamp,
       purchasePrice: auction.floorPrice,
     };
 
