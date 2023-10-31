@@ -137,12 +137,19 @@ export function isExistingActiveRecord({
   record: ArNSNameData;
   currentBlockTimestamp: BlockTimestamp;
 }): boolean {
-  return (
-    record &&
-    record.endTimestamp &&
-    record.endTimestamp + SECONDS_IN_GRACE_PERIOD >
-      currentBlockTimestamp.valueOf()
-  );
+  if (!record) return false;
+
+  if (record.type === 'permabuy') {
+    return true;
+  }
+
+  if (record.type === 'lease') {
+    return (
+      record.endTimestamp &&
+      record.endTimestamp > currentBlockTimestamp.valueOf()
+    );
+  }
+  return false;
 }
 
 export function isShortNameRestricted({
@@ -171,10 +178,13 @@ export function isActiveReservedName({
   const target = reservedName.target;
   const endTimestamp = reservedName.endTimestamp;
   const permanentlyReserved = !target && !endTimestamp;
+  if (permanentlyReserved) {
+    return true;
+  }
   const callerNotTarget = !caller || target !== caller;
   const notExpired =
     endTimestamp && endTimestamp > currentBlockTimestamp.valueOf();
-  if (permanentlyReserved || (callerNotTarget && notExpired)) {
+  if (callerNotTarget && notExpired) {
     return true;
   }
   return false;
