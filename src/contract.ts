@@ -10,32 +10,29 @@ import {
 } from './actions/read/gateways';
 import { getRecord } from './actions/read/record';
 import { buyRecord } from './actions/write/buyRecord';
+import { decreaseOperatorStake } from './actions/write/decreaseOperatorStake';
 import { evolve } from './actions/write/evolve';
 import { evolveState } from './actions/write/evolveState';
 import { extendRecord } from './actions/write/extendRecord';
-import { finalizeLeave } from './actions/write/finalizeLeave';
-import { finalizeOperatorStakeDecrease } from './actions/write/finalizeOperatorStakeDecrease';
 import { increaseOperatorStake } from './actions/write/increaseOperatorStake';
 import { increaseUndernameCount } from './actions/write/increaseUndernameCount';
-import { initiateLeave } from './actions/write/initiateLeave';
-import { initiateOperatorStakeDecrease } from './actions/write/initiateOperatorStakeDecrease';
 import { joinNetwork } from './actions/write/joinNetwork';
+import { leaveNetwork } from './actions/write/leaveNetwork';
 import { submitAuctionBid } from './actions/write/submitAuctionBid';
 import { transferTokens } from './actions/write/transferTokens';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
 import {
-  ContractResult,
+  ContractReadResult,
+  ContractWriteResult,
   IOContractFunctions,
   IOState,
   PstAction,
 } from './types';
 
-declare const ContractError;
-
 export async function handle(
   state: IOState,
   action: PstAction,
-): Promise<ContractResult> {
+): Promise<ContractReadResult | ContractWriteResult> {
   const input = action.input;
 
   switch (input.function as IOContractFunctions) {
@@ -65,16 +62,12 @@ export async function handle(
       return getRankedGatewayRegistry(state);
     case 'joinNetwork':
       return joinNetwork(state, action);
-    case 'initiateLeave':
-      return initiateLeave(state, action);
-    case 'finalizeLeave':
-      return finalizeLeave(state, action);
+    case 'leaveNetwork':
+      return leaveNetwork(state, action);
     case 'increaseOperatorStake':
       return increaseOperatorStake(state, action);
-    case 'initiateOperatorStakeDecrease':
-      return initiateOperatorStakeDecrease(state, action);
-    case 'finalizeOperatorStakeDecrease':
-      return finalizeOperatorStakeDecrease(state, action);
+    case 'decreaseOperatorStake':
+      return decreaseOperatorStake(state, action);
     case 'updateGatewaySettings':
       return updateGatewaySettings(state, action);
     case 'submitAuctionBid':

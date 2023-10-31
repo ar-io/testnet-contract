@@ -37,7 +37,7 @@ const moduleCode = standaloneCode(ajv, {
 });
 
 // Now you can write the module code to file
-fs.writeFileSync(path.join(__dirname, '/src/validations.mjs'), moduleCode);
+fs.writeFileSync(path.join(__dirname, '/src/validations.js'), moduleCode);
 
 const contract = ['/contract.ts'];
 
@@ -50,6 +50,7 @@ build({
   bundle: true,
   format: 'iife',
   packages: 'external',
+  tsconfig: 'tsconfig.json',
 })
   .catch(() => process.exit(1))
   // note: SmartWeave SDK currently does not support files in IIFE bundle format, so we need to remove the "iife" part ;-)

@@ -1,14 +1,11 @@
 import { NETWORK_LEAVING_STATUS } from '../../constants';
-import { ContractResult, IOState, PstAction } from '../../types';
-
-declare const ContractError;
-declare const SmartWeave: any;
+import { ContractWriteResult, IOState, PstAction } from '../../types';
 
 // Begins the process to unlocks the vault of a gateway operator
-export const initiateOperatorStakeDecrease = async (
+export const decreaseOperatorStake = async (
   state: IOState,
   { caller, input }: PstAction,
-): Promise<ContractResult> => {
+): Promise<ContractWriteResult> => {
   const { settings, gateways = {} } = state;
   const { registry: registrySettings } = settings;
   // TODO: object parse validation
@@ -21,12 +18,6 @@ export const initiateOperatorStakeDecrease = async (
   if (gateways[caller].status === NETWORK_LEAVING_STATUS) {
     throw new ContractError(
       'This Gateway is in the process of leaving the network and cannot have its stake adjusted',
-    );
-  }
-
-  if (!Number.isInteger(qty) || qty <= 0) {
-    throw new ContractError(
-      'Invalid value for "qty". Must be an integer greater than zero',
     );
   }
 

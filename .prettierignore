@@ -3,3 +3,4 @@ build
 public
 dist
 coverage
+src/validations.js

@@ -4,6 +4,7 @@ export const SECONDS_IN_A_YEAR = 31_536_000; // 52 weeks, 7 days per week, 24 ho
 export const MAX_YEARS = 5; // the maximum amount of years an arns name could be leased for
 export const MIN_YEARS = 1; // the minimum amount of years an arns name could be leased for
 export const NAMESPACE_LENGTH = 62; // browser domains are max 63 characters between periods, but we need to leave 1 character for the underscore seperator between the undernames and arns name
+export const MAX_ALLOWED_DECIMALS = 6; // the maximum allowed decimals for the IO Token
 export const MAX_NAME_LENGTH = 51; // the maximum length of an arns name - gateway sandbox domains are 52 characters, so to prevent overlap we stop 1 character short, where the 52nd character would be an underscore (which sandbox domains do not use) to prevent overlap
 export const MAX_NOTE_LENGTH = 256; // the maximum size of a note field
 export const MAX_GATEWAY_LABEL_LENGTH = 64; // the maximum size of a gtaeway label field used in the GAR
@@ -20,8 +21,10 @@ export const MINIMUM_ALLOWED_EVOLUTION_DELAY = 3; // 3 blocks for testing purpos
 export const MINIMUM_ALLOWED_NAME_LENGTH = 5; // names less than 5 characters are reserved for auction
 export const RARITY_MULTIPLIER_HALVENING = 25;
 export const PERMABUY_LEASE_FEE_LENGTH = 10;
-export const ANNUAL_PERCENTAGE_FEE = 0.1; // 10% of cost of name
+export const ANNUAL_PERCENTAGE_FEE = 0.2; // 20% of cost of name
 export const DEFAULT_UNDERNAME_COUNT = 10;
+export const UNDERNAME_LEASE_FEE_PERCENTAGE = 0.01; // .1% of cost of name
+export const UNDERNAME_PERMABUY_FEE_PERCENTAGE = 0.1; // 1% of cost of name
 export const MAX_ALLOWED_UNDERNAMES = 10_000; // when modifying these, update the undernames schema
 export const UNDERNAME_REGISTRATION_IO_FEE = 1; // 1 IO token per undername
 export const NON_CONTRACT_OWNER_MESSAGE = `Caller is not the owner of the ArNS!`;
@@ -29,6 +32,7 @@ export const INVALID_ARNS_NAME_MESSAGE = 'Invalid ArNS Record Name';
 export const ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE = 'Name must be auctioned.';
 export const ARNS_NAME_RESERVED_MESSAGE = 'Name is reserved.';
 export const ARNS_NAME_IN_AUCTION_MESSAGE = 'Name is currently in auction.';
+export const ARNS_NAME_AUCTION_EXPIRED_MESSAGE = 'Auction has expired.';
 export const INVALID_INPUT_MESSAGE = 'Invalid input for interaction';
 export const NON_EXPIRED_ARNS_NAME_MESSAGE =
   'This name already exists in an active lease';
@@ -100,8 +104,21 @@ export const FEE_STRUCTURE = {
 };
 export const AUCTION_SETTINGS: AuctionSettings = {
   floorPriceMultiplier: 1,
-  startPriceMultiplier: 50,
+  startPriceMultiplier: 100,
   decayInterval: 30, // decrement every 30 blocks - approx every 1 hour
-  decayRate: 0.0225, // 5% decay
-  auctionDuration: 5040, // approx 7 days long
+  decayRate: 0.0225, // 2.25% decay per interval
+  auctionDuration: 1080, // approx 14 days long
 };
+
+export const DEMAND_FACTORING_SETTINGS = {
+  movingAvgPeriodCount: 7,
+  periodBlockCount: 720,
+  demandFactorBaseValue: 1,
+  demandFactorMin: 0.5,
+  demandFactorUpAdjustment: 0.05,
+  demandFactorDownAdjustment: 0.05, // TODO: spec has this at 2.5%
+  stepDownThreshold: 3, // number of times at minimum allowed before resetting genesis fees (ultimately leads to 4 periods at the new fee, including the reset period)
+};
+
+export const MIO_PER_IO = 1_000_000;
+export const ONE_MIO = 1 / MIO_PER_IO;

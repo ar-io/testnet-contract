@@ -5,16 +5,14 @@ import {
   NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
-import { ContractResult, IOState, PstAction } from '../../types';
+import { ContractWriteResult, IOState, PstAction } from '../../types';
 import { isValidArweaveBase64URL, isValidFQDN } from '../../utilities';
-
-declare const ContractError;
 
 // Updates any of the settings of an existing gateway
 export const updateGatewaySettings = async (
   state: IOState,
   { caller, input }: PstAction,
-): Promise<ContractResult> => {
+): Promise<ContractWriteResult> => {
   const { gateways = {} } = state;
 
   // TODO: add object parsing validation

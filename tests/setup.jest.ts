@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import path from 'path';
 
-import { WALLET_FUND_AMOUNT } from './utils/constants';
 import { createLocalWallet, setupInitialContractState } from './utils/helper';
 import { arlocal, arweave, warp } from './utils/services';
 
@@ -24,6 +23,8 @@ module.exports = async () => {
     Array.from({ length: 10 }).map(() => createLocalWallet(arweave)),
   );
   // save wallets to disk
+  console.log('Saving wallets to disk!'); // eslint-disable-line
+
   wallets.forEach((w, index) => {
     fs.writeFileSync(
       path.join(__dirname, `./wallets/${index}.json`),
@@ -33,8 +34,8 @@ module.exports = async () => {
 
   console.log('Successfully created wallets!'); // eslint-disable-line
 
-  // // // create initial contract
-  const initialContractState = setupInitialContractState(
+  // create initial contract
+  const initialContractState = await setupInitialContractState(
     wallets[0].address,
     wallets.map((w) => w.address),
   );
