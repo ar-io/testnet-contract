@@ -107,7 +107,7 @@ export const AUCTION_SETTINGS: AuctionSettings = {
   startPriceMultiplier: 50,
   decayInterval: 30, // decrement every 30 blocks - approx every 1 hour
   decayRate: 0.0225, // 2.25% decay per interval
-  auctionDuration: 1080, // approx 14 days long
+  auctionDuration: 10_080, // approx 14 days long
 };
 
 export const DEMAND_FACTORING_SETTINGS = {

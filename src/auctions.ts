@@ -72,7 +72,6 @@ export function getAuctionPrices({
 
 export function createAuctionObject({
   auctionSettings,
-  years,
   fees,
   contractTxId,
   currentBlockHeight,
@@ -84,7 +83,6 @@ export function createAuctionObject({
 }: {
   name: string;
   fees: Fees;
-  years: number;
   auctionSettings: AuctionSettings;
   contractTxId: string | undefined;
   currentBlockHeight: BlockHeight;
@@ -96,8 +94,8 @@ export function createAuctionObject({
   const initialRegistrationFee = calculateRegistrationFee({
     name,
     fees,
-    years,
     type,
+    years: 1,
     currentBlockTimestamp,
     demandFactoring,
   });
@@ -115,7 +113,7 @@ export function createAuctionObject({
     startHeight: currentBlockHeight.valueOf(), // auction starts right away
     endHeight, // auction ends after the set duration
     type,
-    ...(years ? { years } : {}),
+    ...(type === 'lease' ? { years: 1 } : {}),
     settings: auctionSettings,
   };
 }

@@ -37,7 +37,6 @@ export const getAuction = (
       type,
       name,
       fees,
-      years: 1,
       currentBlockTimestamp,
       demandFactoring: state.demandFactoring,
       currentBlockHeight,
