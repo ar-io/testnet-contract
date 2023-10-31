@@ -120,7 +120,7 @@ export const getAuction = (
   return {
     result: {
       name: formattedName,
-      isActive: expirationHeight > +SmartWeave.block.height,
+      isActive: expirationHeight >= +SmartWeave.block.height,
       isAvailableForAuction: false,
       isRequiredToBeAuctioned: isRequiredToBeAuctioned,
       minimumBid: minimumBid.valueOf(),
