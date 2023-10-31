@@ -1,8 +1,4 @@
-import {
-  AUCTION_SETTINGS,
-  DEMAND_FACTORING_SETTINGS,
-  NON_CONTRACT_OWNER_MESSAGE,
-} from '../../constants';
+import { AUCTION_SETTINGS, NON_CONTRACT_OWNER_MESSAGE } from '../../constants';
 import { ContractWriteResult, IOState, PstAction } from '../../types';
 
 // Updates this contract to new source code
