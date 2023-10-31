@@ -70,13 +70,7 @@ export const submitAuctionBid = (
   const updatedRecords: Records = {};
 
   // does validation on constructor
-  const {
-    name,
-    qty: submittedBid,
-    type,
-    contractTxId,
-    years,
-  } = new AuctionBid(input);
+  const { name, qty: submittedBid, type, contractTxId } = new AuctionBid(input);
 
   const currentBlockTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
   const currentBlockHeight = new BlockHeight(+SmartWeave.block.height);
@@ -217,7 +211,6 @@ export const submitAuctionBid = (
     type,
     fees: state.fees,
     auctionSettings: currentAuctionSettings,
-    years,
     currentBlockTimestamp,
     demandFactoring: state.demandFactoring,
     currentBlockHeight,
