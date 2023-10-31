@@ -1,4 +1,8 @@
-import { NON_CONTRACT_OWNER_MESSAGE } from '../../constants';
+import {
+  AUCTION_SETTINGS,
+  DEMAND_FACTORING_SETTINGS,
+  NON_CONTRACT_OWNER_MESSAGE,
+} from '../../constants';
 import { ContractWriteResult, IOState, PstAction } from '../../types';
 
 // Updates this contract to new source code
@@ -12,21 +16,17 @@ export const evolveState = async (
     throw new ContractError(NON_CONTRACT_OWNER_MESSAGE);
   }
 
-  // set each gateway to have an empty array of vaults
-  for (const address in state.gateways) {
-    state.gateways[address].observerWallet = address;
-  }
-
-  // remove existing auctions
-  state.auctions = {};
-
   // update the auction settings object
-  state.settings.auctions = {
-    floorPriceMultiplier: 1,
-    startPriceMultiplier: 50,
-    auctionDuration: 5040,
-    decayRate: 0.0225,
-    decayInterval: 30,
+  state.settings.auctions = AUCTION_SETTINGS;
+
+  // update demand factoring
+  state.demandFactoring = {
+    periodZeroBlockHeight: +SmartWeave.block.height,
+    currentPeriod: 0,
+    trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
+    purchasesThisPeriod: 0,
+    demandFactor: 1,
+    consecutivePeriodsWithMinDemandFactor: 0,
   };
 
   return { state };

@@ -2,7 +2,6 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import path from 'path';
 import { LoggerFactory } from 'warp-contracts';
-import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 import { keyfile } from './constants';
 import { initialize, warp } from './utilities';
@@ -25,11 +24,8 @@ import { initialize, warp } from './utilities';
     process.env.ARNS_CONTRACT_TX_ID ??
     'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
-  // ~~ Initialize SmartWeave ~~
-  const warpWithDeploy = warp.use(new DeployPlugin());
-
   // Read the ArNS Registry Contract
-  const contract = warpWithDeploy.pst(arnsContractTxId);
+  const contract = warp.pst(arnsContractTxId);
   contract.connect(wallet);
 
   // ~~ Read contract source and initial state files ~~
@@ -39,18 +35,18 @@ import { initialize, warp } from './utilities';
   );
 
   // Create the evolved source code tx
-  const evolveSrcTx = await warpWithDeploy.createSource(
+  const evolveSrcTx = await warp.createSource(
     { src: newLocalSourceCodeJS },
     wallet,
     true,
   );
-  const evolveSrcTxId = await warpWithDeploy.saveSource(evolveSrcTx, true);
+  const evolveSrcTxId = await warp.saveSource(evolveSrcTx, true);
   if (evolveSrcTxId === null) {
     return 0;
   }
 
   // eslint-disable-next-line
-  const evolveInteractionTXId = await contract.writeInteraction(
+  await contract.writeInteraction(
     { function: 'evolve', value: evolveSrcTxId },
     {
       disableBundling: true,
@@ -59,4 +55,6 @@ import { initialize, warp } from './utilities';
 
   // DO NOT CHANGE THIS - it's used by github actions
   console.log(evolveSrcTxId);
+
+  return evolveSrcTxId;
 })();

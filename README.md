@@ -94,31 +94,17 @@ The following tools can be used to perform basic AR.IO Network operations, such 
   yarn ts-node tools/initiate-operator-stake-decrease.ts
   ```
 
-- [finalize-operator-stake-decrease] - after stake withdraw period, this completes the operator stake decrease and returns the specific amount back to the operator.
-
-  ```shell
-  yarn ts-node tools/finalize-operator-stake-decrease.ts
-  ```
-
 - [initiate-leave-network] - initiate network withdraw period to remove a registered Gateway from the Gateway Address Registry and return all gateway operator stakes.
 
   ```shell
   yarn ts-node tools/initiate-leave-network.ts
   ```
 
-- [finalize-leave-network] - finalize network withdraw period completes, this will finish removing the gateway from the Gateway Address Registry and returns all stakes back to the operator.
-
-  ```shell
-  yarn ts-node tools/finalize-leave-network.ts
-  ```
-
 [join-network]: tools/join-network.ts
 [update-gateway-settings]: tools/update-gateway-settings.ts
 [increase-operator-stake]: tools/increase-operator-stake.ts
 [initiate-operator-stake-decrease]: tools/initiate-operator-stake-decrease.ts
-[finalize-operator-stake-decrease]: tools/finalize-operator-stake-decrease.ts
 [initiate-leave-network]: tools/initiate-leave-network.ts
-[finalize-leave-network]: tools/finalize-leave-network.ts
 [buy-arns-name]: tools/buy-arns-name.ts
 [buy-arns-name-atomic-ant]: /tools/buy-arns-name-atomic-ant.ts
 [tests/unit]: /tests/unit
