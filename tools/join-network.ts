@@ -1,11 +1,5 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
-import {
-  LoggerFactory,
-  WarpFactory,
-  defaultCacheOptions,
-} from 'warp-contracts';
-
 import { keyfile } from './constants';
 import { arweave, getContractManifest, initialize, warp } from './utilities';
 
