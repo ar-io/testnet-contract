@@ -2,7 +2,6 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import path from 'path';
 import { LoggerFactory } from 'warp-contracts';
-import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 import { keyfile } from './constants';
 import { initialize, warp } from './utilities';
@@ -47,7 +46,7 @@ import { initialize, warp } from './utilities';
   }
 
   // eslint-disable-next-line
-  const evolveInteractionTXId = await contract.writeInteraction(
+  await contract.writeInteraction(
     { function: 'evolve', value: evolveSrcTxId },
     {
       disableBundling: true,
@@ -56,4 +55,6 @@ import { initialize, warp } from './utilities';
 
   // DO NOT CHANGE THIS - it's used by github actions
   console.log(evolveSrcTxId);
+
+  return evolveSrcTxId;
 })();
