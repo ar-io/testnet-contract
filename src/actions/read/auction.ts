@@ -3,7 +3,6 @@ import {
   createAuctionObject,
   getAuctionPrices,
 } from '../../auctions';
-import { calculateRegistrationFee } from '../../pricing';
 import {
   BlockHeight,
   BlockTimestamp,
