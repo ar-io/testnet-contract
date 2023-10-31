@@ -146,7 +146,8 @@ export function isExistingActiveRecord({
   if (record.type === 'lease') {
     return (
       record.endTimestamp &&
-      record.endTimestamp > currentBlockTimestamp.valueOf()
+      (record.endTimestamp > currentBlockTimestamp.valueOf() ||
+        isNameInGracePeriod({ currentBlockTimestamp, record }))
     );
   }
   return false;

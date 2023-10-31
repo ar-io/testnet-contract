@@ -63,7 +63,7 @@ export const extendRecord = async (
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  // This name's lease has expired and cannot be extended
+  // This name's lease has expired beyond grace period and cannot be extended
   if (
     !isExistingActiveRecord({
       record,
@@ -73,12 +73,13 @@ export const extendRecord = async (
     if (!record) {
       throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
     }
-    if (record.type === 'permabuy') {
-      throw new ContractError(INVALID_NAME_EXTENSION_TYPE_MESSAGE);
-    }
     throw new ContractError(
       `This name has expired and must renewed before its undername support can be extended.`,
     );
+  }
+
+  if (record.type === 'permabuy') {
+    throw new ContractError(INVALID_NAME_EXTENSION_TYPE_MESSAGE);
   }
 
   if (
