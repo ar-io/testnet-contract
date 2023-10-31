@@ -24,6 +24,7 @@ import { joinNetwork } from './actions/write/joinNetwork';
 import { leaveNetwork } from './actions/write/leaveNetwork';
 import { saveObservations } from './actions/write/saveObservations';
 import { submitAuctionBid } from './actions/write/submitAuctionBid';
+import { tick } from './actions/write/tick';
 import { transferTokens } from './actions/write/transferTokens';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
 import {
@@ -39,6 +40,8 @@ export async function handle(
   action: PstAction,
 ): Promise<ContractReadResult | ContractWriteResult> {
   const input = action.input;
+
+  // TODO: on any write interaction, tick state
 
   switch (input.function as IOContractFunctions) {
     case 'transfer':
@@ -85,6 +88,8 @@ export async function handle(
       return getAuction(state, action);
     case 'saveObservations':
       return saveObservations(state, action);
+    case 'tick':
+      return tick(state);
     default:
       throw new ContractError(
         `No function supplied or function not recognized: "${input.function}"`,
