@@ -7,7 +7,7 @@ export const NAMESPACE_LENGTH = 62; // browser domains are max 63 characters bet
 export const MAX_ALLOWED_DECIMALS = 6; // the maximum allowed decimals for the IO Token
 export const MAX_NAME_LENGTH = 51; // the maximum length of an arns name - gateway sandbox domains are 52 characters, so to prevent overlap we stop 1 character short, where the 52nd character would be an underscore (which sandbox domains do not use) to prevent overlap
 export const MAX_NOTE_LENGTH = 256; // the maximum size of a note field
-export const MAX_GATEWAY_LABEL_LENGTH = 64; // the maximum size of a gtaeway label field used in the GAR
+export const MAX_GATEWAY_LABEL_LENGTH = 64; // the maximum size of a gateway label field used in the GAR
 export const MAX_PORT_NUMBER = 65535; // the default end port of tcp/udp port numbers
 export const TX_ID_LENGTH = 43; // the length of an arweave transaction id
 export const SECONDS_IN_GRACE_PERIOD = 1_814_400; // Three weeks, 7 days per week, 24 hours per day, sixty minutes per hour, sixty seconds per minute
@@ -23,8 +23,8 @@ export const RARITY_MULTIPLIER_HALVENING = 25;
 export const PERMABUY_LEASE_FEE_LENGTH = 10;
 export const ANNUAL_PERCENTAGE_FEE = 0.2; // 20% of cost of name
 export const DEFAULT_UNDERNAME_COUNT = 10;
-export const UNDERNAME_LEASE_FEE_PERCENTAGE = 0.01; // .1% of cost of name
-export const UNDERNAME_PERMABUY_FEE_PERCENTAGE = 0.1; // 1% of cost of name
+export const UNDERNAME_LEASE_FEE_PERCENTAGE = 0.001; // .1% of cost of name
+export const UNDERNAME_PERMABUY_FEE_PERCENTAGE = 0.005; // .5% of cost of name
 export const MAX_ALLOWED_UNDERNAMES = 10_000; // when modifying these, update the undernames schema
 export const UNDERNAME_REGISTRATION_IO_FEE = 1; // 1 IO token per undername
 export const NON_CONTRACT_OWNER_MESSAGE = `Caller is not the owner of the ArNS!`;
@@ -104,7 +104,7 @@ export const FEE_STRUCTURE = {
 };
 export const AUCTION_SETTINGS: AuctionSettings = {
   floorPriceMultiplier: 1,
-  startPriceMultiplier: 100,
+  startPriceMultiplier: 50,
   decayInterval: 30, // decrement every 30 blocks - approx every 1 hour
   decayRate: 0.0225, // 2.25% decay per interval
   auctionDuration: 1080, // approx 14 days long
