@@ -194,7 +194,9 @@ export class PositiveFiniteInteger implements Equatable<PositiveFiniteInteger> {
       !Number.isInteger(this.positiveFiniteInteger) ||
       this.positiveFiniteInteger < 0
     ) {
-      throw new Error('Number must be a non-negative integer value!');
+      throw new ContractError(
+        `Number must be a non-negative integer value! ${positiveFiniteInteger}`,
+      );
     }
   }
 

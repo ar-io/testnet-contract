@@ -16,14 +16,14 @@ export const evolveState = async (
   state.settings.auctions = AUCTION_SETTINGS;
 
   // update demand factoring
-  // state.demandFactoring = {
-  //   periodZeroBlockHeight: +SmartWeave.block.height,
-  //   currentPeriod: 0,
-  //   trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
-  //   purchasesThisPeriod: 0,
-  //   demandFactor: 1,
-  //   consecutivePeriodsWithMinDemandFactor: 0,
-  // };
+  state.demandFactoring = {
+    periodZeroBlockHeight: +SmartWeave.block.height,
+    currentPeriod: 0,
+    trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
+    purchasesThisPeriod: 0,
+    demandFactor: 1,
+    consecutivePeriodsWithMinDemandFactor: 0,
+  };
 
   state.lastTickedHeight = +SmartWeave.block.height;
 

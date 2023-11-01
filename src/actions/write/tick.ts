@@ -303,9 +303,10 @@ export const tick = async (state: IOState): Promise<ContractWriteResult> => {
     tickHeight++
   ) {
     const currentBlockHeight = new BlockHeight(tickHeight);
-    const currentBlockTimestamp = new BlockTimestamp(
-      await SmartWeave.safeArweaveGet(`/block/height/${tickHeight}`).timestamp,
+    const safeBlock = await SmartWeave.safeArweaveGet(
+      `/block/height/${tickHeight}`,
     );
+    const currentBlockTimestamp = new BlockTimestamp(safeBlock.timestamp);
     updatedState = tickInternal({
       currentBlockHeight,
       currentBlockTimestamp,
