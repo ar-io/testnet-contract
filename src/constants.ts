@@ -37,7 +37,7 @@ export const ARNS_NAME_IN_AUCTION_MESSAGE = 'Name is currently in auction.';
 export const ARNS_NAME_AUCTION_EXPIRED_MESSAGE = 'Auction has expired.';
 export const INVALID_INPUT_MESSAGE = 'Invalid input for interaction';
 export const CALLER_NOT_VALID_OBSERVER_MESSAGE =
-  'Cannot submit observation report because caller is not elligible to observe';
+  'Cannot submit observation report because caller is not eligible to observe';
 export const TARGET_GATEWAY_NOT_REGISTERED =
   'Target gateway is not currently registered';
 export const INVALID_OBSERVATION_TARGET =
