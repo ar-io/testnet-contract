@@ -3,7 +3,6 @@ import {
   createAuctionObject,
   getAuctionPrices,
 } from '../../auctions';
-import { calculateRegistrationFee } from '../../pricing';
 import {
   BlockHeight,
   BlockTimestamp,
@@ -24,22 +23,13 @@ export const getAuction = (
   const { records, auctions, settings, fees, reserved } = state;
   const formattedName = name.toLowerCase().trim();
   const auction = auctions[formattedName];
-  const auctionSettings = settings.auctions;
 
   if (!auction) {
+    const auctionSettings = settings.auctions;
     const currentBlockTimestamp = new BlockTimestamp(
       +SmartWeave.block.timestamp,
     );
     const currentBlockHeight = new BlockHeight(+SmartWeave.block.height);
-
-    const initialRegistrationFee = calculateRegistrationFee({
-      type,
-      name,
-      fees,
-      years: 1,
-      currentBlockTimestamp,
-      demandFactoring: state.demandFactoring,
-    });
 
     // a stubbed auction object
     const auctionObject = createAuctionObject({
@@ -47,7 +37,6 @@ export const getAuction = (
       type,
       name,
       fees,
-      years: 1,
       currentBlockTimestamp,
       demandFactoring: state.demandFactoring,
       currentBlockHeight,
@@ -55,15 +44,11 @@ export const getAuction = (
       initiator: undefined,
     });
 
-    const floorPrice =
-      initialRegistrationFee * auctionObject.settings.floorPriceMultiplier;
-    const startPrice = floorPrice * auctionObject.settings.startPriceMultiplier;
-
     const prices = getAuctionPrices({
       auctionSettings,
       startHeight: currentBlockHeight, // set it to the current block height
-      startPrice,
-      floorPrice,
+      startPrice: auctionObject.startPrice,
+      floorPrice: auctionObject.floorPrice,
     });
 
     // existing record
@@ -93,15 +78,21 @@ export const getAuction = (
         isActive: false,
         isAvailableForAuction: isAvailableForAuction,
         isRequiredToBeAuctioned: isRequiredToBeAuctioned,
-        minimumBid: floorPrice, // since its not active yet, the minimum bid is the floor price
+        minimumBid: auctionObject.floorPrice, // since its not active yet, the minimum bid is the floor price
         ...auctionObject,
         prices,
       },
     };
   }
 
-  const { startHeight, floorPrice, startPrice } = auction;
-  const expirationHeight = startHeight + auctionSettings.auctionDuration;
+  const {
+    startHeight,
+    floorPrice,
+    startPrice,
+    settings: existingAuctionSettings,
+  } = auction;
+  const expirationHeight =
+    startHeight + existingAuctionSettings.auctionDuration;
   const isRequiredToBeAuctioned = isNameRequiredToBeAuction({
     name: formattedName,
     type: auction.type,
@@ -109,9 +100,9 @@ export const getAuction = (
 
   // get all the prices for the auction
   const prices = getAuctionPrices({
-    auctionSettings,
+    auctionSettings: existingAuctionSettings,
     startHeight: new BlockHeight(startHeight),
-    startPrice, // TODO: use IOTOken class
+    startPrice, // TODO: use IO class class
     floorPrice,
   });
 
@@ -121,15 +112,14 @@ export const getAuction = (
     startPrice,
     floorPrice,
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
-    decayInterval: auctionSettings.decayInterval,
-    decayRate: auctionSettings.decayRate,
+    decayInterval: existingAuctionSettings.decayInterval,
+    decayRate: existingAuctionSettings.decayRate,
   });
 
   return {
     result: {
       name: formattedName,
-      // TODO: inclusive or exclusive here
-      isActive: expirationHeight > +SmartWeave.block.height,
+      isActive: expirationHeight >= +SmartWeave.block.height,
       isAvailableForAuction: false,
       isRequiredToBeAuctioned: isRequiredToBeAuctioned,
       minimumBid: minimumBid.valueOf(),

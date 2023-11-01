@@ -25,5 +25,7 @@ export const evolveState = async (
     consecutivePeriodsWithMinDemandFactor: 0,
   };
 
+  state.lastTickedHeight = +SmartWeave.block.height;
+
   return { state };
 };

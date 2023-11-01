@@ -70,13 +70,7 @@ export const submitAuctionBid = (
   const updatedRecords: Records = {};
 
   // does validation on constructor
-  const {
-    name,
-    qty: submittedBid,
-    type,
-    contractTxId,
-    years,
-  } = new AuctionBid(input);
+  const { name, qty: submittedBid, type, contractTxId } = new AuctionBid(input);
 
   const currentBlockTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
   const currentBlockHeight = new BlockHeight(+SmartWeave.block.height);
@@ -91,9 +85,6 @@ export const submitAuctionBid = (
     reserved: state.reserved,
     currentBlockTimestamp,
   });
-
-  // get the current auction settings, create one of it doesn't exist yet
-  const currentAuctionSettings: AuctionSettings = state.settings.auctions;
 
   // existing auction, handle the bid
   if (state.auctions[name]) {
@@ -110,8 +101,8 @@ export const submitAuctionBid = (
       startPrice: existingAuction.startPrice,
       floorPrice: existingAuction.floorPrice,
       currentBlockHeight: currentBlockHeight,
-      decayRate: currentAuctionSettings.decayRate,
-      decayInterval: currentAuctionSettings.decayInterval,
+      decayRate: existingAuction.settings.decayRate,
+      decayInterval: existingAuction.settings.decayInterval,
     });
 
     // we could throw an error if qty wasn't provided
@@ -210,6 +201,8 @@ export const submitAuctionBid = (
 
   // no current auction, create one and vault the balance from the user
   // calculate the registration fee taking into account demand factoring
+  // get the current auction settings, create one of it doesn't exist yet
+  const currentAuctionSettings: AuctionSettings = state.settings.auctions;
 
   // create the initial auction bid
   const initialAuctionBid = createAuctionObject({
@@ -217,7 +210,6 @@ export const submitAuctionBid = (
     type,
     fees: state.fees,
     auctionSettings: currentAuctionSettings,
-    years,
     currentBlockTimestamp,
     demandFactoring: state.demandFactoring,
     currentBlockHeight,
