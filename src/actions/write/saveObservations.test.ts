@@ -1,6 +1,7 @@
 import {
   CALLER_NOT_VALID_OBSERVER_MESSAGE,
   INVALID_INPUT_MESSAGE,
+  NETWORK_LEAVING_STATUS,
 } from '../../constants';
 import { Gateway, IOState, Observations, WeightedObserver } from '../../types';
 import { getPrescribedObservers } from '../../utilities';
@@ -190,6 +191,10 @@ describe('saveObservations', () => {
           ...getBaselineState(),
           gateways: {
             'observer-address': baselineGatewayData,
+            [validTxId]: {
+              ...baselineGatewayData,
+              observerAddress: validTxId,
+            },
           },
           observations: existingObservations,
         };
@@ -197,10 +202,23 @@ describe('saveObservations', () => {
           caller: 'observer-address',
           input: {
             observerReportTxId: validTxId,
-            failedGateways: [],
+            failedGateways: [validTxId],
           },
         });
-        expect(state).toEqual(initialState);
+        const expectedState = {
+          ...initialState,
+          observations: {
+            [0]: {
+              failureSummaries: {
+                [validTxId]: ['observer-address'],
+              },
+              reports: {
+                'observer-address': validTxId,
+              },
+            },
+          },
+        };
+        expect(state).toEqual(expectedState);
       });
     });
 
@@ -240,6 +258,38 @@ describe('saveObservations', () => {
           [validTxId]: {
             ...baselineGatewayData,
             start: 10,
+          },
+        },
+      };
+      const { state } = await saveObservations(initialState, {
+        caller: 'observer-address',
+        input: {
+          observerReportTxId: validTxId,
+          failedGateways: [validTxId],
+        },
+      });
+      const expectedState = {
+        ...initialState,
+        observations: {
+          [0]: {
+            failureSummaries: {},
+            reports: {
+              'observer-address': validTxId,
+            },
+          },
+        },
+      };
+      expect(state).toEqual(expectedState);
+    });
+
+    it('should not save a gateway to the failure summaries for the epoch if it the observed gateway is currently leaving the network', async () => {
+      const initialState: IOState = {
+        ...getBaselineState(),
+        gateways: {
+          'observer-address': baselineGatewayData,
+          [validTxId]: {
+            ...baselineGatewayData,
+            status: NETWORK_LEAVING_STATUS,
           },
         },
       };

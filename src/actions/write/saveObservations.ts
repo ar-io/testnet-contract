@@ -2,8 +2,16 @@ import {
   CALLER_NOT_VALID_OBSERVER_MESSAGE,
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_START_HEIGHT,
+  NETWORK_JOIN_STATUS,
 } from '../../constants';
-import { ContractWriteResult, IOState, PstAction } from '../../types';
+import {
+  ContractWriteResult,
+  Gateway,
+  IOState,
+  PstAction,
+  WalletAddress,
+  WeightedObserver,
+} from '../../types';
 import {
   getEpochStart,
   getInvalidAjvMessage,
@@ -46,24 +54,22 @@ export const saveObservations = async (
     height: +SmartWeave.block.height,
   });
 
-  let gatewayAddress: string;
-  if (gateways[caller]) {
-    // This caller is a known gateway
-    gatewayAddress = caller;
-  } else {
-    // This caller is not a known gateway, so check if it matches an observer wallet
-    for (const address in gateways) {
-      if (gateways[address].observerWallet === caller) {
-        gatewayAddress = address;
-      }
-    }
-    if (!gatewayAddress) {
-      throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
-    }
+  // get the gateway that is creating the observation
+  const observingGatewayArray = Object.entries(gateways).find(
+    ([gatewayAddress, gateway]: [WalletAddress, Gateway]) =>
+      gatewayAddress === caller || gateway.observerWallet === caller,
+  );
+
+  // no observer found
+  if (!observingGatewayArray) {
+    throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
   }
 
-  const gateway = gateways[gatewayAddress];
-  if (gateway.start > currentEpochStartHeight) {
+  // get the gateway address and observer address of the gateway that is creating the observation
+  const [observingGatewayAddress, observingGateway]: [WalletAddress, Gateway] =
+    observingGatewayArray;
+
+  if (observingGateway.start > currentEpochStartHeight) {
     throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
   }
 
@@ -75,10 +81,10 @@ export const saveObservations = async (
   );
 
   if (
-    !prescribedObservers.some(
-      (observer) =>
-        observer.gatewayAddress === gatewayAddress ||
-        observer.observerAddress === gateway.observerWallet,
+    !prescribedObservers.find(
+      (prescribedObserver: WeightedObserver) =>
+        prescribedObserver.gatewayAddress === observingGatewayAddress ||
+        prescribedObserver.gatewayAddress === observingGateway.observerWallet,
     )
   ) {
     throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
@@ -93,43 +99,44 @@ export const saveObservations = async (
   }
 
   // process the failed gateway summary
-  for (let i = 0; i < failedGateways.length; i++) {
-    // check if gateway is valid for being observed
-    if (!gateways[failedGateways[i]]) {
+  for (const observedFailedGatewayAddress of failedGateways) {
+    // validate the gateway is in the gar or is leaving
+    const failedGateway = gateways[observedFailedGatewayAddress];
+    if (
+      !failedGateway ||
+      failedGateway.start > currentEpochStartHeight ||
+      failedGateway.status !== NETWORK_JOIN_STATUS
+    ) {
       continue;
-      // throw new ContractError(TARGET_GATEWAY_NOT_REGISTERED); // optionally, we could halt here and throw an error
     }
 
-    if (gateways[failedGateways[i]].start <= currentEpochStartHeight) {
-      // Check if any observer has failed this gateway, and if not, mark it as failed
+    // Check if any observer has failed this gateway, and if not, mark it as failed
+    const existingObservationInEpochForGateway: WalletAddress[] =
+      observations[currentEpochStartHeight].failureSummaries[
+        observedFailedGatewayAddress
+      ];
+
+    // editing observation for gateway, add current observing gateway to list of observers
+    if (existingObservationInEpochForGateway) {
+      // the observer has already reported it for the current epoch
       if (
-        !observations[currentEpochStartHeight].failureSummaries[
-          failedGateways[i]
-        ]
+        existingObservationInEpochForGateway.includes(observingGatewayAddress)
       ) {
-        observations[currentEpochStartHeight].failureSummaries[
-          failedGateways[i]
-        ] = [gatewayAddress];
-      } else {
-        //check if this observer has already marked this gateway as failed, and if not, mark it as failed
-        if (
-          observations[currentEpochStartHeight].failureSummaries[
-            failedGateways[i]
-          ].indexOf(gatewayAddress) === -1
-        ) {
-          observations[currentEpochStartHeight].failureSummaries[
-            failedGateways[i]
-          ].push(gatewayAddress);
-        }
+        continue;
       }
-    } else {
+      // add it to the list of observers
+      existingObservationInEpochForGateway.push(observingGatewayAddress);
       continue;
-      // throw new ContractError(INVALID_OBSERVATION_TARGET); // optionally, we could halt here and throw an error
     }
+
+    // create the new failure summary for the observed gateway
+    observations[currentEpochStartHeight].failureSummaries[
+      observedFailedGatewayAddress
+    ] = [observingGatewayAddress];
   }
 
   // add this observers report tx id to this epoch
-  state.observations[currentEpochStartHeight].reports[gatewayAddress] =
+  state.observations[currentEpochStartHeight].reports[observingGatewayAddress] =
     observerReportTxId;
 
   return { state };
