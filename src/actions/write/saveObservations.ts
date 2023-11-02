@@ -81,9 +81,7 @@ export const saveObservations = async (
         observer.observerAddress === gateway.observerWallet,
     )
   ) {
-    throw new ContractError(
-      `${Object.keys(gateway)} is not a prescribed observer`,
-    );
+    throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
   }
 
   // check if this is the first report filed in this epoch

@@ -8,7 +8,7 @@ const saveObservationsSchema = {
     },
     observerReportTxId: {
       type: 'string',
-      pattern: '^(atomic|[a-zA-Z0-9-_]{43})$',
+      pattern: '^[a-zA-Z0-9-_]{43}$',
     },
     failedGateways: {
       type: 'array',
@@ -20,8 +20,8 @@ const saveObservationsSchema = {
       minItems: 0,
     },
   },
-  required: ['failedGateways', 'observerReportTxId', 'function'],
-  additionalProperties: true, // allows for auction properties to be provided to buy record
+  required: ['failedGateways', 'observerReportTxId'],
+  additionalProperties: false,
 };
 
 module.exports = {

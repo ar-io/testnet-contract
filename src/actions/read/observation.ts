@@ -44,7 +44,7 @@ export const prescribedObserver = async (
 export const prescribedObservers = async (
   state: IOState,
   { input: { height } }: PstAction,
-): Promise<ContractResult> => {
+): Promise<ContractReadResult> => {
   const { settings, gateways } = state;
   if (!height) {
     height = +SmartWeave.block.height;
