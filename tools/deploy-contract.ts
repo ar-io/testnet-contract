@@ -29,14 +29,7 @@ import { arweave, initialize, warp } from './utilities';
   const walletAddress = await arweave.wallets.jwkToAddress(wallet);
   const {
     cachedValue: { state: existingContractState },
-  } = await warp
-    .contract(ARNS_CONTRACT_TX_ID)
-    .setEvaluationOptions({
-      internalWrites: true,
-      unsafeClient: 'skip',
-      updateCacheForEachInteraction: true,
-    })
-    .readState();
+  } = await warp.contract(ARNS_CONTRACT_TX_ID).readState();
 
   // any state forks we want to do
   const forkedState = {

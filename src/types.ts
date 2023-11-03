@@ -8,6 +8,7 @@ import {
 } from './constants';
 
 export type WalletAddress = string;
+export type TransactionId = string;
 export type DemandFactoringData = {
   periodZeroBlockHeight: number; // TODO: The block height at which the contract was initialized
   currentPeriod: number;
@@ -37,6 +38,28 @@ export type IOState = PstState & {
   lastTickedHeight: number; // periodicity management
   // TODO: epoch tracking - relevant to GAR observers
   demandFactoring: DemandFactoringData;
+  observations: Observations;
+};
+
+export type EpochObservations = {
+  failureSummaries: Record<WalletAddress, WalletAddress[]>; // the gateway that has been marked as down and the gateways that marked it down
+  reports: Record<WalletAddress, TransactionId>;
+};
+
+// The health reports and failure failureSummaries submitted by observers for an epoch
+export type Observations = Record<number, EpochObservations>;
+
+export type WeightedObserver = {
+  gatewayAddress: string;
+  observerAddress: string;
+  stake: number;
+  start: number;
+  stakeWeight: number;
+  tenureWeight: number;
+  gatewayRewardRatioWeight: number;
+  observerRewardRatioWeight: number;
+  compositeWeight: number;
+  normalizedCompositeWeight: number;
 };
 
 export type AuctionData = {
@@ -173,15 +196,19 @@ export type GARFunctions =
   | 'finalizeOperatorStakeDecrease'
   | 'updateGatewaySettings';
 
-export type IOContractFunctions = GARFunctions & ArNSFunctions & PstFunctions;
+export type ObservationFunctions =
+  | 'saveObservations'
+  | 'prescribedObserver'
+  | 'prescribedObservers';
+
+export type IOContractFunctions = ObservationFunctions &
+  GARFunctions &
+  ArNSFunctions &
+  PstFunctions;
 
 export type ContractWriteResult = { state: DeepReadonly<IOState> | IOState };
-export type ContractReadResult =
-  | { result: PstResult }
-  | { result: ArNSNameResult }
-  | {
-      result: Record<string | number, unknown>;
-    };
+// TODO: make this a union type of all the possible return types
+export type ContractReadResult = { result: unknown };
 
 export interface Equatable<T> {
   equals(other: T): boolean;

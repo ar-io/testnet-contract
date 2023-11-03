@@ -38,7 +38,10 @@ describe('Extend', () => {
       );
       contract = warp.pst(srcContractId).connect(nonContractOwner);
       emptyWalletCaller = await arweave.wallets.generate();
-      await addFunds(arweave, emptyWalletCaller);
+      const emptyWalletAddress = await arweave.wallets.getAddress(
+        emptyWalletCaller,
+      );
+      await addFunds(arweave, emptyWalletAddress);
     });
 
     afterEach(() => {

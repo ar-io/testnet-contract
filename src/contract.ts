@@ -8,6 +8,10 @@ import {
   getGatewayTotalStake,
   getRankedGatewayRegistry,
 } from './actions/read/gateways';
+import {
+  prescribedObserver,
+  prescribedObservers,
+} from './actions/read/observation';
 import { getRecord } from './actions/read/record';
 import { buyRecord } from './actions/write/buyRecord';
 import { decreaseOperatorStake } from './actions/write/decreaseOperatorStake';
@@ -18,6 +22,7 @@ import { increaseOperatorStake } from './actions/write/increaseOperatorStake';
 import { increaseUndernameCount } from './actions/write/increaseUndernameCount';
 import { joinNetwork } from './actions/write/joinNetwork';
 import { leaveNetwork } from './actions/write/leaveNetwork';
+import { saveObservations } from './actions/write/saveObservations';
 import { submitAuctionBid } from './actions/write/submitAuctionBid';
 import { tick } from './actions/write/tick';
 import { transferTokens } from './actions/write/transferTokens';
@@ -57,6 +62,10 @@ export async function handle(
       return getRecord(state, action);
     case 'gateway':
       return getGateway(state, action);
+    case 'prescribedObserver':
+      return prescribedObserver(state, action);
+    case 'prescribedObservers':
+      return prescribedObservers(state, action);
     case 'gatewayTotalStake':
       return getGatewayTotalStake(state, action);
     case 'gatewayRegistry':
@@ -77,6 +86,8 @@ export async function handle(
       return submitAuctionBid(state, action);
     case 'auction':
       return getAuction(state, action);
+    case 'saveObservations':
+      return saveObservations(state, action);
     case 'tick':
       return tick(state);
     default:

@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import path from 'path';
 
+import { WALLETS_TO_CREATE } from './utils/constants';
 import { createLocalWallet, setupInitialContractState } from './utils/helper';
 import { arlocal, arweave, warp } from './utils/services';
 
@@ -19,9 +20,10 @@ module.exports = async () => {
   );
 
   // create owner wallet
-  const wallets = await Promise.all(
-    Array.from({ length: 10 }).map(() => createLocalWallet(arweave)),
-  );
+  const wallets = [];
+  for (let i = 0; i < WALLETS_TO_CREATE; i++) {
+    wallets.push(await createLocalWallet(arweave));
+  }
   // save wallets to disk
   console.log('Saving wallets to disk!'); // eslint-disable-line
 
@@ -49,8 +51,8 @@ module.exports = async () => {
       initState: JSON.stringify(initialContractState),
       src: contractSrcJs,
     },
-    true, // disable bundling
-  );
+    true,
+  ); // disable bundling
 
   // transfer funds to the protocol balance
   await warp.pst(contractTxId).connect(wallets[0].wallet).writeInteraction({

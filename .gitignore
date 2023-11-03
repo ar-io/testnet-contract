@@ -18,6 +18,9 @@ wallets
 # local env files
 .env
 
+# test files
+arns_contract.json
+
 # warp
 cache/
 

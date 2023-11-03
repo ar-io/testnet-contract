@@ -16,9 +16,11 @@ export const NETWORK_JOIN_STATUS = 'joined';
 export const NETWORK_LEAVING_STATUS = 'leaving';
 export const NETWORK_HIDDEN_STATUS = 'hidden';
 export const SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP = 1704092400000; // January 1st, 2024
-export const MAX_ALLOWED_EVOLUTION_DELAY = 720 * 30;
+export const BLOCKS_PER_DAY = 720;
+export const MAX_ALLOWED_EVOLUTION_DELAY = BLOCKS_PER_DAY * 30;
 export const MINIMUM_ALLOWED_EVOLUTION_DELAY = 3; // 3 blocks for testing purposes, but should be 720 * 7; // 720 blocks per day times 7 days
 export const MINIMUM_ALLOWED_NAME_LENGTH = 5; // names less than 5 characters are reserved for auction
+export const TENURE_WEIGHT_DAYS = 180; // the amount of days in a single tenure weight period used to calculate composite weights for observation
 export const RARITY_MULTIPLIER_HALVENING = 25;
 export const PERMABUY_LEASE_FEE_LENGTH = 10;
 export const ANNUAL_PERCENTAGE_FEE = 0.2; // 20% of cost of name
@@ -34,6 +36,15 @@ export const ARNS_NAME_RESERVED_MESSAGE = 'Name is reserved.';
 export const ARNS_NAME_IN_AUCTION_MESSAGE = 'Name is currently in auction.';
 export const ARNS_NAME_AUCTION_EXPIRED_MESSAGE = 'Auction has expired.';
 export const INVALID_INPUT_MESSAGE = 'Invalid input for interaction';
+export const CALLER_NOT_VALID_OBSERVER_MESSAGE =
+  'Cannot submit observation report because caller is not eligible to observe';
+export const TARGET_GATEWAY_NOT_REGISTERED =
+  'Target gateway is not currently registered';
+export const INVALID_OBSERVATION_TARGET =
+  'Target gateway is leaving the network and must not be observed';
+export const DEFAULT_NUM_SAMPLED_BLOCKS = 3;
+export const DEFAULT_SAMPLED_BLOCKS_OFFSET = 50;
+export const NUM_OBSERVERS_PER_EPOCH = 4;
 export const NON_EXPIRED_ARNS_NAME_MESSAGE =
   'This name already exists in an active lease';
 export const ARNS_NAME_DOES_NOT_EXIST_MESSAGE =
@@ -110,6 +121,9 @@ export const AUCTION_SETTINGS: AuctionSettings = {
   auctionDuration: 10_080, // approx 14 days long
 };
 
+export const DEFAULT_EPOCH_BLOCK_LENGTH = 50; // 5000 for mainnet
+export const DEFAULT_START_HEIGHT = 0;
+export const MAX_TENURE_WEIGHT = 2;
 export const DEMAND_FACTORING_SETTINGS = {
   movingAvgPeriodCount: 7,
   periodBlockCount: 720,

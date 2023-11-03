@@ -11,6 +11,7 @@
   "auctions": {},
   "settings": {},
   "gateways": {},
+  "observations": {},
   "demandFactoring": {
     "periodZeroBlockHeight": 0,
     "currentPeriod": 0,
