@@ -39,10 +39,21 @@ export type IOState = PstState & {
   reserved: ReservedNames; // list of all reserved names that are not allowed to be purchased at this time
   auctions: Auctions;
   lastTickedHeight: number; // periodicity management
-  // TODO: epoch tracking - relevant to GAR observers
   demandFactoring: DemandFactoringData;
   observations: Observations;
   vaults: Vaults;
+  distributions: RewardDistributions;
+};
+
+// The distributions made at the end of each epoch
+export type RewardDistributions = {
+  lastCompletedEpoch: number; // the last epoch that had its rewards distributed
+  passedGatewayEpochs: {
+    [address: string]: number[]; // an array of each epoch a given gateway has passed
+  };
+  passedObserverEpochs: {
+    [address: string]: number[]; // an array of each epoch a given observer has passed
+  };
 };
 
 export type EpochObservations = {

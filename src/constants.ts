@@ -46,6 +46,11 @@ export const INVALID_OBSERVATION_TARGET =
   'Target gateway is leaving the network and must not be observed';
 export const DEFAULT_NUM_SAMPLED_BLOCKS = 3;
 export const DEFAULT_SAMPLED_BLOCKS_OFFSET = 50;
+export const TALLY_PERIOD_BLOCKS = 100;
+export const EPOCH_REWARD_PERCENTAGE = 0.25;
+export const GATEWAY_PERCENTAGE_OF_EPOCH_REWARD = 0.95;
+export const OBSERVATION_FAILURE_THRESHOLD = 0.51;
+export const BAD_OBSERVER_GATEWAY_PENALTY = 0.75;
 export const NUM_OBSERVERS_PER_EPOCH = 4;
 export const NON_EXPIRED_ARNS_NAME_MESSAGE =
   'This name already exists in an active lease';

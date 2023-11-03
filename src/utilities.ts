@@ -30,6 +30,7 @@ import {
   DeepReadonly,
   Gateway,
   GatewayRegistrySettings,
+  Gateways,
   IOToken,
   Records,
   RegistrationType,
@@ -203,9 +204,7 @@ export async function getEntropy(height: number): Promise<Buffer> {
 }
 
 export async function getPrescribedObservers(
-  gateways: {
-    [address: string]: Gateway;
-  },
+  gateways: DeepReadonly<Gateways> | Gateways,
   minNetworkJoinStakeAmount: number,
   gatewayLeaveLength: number,
   height: number,

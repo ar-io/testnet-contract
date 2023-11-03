@@ -13,6 +13,11 @@
   "settings": {},
   "gateways": {},
   "observations": {},
+  "distributions": {
+    "lastCompletedEpoch": 0,
+    "passedGatewayEpochs": {},
+    "passedObserverEpochs": {}
+  },
   "demandFactoring": {
     "periodZeroBlockHeight": 0,
     "currentPeriod": 0,
