@@ -98,6 +98,19 @@ function tickInternal({
     }),
   );
 
+  // tick reward distribution
+  Object.assign(
+    updatedState,
+    tickRewardDistribution({
+      currentBlockHeight,
+      gateways: updatedState.gateways,
+      distributions: updatedState.distributions,
+      observations: updatedState.observations,
+      balances: updatedState.balances,
+      settings: updatedState.settings,
+    }),
+  );
+
   // update last ticked height
   Object.assign(updatedState, {
     lastTickedHeight: currentBlockHeight.valueOf(),
@@ -361,25 +374,21 @@ export async function tickRewardDistribution({
   let eligibleGateways = 0;
   const lastEpochStartHeight: number =
     currentEpochStartHeight - DEFAULT_EPOCH_BLOCK_LENGTH;
+  const lastEpochEndHeight: number =
+    lastEpochStartHeight + DEFAULT_EPOCH_BLOCK_LENGTH;
   const updatedBalances: Balances = balances;
   const newDistributions: RewardDistributions = {
-    lastCompletedEpoch: currentEpochStartHeight,
+    lastCompletedEpoch: distributions.lastCompletedEpoch,
     passedGatewayEpochs: {},
     passedObserverEpochs: {},
   };
 
-  // Check if this epoch's tallying period has ended
+  // Check if this epoch's tallying period has ended and if it has been observed at all
   if (
-    currentBlockHeight.valueOf() <=
-      currentEpochStartHeight + TALLY_PERIOD_BLOCKS ||
-    distributions.lastCompletedEpoch >= lastEpochStartHeight
+    currentBlockHeight.valueOf() > lastEpochEndHeight + TALLY_PERIOD_BLOCKS &&
+    distributions.lastCompletedEpoch < lastEpochStartHeight &&
+    lastEpochStartHeight in observations[lastEpochStartHeight]
   ) {
-    // This epoch is not ready to be tallied and have its rewards distributed
-    return { distributions: newDistributions, balances: updatedBalances };
-  }
-
-  // Check if this epoch has been observed at all
-  if (lastEpochStartHeight in observations[lastEpochStartHeight]) {
     const totalReportsSubmitted = Object.keys(
       observations[lastEpochStartHeight].reports,
     ).length;
@@ -442,9 +451,6 @@ export async function tickRewardDistribution({
       }
     }
 
-    // update reward distributions state
-    newDistributions.lastCompletedEpoch = lastEpochStartHeight;
-
     // prepare for distributions
     // calculate epoch rewards X% of current protocol balance split amongst gateways and observers
     const totalPotentialReward = Math.floor(
@@ -500,13 +506,32 @@ export async function tickRewardDistribution({
       }
       updatedBalances[SmartWeave.contract.id] -= updatedGatewayReward;
     }
+
+    // Mark this as the last completed epoch
+    newDistributions.lastCompletedEpoch = lastEpochStartHeight;
   }
   // avoids copying balances if not necessary
   const newBalances: Balances = Object.keys(updatedBalances).length
     ? { ...balances, ...updatedBalances }
     : balances;
 
-  const updatedDistributions = newDistributions;
+  const updatedDistributions: RewardDistributions = {
+    lastCompletedEpoch: newDistributions.lastCompletedEpoch,
+    passedGatewayEpochs: Object.keys(newDistributions.passedGatewayEpochs)
+      .length
+      ? {
+          ...distributions.passedGatewayEpochs,
+          ...newDistributions.passedGatewayEpochs,
+        }
+      : distributions.passedGatewayEpochs,
+    passedObserverEpochs: Object.keys(newDistributions.passedObserverEpochs)
+      .length
+      ? {
+          ...distributions.passedObserverEpochs,
+          ...newDistributions.passedObserverEpochs,
+        }
+      : distributions.passedObserverEpochs,
+  };
 
   return {
     distributions: updatedDistributions,
