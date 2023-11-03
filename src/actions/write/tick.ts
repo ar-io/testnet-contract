@@ -27,9 +27,11 @@ import {
   Gateways,
   IOState,
   Observations,
+  PassedEpochs,
   Records,
   ReservedNames,
   RewardDistributions,
+  WalletAddress,
 } from '../../types';
 import {
   getEpochStart,
@@ -372,11 +374,15 @@ export async function tickRewardDistribution({
     height: currentBlockHeight.valueOf(),
   });
   let eligibleGateways = 0;
+  const updatedPassedGatewayEpochs: PassedEpochs = {};
+  const updatedPassedObserverEpochs: PassedEpochs = {};
   const lastEpochStartHeight: number =
     currentEpochStartHeight - DEFAULT_EPOCH_BLOCK_LENGTH;
   const lastEpochEndHeight: number =
     lastEpochStartHeight + DEFAULT_EPOCH_BLOCK_LENGTH;
-  const updatedBalances: Balances = balances;
+  const updatedBalances: Balances = {
+    [SmartWeave.contract.id]: balances[SmartWeave.contract.id] || 0,
+  };
   const newDistributions: RewardDistributions = {
     lastCompletedEpoch: distributions.lastCompletedEpoch,
     passedGatewayEpochs: {},
@@ -474,11 +480,8 @@ export async function tickRewardDistribution({
 
     // distribute observer tokens
     for (const address in newDistributions.passedObserverEpochs) {
-      if (address in balances) {
-        updatedBalances[address] += observerReward;
-      } else {
-        updatedBalances[address] = observerReward;
-      }
+      updatedBalances[address] =
+        (updatedBalances[address] ?? balances[address] ?? 0) + observerReward;
       updatedBalances[SmartWeave.contract.id] -= observerReward;
     }
 
@@ -499,38 +502,42 @@ export async function tickRewardDistribution({
           updatedGatewayReward * BAD_OBSERVER_GATEWAY_PENALTY,
         );
       }
-      if (address in balances) {
-        updatedBalances[address] += updatedGatewayReward;
-      } else {
-        updatedBalances[address] = updatedGatewayReward;
-      }
+      updatedBalances[address] +=
+        (updatedBalances[address] ?? balances[address] ?? 0) +
+        updatedGatewayReward;
       updatedBalances[SmartWeave.contract.id] -= updatedGatewayReward;
     }
 
     // Mark this as the last completed epoch
     newDistributions.lastCompletedEpoch = lastEpochStartHeight;
+  } else {
+    return { distributions: distributions as RewardDistributions, balances };
   }
   // avoids copying balances if not necessary
   const newBalances: Balances = Object.keys(updatedBalances).length
     ? { ...balances, ...updatedBalances }
     : balances;
 
+  // MAKE THIS A FUNCTION
+  for (const [address, epochs] of Object.entries(
+    distributions.passedGatewayEpochs,
+  )) {
+    updatedPassedGatewayEpochs[address] = newDistributions.passedGatewayEpochs[
+      address
+    ] || [...epochs];
+  }
+
+  for (const [address, epochs] of Object.entries(
+    distributions.passedObserverEpochs,
+  )) {
+    updatedPassedObserverEpochs[address] = newDistributions
+      .passedObserverEpochs[address] || [...epochs];
+  }
+
   const updatedDistributions: RewardDistributions = {
     lastCompletedEpoch: newDistributions.lastCompletedEpoch,
-    passedGatewayEpochs: Object.keys(newDistributions.passedGatewayEpochs)
-      .length
-      ? {
-          ...distributions.passedGatewayEpochs,
-          ...newDistributions.passedGatewayEpochs,
-        }
-      : distributions.passedGatewayEpochs,
-    passedObserverEpochs: Object.keys(newDistributions.passedObserverEpochs)
-      .length
-      ? {
-          ...distributions.passedObserverEpochs,
-          ...newDistributions.passedObserverEpochs,
-        }
-      : distributions.passedObserverEpochs,
+    passedGatewayEpochs: updatedPassedGatewayEpochs,
+    passedObserverEpochs: updatedPassedObserverEpochs,
   };
 
   return {

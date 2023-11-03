@@ -48,13 +48,11 @@ export type IOState = PstState & {
 // The distributions made at the end of each epoch
 export type RewardDistributions = {
   lastCompletedEpoch: number; // the last epoch that had its rewards distributed
-  passedGatewayEpochs: {
-    [address: string]: number[]; // an array of each epoch a given gateway has passed
-  };
-  passedObserverEpochs: {
-    [address: string]: number[]; // an array of each epoch a given observer has passed
-  };
+  passedGatewayEpochs: PassedEpochs;
+  passedObserverEpochs: PassedEpochs;
 };
+
+export type PassedEpochs = Record<WalletAddress, number[]>;
 
 export type EpochObservations = {
   failureSummaries: Record<WalletAddress, WalletAddress[]>; // the gateway that has been marked as down and the gateways that marked it down
