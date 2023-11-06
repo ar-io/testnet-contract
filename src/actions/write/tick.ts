@@ -31,7 +31,6 @@ import {
   Records,
   ReservedNames,
   RewardDistributions,
-  WalletAddress,
 } from '../../types';
 import {
   getEpochStart,

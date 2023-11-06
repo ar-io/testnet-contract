@@ -30,6 +30,11 @@ export const getBaselineState = (): IOState => ({
   records: {},
   balances: {},
   vaults: {},
+  distributions: {
+    lastCompletedEpoch: 0,
+    passedObserverEpochs: {},
+    passedGatewayEpochs: {},
+  },
   reserved: {},
   fees: {
     ...FEE_STRUCTURE,
