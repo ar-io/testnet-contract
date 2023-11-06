@@ -41,7 +41,8 @@ export async function handle(
 ): Promise<ContractReadResult | ContractWriteResult> {
   const input = action.input;
 
-  // TODO: on any write interaction, tick state
+  // tick state on any interaction, even when reading, so users get the most recent evaluation
+  await tick(state);
 
   switch (input.function as IOContractFunctions) {
     case 'transfer':
