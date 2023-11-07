@@ -162,8 +162,9 @@ describe('getPriceForInteraction', () => {
       },
       expectedResult: number,
     ) => {
-      const fee = getPriceForInteraction(inputState, inputData);
-      expect(fee).toEqual(expectedResult);
+      const { result } = getPriceForInteraction(inputState, inputData);
+      expect((result as any).price).toEqual(expectedResult);
+      expect((result as any).input).toEqual(inputData.input);
     },
   );
 });

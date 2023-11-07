@@ -208,7 +208,9 @@ export type IOContractFunctions = ObservationFunctions &
 
 export type ContractWriteResult = { state: IOState };
 // TODO: make this a union type of all the possible return types
-export type ContractReadResult = { result: unknown };
+export type ContractReadResult = {
+  result: unknown;
+};
 
 export interface Equatable<T> {
   equals(other: T): boolean;

@@ -11,6 +11,7 @@ import {
 import {
   BlockHeight,
   BlockTimestamp,
+  ContractReadResult,
   DeepReadonly,
   IOState,
 } from '../../types';
@@ -38,7 +39,8 @@ export function getPriceForInteraction(
     caller,
     input,
   }: { caller: string; input: { function: string; [x: string]: unknown } },
-): number {
+): ContractReadResult {
+  let fee: number;
   // TODO: move all these to utility functions
   switch (input.function as InteractionsWithFee) {
     case 'buyRecord': {
@@ -60,7 +62,7 @@ export function getPriceForInteraction(
         reserved: state.reserved,
         currentBlockTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),
       });
-      const fee = calculateRegistrationFee({
+      fee = calculateRegistrationFee({
         name,
         fees: state.fees,
         type,
@@ -68,7 +70,7 @@ export function getPriceForInteraction(
         currentBlockTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),
         demandFactoring: state.demandFactoring,
       });
-      return fee;
+      break;
     }
     case 'submitAuctionBid': {
       const { name } = new AuctionBid(input);
@@ -95,9 +97,10 @@ export function getPriceForInteraction(
           initiator: caller,
           contractTxId: SmartWeave.transaction.id,
         });
-        return newAuction.floorPrice;
+        fee = newAuction.floorPrice;
+        break;
       }
-      const fee = calculateMinimumAuctionBid({
+      const minimumAuctionBid = calculateMinimumAuctionBid({
         startHeight: new BlockHeight(auction.startHeight),
         currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
         startPrice: auction.startPrice,
@@ -105,7 +108,8 @@ export function getPriceForInteraction(
         decayInterval: auction.settings.decayInterval,
         decayRate: auction.settings.decayRate,
       });
-      return fee.valueOf();
+      fee = minimumAuctionBid.valueOf();
+      break;
     }
     case 'extendRecord': {
       const { name, years } = new ExtendRecord(input);
@@ -115,8 +119,8 @@ export function getPriceForInteraction(
         currentBlockTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),
         years,
       });
-      const fee = calculateAnnualRenewalFee({ name, years, fees: state.fees });
-      return fee;
+      fee = calculateAnnualRenewalFee({ name, years, fees: state.fees });
+      break;
     }
     case 'increaseUndernameCount': {
       const { name, qty } = new IncreaseUndernameCount(input);
@@ -134,7 +138,7 @@ export function getPriceForInteraction(
           })
         : PERMABUY_LEASE_FEE_LENGTH;
 
-      const fee = calculateUndernameCost({
+      fee = calculateUndernameCost({
         name,
         fees: state.fees,
         type,
@@ -142,11 +146,19 @@ export function getPriceForInteraction(
         increaseQty: qty,
         demandFactoring: state.demandFactoring,
       });
-      return fee;
+      break;
     }
     default:
       throw new ContractError(
         `Invalid function provided. Available options are 'buyRecord', 'extendRecord', and 'increaseUndernameCount'.`,
       );
   }
+
+  return {
+    result: {
+      input,
+      // TODO: make this mIO
+      price: fee,
+    },
+  };
 }
