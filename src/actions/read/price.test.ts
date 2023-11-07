@@ -27,9 +27,9 @@ describe('getPriceForInteraction', () => {
         records: {
           'existing-record': {
             contractTxId: 'test-contract-tx-id',
-            endTimestamp: Date.now() + SECONDS_IN_A_YEAR, // one years,
+            endTimestamp: +SmartWeave.block.timestamp + SECONDS_IN_A_YEAR, // one years,
             type: 'lease',
-            startTimestamp: Date.now(),
+            startTimestamp: +SmartWeave.block.timestamp,
             undernames: 10,
             purchasePrice: 1000,
           },
