@@ -14,11 +14,11 @@ describe('getPriceForInteraction', () => {
         caller: 'test-caller',
         input: {
           function: 'buyRecord',
-          name: 'test',
+          name: 'test-buy-record',
           type: 'permabuy',
         },
       },
-      312500000,
+      500000,
     ],
     [
       'should return the correct price for extendRecord',

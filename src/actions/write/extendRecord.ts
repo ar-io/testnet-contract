@@ -7,6 +7,7 @@ import {
 } from '../../constants';
 import { calculateAnnualRenewalFee, tallyNamePurchase } from '../../pricing';
 import {
+  ArNSNameData,
   BlockTimestamp,
   ContractWriteResult,
   IOState,
@@ -63,6 +64,42 @@ export const extendRecord = async (
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
+  assertRecordCanBeExtended({
+    record,
+    currentBlockTimestamp,
+    years,
+  });
+
+  const demandFactor = state.demandFactoring.demandFactor;
+  const totalExtensionAnnualFee =
+    demandFactor *
+    calculateAnnualRenewalFee({
+      name,
+      fees,
+      years,
+    });
+
+  if (!walletHasSufficientBalance(balances, caller, totalExtensionAnnualFee)) {
+    throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
+  }
+
+  state.balances[caller] -= totalExtensionAnnualFee;
+  state.balances[SmartWeave.contract.id] += totalExtensionAnnualFee;
+  state.records[name].endTimestamp += SECONDS_IN_A_YEAR * years;
+  state.demandFactoring = tallyNamePurchase(state.demandFactoring);
+
+  return { state };
+};
+
+export function assertRecordCanBeExtended({
+  record,
+  currentBlockTimestamp,
+  years,
+}: {
+  record: ArNSNameData;
+  currentBlockTimestamp: BlockTimestamp;
+  years: number;
+}): void {
   // This name's lease has expired beyond grace period and cannot be extended
   if (
     !isExistingActiveRecord({
@@ -88,24 +125,4 @@ export const extendRecord = async (
   ) {
     throw new ContractError(INVALID_YEARS_MESSAGE);
   }
-
-  const demandFactor = state.demandFactoring.demandFactor;
-  const totalExtensionAnnualFee =
-    demandFactor *
-    calculateAnnualRenewalFee({
-      name,
-      fees,
-      years,
-    });
-
-  if (!walletHasSufficientBalance(balances, caller, totalExtensionAnnualFee)) {
-    throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
-  }
-
-  state.balances[caller] -= totalExtensionAnnualFee;
-  state.balances[SmartWeave.contract.id] += totalExtensionAnnualFee;
-  state.records[name].endTimestamp += SECONDS_IN_A_YEAR * years;
-  state.demandFactoring = tallyNamePurchase(state.demandFactoring);
-
-  return { state };
-};
+}

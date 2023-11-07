@@ -2,10 +2,7 @@ import {
   calculateMinimumAuctionBid,
   createAuctionObject,
 } from '../../auctions';
-import {
-  MAX_ALLOWED_UNDERNAMES,
-  PERMABUY_LEASE_FEE_LENGTH,
-} from '../../constants';
+import { PERMABUY_LEASE_FEE_LENGTH } from '../../constants';
 import {
   calculateAnnualRenewalFee,
   calculateRegistrationFee,
@@ -20,11 +17,13 @@ import {
 import {
   assertAvailableRecord,
   calculateYearsBetweenTimestamps,
-  isExistingActiveRecord,
 } from '../../utilities';
 import { BuyRecord } from '../write/buyRecord';
-import { ExtendRecord } from '../write/extendRecord';
-import { IncreaseUndernameCount } from '../write/increaseUndernameCount';
+import { ExtendRecord, assertRecordCanBeExtended } from '../write/extendRecord';
+import {
+  IncreaseUndernameCount,
+  assertRecordCanIncreaseUndernameCount,
+} from '../write/increaseUndernameCount';
 import { AuctionBid } from '../write/submitAuctionBid';
 
 export type InteractionsWithFee =
@@ -111,42 +110,22 @@ export function getPriceForInteraction(
     case 'extendRecord': {
       const { name, years } = new ExtendRecord(input);
       const record = state.records[name];
-      if (
-        !isExistingActiveRecord({
-          record,
-          currentBlockTimestamp: new BlockTimestamp(
-            +SmartWeave.block.timestamp,
-          ),
-        })
-      ) {
-        throw new ContractError(`Record ${name} does not exist.`);
-      }
-      if (record.type === 'permabuy') {
-        throw new ContractError('Cannot extend a permabuy record.');
-      }
+      assertRecordCanBeExtended({
+        record,
+        currentBlockTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),
+        years,
+      });
       const fee = calculateAnnualRenewalFee({ name, years, fees: state.fees });
       return fee;
     }
     case 'increaseUndernameCount': {
       const { name, qty } = new IncreaseUndernameCount(input);
       const record = state.records[name];
-      if (
-        !isExistingActiveRecord({
-          record,
-          currentBlockTimestamp: new BlockTimestamp(
-            +SmartWeave.block.timestamp,
-          ),
-        })
-      ) {
-        throw new ContractError(
-          `Record is not active. Cannot increase undernames.`,
-        );
-      }
-      if (record.undernames + qty > MAX_ALLOWED_UNDERNAMES) {
-        throw new ContractError(
-          `Cannot purchase more than ${MAX_ALLOWED_UNDERNAMES} undernames. The current record has ${record.undernames}`,
-        );
-      }
+      assertRecordCanIncreaseUndernameCount({
+        record,
+        qty,
+        currentBlockTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),
+      });
       const { endTimestamp, type } = record;
       const yearsRemaining = endTimestamp
         ? calculateYearsBetweenTimestamps({
