@@ -3,6 +3,7 @@ import {
   INSUFFICIENT_FUNDS_MESSAGE,
   MAX_ALLOWED_UNDERNAMES,
   MAX_UNDERNAME_MESSAGE,
+  PERMABUY_LEASE_FEE_LENGTH,
 } from '../../constants';
 import { calculateUndernameCost } from '../../pricing';
 import {
@@ -72,10 +73,12 @@ export const increaseUndernameCount = async (
     throw new ContractError(MAX_UNDERNAME_MESSAGE);
   }
 
-  const yearsRemaining = calculateYearsBetweenTimestamps({
-    startTimestamp: currentBlockTimestamp,
-    endTimestamp: new BlockTimestamp(endTimestamp),
-  });
+  const yearsRemaining = endTimestamp
+    ? calculateYearsBetweenTimestamps({
+        startTimestamp: currentBlockTimestamp,
+        endTimestamp: new BlockTimestamp(endTimestamp),
+      })
+    : PERMABUY_LEASE_FEE_LENGTH;
 
   const additionalUndernameCost = calculateUndernameCost({
     name,
