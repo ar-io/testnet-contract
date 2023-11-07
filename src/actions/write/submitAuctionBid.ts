@@ -45,7 +45,12 @@ export class AuctionBid {
       );
     }
 
-    const { name, qty, type = 'lease', contractTxId } = input;
+    const {
+      name,
+      qty,
+      type = 'lease',
+      contractTxId = RESERVED_ATOMIC_TX_ID,
+    } = input;
     this.name = name.trim().toLowerCase();
     this.qty = qty;
     this.type = type;
@@ -196,7 +201,7 @@ export const submitAuctionBid = (
       demandFactoring: tallyNamePurchase(state.demandFactoring),
     });
     // return updated state
-    return { state };
+    return { state: state as IOState };
   }
 
   // no current auction, create one and vault the balance from the user
@@ -254,5 +259,5 @@ export const submitAuctionBid = (
   });
 
   // we do not update demand factor here, as it is not a purchase yet
-  return { state };
+  return { state: state as IOState };
 };

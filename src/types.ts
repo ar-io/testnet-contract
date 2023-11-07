@@ -206,7 +206,7 @@ export type IOContractFunctions = ObservationFunctions &
   ArNSFunctions &
   PstFunctions;
 
-export type ContractWriteResult = { state: DeepReadonly<IOState> | IOState };
+export type ContractWriteResult = { state: IOState };
 // TODO: make this a union type of all the possible return types
 export type ContractReadResult = { result: unknown };
 

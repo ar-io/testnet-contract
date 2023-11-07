@@ -42,55 +42,55 @@ export async function handle(
   const input = action.input;
 
   // tick state on any interaction, even when reading, so users get the most recent evaluation
-  await tick(state);
+  const { state: tickedState } = await tick(state);
 
   switch (input.function as IOContractFunctions) {
     case 'transfer':
-      return transferTokens(state, action);
+      return transferTokens(tickedState, action);
     case 'buyRecord':
-      return buyRecord(state, action);
+      return buyRecord(tickedState, action);
     case 'extendRecord':
-      return extendRecord(state, action);
+      return extendRecord(tickedState, action);
     case 'increaseUndernameCount':
-      return increaseUndernameCount(state, action);
+      return increaseUndernameCount(tickedState, action);
     case 'evolve':
-      return evolve(state, action);
+      return evolve(tickedState, action);
     case 'evolveState':
-      return evolveState(state, action);
+      return evolveState(tickedState, action);
     case 'balance':
-      return balance(state, action);
+      return balance(tickedState, action);
     case 'record':
-      return getRecord(state, action);
+      return getRecord(tickedState, action);
     case 'gateway':
-      return getGateway(state, action);
+      return getGateway(tickedState, action);
     case 'prescribedObserver':
-      return prescribedObserver(state, action);
+      return prescribedObserver(tickedState, action);
     case 'prescribedObservers':
-      return prescribedObservers(state, action);
+      return prescribedObservers(tickedState, action);
     case 'gatewayTotalStake':
-      return getGatewayTotalStake(state, action);
+      return getGatewayTotalStake(tickedState, action);
     case 'gatewayRegistry':
-      return getGatewayRegistry(state);
+      return getGatewayRegistry(tickedState);
     case 'rankedGatewayRegistry':
-      return getRankedGatewayRegistry(state);
+      return getRankedGatewayRegistry(tickedState);
     case 'joinNetwork':
-      return joinNetwork(state, action);
+      return joinNetwork(tickedState, action);
     case 'leaveNetwork':
-      return leaveNetwork(state, action);
+      return leaveNetwork(tickedState, action);
     case 'increaseOperatorStake':
-      return increaseOperatorStake(state, action);
+      return increaseOperatorStake(tickedState, action);
     case 'decreaseOperatorStake':
-      return decreaseOperatorStake(state, action);
+      return decreaseOperatorStake(tickedState, action);
     case 'updateGatewaySettings':
-      return updateGatewaySettings(state, action);
+      return updateGatewaySettings(tickedState, action);
     case 'submitAuctionBid':
-      return submitAuctionBid(state, action);
+      return submitAuctionBid(tickedState, action);
     case 'auction':
-      return getAuction(state, action);
+      return getAuction(tickedState, action);
     case 'saveObservations':
-      return saveObservations(state, action);
+      return saveObservations(tickedState, action);
     case 'tick':
-      return tick(state);
+      return tick(tickedState);
     default:
       throw new ContractError(
         `No function supplied or function not recognized: "${input.function}"`,
