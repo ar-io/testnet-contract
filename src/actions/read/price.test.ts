@@ -70,6 +70,87 @@ describe('getPriceForInteraction', () => {
       },
       1250,
     ],
+    [
+      'should return the correct price for increaseUndernameCount',
+      {
+        ...state,
+        records: {
+          'existing-record': {
+            contractTxId: 'test-contract-tx-id',
+            type: 'permabuy',
+            startTimestamp: +SmartWeave.block.timestamp,
+            undernames: 10,
+            purchasePrice: 1000,
+          },
+        },
+      } as IOState,
+      {
+        caller: 'test-caller',
+        input: {
+          function: 'increaseUndernameCount',
+          name: 'existing-record',
+          qty: 5,
+        },
+      },
+      62500,
+    ],
+    [
+      'should return the current bid for an existing auction and submitAuctionBid',
+      {
+        ...state,
+        auctions: {
+          'existing-auction': {
+            startPrice: 1000,
+            floorPrice: 1,
+            startHeight: 0,
+            endHeight: 10,
+            initiator: 'initiator',
+            contractTxId: 'atomic',
+            type: 'lease',
+            years: 1,
+            settings: {
+              decayInterval: 1,
+              decayRate: 0.01,
+              auctionDuration: 10,
+              floorPriceMultiplier: 1,
+              startPriceMultiplier: 10,
+            },
+          },
+        },
+      } as IOState,
+      {
+        caller: 'test-caller',
+        input: {
+          function: 'submitAuctionBid',
+          name: 'existing-auction',
+        },
+      },
+      990,
+    ],
+    [
+      'should return the floor price a new auction and submitAuctionBid',
+      {
+        ...state,
+        settings: {
+          ...state.settings,
+          auctions: {
+            decayInterval: 1,
+            decayRate: 0.01,
+            auctionDuration: 10,
+            floorPriceMultiplier: 1,
+            startPriceMultiplier: 10,
+          },
+        },
+      },
+      {
+        caller: 'test-caller',
+        input: {
+          function: 'submitAuctionBid',
+          name: 'new-auction',
+        },
+      },
+      540000,
+    ],
   ])(
     '%s',
     (
