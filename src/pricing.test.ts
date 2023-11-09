@@ -3,6 +3,7 @@ import {
   demandFactorPeriodIndex,
   demandIsIncreasing,
   mvgAvgTrailingPurchaseCounts,
+  mvgAvgTrailingRevenues,
   periodAtHeight,
   shouldUpdateDemandFactor,
   tallyNamePurchase,
@@ -61,53 +62,74 @@ describe('Pricing functions:', () => {
   describe('tallyNamePurchase function', () => {
     it('should increment purchasesThisPeriod', () => {
       expect(
-        tallyNamePurchase({
-          periodZeroBlockHeight: 0,
-          currentPeriod: 0,
-          trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
-          purchasesThisPeriod: 0,
-          demandFactor: 1,
-          consecutivePeriodsWithMinDemandFactor: 0,
-        }),
+        tallyNamePurchase(
+          {
+            periodZeroBlockHeight: 0,
+            currentPeriod: 0,
+            trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
+            trailingPeriodRevenues: [1, 1, 1, 1, 1, 1, 1],
+            purchasesThisPeriod: 0,
+            revenueThisPeriod: 0,
+            demandFactor: 1,
+            consecutivePeriodsWithMinDemandFactor: 0,
+          },
+          123,
+        ),
       ).toEqual({
         periodZeroBlockHeight: 0,
         currentPeriod: 0,
         trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
+        trailingPeriodRevenues: [1, 1, 1, 1, 1, 1, 1],
         purchasesThisPeriod: 1,
+        revenueThisPeriod: 123,
         demandFactor: 1,
         consecutivePeriodsWithMinDemandFactor: 0,
       });
       expect(
-        tallyNamePurchase({
-          periodZeroBlockHeight: 0,
-          currentPeriod: 6,
-          trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
-          purchasesThisPeriod: 0,
-          demandFactor: 1,
-          consecutivePeriodsWithMinDemandFactor: 0,
-        }),
+        tallyNamePurchase(
+          {
+            periodZeroBlockHeight: 0,
+            currentPeriod: 6,
+            trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
+            trailingPeriodRevenues: [1, 1, 1, 1, 1, 1, 1],
+            purchasesThisPeriod: 0,
+            revenueThisPeriod: 0,
+            demandFactor: 1,
+            consecutivePeriodsWithMinDemandFactor: 0,
+          },
+          321, // TODO
+        ),
       ).toEqual({
         periodZeroBlockHeight: 0,
         currentPeriod: 6,
         trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
+        trailingPeriodRevenues: [1, 1, 1, 1, 1, 1, 1],
         purchasesThisPeriod: 1,
+        revenueThisPeriod: 321,
         demandFactor: 1,
         consecutivePeriodsWithMinDemandFactor: 0,
       });
       expect(
-        tallyNamePurchase({
-          periodZeroBlockHeight: 0,
-          currentPeriod: 7,
-          trailingPeriodPurchases: [1, 1, 1, 1, 1, 1, 1],
-          purchasesThisPeriod: 1,
-          demandFactor: 1.5,
-          consecutivePeriodsWithMinDemandFactor: 3,
-        }),
+        tallyNamePurchase(
+          {
+            periodZeroBlockHeight: 0,
+            currentPeriod: 7,
+            trailingPeriodPurchases: [1, 1, 1, 1, 1, 1, 1],
+            trailingPeriodRevenues: [123, 321, 213, 132, 231, 111, 222],
+            purchasesThisPeriod: 1,
+            revenueThisPeriod: 0,
+            demandFactor: 1.5,
+            consecutivePeriodsWithMinDemandFactor: 3,
+          },
+          0,
+        ),
       ).toEqual({
         periodZeroBlockHeight: 0,
         currentPeriod: 7,
         trailingPeriodPurchases: [1, 1, 1, 1, 1, 1, 1],
+        trailingPeriodRevenues: [123, 321, 213, 132, 231, 111, 222],
         purchasesThisPeriod: 2,
+        revenueThisPeriod: 0,
         demandFactor: 1.5,
         consecutivePeriodsWithMinDemandFactor: 3,
       });
@@ -116,11 +138,87 @@ describe('Pricing functions:', () => {
 
   describe('mvgAvgTrailingPurchaseCounts function', () => {
     it.each([
-      [[[0, 0, 0, 0, 0, 0, 0]], 0],
-      [[[0, 0, 0, 1, 0, 0, 0]], 1 / 7],
-      [[[1, 1, 1, 1, 1, 1, 1]], 1],
       [
         [
+          [0, 0, 0, 0, 0, 0, 0],
+          [1, 1, 1, 1, 1, 1, 1],
+        ],
+        0,
+      ],
+      [
+        [
+          [0, 0, 0, 1, 0, 0, 0],
+          [1, 1, 1, 1, 1, 1, 1],
+        ],
+        1 / 7,
+      ],
+      [
+        [
+          [1, 1, 1, 1, 1, 1, 1],
+          [2, 2, 2, 2, 2, 2, 2],
+        ],
+        1,
+      ],
+      [
+        [
+          [
+            Number.MAX_SAFE_INTEGER,
+            Number.MAX_SAFE_INTEGER,
+            Number.MAX_SAFE_INTEGER,
+            Number.MAX_SAFE_INTEGER,
+            Number.MAX_SAFE_INTEGER,
+            Number.MAX_SAFE_INTEGER,
+            Number.MAX_SAFE_INTEGER,
+          ],
+          [1, 1, 1, 1, 1, 1, 1],
+        ],
+        Number.MAX_SAFE_INTEGER,
+      ],
+    ])(
+      'given period purchase history %j, should return moving average %d',
+      ([trailingPeriodPurchases, trailingPeriodRevenues], expectedMvgAvg) => {
+        expect(
+          mvgAvgTrailingPurchaseCounts({
+            periodZeroBlockHeight: 0,
+            currentPeriod: 0,
+            trailingPeriodPurchases,
+            trailingPeriodRevenues,
+            purchasesThisPeriod: 10,
+            revenueThisPeriod: 0, // TODO
+            demandFactor: 1,
+            consecutivePeriodsWithMinDemandFactor: 0,
+          }),
+        ).toEqual(expectedMvgAvg);
+      },
+    );
+  });
+
+  describe('mvgAvgTrailingRevenues function', () => {
+    it.each([
+      [
+        [
+          [1, 1, 1, 1, 1, 1, 1],
+          [0, 0, 0, 0, 0, 0, 0],
+        ],
+        0,
+      ],
+      [
+        [
+          [1, 1, 1, 1, 1, 1, 1],
+          [0, 0, 0, 1, 0, 0, 0],
+        ],
+        1 / 7,
+      ],
+      [
+        [
+          [0, 0, 0, 0, 0, 0, 0],
+          [1, 1, 1, 1, 1, 1, 1],
+        ],
+        1,
+      ],
+      [
+        [
+          [0, 0, 0, 0, 0, 0, 0],
           [
             Number.MAX_SAFE_INTEGER,
             Number.MAX_SAFE_INTEGER,
@@ -134,14 +232,16 @@ describe('Pricing functions:', () => {
         Number.MAX_SAFE_INTEGER,
       ],
     ])(
-      'given period purchase history %j, should return moving average %d',
-      ([trailingPeriodPurchases], expectedMvgAvg) => {
+      'given period revenues history %j, should return moving average %d',
+      ([trailingPeriodPurchases, trailingPeriodRevenues], expectedMvgAvg) => {
         expect(
-          mvgAvgTrailingPurchaseCounts({
+          mvgAvgTrailingRevenues({
             periodZeroBlockHeight: 0,
             currentPeriod: 0,
             trailingPeriodPurchases,
+            trailingPeriodRevenues,
             purchasesThisPeriod: 10,
+            revenueThisPeriod: 10,
             demandFactor: 1,
             consecutivePeriodsWithMinDemandFactor: 0,
           }),
@@ -174,7 +274,9 @@ describe('Pricing functions:', () => {
             periodZeroBlockHeight,
             currentPeriod,
             trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
+            trailingPeriodRevenues: [1, 1, 1, 1, 1, 1, 1],
             purchasesThisPeriod: 10,
+            revenueThisPeriod: 100,
             demandFactor: 1,
             consecutivePeriodsWithMinDemandFactor: 0,
           }),
@@ -185,20 +287,35 @@ describe('Pricing functions:', () => {
 
   describe('demandIsIncreasing function', () => {
     it.each([
-      [[0, 0], false],
-      [[0, 1], false],
-      [[1, 1], true],
-      [[2, 1], true],
+      // aritrarily treating -1 as 'purchases' and -2 as 'revenues' to make typescript happy
+      [[-1, 0, 0, 0, 0], false],
+      [[-1, 0, 1, 0, 0], false],
+      [[-1, 1, 1, 0, 0], true],
+      [[-1, 2, 1, 0, 0], true],
+      [[-2, 0, 0, 0, 0], false],
+      [[-2, 0, 0, 0, 1], false],
+      [[-2, 0, 0, 1, 1], true],
+      [[-2, 0, 0, 2, 1], true],
     ])(
       'given [current period purchase count, moving average purchase count] of %j, should return %d',
       (
-        [numNamesPurchasedInLastPeriod, mvgAvgOfTailingNamePurchases],
+        [
+          demandFactoringCriteriaAsInt,
+          numNamesPurchasedInLastPeriod,
+          mvgAvgOfTrailingNamePurchases,
+          revenueInLastPeriod,
+          mvgAvgOfTrailingRevenue,
+        ],
         expectedResult,
       ) => {
         expect(
           demandIsIncreasing({
             numNamesPurchasedInLastPeriod,
-            mvgAvgOfTailingNamePurchases,
+            mvgAvgOfTrailingNamePurchases,
+            revenueInLastPeriod,
+            mvgAvgOfTrailingRevenue,
+            demandFactoringCriteria:
+              demandFactoringCriteriaAsInt === -1 ? 'purchases' : 'revenue',
           }),
         ).toEqual(expectedResult);
       },
@@ -210,7 +327,9 @@ describe('Pricing functions:', () => {
       periodZeroBlockHeight: 0,
       currentPeriod: 0,
       trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
+      trailingPeriodRevenues: [0, 0, 0, 0, 0, 0, 0],
       purchasesThisPeriod: 0,
+      revenueThisPeriod: 0,
       demandFactor: 1,
       consecutivePeriodsWithMinDemandFactor: 0,
     };
@@ -226,36 +345,43 @@ describe('Pricing functions:', () => {
         { expectedDFOverrides: {} },
       ],
       [
-        // Don't update the period or demand factoring data at first block of current period, but continue tracking ongoing purchases
+        // Don't update the period or demand factoring data at first block of current period, but continue tracking ongoing purchases and revenue
         {
           currentBlock: 0,
-          inputDfData: { purchasesThisPeriod: 1 },
+          inputDfData: { purchasesThisPeriod: 1, revenueThisPeriod: 123 },
         },
         {
-          expectedDFOverrides: { purchasesThisPeriod: 1 },
+          expectedDFOverrides: {
+            purchasesThisPeriod: 1,
+            revenueThisPeriod: 123,
+          },
         },
       ],
       [
         // Don't update the period or demand factoring data at final block of current period, but continue tracking ongoing purchases
         {
           currentBlock: 719,
-          inputDfData: { purchasesThisPeriod: 1 },
+          inputDfData: { purchasesThisPeriod: 1, revenueThisPeriod: 234 },
         },
         {
-          expectedDFOverrides: { purchasesThisPeriod: 1 },
+          expectedDFOverrides: {
+            purchasesThisPeriod: 1,
+            revenueThisPeriod: 234,
+          },
         },
       ],
       [
         // Update the period and demand factoring data at first block of NEXT period
         {
           currentBlock: 720,
-          inputDfData: { purchasesThisPeriod: 1 },
+          inputDfData: { purchasesThisPeriod: 1, revenueThisPeriod: 456 },
         },
         {
           expectedDFOverrides: {
             demandFactor: 1.05,
             currentPeriod: 1,
             trailingPeriodPurchases: [1, 0, 0, 0, 0, 0, 0],
+            trailingPeriodRevenues: [456, 0, 0, 0, 0, 0, 0],
           },
         },
       ],
@@ -265,14 +391,15 @@ describe('Pricing functions:', () => {
           currentBlock: 720,
           inputDfData: {
             purchasesThisPeriod: 1,
+            revenueThisPeriod: 567,
             currentPeriod: 1,
           },
         },
         {
           expectedDFOverrides: {
             currentPeriod: 1,
-            trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
             purchasesThisPeriod: 1,
+            revenueThisPeriod: 567,
           },
         },
       ],
@@ -282,14 +409,15 @@ describe('Pricing functions:', () => {
           currentBlock: 1439,
           inputDfData: {
             purchasesThisPeriod: 2,
+            revenueThisPeriod: 678,
             currentPeriod: 1,
           },
         },
         {
           expectedDFOverrides: {
             currentPeriod: 1,
-            trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
             purchasesThisPeriod: 2,
+            revenueThisPeriod: 678,
           },
         },
       ],
@@ -299,14 +427,17 @@ describe('Pricing functions:', () => {
           currentBlock: 1440,
           inputDfData: {
             purchasesThisPeriod: 5,
-            trailingPeriodPurchases: [1, 2, 3, 4, 5, 6, 7],
+            revenueThisPeriod: 5,
+            trailingPeriodPurchases: [0, 1, 2, 3, 4, 5, 6],
+            trailingPeriodRevenues: [1, 2, 3, 4, 5, 6, 7],
             currentPeriod: 1,
           },
         },
         {
           expectedDFOverrides: {
             currentPeriod: 2,
-            trailingPeriodPurchases: [1, 5, 3, 4, 5, 6, 7],
+            trailingPeriodPurchases: [0, 5, 2, 3, 4, 5, 6],
+            trailingPeriodRevenues: [1, 5, 3, 4, 5, 6, 7],
             demandFactor: 1.05,
           },
         },

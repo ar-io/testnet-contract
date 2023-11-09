@@ -111,7 +111,6 @@ export const buyRecord = (
     );
   }
 
-  // TODO: replace with protocol balance
   balances[caller] -= totalRegistrationFee;
   balances[SmartWeave.contract.id] += totalRegistrationFee;
 
@@ -134,7 +133,10 @@ export const buyRecord = (
   state.records = records;
   state.reserved = reserved;
   state.balances = balances;
-  state.demandFactoring = tallyNamePurchase(state.demandFactoring);
+  state.demandFactoring = tallyNamePurchase(
+    state.demandFactoring,
+    totalRegistrationFee,
+  );
 
   return { state };
 };

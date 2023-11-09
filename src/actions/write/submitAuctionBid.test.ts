@@ -7,13 +7,15 @@ import {
   SECONDS_IN_A_YEAR,
 } from '../../constants';
 import { FEE_STRUCTURE } from '../../constants';
-import { AuctionData, IOState } from '../../types';
+import { AuctionData, DemandFactoringData, IOState } from '../../types';
 
-const baselineDemandFactorData = {
+const baselineDemandFactorData: DemandFactoringData = {
   periodZeroBlockHeight: 0,
   currentPeriod: 0,
   trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
+  trailingPeriodRevenues: [0, 0, 0, 0, 0, 0, 0],
   purchasesThisPeriod: 0,
+  revenueThisPeriod: 0,
   demandFactor: 1,
   consecutivePeriodsWithMinDemandFactor: 0,
 };
@@ -57,6 +59,8 @@ export const getBaselineState = (): IOState => ({
     ...baselineDemandFactorData,
     trailingPeriodPurchases:
       baselineDemandFactorData.trailingPeriodPurchases.slice(),
+    trailingPeriodRevenues:
+      baselineDemandFactorData.trailingPeriodRevenues.slice(),
   },
 });
 
@@ -202,7 +206,7 @@ describe('submitAuctionBid', () => {
       },
     ],
   ])(
-    'should create a new auction and decrement the initiators balance, increase the protocol balance, and remove the reserved name for valid contractTxIds',
+    'should create a new auction and decrement the initiators balance, vault the floor price in the auction, and remove the reserved name for valid contractTxIds',
     (interactionInput, expectedData) => {
       const inputData = {
         ...getBaselineState(),
@@ -213,7 +217,6 @@ describe('submitAuctionBid', () => {
         },
         balances: {
           initiator: expectedData.floorPrice,
-          'stubbed-contract-id': 0,
         },
       };
       const { state } = submitAuctionBid(inputData, {
@@ -225,10 +228,7 @@ describe('submitAuctionBid', () => {
       });
       expect(state).toEqual({
         ...getBaselineState(),
-        balances: {
-          initiator: 0,
-          'stubbed-contract-id': expectedData.floorPrice,
-        },
+        balances: {},
         auctions: {
           'test-new-auction': {
             contractTxId: expectedData.contractTxId,
@@ -361,7 +361,6 @@ describe('submitAuctionBid', () => {
           'test-auction-close': auction,
         },
         balances: {
-          'stubbed-contract-id': 100, // assumes the floor price was already given to the protocol balance
           'new-bidder': 1000,
         },
       };
@@ -393,11 +392,11 @@ describe('submitAuctionBid', () => {
         demandFactoring: {
           ...baselineDemandFactorData,
           purchasesThisPeriod: 1,
+          revenueThisPeriod: 1000,
         },
         balances: {
           initiator: 100,
           'stubbed-contract-id': 1000,
-          'new-bidder': 0,
         },
       });
     },
@@ -410,7 +409,6 @@ describe('submitAuctionBid', () => {
       records: {},
       balances: {
         initiator: 900,
-        'stubbed-contract-id': 100, // assumes the floor price was already given to the protocol balance
       },
     };
     const { state } = submitAuctionBid(inputData, {
@@ -436,9 +434,9 @@ describe('submitAuctionBid', () => {
       demandFactoring: {
         ...baselineDemandFactorData,
         purchasesThisPeriod: 1,
+        revenueThisPeriod: 1000,
       },
       balances: {
-        initiator: 0,
         'stubbed-contract-id': 1000,
       },
     });

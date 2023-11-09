@@ -124,7 +124,18 @@ export const AUCTION_SETTINGS: AuctionSettings = {
 export const DEFAULT_EPOCH_BLOCK_LENGTH = 50; // 5000 for mainnet
 export const DEFAULT_START_HEIGHT = 0;
 export const MAX_TENURE_WEIGHT = 2;
-export const DEMAND_FACTORING_SETTINGS = {
+export type DemandFactoringCriteria = 'purchases' | 'revenue';
+type DemandFactoringSettings = {
+  movingAvgPeriodCount: number;
+  periodBlockCount: number;
+  demandFactorBaseValue: number;
+  demandFactorMin: number;
+  demandFactorUpAdjustment: number;
+  demandFactorDownAdjustment: number;
+  stepDownThreshold: number;
+  criteria: DemandFactoringCriteria;
+};
+export const DEMAND_FACTORING_SETTINGS: DemandFactoringSettings = {
   movingAvgPeriodCount: 7,
   periodBlockCount: 720,
   demandFactorBaseValue: 1,
@@ -132,6 +143,7 @@ export const DEMAND_FACTORING_SETTINGS = {
   demandFactorUpAdjustment: 0.05,
   demandFactorDownAdjustment: 0.05, // TODO: spec has this at 2.5%
   stepDownThreshold: 3, // number of times at minimum allowed before resetting genesis fees (ultimately leads to 4 periods at the new fee, including the reset period)
+  criteria: 'revenue',
 };
 
 export const MIO_PER_IO = 1_000_000;

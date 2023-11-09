@@ -259,7 +259,10 @@ export function tickAuctions({
       purchasePrice: auction.floorPrice,
     };
 
-    updatedDemandFactoring = tallyNamePurchase(updatedDemandFactoring);
+    updatedDemandFactoring = tallyNamePurchase(
+      updatedDemandFactoring,
+      auction.floorPrice,
+    );
     // now return the auction object
     return acc;
   }, {});
