@@ -315,7 +315,7 @@ export function calculateUndernameCost({
   increaseQty: number;
   type: RegistrationType;
   years: number;
-  demandFactoring: DemandFactoringData;
+  demandFactoring: DeepReadonly<DemandFactoringData>;
 }): number {
   const initialNameFee = fees[name.length.toString()];
   const getUndernameFeePercentage = () => {
@@ -328,6 +328,6 @@ export function calculateUndernameCost({
   };
   const undernamePercentageFee = getUndernameFeePercentage();
   const totalFeeForQtyAndYears =
-    initialNameFee * (1 + undernamePercentageFee) * increaseQty * years;
+    initialNameFee * undernamePercentageFee * increaseQty * years;
   return demandFactoring.demandFactor * totalFeeForQtyAndYears;
 }

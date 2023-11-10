@@ -3,9 +3,11 @@ import {
   INSUFFICIENT_FUNDS_MESSAGE,
   MAX_ALLOWED_UNDERNAMES,
   MAX_UNDERNAME_MESSAGE,
+  PERMABUY_LEASE_FEE_LENGTH,
 } from '../../constants';
 import { calculateUndernameCost } from '../../pricing';
 import {
+  ArNSNameData,
   BlockTimestamp,
   ContractWriteResult,
   IOState,
@@ -50,32 +52,22 @@ export const increaseUndernameCount = async (
   const record = records[name];
   const currentBlockTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
 
-  // This name's lease has expired and cannot be extended
-  if (
-    !isExistingActiveRecord({
-      record,
-      currentBlockTimestamp,
-    })
-  ) {
-    if (!record) {
-      throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
-    }
-    throw new ContractError(
-      `This name has expired and must renewed before its undername support can be extended.`,
-    );
-  }
-
-  const { undernames: existingUndernames = 10, type, endTimestamp } = record;
-  // the new total qty
-  const incrementedUndernames = existingUndernames + qty;
-  if (incrementedUndernames > MAX_ALLOWED_UNDERNAMES) {
-    throw new ContractError(MAX_UNDERNAME_MESSAGE);
-  }
-
-  const yearsRemaining = calculateYearsBetweenTimestamps({
-    startTimestamp: currentBlockTimestamp,
-    endTimestamp: new BlockTimestamp(endTimestamp),
+  // validate record can increase undernames
+  assertRecordCanIncreaseUndernameCount({
+    record,
+    qty,
+    currentBlockTimestamp,
   });
+
+  const { endTimestamp, type, undernames: existingUndernames } = record;
+  const yearsRemaining = endTimestamp
+    ? calculateYearsBetweenTimestamps({
+        startTimestamp: currentBlockTimestamp,
+        endTimestamp: new BlockTimestamp(endTimestamp),
+      })
+    : PERMABUY_LEASE_FEE_LENGTH;
+
+  const incrementedUndernames = existingUndernames + qty;
 
   const additionalUndernameCost = calculateUndernameCost({
     name,
@@ -101,3 +93,33 @@ export const increaseUndernameCount = async (
 
   return { state };
 };
+
+export function assertRecordCanIncreaseUndernameCount({
+  record,
+  qty,
+  currentBlockTimestamp,
+}: {
+  record: ArNSNameData;
+  qty: number;
+  currentBlockTimestamp: BlockTimestamp;
+}): void {
+  // This name's lease has expired and cannot be extended
+  if (
+    !isExistingActiveRecord({
+      record,
+      currentBlockTimestamp,
+    })
+  ) {
+    if (!record) {
+      throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
+    }
+    throw new ContractError(
+      `This name has expired and must renewed before its undername support can be extended.`,
+    );
+  }
+
+  // the new total qty
+  if (record.undernames + qty > MAX_ALLOWED_UNDERNAMES) {
+    throw new ContractError(MAX_UNDERNAME_MESSAGE);
+  }
+}
