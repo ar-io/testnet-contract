@@ -86,7 +86,10 @@ export const extendRecord = async (
   state.balances[caller] -= totalExtensionAnnualFee;
   state.balances[SmartWeave.contract.id] += totalExtensionAnnualFee;
   state.records[name].endTimestamp += SECONDS_IN_A_YEAR * years;
-  state.demandFactoring = tallyNamePurchase(state.demandFactoring);
+  state.demandFactoring = tallyNamePurchase(
+    state.demandFactoring,
+    totalExtensionAnnualFee,
+  );
 
   return { state };
 };
