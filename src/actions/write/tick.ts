@@ -18,6 +18,7 @@ import {
   ReservedNames,
 } from '../../types';
 import {
+  incrementBalance,
   isActiveReservedName,
   isExistingActiveRecord,
   isGatewayEligibleToBeRemoved,
@@ -170,10 +171,10 @@ export function tickGatewayRegistry({
         }
         // gateway is leaving, make sure we return all the vaults to it
         for (const vault of gateway.vaults) {
-          updatedBalances[key] += vault.balance;
+          incrementBalance(updatedBalances, key, vault.balance);
         }
         // return any remaining operator stake
-        updatedBalances[key] += gateway.operatorStake;
+        incrementBalance(updatedBalances, key, gateway.operatorStake);
         return acc;
       }
       // return any vaulted balances to the owner if they are expired, but keep the gateway
@@ -184,7 +185,7 @@ export function tickGatewayRegistry({
             updatedBalances[key] = balances[key] ?? 0;
           }
           // return the vault balance to the owner and do not add back vault
-          updatedBalances[key] += vault.balance;
+          incrementBalance(updatedBalances, key, vault.balance);
         } else {
           // still an active vault
           updatedVaults.push(vault);

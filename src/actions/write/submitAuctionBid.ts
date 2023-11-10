@@ -181,9 +181,11 @@ export const submitAuctionBid = (
     );
 
     if (caller !== existingAuction.initiator) {
-      updatedBalances[existingAuction.initiator] =
-        (state.balances[existingAuction.initiator] || 0) +
-        existingAuction.floorPrice;
+      incrementBalance(
+        updatedBalances,
+        existingAuction.initiator,
+        existingAuction.floorPrice,
+      );
     }
 
     // update the state
