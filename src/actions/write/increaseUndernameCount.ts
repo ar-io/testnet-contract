@@ -17,6 +17,7 @@ import {
   calculateYearsBetweenTimestamps,
   getInvalidAjvMessage,
   isExistingActiveRecord,
+  safeTransfer,
   walletHasSufficientBalance,
 } from '../../utilities';
 import { validateIncreaseUndernameCount } from '../../validations';
@@ -88,8 +89,12 @@ export const increaseUndernameCount = async (
   }
 
   state.records[name].undernames = incrementedUndernames;
-  state.balances[caller] -= additionalUndernameCost;
-  state.balances[SmartWeave.contract.id] += additionalUndernameCost;
+  safeTransfer({
+    balances: state.balances,
+    fromAddr: caller,
+    toAddr: SmartWeave.contract.id,
+    qty: additionalUndernameCost,
+  });
 
   return { state };
 };

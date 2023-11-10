@@ -26,6 +26,8 @@ import {
   assertAvailableRecord,
   calculateExistingAuctionBidForCaller,
   getInvalidAjvMessage,
+  incrementBalance,
+  unsafeDecrementBalance,
   walletHasSufficientBalance,
 } from '../../utilities';
 // composed by ajv at build
@@ -166,9 +168,17 @@ export const submitAuctionBid = (
      * Deduct the unsettled final bid value from the caller
      * Return floor price from the auction's vaulted balance to the initiator, if necessary
      */
-    updatedBalances[SmartWeave.contract.id] +=
-      currentRequiredMinimumBid.valueOf();
-    updatedBalances[caller] -= finalBidForCaller.valueOf();
+    incrementBalance(
+      updatedBalances,
+      SmartWeave.contract.id,
+      currentRequiredMinimumBid.valueOf(),
+    );
+    unsafeDecrementBalance(
+      updatedBalances,
+      caller,
+      finalBidForCaller.valueOf(),
+      false,
+    );
 
     if (caller !== existingAuction.initiator) {
       updatedBalances[existingAuction.initiator] =
@@ -238,7 +248,12 @@ export const submitAuctionBid = (
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  updatedBalances[caller] -= initialAuctionBid.floorPrice; // decremented based on the floor price
+  unsafeDecrementBalance(
+    updatedBalances,
+    caller,
+    initialAuctionBid.floorPrice,
+    false,
+  );
 
   // delete the rename if exists in reserved
   const { [name]: _, ...reserved } = state.reserved;

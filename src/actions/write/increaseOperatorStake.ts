@@ -1,5 +1,6 @@
 import { NETWORK_LEAVING_STATUS } from '../../constants';
 import { ContractWriteResult, IOState, PstAction } from '../../types';
+import { unsafeDecrementBalance } from '../../utilities';
 
 // Locks tokens into a new gateway operator vault
 export const increaseOperatorStake = async (
@@ -36,7 +37,7 @@ export const increaseOperatorStake = async (
     );
   }
 
-  state.balances[caller] -= qty;
+  unsafeDecrementBalance(state.balances, caller, qty);
   state.gateways[caller].operatorStake += qty;
   return { state };
 };

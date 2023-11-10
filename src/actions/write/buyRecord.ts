@@ -17,6 +17,7 @@ import {
   assertAvailableRecord,
   getInvalidAjvMessage,
   isNameRequiredToBeAuction,
+  safeTransfer,
   walletHasSufficientBalance,
 } from '../../utilities';
 // composed by ajv at build
@@ -111,8 +112,12 @@ export const buyRecord = (
     );
   }
 
-  balances[caller] -= totalRegistrationFee;
-  balances[SmartWeave.contract.id] += totalRegistrationFee;
+  safeTransfer({
+    balances,
+    fromAddr: caller,
+    toAddr: SmartWeave.contract.id,
+    qty: totalRegistrationFee,
+  });
 
   records[name] = {
     contractTxId,
@@ -129,10 +134,6 @@ export const buyRecord = (
     delete state.reserved[name];
   }
 
-  // update the records object
-  state.records = records;
-  state.reserved = reserved;
-  state.balances = balances;
   state.demandFactoring = tallyNamePurchase(
     state.demandFactoring,
     totalRegistrationFee,
