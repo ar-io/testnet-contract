@@ -121,7 +121,7 @@ export const buyRecord = (
     undernames: DEFAULT_UNDERNAME_COUNT,
     purchasePrice: totalRegistrationFee,
     // only include timestamp on lease
-    ...{ endTimestamp },
+    ...(endTimestamp && { endTimestamp }),
   };
 
   // delete the reserved name if it exists
