@@ -12,6 +12,7 @@ import {
   prescribedObserver,
   prescribedObservers,
 } from './actions/read/observation';
+import { getPriceForInteraction } from './actions/read/price';
 import { getRecord } from './actions/read/record';
 import { buyRecord } from './actions/write/buyRecord';
 import { decreaseOperatorStake } from './actions/write/decreaseOperatorStake';
@@ -89,6 +90,8 @@ export async function handle(
       return getAuction(tickedState, action);
     case 'saveObservations':
       return saveObservations(tickedState, action);
+    case 'priceForInteraction':
+      return getPriceForInteraction(tickedState, action);
     case 'tick':
       return tick(tickedState);
     default:
