@@ -171,10 +171,12 @@ export const submitAuctionBid = (
     updatedBalances[caller] -= finalBidForCaller.valueOf();
 
     if (caller !== existingAuction.initiator) {
+      const initiatorsNewBalance =
+        (updatedBalances[existingAuction.initiator] ||
+          state.balances[existingAuction.initiator] ||
+          0) + existingAuction.floorPrice;
       // pull in the initiators existing balance and update it
-      updatedBalances[existingAuction.initiator] =
-        (updatedBalances[existingAuction.initiator] || 0) +
-        existingAuction.floorPrice;
+      updatedBalances[existingAuction.initiator] = initiatorsNewBalance;
     }
 
     // update the state

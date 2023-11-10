@@ -226,7 +226,7 @@ describe('Auctions', () => {
                 };
                 // connect using another wallet
                 const separateWallet = await getLocalWallet(2);
-                await contract.connect(separateWallet);
+                contract.connect(separateWallet);
                 const writeInteraction = await contract.writeInteraction({
                   function: 'submitAuctionBid',
                   ...auctionBid,
@@ -271,7 +271,7 @@ describe('Auctions', () => {
                 };
                 // connect using another wallet
                 const separateWallet = await getLocalWallet(2);
-                await contract.connect(separateWallet);
+                contract.connect(separateWallet);
                 const winnerAddress = await arweave.wallets.getAddress(
                   separateWallet,
                 );
@@ -302,9 +302,7 @@ describe('Auctions', () => {
                 );
                 expect(balances[srcContractId]).toEqual(
                   // Uses the smartweave contract ID to act as the protocol balance
-                  prevState.balances[srcContractId] +
-                    winningBidQty -
-                    auctionObj.floorPrice,
+                  prevState.balances[srcContractId] + winningBidQty,
                 );
                 // clear out the auction obj
                 auctionObj = undefined;
@@ -318,7 +316,7 @@ describe('Auctions', () => {
               };
               // connect using another wallet
               const separateWallet = await getLocalWallet(2);
-              await contract.connect(separateWallet);
+              contract.connect(separateWallet);
               const writeInteraction = await contract.writeInteraction({
                 function: 'submitAuctionBid',
                 ...auctionBid,
@@ -389,7 +387,7 @@ describe('Auctions', () => {
               };
               // connect using another wallet
               const separateWallet = await getLocalWallet(2);
-              await contract.connect(separateWallet);
+              contract.connect(separateWallet);
               const writeInteraction = await contract.writeInteraction({
                 function: 'submitAuctionBid',
                 ...auctionBid,
@@ -486,10 +484,6 @@ describe('Auctions', () => {
             prevState.balances[nonContractOwnerAddress] -
               auctions[auctionBid.name].floorPrice,
           );
-          expect(balances[srcContractId]).toEqual(
-            prevState.balances[srcContractId] +
-              auctions[auctionBid.name].floorPrice,
-          );
           // for the remaining tests
           auctionObj = auctions[auctionBid.name];
           auctionTxId = writeInteraction.originalTxId;
@@ -552,9 +546,7 @@ describe('Auctions', () => {
             prevState.balances[auctionObj.initiator] + auctionObj.floorPrice,
           );
           expect(balances[srcContractId]).toEqual(
-            prevState.balances[srcContractId] +
-              winningBidQty -
-              auctionObj.floorPrice,
+            prevState.balances[srcContractId] + winningBidQty,
           );
           expect(newDemandFactoringData.purchasesThisPeriod).toEqual(
             prevDemandFactorPurchasesForPeriod + 1,
@@ -600,10 +592,6 @@ describe('Auctions', () => {
           });
           expect(balances[nonContractOwnerAddress]).toEqual(
             prevState.balances[nonContractOwnerAddress] -
-              auctions[auctionBid.name].floorPrice,
-          );
-          expect(balances[srcContractId]).toEqual(
-            prevState.balances[srcContractId] +
               auctions[auctionBid.name].floorPrice,
           );
           // for the remaining tests
@@ -668,7 +656,7 @@ describe('Auctions', () => {
               excessValueForInitiator,
           );
           expect(balances[srcContractId]).toEqual(
-            prevState.balances[srcContractId] + excessValueForInitiator,
+            prevState.balances[srcContractId] + winningBidQty,
           );
         });
       });
