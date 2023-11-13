@@ -3,8 +3,10 @@ import {
   BLOCKS_PER_DAY,
   DEFAULT_NUM_SAMPLED_BLOCKS,
   DEFAULT_SAMPLED_BLOCKS_OFFSET,
+  INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
   INVALID_SHORT_NAME,
+  INVALID_TARGET_MESSAGE,
   MAX_TENURE_WEIGHT,
   MAX_YEARS,
   MINIMUM_ALLOWED_NAME_LENGTH,
@@ -30,6 +32,7 @@ import {
   RegistrationType,
   ReservedNameData,
   ReservedNames,
+  WalletAddress,
   WeightedObserver,
 } from './types';
 
@@ -502,4 +505,58 @@ export function calculateYearsBetweenTimestamps({
   const yearsRemainingFloat =
     (endTimestamp.valueOf() - startTimestamp.valueOf()) / SECONDS_IN_A_YEAR;
   return +yearsRemainingFloat.toFixed(2);
+}
+
+// Unsafe because it does not check if the balance exists or is sufficient
+export function unsafeDecrementBalance(
+  balances: Balances,
+  address: WalletAddress,
+  amount: number,
+  removeIfZero = true,
+): void {
+  balances[address] -= amount;
+  if (removeIfZero && balances[address] === 0) {
+    delete balances[address];
+  }
+}
+
+// TODO: Is this safe enough without amount validation?
+export function incrementBalance(
+  balances: Balances,
+  address: WalletAddress,
+  amount: number,
+): void {
+  if (address in balances) {
+    balances[address] += amount;
+  } else {
+    balances[address] = amount;
+  }
+}
+
+export function safeTransfer({
+  balances,
+  fromAddr,
+  toAddr,
+  qty,
+}: {
+  balances: Balances;
+  fromAddr: WalletAddress;
+  toAddr: WalletAddress;
+  qty: number;
+}): void {
+  // TODO: Quantity validation
+  if (fromAddr === toAddr) {
+    throw new ContractError(INVALID_TARGET_MESSAGE);
+  }
+
+  if (balances[fromAddr] === null || isNaN(balances[fromAddr])) {
+    throw new ContractError(`Caller balance is not defined!`);
+  }
+
+  if (!walletHasSufficientBalance(balances, fromAddr, qty)) {
+    throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
+  }
+
+  incrementBalance(balances, toAddr, qty);
+  unsafeDecrementBalance(balances, fromAddr, qty);
 }

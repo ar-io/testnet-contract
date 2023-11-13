@@ -17,6 +17,7 @@ import {
   getInvalidAjvMessage,
   getMaxAllowedYearsExtensionForRecord,
   isExistingActiveRecord,
+  safeTransfer,
   walletHasSufficientBalance,
 } from '../../utilities';
 import { validateExtendRecord } from '../../validations';
@@ -83,10 +84,18 @@ export const extendRecord = async (
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  state.balances[caller] -= totalExtensionAnnualFee;
-  state.balances[SmartWeave.contract.id] += totalExtensionAnnualFee;
+  safeTransfer({
+    balances: state.balances,
+    fromAddr: caller,
+    toAddr: SmartWeave.contract.id,
+    qty: totalExtensionAnnualFee,
+  });
+
   state.records[name].endTimestamp += SECONDS_IN_A_YEAR * years;
-  state.demandFactoring = tallyNamePurchase(state.demandFactoring);
+  state.demandFactoring = tallyNamePurchase(
+    state.demandFactoring,
+    totalExtensionAnnualFee,
+  );
 
   return { state };
 };

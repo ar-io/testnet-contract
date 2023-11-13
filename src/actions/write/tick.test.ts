@@ -41,7 +41,9 @@ const testAuction: AuctionData = {
 const demandFactorData: DeepReadonly<DemandFactoringData> = {
   currentPeriod: 1,
   trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
+  trailingPeriodRevenues: [0, 0, 0, 0, 0, 0, 0],
   purchasesThisPeriod: 0,
+  revenueThisPeriod: 0,
   consecutivePeriodsWithMinDemandFactor: 0,
   demandFactor: 1,
   periodZeroBlockHeight: 0,
@@ -79,6 +81,7 @@ describe('tickAuctions', () => {
         },
         demandFactoring: {
           purchasesThisPeriod: 1,
+          revenueThisPeriod: 10,
         },
       },
     ],
@@ -108,6 +111,7 @@ describe('tickAuctions', () => {
         },
         demandFactoring: {
           purchasesThisPeriod: 1,
+          revenueThisPeriod: 10,
         },
       },
     ],

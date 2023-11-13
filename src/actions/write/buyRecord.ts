@@ -17,6 +17,7 @@ import {
   assertAvailableRecord,
   getInvalidAjvMessage,
   isNameRequiredToBeAuction,
+  safeTransfer,
   walletHasSufficientBalance,
 } from '../../utilities';
 // composed by ajv at build
@@ -111,9 +112,12 @@ export const buyRecord = (
     );
   }
 
-  // TODO: replace with protocol balance
-  balances[caller] -= totalRegistrationFee;
-  balances[SmartWeave.contract.id] += totalRegistrationFee;
+  safeTransfer({
+    balances,
+    fromAddr: caller,
+    toAddr: SmartWeave.contract.id,
+    qty: totalRegistrationFee,
+  });
 
   records[name] = {
     contractTxId,
@@ -122,7 +126,7 @@ export const buyRecord = (
     undernames: DEFAULT_UNDERNAME_COUNT,
     purchasePrice: totalRegistrationFee,
     // only include timestamp on lease
-    ...{ endTimestamp },
+    ...(endTimestamp && { endTimestamp }),
   };
 
   // delete the reserved name if it exists
@@ -130,11 +134,10 @@ export const buyRecord = (
     delete state.reserved[name];
   }
 
-  // update the records object
-  state.records = records;
-  state.reserved = reserved;
-  state.balances = balances;
-  state.demandFactoring = tallyNamePurchase(state.demandFactoring);
+  state.demandFactoring = tallyNamePurchase(
+    state.demandFactoring,
+    totalRegistrationFee,
+  );
 
   return { state };
 };

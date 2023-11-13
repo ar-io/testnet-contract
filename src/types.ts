@@ -13,7 +13,9 @@ export type DemandFactoringData = {
   periodZeroBlockHeight: number; // TODO: The block height at which the contract was initialized
   currentPeriod: number;
   trailingPeriodPurchases: number[]; // Acts as a ring buffer of trailing period purchase counts
+  trailingPeriodRevenues: number[]; // Acts as a ring buffer of trailing period revenues
   purchasesThisPeriod: number;
+  revenueThisPeriod: number;
   demandFactor: number;
   consecutivePeriodsWithMinDemandFactor: number;
 };

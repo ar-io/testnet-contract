@@ -1,6 +1,7 @@
 import {
   ANNUAL_PERCENTAGE_FEE,
   DEMAND_FACTORING_SETTINGS,
+  DemandFactoringCriteria,
   ONE_MIO,
   PERMABUY_LEASE_FEE_LENGTH,
   UNDERNAME_LEASE_FEE_PERCENTAGE,
@@ -19,9 +20,11 @@ import {
 
 export function tallyNamePurchase(
   dfData: DeepReadonly<DemandFactoringData>,
+  revenue: number,
 ): DemandFactoringData {
   const newDfData = cloneDemandFactoringData(dfData);
   newDfData.purchasesThisPeriod++;
+  newDfData.revenueThisPeriod += revenue;
   return newDfData;
 }
 
@@ -42,10 +45,15 @@ export function updateDemandFactor(
 
   const numNamesPurchasedInLastPeriod = dfData.purchasesThisPeriod;
   const mvgAvgOfTrailingNamePurchases = mvgAvgTrailingPurchaseCounts(dfData);
+  const revenueInLastPeriod = dfData.revenueThisPeriod;
+  const mvgAvgOfTrailingRevenue = mvgAvgTrailingRevenues(dfData);
   if (
     demandIsIncreasing({
       numNamesPurchasedInLastPeriod,
-      mvgAvgOfTailingNamePurchases: mvgAvgOfTrailingNamePurchases,
+      mvgAvgOfTrailingNamePurchases,
+      revenueInLastPeriod,
+      mvgAvgOfTrailingRevenue,
+      demandFactoringCriteria: DEMAND_FACTORING_SETTINGS.criteria,
     })
   ) {
     newDemandFactoringData.demandFactor *=
@@ -83,14 +91,19 @@ export function updateDemandFactor(
     newDemandFactoringData.consecutivePeriodsWithMinDemandFactor = 0;
   }
 
-  // Stash the number of purchases for this period in the trailing metrics
-  newDemandFactoringData.trailingPeriodPurchases[
-    demandFactorPeriodIndex(newDemandFactoringData.currentPeriod)
-  ] = numNamesPurchasedInLastPeriod;
+  // Stash the number of purchases and revenue for this period in the trailing metrics
+  const trailingPeriodIndex = demandFactorPeriodIndex(
+    newDemandFactoringData.currentPeriod,
+  );
+  newDemandFactoringData.trailingPeriodPurchases[trailingPeriodIndex] =
+    numNamesPurchasedInLastPeriod;
+  newDemandFactoringData.trailingPeriodRevenues[trailingPeriodIndex] =
+    revenueInLastPeriod;
 
-  // Increment the current period and reset the purchase count
+  // Increment the current period and reset the purchase count and revenue amount
   newDemandFactoringData.currentPeriod++;
   newDemandFactoringData.purchasesThisPeriod = 0;
+  newDemandFactoringData.revenueThisPeriod = 0;
 
   return {
     demandFactoring: newDemandFactoringData,
@@ -116,15 +129,29 @@ export function shouldUpdateDemandFactor(
 
 export function demandIsIncreasing({
   numNamesPurchasedInLastPeriod,
-  mvgAvgOfTailingNamePurchases,
+  mvgAvgOfTrailingNamePurchases: mvgAvgOfTailingNamePurchases,
+  revenueInLastPeriod,
+  mvgAvgOfTrailingRevenue,
+  demandFactoringCriteria,
 }: {
   numNamesPurchasedInLastPeriod: number;
-  mvgAvgOfTailingNamePurchases: number;
+  mvgAvgOfTrailingNamePurchases: number;
+  revenueInLastPeriod: number;
+  mvgAvgOfTrailingRevenue: number;
+  demandFactoringCriteria: DemandFactoringCriteria;
 }): boolean {
-  return (
-    numNamesPurchasedInLastPeriod >= mvgAvgOfTailingNamePurchases &&
-    numNamesPurchasedInLastPeriod !== 0
-  );
+  switch (demandFactoringCriteria) {
+    case 'purchases':
+      return (
+        numNamesPurchasedInLastPeriod >= mvgAvgOfTailingNamePurchases &&
+        numNamesPurchasedInLastPeriod !== 0
+      );
+    case 'revenue':
+      return (
+        revenueInLastPeriod >= mvgAvgOfTrailingRevenue &&
+        revenueInLastPeriod !== 0
+      );
+  }
 }
 
 export function periodAtHeight(
@@ -152,12 +179,24 @@ export function mvgAvgTrailingPurchaseCounts(
   );
 }
 
+export function mvgAvgTrailingRevenues(
+  dfData: DeepReadonly<DemandFactoringData>,
+): number {
+  return (
+    dfData.trailingPeriodRevenues.reduce(
+      (acc, periodRevenue) => acc + periodRevenue,
+      0,
+    ) / DEMAND_FACTORING_SETTINGS.movingAvgPeriodCount
+  );
+}
+
 export function cloneDemandFactoringData(
   dfData: DeepReadonly<DemandFactoringData>,
 ): DemandFactoringData {
   return {
     ...dfData,
     trailingPeriodPurchases: dfData.trailingPeriodPurchases.slice(),
+    trailingPeriodRevenues: dfData.trailingPeriodRevenues.slice(),
   };
 }
 

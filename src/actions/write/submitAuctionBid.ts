@@ -26,6 +26,8 @@ import {
   assertAvailableRecord,
   calculateExistingAuctionBidForCaller,
   getInvalidAjvMessage,
+  incrementBalance,
+  unsafeDecrementBalance,
   walletHasSufficientBalance,
 } from '../../utilities';
 // composed by ajv at build
@@ -96,6 +98,11 @@ export const submitAuctionBid = (
     // all the things we need to handle an auction bid
     const existingAuction = state.auctions[name];
 
+    // Prepare to update the initiator's balance in addition
+    // to the planned updates to the protocol and bidder balances
+    updatedBalances[existingAuction.initiator] =
+      state.balances[existingAuction.initiator] || 0;
+
     if (currentBlockHeight.valueOf() > existingAuction.endHeight) {
       throw new ContractError(ARNS_NAME_AUCTION_EXPIRED_MESSAGE);
     }
@@ -162,20 +169,28 @@ export const submitAuctionBid = (
     };
 
     /**
-     * Give the unsettled value to the protocol (it should already have the floor price from the initiated auction)
+     * Give the total value to the protocol
      * Deduct the unsettled final bid value from the caller
-     * Return floor price from the protocol balance to the initiator, if necessary
+     * Return floor price from the auction's vaulted balance to the initiator, if necessary
      */
-    updatedBalances[SmartWeave.contract.id] += finalBidForCaller.valueOf();
-    updatedBalances[caller] -= finalBidForCaller.valueOf();
+    incrementBalance(
+      updatedBalances,
+      SmartWeave.contract.id,
+      currentRequiredMinimumBid.valueOf(),
+    );
+    unsafeDecrementBalance(
+      updatedBalances,
+      caller,
+      finalBidForCaller.valueOf(),
+      false,
+    );
 
     if (caller !== existingAuction.initiator) {
-      // pull in the initiators existing balance and update it
-      updatedBalances[existingAuction.initiator] =
-        (state.balances[existingAuction.initiator] || 0) +
-        existingAuction.floorPrice;
-      // use the most recent protocol balance and update it
-      updatedBalances[SmartWeave.contract.id] -= existingAuction.floorPrice;
+      incrementBalance(
+        updatedBalances,
+        existingAuction.initiator,
+        existingAuction.floorPrice,
+      );
     }
 
     // update the state
@@ -183,6 +198,10 @@ export const submitAuctionBid = (
       ...state.balances,
       ...updatedBalances,
     };
+
+    Object.keys(updatedBalances)
+      .filter((address) => updatedBalances[address] === 0)
+      .forEach((address) => delete balances[address]);
 
     // update our records
     const records = {
@@ -198,15 +217,18 @@ export const submitAuctionBid = (
       auctions,
       balances,
       records,
-      demandFactoring: tallyNamePurchase(state.demandFactoring),
+      demandFactoring: tallyNamePurchase(
+        state.demandFactoring,
+        currentRequiredMinimumBid.valueOf(),
+      ),
     });
     // return updated state
     return { state: state as IOState };
   }
 
-  // no current auction, create one and vault the balance from the user
+  // no current auction, create one and vault the balance (floor price) from the user in the auction
   // calculate the registration fee taking into account demand factoring
-  // get the current auction settings, create one of it doesn't exist yet
+  // get the current auction settings, create one if it doesn't exist yet
   const currentAuctionSettings: AuctionSettings = state.settings.auctions;
 
   // create the initial auction bid
@@ -233,8 +255,12 @@ export const submitAuctionBid = (
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  updatedBalances[SmartWeave.contract.id] += initialAuctionBid.floorPrice; // vault the balance
-  updatedBalances[caller] -= initialAuctionBid.floorPrice; // decremented based on the floor price
+  unsafeDecrementBalance(
+    updatedBalances,
+    caller,
+    initialAuctionBid.floorPrice,
+    false,
+  );
 
   // delete the rename if exists in reserved
   const { [name]: _, ...reserved } = state.reserved;
@@ -250,6 +276,10 @@ export const submitAuctionBid = (
     ...state.balances,
     ...updatedBalances,
   };
+
+  Object.keys(updatedBalances)
+    .filter((address) => updatedBalances[address] === 0)
+    .forEach((address) => delete balances[address]);
 
   // update the state
   Object.assign(state, {

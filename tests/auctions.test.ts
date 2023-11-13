@@ -1,4 +1,10 @@
-import { Contract, JWKInterface, PstState } from 'warp-contracts';
+import {
+  Contract,
+  JWKInterface,
+  PstState,
+  WriteInteractionOptions,
+  WriteInteractionResponse,
+} from 'warp-contracts';
 
 import { calculateMinimumAuctionBid } from '../src/auctions';
 import {
@@ -61,7 +67,8 @@ describe('Auctions', () => {
               contractTxId: ANT_CONTRACT_IDS[0],
               type: 'lease',
             };
-            const writeInteraction = await contract.writeInteraction(
+            const writeInteraction = await writeInteractionOrFail(
+              contract,
               {
                 function: 'submitAuctionBid',
                 ...auctionBid,
@@ -102,7 +109,8 @@ describe('Auctions', () => {
               contractTxId: ANT_CONTRACT_IDS[0],
               type: badType,
             };
-            const writeInteraction = await contract.writeInteraction(
+            const writeInteraction = await writeInteractionOrFail(
+              contract,
               {
                 function: 'submitAuctionBid',
                 ...auctionBid,
@@ -143,7 +151,8 @@ describe('Auctions', () => {
               contractTxId: badTxId,
               type: 'lease',
             };
-            const writeInteraction = await contract.writeInteraction(
+            const writeInteraction = await writeInteractionOrFail(
+              contract,
               {
                 function: 'submitAuctionBid',
                 ...auctionBid,
@@ -170,7 +179,7 @@ describe('Auctions', () => {
         describe('for a lease', () => {
           describe('for a non-existent auction', () => {
             let auctionTxId: string;
-            let auctionObj: AuctionData;
+            let auctionObj: AuctionData | undefined;
             let prevState: IOState;
             const auctionBid = {
               name: 'apple',
@@ -184,7 +193,7 @@ describe('Auctions', () => {
             });
 
             it('should create the initial auction object', async () => {
-              const writeInteraction = await contract.writeInteraction({
+              const writeInteraction = await writeInteractionOrFail(contract, {
                 function: 'submitAuctionBid',
                 ...auctionBid,
               });
@@ -225,12 +234,15 @@ describe('Auctions', () => {
                   contractTxId: ANT_CONTRACT_IDS[0],
                 };
                 // connect using another wallet
-                const separateWallet = await getLocalWallet(2);
-                await contract.connect(separateWallet);
-                const writeInteraction = await contract.writeInteraction({
-                  function: 'submitAuctionBid',
-                  ...auctionBid,
-                });
+                const separateWallet = getLocalWallet(2);
+                contract.connect(separateWallet);
+                const writeInteraction = await writeInteractionOrFail(
+                  contract,
+                  {
+                    function: 'submitAuctionBid',
+                    ...auctionBid,
+                  },
+                );
                 expect(writeInteraction?.originalTxId).not.toBeUndefined();
                 const { cachedValue } = await contract.readState();
                 expect(Object.keys(cachedValue.errorMessages)).toContain(
@@ -252,10 +264,10 @@ describe('Auctions', () => {
 
               it('should update the records object when a winning bid comes in', async () => {
                 // fast forward to the last allowed block for the auction bid
-                await mineBlocks(
-                  arweave,
-                  AUCTION_SETTINGS.auctionDuration - 10,
-                );
+                await mineBlocks(arweave, 5);
+                if (!auctionObj) {
+                  throw new Error('auctionObj is undefined');
+                }
                 const winningBidQty = calculateMinimumAuctionBid({
                   startHeight: new BlockHeight(auctionObj.startHeight),
                   startPrice: auctionObj.startPrice,
@@ -270,8 +282,8 @@ describe('Auctions', () => {
                   contractTxId: ANT_CONTRACT_IDS[1],
                 };
                 // connect using another wallet
-                const separateWallet = await getLocalWallet(2);
-                await contract.connect(separateWallet);
+                const separateWallet = getLocalWallet(2);
+                contract.connect(separateWallet);
                 const winnerAddress = await arweave.wallets.getAddress(
                   separateWallet,
                 );
@@ -302,9 +314,7 @@ describe('Auctions', () => {
                 );
                 expect(balances[srcContractId]).toEqual(
                   // Uses the smartweave contract ID to act as the protocol balance
-                  prevState.balances[srcContractId] +
-                    winningBidQty -
-                    auctionObj.floorPrice,
+                  prevState.balances[srcContractId] + winningBidQty,
                 );
                 // clear out the auction obj
                 auctionObj = undefined;
@@ -317,9 +327,9 @@ describe('Auctions', () => {
                 contractTxId: ANT_CONTRACT_IDS[0],
               };
               // connect using another wallet
-              const separateWallet = await getLocalWallet(2);
-              await contract.connect(separateWallet);
-              const writeInteraction = await contract.writeInteraction({
+              const separateWallet = getLocalWallet(2);
+              contract.connect(separateWallet);
+              const writeInteraction = await writeInteractionOrFail(contract, {
                 function: 'submitAuctionBid',
                 ...auctionBid,
               });
@@ -341,7 +351,7 @@ describe('Auctions', () => {
                 name: 'www',
                 contractTxId: ANT_CONTRACT_IDS[0],
               };
-              const writeInteraction = await contract.writeInteraction({
+              const writeInteraction = await writeInteractionOrFail(contract, {
                 function: 'submitAuctionBid',
                 ...auctionBid,
               });
@@ -363,7 +373,7 @@ describe('Auctions', () => {
                 name: 'ibm',
                 contractTxId: ANT_CONTRACT_IDS[0],
               };
-              const writeInteraction = await contract.writeInteraction({
+              const writeInteraction = await writeInteractionOrFail(contract, {
                 function: 'submitAuctionBid',
                 ...auctionBid,
               });
@@ -388,9 +398,9 @@ describe('Auctions', () => {
                 contractTxId: ANT_CONTRACT_IDS[0],
               };
               // connect using another wallet
-              const separateWallet = await getLocalWallet(2);
-              await contract.connect(separateWallet);
-              const writeInteraction = await contract.writeInteraction({
+              const separateWallet = getLocalWallet(2);
+              contract.connect(separateWallet);
+              const writeInteraction = await writeInteractionOrFail(contract, {
                 function: 'submitAuctionBid',
                 ...auctionBid,
               });
@@ -412,7 +422,7 @@ describe('Auctions', () => {
                 name: 'auction',
                 contractTxId: ANT_CONTRACT_IDS[0],
               };
-              const writeInteraction = await contract.writeInteraction({
+              const writeInteraction = await writeInteractionOrFail(contract, {
                 function: 'submitAuctionBid',
                 ...auctionBid,
               });
@@ -462,7 +472,7 @@ describe('Auctions', () => {
         });
 
         it('should create the initial auction object', async () => {
-          const writeInteraction = await contract.writeInteraction({
+          const writeInteraction = await writeInteractionOrFail(contract, {
             function: 'submitAuctionBid',
             ...auctionBid,
           });
@@ -486,10 +496,6 @@ describe('Auctions', () => {
             prevState.balances[nonContractOwnerAddress] -
               auctions[auctionBid.name].floorPrice,
           );
-          expect(balances[srcContractId]).toEqual(
-            prevState.balances[srcContractId] +
-              auctions[auctionBid.name].floorPrice,
-          );
           // for the remaining tests
           auctionObj = auctions[auctionBid.name];
           auctionTxId = writeInteraction.originalTxId;
@@ -503,8 +509,8 @@ describe('Auctions', () => {
           const prevDemandFactorPurchasesForPeriod =
             prevDemandFactoringData.purchasesThisPeriod;
 
-          // fast forward towards the end of the auction
-          await mineBlocks(arweave, AUCTION_SETTINGS.auctionDuration - 10);
+          // fast forward to lower auction price
+          await mineBlocks(arweave, 5);
           const winningBidQty = calculateMinimumAuctionBid({
             startHeight: new BlockHeight(auctionObj.startHeight),
             startPrice: auctionObj.startPrice,
@@ -519,7 +525,7 @@ describe('Auctions', () => {
             contractTxId: ANT_CONTRACT_IDS[1],
           };
           // connect using another wallet
-          const separateWallet = await getLocalWallet(2);
+          const separateWallet = getLocalWallet(2);
           contract.connect(separateWallet);
           const winnerAddress = await arweave.wallets.getAddress(
             separateWallet,
@@ -552,9 +558,7 @@ describe('Auctions', () => {
             prevState.balances[auctionObj.initiator] + auctionObj.floorPrice,
           );
           expect(balances[srcContractId]).toEqual(
-            prevState.balances[srcContractId] +
-              winningBidQty -
-              auctionObj.floorPrice,
+            prevState.balances[srcContractId] + winningBidQty,
           );
           expect(newDemandFactoringData.purchasesThisPeriod).toEqual(
             prevDemandFactorPurchasesForPeriod + 1,
@@ -577,7 +581,7 @@ describe('Auctions', () => {
         });
 
         it('should create the initial auction object', async () => {
-          const writeInteraction = await contract.writeInteraction({
+          const writeInteraction = await writeInteractionOrFail(contract, {
             function: 'submitAuctionBid',
             ...auctionBid,
           });
@@ -600,10 +604,6 @@ describe('Auctions', () => {
           });
           expect(balances[nonContractOwnerAddress]).toEqual(
             prevState.balances[nonContractOwnerAddress] -
-              auctions[auctionBid.name].floorPrice,
-          );
-          expect(balances[srcContractId]).toEqual(
-            prevState.balances[srcContractId] +
               auctions[auctionBid.name].floorPrice,
           );
           // for the remaining tests
@@ -631,7 +631,7 @@ describe('Auctions', () => {
 
         it('should update the records when the caller is the initiator, and only withdraw the difference of the current bid to the original floor price that was already withdrawn from the initiator', async () => {
           // fast forward a few blocks, then construct winning bid
-          await mineBlocks(arweave, AUCTION_SETTINGS.auctionDuration - 10);
+          await mineBlocks(arweave, 5);
           const winningBidQty = calculateMinimumAuctionBid({
             startHeight: new BlockHeight(auctionObj.startHeight),
             startPrice: auctionObj.startPrice,
@@ -668,10 +668,22 @@ describe('Auctions', () => {
               excessValueForInitiator,
           );
           expect(balances[srcContractId]).toEqual(
-            prevState.balances[srcContractId] + excessValueForInitiator,
+            prevState.balances[srcContractId] + winningBidQty,
           );
         });
       });
     });
   });
 });
+
+async function writeInteractionOrFail<Input = unknown>(
+  contract: Contract<PstState>,
+  input: Input,
+  options?: WriteInteractionOptions,
+): Promise<WriteInteractionResponse> {
+  const ret = await contract.writeInteraction(input, options);
+  if (!ret) {
+    throw new Error('writeInteration returned null unexpectedly');
+  }
+  return ret;
+}

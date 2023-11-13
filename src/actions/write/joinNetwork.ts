@@ -3,7 +3,7 @@ import {
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import { ContractWriteResult, IOState, PstAction } from '../../types';
-import { getInvalidAjvMessage } from '../../utilities';
+import { getInvalidAjvMessage, unsafeDecrementBalance } from '../../utilities';
 import { validateJoinNetwork } from '../../validations';
 
 export class JoinNetwork {
@@ -79,7 +79,7 @@ export const joinNetwork = async (
   }
 
   // Join the network
-  state.balances[caller] -= qty;
+  unsafeDecrementBalance(state.balances, caller, qty);
   state.gateways[caller] = {
     operatorStake: qty,
     observerWallet: observerWallet || caller, // if no observer wallet is provided, we add the caller by default
