@@ -39,7 +39,7 @@ describe('getPriceForInteraction', () => {
         caller: 'test-caller',
         input: {
           interactionName: 'extendRecord' as InteractionsWithFee,
-          name: 'test-buy-record',
+          name: 'existing-record',
           years: 1,
         },
       },

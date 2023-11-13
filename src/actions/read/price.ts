@@ -45,7 +45,10 @@ export function getPriceForInteraction(
 ): ContractReadResult {
   let fee: number;
   // overwrite function on the input so it does not fail on interaction specific validation
-  const parsedInput = { ...input, function: input.interactionName };
+  const { interactionName: _, ...parsedInput } = {
+    ...input,
+    function: input.interactionName,
+  };
   // TODO: move all these to utility functions
   switch (input.interactionName) {
     case 'buyRecord': {
