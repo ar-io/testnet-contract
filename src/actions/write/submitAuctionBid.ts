@@ -98,6 +98,11 @@ export const submitAuctionBid = (
     // all the things we need to handle an auction bid
     const existingAuction = state.auctions[name];
 
+    // Prepare to update the initiator's balance in addition
+    // to the planned updates to the protocol and bidder balances
+    updatedBalances[existingAuction.initiator] =
+      state.balances[existingAuction.initiator] || 0;
+
     if (currentBlockHeight.valueOf() > existingAuction.endHeight) {
       throw new ContractError(ARNS_NAME_AUCTION_EXPIRED_MESSAGE);
     }
