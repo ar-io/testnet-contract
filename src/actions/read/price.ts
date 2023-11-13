@@ -38,13 +38,18 @@ export function getPriceForInteraction(
   {
     caller,
     input,
-  }: { caller: string; input: { function: string; [x: string]: unknown } },
+  }: {
+    caller: string;
+    input: { interactionName: InteractionsWithFee; [x: string]: unknown };
+  },
 ): ContractReadResult {
   let fee: number;
+  // overwrite function on the input so it does not fail on interaction specific validation
+  const parsedInput = { ...input, function: input.interactionName };
   // TODO: move all these to utility functions
-  switch (input.function as InteractionsWithFee) {
+  switch (input.interactionName) {
     case 'buyRecord': {
-      const { name, years, type, auction } = new BuyRecord(input);
+      const { name, years, type, auction } = new BuyRecord(parsedInput);
       // TODO: move this to util so we can call it directly rather than recalling this function
       if (auction) {
         return getPriceForInteraction(state, {
@@ -73,7 +78,7 @@ export function getPriceForInteraction(
       break;
     }
     case 'submitAuctionBid': {
-      const { name } = new AuctionBid(input);
+      const { name } = new AuctionBid(parsedInput);
       const auction = state.auctions[name];
       assertAvailableRecord({
         caller,
@@ -82,7 +87,7 @@ export function getPriceForInteraction(
         reserved: state.reserved,
         currentBlockTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),
       });
-      // we don't return minimum au
+      // return the floor price to start the auction
       if (!auction) {
         const newAuction = createAuctionObject({
           name,
@@ -112,7 +117,7 @@ export function getPriceForInteraction(
       break;
     }
     case 'extendRecord': {
-      const { name, years } = new ExtendRecord(input);
+      const { name, years } = new ExtendRecord(parsedInput);
       const record = state.records[name];
       assertRecordCanBeExtended({
         record,
@@ -123,7 +128,7 @@ export function getPriceForInteraction(
       break;
     }
     case 'increaseUndernameCount': {
-      const { name, qty } = new IncreaseUndernameCount(input);
+      const { name, qty } = new IncreaseUndernameCount(parsedInput);
       const record = state.records[name];
       assertRecordCanIncreaseUndernameCount({
         record,

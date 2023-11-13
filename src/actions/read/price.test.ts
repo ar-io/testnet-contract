@@ -1,7 +1,7 @@
 import { SECONDS_IN_A_YEAR } from '../../constants';
 import { IOState } from '../../types';
 import { getBaselineState } from '../write/submitAuctionBid.test';
-import { getPriceForInteraction } from './price';
+import { InteractionsWithFee, getPriceForInteraction } from './price';
 
 describe('getPriceForInteraction', () => {
   const state = getBaselineState();
@@ -13,7 +13,7 @@ describe('getPriceForInteraction', () => {
       {
         caller: 'test-caller',
         input: {
-          function: 'buyRecord',
+          interactionName: 'buyRecord' as InteractionsWithFee,
           name: 'test-buy-record',
           type: 'permabuy',
         },
@@ -38,8 +38,8 @@ describe('getPriceForInteraction', () => {
       {
         caller: 'test-caller',
         input: {
-          function: 'extendRecord',
-          name: 'existing-record',
+          interactionName: 'extendRecord' as InteractionsWithFee,
+          name: 'test-buy-record',
           years: 1,
         },
       },
@@ -63,7 +63,7 @@ describe('getPriceForInteraction', () => {
       {
         caller: 'test-caller',
         input: {
-          function: 'increaseUndernameCount',
+          interactionName: 'increaseUndernameCount' as InteractionsWithFee,
           name: 'existing-record',
           qty: 5,
         },
@@ -87,7 +87,7 @@ describe('getPriceForInteraction', () => {
       {
         caller: 'test-caller',
         input: {
-          function: 'increaseUndernameCount',
+          interactionName: 'increaseUndernameCount' as InteractionsWithFee,
           name: 'existing-record',
           qty: 5,
         },
@@ -121,7 +121,7 @@ describe('getPriceForInteraction', () => {
       {
         caller: 'test-caller',
         input: {
-          function: 'submitAuctionBid',
+          interactionName: 'submitAuctionBid' as InteractionsWithFee,
           name: 'existing-auction',
         },
       },
@@ -145,7 +145,7 @@ describe('getPriceForInteraction', () => {
       {
         caller: 'test-caller',
         input: {
-          function: 'submitAuctionBid',
+          interactionName: 'submitAuctionBid' as InteractionsWithFee,
           name: 'new-auction',
         },
       },
@@ -158,7 +158,7 @@ describe('getPriceForInteraction', () => {
       inputState: IOState,
       inputData: {
         caller: string;
-        input: { function: string; [x: string]: unknown };
+        input: { interactionName: InteractionsWithFee; [x: string]: unknown };
       },
       expectedResult: number,
     ) => {
