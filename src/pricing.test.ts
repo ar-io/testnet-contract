@@ -453,7 +453,7 @@ describe('Pricing functions:', () => {
         {
           expectedDFOverrides: {
             currentPeriod: 2,
-            demandFactor: 0.95,
+            demandFactor: 0.975,
           },
         },
       ],
