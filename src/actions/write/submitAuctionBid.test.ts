@@ -349,7 +349,7 @@ describe('submitAuctionBid', () => {
       },
     ],
   ])(
-    'should close out an auction, update records, return balance to initiator, update protocol balance and increase demand factor for the period when a second bidder wins the auction',
+    'should close out an auction, update records, return balance to initiator when it has a balance, update protocol balance and increase demand factor for the period when a second bidder wins the auction',
     (inputAuctionData, expectedData) => {
       const auction = {
         ...baselineAuctionData,
@@ -361,6 +361,7 @@ describe('submitAuctionBid', () => {
           'test-auction-close': auction,
         },
         balances: {
+          initiator: 100,
           'new-bidder': 1000,
         },
       };
@@ -395,14 +396,15 @@ describe('submitAuctionBid', () => {
           revenueThisPeriod: 1000,
         },
         balances: {
-          initiator: 100,
+          initiator: 200, // return balance back to the initiator
           'stubbed-contract-id': 1000,
+          // removes the new-bidder balance as they now have 0 tokens
         },
       });
     },
   );
 
-  it('should close out an auction, update records, return balance to initiator, update protocol balance and increase demand factor for the period when the initiator bids twice and wins the auction', () => {
+  it('should close out an auction, update records, update the balance to initiator, update protocol balance and increase demand factor for the period when the initiator bids twice and wins the auction', () => {
     const inputData: IOState = {
       ...getBaselineState(),
       ...baselineAuctionState,
@@ -438,6 +440,7 @@ describe('submitAuctionBid', () => {
       },
       balances: {
         'stubbed-contract-id': 1000,
+        // removes initiator balance as they now have 0 tokens
       },
     });
   });
