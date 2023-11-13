@@ -19,6 +19,9 @@ describe('Auction util functions', () => {
       [[0, 1, 0.002, 90], 83.511968],
       [[0, 2, 0.002, 90], 69.717284],
       [[0, 3, 0.002, 90], 58.180118],
+      // block heights before the start height should just return the start price
+      [[10, 9, 0.001, 90], 100],
+      [[10, 0, 0.001, 90], 100],
     ])(
       'given [current block height, moving average purchase count] of %j, should return %d',
       (

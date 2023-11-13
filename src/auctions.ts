@@ -32,7 +32,9 @@ export function calculateMinimumAuctionBid({
   const dutchAuctionBid =
     startPrice * Math.pow(1 - decaySinceStart, scalingExponent);
   // TODO: we shouldn't be rounding like this, use a separate class to handle the number of allowed decimals for IO values and use them here
-  return new IOToken(Math.max(floorPrice, dutchAuctionBid));
+  return new IOToken(
+    Math.min(startPrice, Math.max(floorPrice, dutchAuctionBid)),
+  );
 }
 
 export function getAuctionPricesForInterval({

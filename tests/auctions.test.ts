@@ -627,24 +627,6 @@ describe('Auctions', () => {
           auctionTxId = writeInteraction.originalTxId;
         });
 
-        it.each([0, 10, 19, 20, 69])(
-          `should expect the bid amount to not exceed the start price after %s blocks`,
-          async (block) => {
-            const winningBidQty = calculateMinimumAuctionBid({
-              startHeight: new BlockHeight(auctionObj.startHeight),
-              startPrice: auctionObj.startPrice,
-              floorPrice: auctionObj.floorPrice,
-              scalingExponent: AUCTION_SETTINGS.scalingExponent,
-              exponentialDecayRate: AUCTION_SETTINGS.exponentialDecayRate,
-              currentBlockHeight: new BlockHeight(
-                auctionObj.startHeight + block,
-              ),
-            }).valueOf();
-
-            expect(winningBidQty).toBeLessThanOrEqual(auctionObj.startPrice);
-          },
-        );
-
         it('should update the records when the caller is the initiator, and only withdraw the difference of the current bid to the original floor price that was already withdrawn from the initiator', async () => {
           // fast forward a few blocks, then construct winning bid
           await mineBlocks(arweave, 5);
