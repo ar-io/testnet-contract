@@ -61,7 +61,7 @@ describe('Pricing functions:', () => {
   });
 
   describe('tallyNamePurchase function', () => {
-    it('should increment purchasesThisPeriod', () => {
+    it('should increment purchasesThisPeriod and increase revenueThisPeriod by the respective amount', () => {
       expect(
         tallyNamePurchase(
           {
@@ -98,7 +98,7 @@ describe('Pricing functions:', () => {
             demandFactor: 1,
             consecutivePeriodsWithMinDemandFactor: 0,
           },
-          321, // TODO
+          321,
         ),
       ).toEqual({
         periodZeroBlockHeight: 0,
