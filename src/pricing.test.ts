@@ -1,3 +1,4 @@
+import { DemandFactoringCriteria } from './constants';
 import {
   cloneDemandFactoringData,
   demandFactorPeriodIndex,
@@ -287,20 +288,19 @@ describe('Pricing functions:', () => {
 
   describe('demandIsIncreasing function', () => {
     it.each([
-      // aritrarily treating -1 as 'purchases' and -2 as 'revenues' to make typescript happy
-      [[-1, 0, 0, 0, 0], false],
-      [[-1, 0, 1, 0, 0], false],
-      [[-1, 1, 1, 0, 0], true],
-      [[-1, 2, 1, 0, 0], true],
-      [[-2, 0, 0, 0, 0], false],
-      [[-2, 0, 0, 0, 1], false],
-      [[-2, 0, 0, 1, 1], true],
-      [[-2, 0, 0, 2, 1], true],
+      ['purchases', [0, 0, 0, 0], false],
+      ['purchases', [0, 1, 0, 0], false],
+      ['purchases', [1, 1, 0, 0], true],
+      ['purchases', [2, 1, 0, 0], true],
+      ['revenue', [0, 0, 0, 0], false],
+      ['revenue', [0, 0, 0, 1], false],
+      ['revenue', [0, 0, 1, 1], true],
+      ['revenue', [0, 0, 2, 1], true],
     ])(
       'given [current period purchase count, moving average purchase count] of %j, should return %d',
       (
+        demandFactoringCriteria: DemandFactoringCriteria,
         [
-          demandFactoringCriteriaAsInt,
           numNamesPurchasedInLastPeriod,
           mvgAvgOfTrailingNamePurchases,
           revenueInLastPeriod,
@@ -314,8 +314,7 @@ describe('Pricing functions:', () => {
             mvgAvgOfTrailingNamePurchases,
             revenueInLastPeriod,
             mvgAvgOfTrailingRevenue,
-            demandFactoringCriteria:
-              demandFactoringCriteriaAsInt === -1 ? 'purchases' : 'revenue',
+            demandFactoringCriteria,
           }),
         ).toEqual(expectedResult);
       },
