@@ -269,7 +269,7 @@ describe('Auctions', () => {
                   AUCTION_SETTINGS.auctionDuration - 10,
                 );
                 if (!auctionObj) {
-                  fail('auctionObj is undefined');
+                  throw new Error('auctionObj is undefined');
                 }
                 const winningBidQty = calculateMinimumAuctionBid({
                   startHeight: new BlockHeight(auctionObj.startHeight),
@@ -686,7 +686,7 @@ async function writeInteractionOrFail<Input = unknown>(
 ): Promise<WriteInteractionResponse> {
   const ret = await contract.writeInteraction(input, options);
   if (!ret) {
-    fail('writeInteration returned null unexpectedly');
+    throw new Error('writeInteration returned null unexpectedly');
   }
   return ret;
 }
