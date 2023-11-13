@@ -1,7 +1,7 @@
 import {
   calculateMinimumAuctionBid,
   createAuctionObject,
-  getAuctionPrices,
+  getAuctionPricesForInterval,
 } from '../../auctions';
 import {
   BlockHeight,
@@ -44,11 +44,12 @@ export const getAuction = (
       initiator: undefined,
     });
 
-    const prices = getAuctionPrices({
+    const prices = getAuctionPricesForInterval({
       auctionSettings,
       startHeight: currentBlockHeight, // set it to the current block height
       startPrice: auctionObject.startPrice,
       floorPrice: auctionObject.floorPrice,
+      blocksPerInterval: 30, // TODO: this could be an input on the function
     });
 
     // existing record
@@ -99,11 +100,12 @@ export const getAuction = (
   });
 
   // get all the prices for the auction
-  const prices = getAuctionPrices({
+  const prices = getAuctionPricesForInterval({
     auctionSettings: existingAuctionSettings,
     startHeight: new BlockHeight(startHeight),
     startPrice, // TODO: use IO class class
     floorPrice,
+    blocksPerInterval: 30, // TODO: this could be an input on the function
   });
 
   // calculate the minimum bid
@@ -112,9 +114,11 @@ export const getAuction = (
     startPrice,
     floorPrice,
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
-    decayInterval: existingAuctionSettings.decayInterval,
-    decayRate: existingAuctionSettings.decayRate,
+    scalingExponent: existingAuctionSettings.scalingExponent,
+    exponentialDecayRate: existingAuctionSettings.exponentialDecayRate,
   });
+
+  // TODO: return stringified function used to compute the current price of the auction so clients can calculate prices per block heights themselves
 
   return {
     result: {

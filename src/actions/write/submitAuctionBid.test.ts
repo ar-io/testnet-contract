@@ -22,8 +22,8 @@ const baselineDemandFactorData: DemandFactoringData = {
 
 const baselineAuctionSettings = {
   auctionDuration: 100,
-  decayInterval: 10,
-  decayRate: 0.9,
+  scalingExponent: 10,
+  exponentialDecayRate: 0.001,
   startPriceMultiplier: 100,
   floorPriceMultiplier: 1,
 };

@@ -78,11 +78,11 @@ export type AuctionData = {
 
 // TODO: Since we're not allowing mutability of this via governance, we could do away with ID-based settings
 export type AuctionSettings = {
-  floorPriceMultiplier: number; // if we ever want to drop prices
+  floorPriceMultiplier: number;
   startPriceMultiplier: number;
+  scalingExponent: number; // the constant used to scale the price of the auction
   auctionDuration: number;
-  decayRate: number;
-  decayInterval: number;
+  exponentialDecayRate: number; // the rate at which the price drops for each block
 };
 
 export type GatewayRegistrySettings = {

@@ -113,8 +113,8 @@ export function getPriceForInteraction(
         currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
         startPrice: auction.startPrice,
         floorPrice: auction.floorPrice,
-        decayInterval: auction.settings.decayInterval,
-        decayRate: auction.settings.decayRate,
+        scalingExponent: auction.settings.scalingExponent,
+        exponentialDecayRate: auction.settings.exponentialDecayRate,
       });
       fee = minimumAuctionBid.valueOf();
       break;

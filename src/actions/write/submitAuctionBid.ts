@@ -113,8 +113,8 @@ export const submitAuctionBid = (
       startPrice: existingAuction.startPrice,
       floorPrice: existingAuction.floorPrice,
       currentBlockHeight: currentBlockHeight,
-      decayRate: existingAuction.settings.decayRate,
-      decayInterval: existingAuction.settings.decayInterval,
+      exponentialDecayRate: existingAuction.settings.exponentialDecayRate,
+      scalingExponent: existingAuction.settings.scalingExponent,
     });
 
     // we could throw an error if qty wasn't provided

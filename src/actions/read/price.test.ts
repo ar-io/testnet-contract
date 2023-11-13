@@ -109,8 +109,8 @@ describe('getPriceForInteraction', () => {
             type: 'lease',
             years: 1,
             settings: {
-              decayInterval: 1,
-              decayRate: 0.01,
+              scalingExponent: 10,
+              exponentialDecayRate: 0.01,
               auctionDuration: 10,
               floorPriceMultiplier: 1,
               startPriceMultiplier: 10,
@@ -125,7 +125,7 @@ describe('getPriceForInteraction', () => {
           name: 'existing-auction',
         },
       },
-      990,
+      904.382075,
     ],
     [
       'should return the floor price a new auction and submitAuctionBid',
@@ -134,8 +134,8 @@ describe('getPriceForInteraction', () => {
         settings: {
           ...state.settings,
           auctions: {
-            decayInterval: 1,
-            decayRate: 0.01,
+            scalingExponent: 10,
+            exponentialDecayRate: 0.01,
             auctionDuration: 10,
             floorPriceMultiplier: 1,
             startPriceMultiplier: 10,
