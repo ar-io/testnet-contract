@@ -264,10 +264,7 @@ describe('Auctions', () => {
 
               it('should update the records object when a winning bid comes in', async () => {
                 // fast forward to the last allowed block for the auction bid
-                await mineBlocks(
-                  arweave,
-                  AUCTION_SETTINGS.auctionDuration - 10,
-                );
+                await mineBlocks(arweave, 5);
                 if (!auctionObj) {
                   throw new Error('auctionObj is undefined');
                 }
@@ -512,8 +509,8 @@ describe('Auctions', () => {
           const prevDemandFactorPurchasesForPeriod =
             prevDemandFactoringData.purchasesThisPeriod;
 
-          // fast forward towards the end of the auction
-          await mineBlocks(arweave, AUCTION_SETTINGS.auctionDuration - 10);
+          // fast forward to lower auction price
+          await mineBlocks(arweave, 5);
           const winningBidQty = calculateMinimumAuctionBid({
             startHeight: new BlockHeight(auctionObj.startHeight),
             startPrice: auctionObj.startPrice,
@@ -634,7 +631,7 @@ describe('Auctions', () => {
 
         it('should update the records when the caller is the initiator, and only withdraw the difference of the current bid to the original floor price that was already withdrawn from the initiator', async () => {
           // fast forward a few blocks, then construct winning bid
-          await mineBlocks(arweave, AUCTION_SETTINGS.auctionDuration - 10);
+          await mineBlocks(arweave, 5);
           const winningBidQty = calculateMinimumAuctionBid({
             startHeight: new BlockHeight(auctionObj.startHeight),
             startPrice: auctionObj.startPrice,
