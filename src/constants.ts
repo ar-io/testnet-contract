@@ -141,7 +141,7 @@ export const DEMAND_FACTORING_SETTINGS: DemandFactoringSettings = {
   demandFactorBaseValue: 1,
   demandFactorMin: 0.5,
   demandFactorUpAdjustment: 0.05,
-  demandFactorDownAdjustment: 0.05, // TODO: spec has this at 2.5%
+  demandFactorDownAdjustment: 0.025,
   stepDownThreshold: 3, // number of times at minimum allowed before resetting genesis fees (ultimately leads to 4 periods at the new fee, including the reset period)
   criteria: 'revenue',
 };
