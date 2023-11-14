@@ -1,14 +1,59 @@
 import {
-  calculateMinimumAuctionBid,
+  calculateAuctionPriceForBlock,
   getAuctionPricesForInterval,
   getEndTimestampForAuction,
 } from './auctions';
-import { SECONDS_IN_A_YEAR } from './constants';
+import { AUCTION_SETTINGS, SECONDS_IN_A_YEAR } from './constants';
 import { AuctionData, BlockTimestamp } from './types';
 import { BlockHeight } from './types';
 
 describe('Auction util functions', () => {
-  describe('calculateMinimumAuctionBid function', () => {
+  describe('validate AUCTION_SETTINGS used in the contract', () => {
+    const basePrice = 30;
+    const allowedThreshold = 0.05; // prices must be within 5% of the expected value
+    const startPrice = basePrice * AUCTION_SETTINGS.startPriceMultiplier;
+    const floorPrice = basePrice * AUCTION_SETTINGS.floorPriceMultiplier;
+    const startHeight = new BlockHeight(0);
+
+    it.each([
+      [
+        'should never be larger than the start price',
+        new BlockHeight(0),
+        startPrice,
+      ],
+      [
+        'should be half the start price after ~2.5 days (1800 blocks)',
+        new BlockHeight(1800),
+        startPrice / 2,
+      ],
+      [
+        'should twice the floor price after ~11.5 days (8300 blocks)',
+        new BlockHeight(8300),
+        floorPrice * 2,
+      ],
+      [
+        'should end at a price larger than the floor price',
+        new BlockHeight(AUCTION_SETTINGS.auctionDuration),
+        floorPrice,
+      ],
+    ])('%s', (_: string, currentBlockHeight: BlockHeight, expectedPrice) => {
+      const priceAtBlock = calculateAuctionPriceForBlock({
+        startHeight,
+        startPrice,
+        floorPrice,
+        currentBlockHeight,
+        exponentialDecayRate: AUCTION_SETTINGS.exponentialDecayRate,
+        scalingExponent: AUCTION_SETTINGS.scalingExponent,
+      });
+      const percentDifference = Math.abs(
+        1 - expectedPrice / priceAtBlock.valueOf(),
+      );
+      expect(priceAtBlock.valueOf()).toBeGreaterThanOrEqual(expectedPrice);
+      expect(percentDifference).toBeLessThanOrEqual(allowedThreshold);
+    });
+  });
+
+  describe('calculateAuctionPriceForBlock function', () => {
     it.each([
       // we keep the scalingComponent consistent to make it easier to reason about the test cases, and to represent the decay in the auction curve for block heights and varying decay rates
       [[0, 0, 0.001, 90], 100],
@@ -28,7 +73,7 @@ describe('Auction util functions', () => {
         [startHeight, currentHeight, exponentialDecayRate, scalingExponent],
         expectedPrice,
       ) => {
-        const calculatedMinimumBid = calculateMinimumAuctionBid({
+        const calculatedMinimumBid = calculateAuctionPriceForBlock({
           startHeight: new BlockHeight(startHeight),
           startPrice: 100,
           floorPrice: 10,

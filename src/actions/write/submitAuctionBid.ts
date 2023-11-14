@@ -1,5 +1,5 @@
 import {
-  calculateMinimumAuctionBid,
+  calculateAuctionPriceForBlock,
   createAuctionObject,
   getEndTimestampForAuction,
 } from '../../auctions';
@@ -108,7 +108,7 @@ export const submitAuctionBid = (
     }
 
     // calculate the current bid price and compare it to the floor price set by the initiator
-    const currentRequiredMinimumBid = calculateMinimumAuctionBid({
+    const currentRequiredMinimumBid = calculateAuctionPriceForBlock({
       startHeight: new BlockHeight(existingAuction.startHeight),
       startPrice: existingAuction.startPrice,
       floorPrice: existingAuction.floorPrice,
