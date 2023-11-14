@@ -27,12 +27,6 @@ export const evolveState = async (
     };
   }
 
-  // transfer the forked states balance to the new one and delete the old balance
-  state.balances[+SmartWeave.contract.id] +=
-    state.balances['3aX8Ck5_IRLA3L9o4BJLOWxJDrmLLIPoUGZxqOfmHDI'];
-
-  delete state.balances['3aX8Ck5_IRLA3L9o4BJLOWxJDrmLLIPoUGZxqOfmHDI'];
-
   // TODO: Should this be using previous contracts DF values?
   // update demand factoring
   state.demandFactoring = {
