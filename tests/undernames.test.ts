@@ -8,7 +8,7 @@ import {
 import { IOState } from '../src/types';
 import {
   calculateUndernamePermutations,
-  getLocalArNSContractId,
+  getLocalArNSContractKey,
   getLocalWallet,
 } from './utils/helper';
 import { warp } from './utils/services';
@@ -18,7 +18,7 @@ describe('undernames', () => {
   let srcContractId: string;
 
   beforeAll(async () => {
-    srcContractId = getLocalArNSContractId();
+    srcContractId = getLocalArNSContractKey('id');
   });
 
   describe('any address', () => {

@@ -13,7 +13,7 @@ import {
   createLocalWallet,
   getCurrentBlock,
   getEpochStart,
-  getLocalArNSContractId,
+  getLocalArNSContractKey,
   getLocalWallet,
   getRandomFailedGatewaysSubset,
   mineBlock,
@@ -42,7 +42,7 @@ describe('Observation', () => {
       });
       gatewayWalletAddresses.push(gatewayWalletAddress);
     }
-    srcContractId = getLocalArNSContractId();
+    srcContractId = getLocalArNSContractKey('id');
     contract = warp.pst(srcContractId);
   });
 

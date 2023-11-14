@@ -7,7 +7,7 @@ import {
   INVALID_TARGET_MESSAGE,
   TRANSFER_QTY,
 } from './utils/constants';
-import { getLocalArNSContractId, getLocalWallet } from './utils/helper';
+import { getLocalArNSContractKey, getLocalWallet } from './utils/helper';
 import { arweave, warp } from './utils/services';
 
 describe('Transfers', () => {
@@ -15,7 +15,7 @@ describe('Transfers', () => {
   let srcContractId: string;
 
   beforeAll(async () => {
-    srcContractId = getLocalArNSContractId();
+    srcContractId = getLocalArNSContractKey('id');
   });
 
   describe('contract owner', () => {

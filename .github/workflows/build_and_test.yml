@@ -10,6 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: develop
     strategy:
       matrix:
         step: ['format:check', 'lint:check', 'build', 'test']
@@ -21,3 +22,5 @@ jobs:
           cache: 'yarn'
       - run: yarn install
       - run: yarn ${{ matrix.step }}
+        env:
+          ARNS_CONTRACT_TX_ID: ${{ vars.ARNS_CONTRACT_TX_ID }}

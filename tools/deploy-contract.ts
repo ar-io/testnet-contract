@@ -4,7 +4,7 @@ import { SourceType } from 'warp-contracts';
 
 import { IOState } from '../src/types';
 import { keyfile } from './constants';
-import { arweave, initialize, warp } from './utilities';
+import { arweave, getContractManifest, initialize, warp } from './utilities';
 
 (async () => {
   // simple setup script
@@ -18,7 +18,7 @@ import { arweave, initialize, warp } from './utilities';
   // load state of contract
   const ARNS_CONTRACT_TX_ID =
     process.env.ARNS_CONTRACT_TX_ID ??
-    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
+    'blAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // ~~ Read contract source and initial state files ~~
   const contractSrc = fs.readFileSync(
@@ -26,18 +26,25 @@ import { arweave, initialize, warp } from './utilities';
     'utf8',
   );
 
-  const walletAddress = await arweave.wallets.jwkToAddress(wallet);
+  const { evaluationOptions = {} } = await getContractManifest({
+    contractTxId: ARNS_CONTRACT_TX_ID,
+    arweave,
+  });
+
   const {
     cachedValue: { state: existingContractState },
-  } = await warp.contract(ARNS_CONTRACT_TX_ID).readState();
+  } = await (
+    await warp
+      .contract(ARNS_CONTRACT_TX_ID)
+      .setEvaluationOptions(evaluationOptions)
+      .syncState(`https://api.arns.app/v1/contract/${ARNS_CONTRACT_TX_ID}`)
+  ).readState();
 
-  // any state forks we want to do
-  const forkedState = {
+  const forkedState: IOState = {
     ...(existingContractState as IOState),
-    balances: {
-      [walletAddress]: 1_000_000_000,
-    },
+    evolve: null, // clear out evolve so new source code is not overwritten
   };
+
   // ~~ Deploy contract ~~
   const contractTxId = await warp.deploy(
     {
