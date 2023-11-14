@@ -1,5 +1,5 @@
 import {
-  calculateMinimumAuctionBid,
+  calculateAuctionPriceForBlock,
   createAuctionObject,
   getAuctionPricesForInterval,
 } from '../../auctions';
@@ -109,7 +109,7 @@ export const getAuction = (
   });
 
   // calculate the minimum bid
-  const minimumBid = calculateMinimumAuctionBid({
+  const minimumBid = calculateAuctionPriceForBlock({
     startHeight: new BlockHeight(startHeight),
     startPrice,
     floorPrice,

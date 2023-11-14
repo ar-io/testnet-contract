@@ -1,5 +1,5 @@
 import {
-  calculateMinimumAuctionBid,
+  calculateAuctionPriceForBlock,
   createAuctionObject,
 } from '../../auctions';
 import { PERMABUY_LEASE_FEE_LENGTH } from '../../constants';
@@ -108,7 +108,7 @@ export function getPriceForInteraction(
         fee = newAuction.floorPrice;
         break;
       }
-      const minimumAuctionBid = calculateMinimumAuctionBid({
+      const minimumAuctionBid = calculateAuctionPriceForBlock({
         startHeight: new BlockHeight(auction.startHeight),
         currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
         startPrice: auction.startPrice,

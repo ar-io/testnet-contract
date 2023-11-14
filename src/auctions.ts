@@ -12,7 +12,7 @@ import {
   RegistrationType,
 } from './types';
 
-export function calculateMinimumAuctionBid({
+export function calculateAuctionPriceForBlock({
   startHeight,
   startPrice,
   floorPrice,
@@ -58,7 +58,7 @@ export function getAuctionPricesForInterval({
     intervalBlockHeight <= auctionDuration;
     intervalBlockHeight += blocksPerInterval
   ) {
-    const price = calculateMinimumAuctionBid({
+    const price = calculateAuctionPriceForBlock({
       startHeight,
       startPrice,
       floorPrice,

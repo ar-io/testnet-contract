@@ -116,8 +116,8 @@ export const FEE_STRUCTURE = {
 export const AUCTION_SETTINGS: AuctionSettings = {
   floorPriceMultiplier: 1,
   startPriceMultiplier: 50,
-  exponentialDecayRate: 0.000005,
-  scalingExponent: 90,
+  exponentialDecayRate: 0.000002,
+  scalingExponent: 190,
   auctionDuration: 10_080, // approx 14 days long
 };
 

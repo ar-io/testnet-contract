@@ -6,7 +6,7 @@ import {
   WriteInteractionResponse,
 } from 'warp-contracts';
 
-import { calculateMinimumAuctionBid } from '../src/auctions';
+import { calculateAuctionPriceForBlock } from '../src/auctions';
 import {
   ARNS_NAME_RESERVED_MESSAGE,
   AUCTION_SETTINGS,
@@ -268,7 +268,7 @@ describe('Auctions', () => {
                 if (!auctionObj) {
                   throw new Error('auctionObj is undefined');
                 }
-                const winningBidQty = calculateMinimumAuctionBid({
+                const winningBidQty = calculateAuctionPriceForBlock({
                   startHeight: new BlockHeight(auctionObj.startHeight),
                   startPrice: auctionObj.startPrice,
                   floorPrice: auctionObj.floorPrice,
@@ -291,7 +291,7 @@ describe('Auctions', () => {
                   function: 'submitAuctionBid',
                   ...auctionBid,
                 });
-                const pricePaidForBlock = calculateMinimumAuctionBid({
+                const pricePaidForBlock = calculateAuctionPriceForBlock({
                   startHeight: new BlockHeight(auctionObj.startHeight),
                   startPrice: auctionObj.startPrice,
                   floorPrice: auctionObj.floorPrice,
@@ -519,7 +519,7 @@ describe('Auctions', () => {
 
           // fast forward to lower auction price
           await mineBlocks(arweave, 5);
-          const winningBidQty = calculateMinimumAuctionBid({
+          const winningBidQty = calculateAuctionPriceForBlock({
             startHeight: new BlockHeight(auctionObj.startHeight),
             startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
@@ -542,7 +542,7 @@ describe('Auctions', () => {
             function: 'submitAuctionBid',
             ...auctionBid,
           });
-          const pricePaidForBlock = calculateMinimumAuctionBid({
+          const pricePaidForBlock = calculateAuctionPriceForBlock({
             startHeight: new BlockHeight(auctionObj.startHeight),
             startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
@@ -630,7 +630,7 @@ describe('Auctions', () => {
         it('should update the records when the caller is the initiator, and only withdraw the difference of the current bid to the original floor price that was already withdrawn from the initiator', async () => {
           // fast forward a few blocks, then construct winning bid
           await mineBlocks(arweave, 5);
-          const winningBidQty = calculateMinimumAuctionBid({
+          const winningBidQty = calculateAuctionPriceForBlock({
             startHeight: new BlockHeight(auctionObj.startHeight),
             startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
@@ -648,7 +648,7 @@ describe('Auctions', () => {
             ...auctionBid,
           });
           // we always take the lesser of the submitted and the cost of auction at a given block
-          const pricePaidForBlock = calculateMinimumAuctionBid({
+          const pricePaidForBlock = calculateAuctionPriceForBlock({
             startHeight: new BlockHeight(auctionObj.startHeight),
             startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
