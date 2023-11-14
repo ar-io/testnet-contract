@@ -10,54 +10,60 @@ import { arweave as arweaveLocal, warp as warpLocal } from './utils/services';
 
 const testnetContractTxId =
   process.env.ARNS_CONTRACT_TX_ID ??
-  '3aX8Ck5_IRLA3L9o4BJLOWxJDrmLLIPoUGZxqOfmHDI';
+  'fbU8Y4NMKKzP4rmAYeYj6tDrVDo9XNbdyq5IZPA31WQ';
 
-describe('evolving contract', () => {
-  let contractOwner: JWKInterface;
-  let contract: Contract<PstState>;
-  let srcContractId: string;
+describe('evolving', () => {
+  let localContractOwnerJWK: JWKInterface;
+  let newForkedContract: Contract<PstState>;
+  let localSourceCodeId: string;
 
   beforeAll(async () => {
-    srcContractId = getLocalArNSContractKey('srcTxId');
-    contractOwner = getLocalWallet(0);
+    localSourceCodeId = getLocalArNSContractKey('srcTxId');
+    localContractOwnerJWK = getLocalWallet(0);
 
     // get the existing contract state
     const { evaluationOptions = {} } = await getContractManifest({
       arweave,
       contractTxId: testnetContractTxId,
     });
+    // fetches the currently deployed contract (on arweave.net) state against the most recent sort key
     const testnetContract = await warpMainnet
       .contract(testnetContractTxId)
       .setEvaluationOptions(evaluationOptions)
       .syncState(`https://api.arns.app/v1/contract/${testnetContractTxId}`);
     const { cachedValue } = await testnetContract.readState();
 
-    const ownerAddress = await arweaveLocal.wallets.jwkToAddress(contractOwner);
+    const ownerAddress = await arweaveLocal.wallets.jwkToAddress(
+      localContractOwnerJWK,
+    );
 
-    // deploy a new contract locally against the existing contract state to test that evolve will not break
+    // deploy a new contract locally using the deployed (arweave.net) contracts state to test that any code changes to not break the ability to evolve forward
     const { contractTxId: newContractTxId } =
       await warpLocal.deployFromSourceTx(
         {
-          wallet: contractOwner,
+          wallet: localContractOwnerJWK,
           initState: JSON.stringify({
             ...(cachedValue.state as any),
             owner: ownerAddress,
             evolve: null,
           }),
-          srcTxId: srcContractId,
+          srcTxId: localSourceCodeId,
         },
         true,
       );
-    contract = warpLocal.pst(newContractTxId).connect(contractOwner);
+    newForkedContract = warpLocal
+      .pst(newContractTxId)
+      .connect(localContractOwnerJWK);
   });
 
-  it('should be able to evolve the existing arns contract with the new contract source code', async () => {
-    const writeInteraction = await contract.evolve(srcContractId);
+  // if this test fails, it means that we are going to lose our ability to evolve after the next contract update - VERY IMPORTANT to ensure this test is not modified or removed without thorough review
+  it('should be able evolve a newly deployed arns contract with a forked state using the new contract source', async () => {
+    const writeInteraction = await newForkedContract.evolve(localSourceCodeId);
     expect(writeInteraction.originalTxId).not.toBeUndefined();
-    const { cachedValue } = await contract.readState();
+    const { cachedValue } = await newForkedContract.readState();
     expect(Object.keys(cachedValue.errorMessages)).not.toContain(
       writeInteraction.originalTxId,
     );
-    expect(cachedValue.state.evolve).toBe(srcContractId);
+    expect(cachedValue.state.evolve).toBe(localSourceCodeId);
   });
 });
