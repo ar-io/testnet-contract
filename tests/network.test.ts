@@ -10,7 +10,7 @@ import {
 } from './utils/constants';
 import {
   getCurrentBlock,
-  getLocalArNSContractId,
+  getLocalArNSContractKey,
   getLocalWallet,
   mineBlocks,
 } from './utils/helper';
@@ -24,7 +24,7 @@ describe('Network', () => {
   let srcContractId: string;
 
   beforeAll(async () => {
-    srcContractId = getLocalArNSContractId();
+    srcContractId = getLocalArNSContractKey('id');
   });
 
   describe('valid gateway operator', () => {

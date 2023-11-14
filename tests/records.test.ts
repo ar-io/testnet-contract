@@ -14,7 +14,7 @@ import {
 import {
   calculatePermabuyFee,
   calculateRegistrationFee,
-  getLocalArNSContractId,
+  getLocalArNSContractKey,
   getLocalWallet,
 } from './utils/helper';
 import { arweave, warp } from './utils/services';
@@ -24,7 +24,7 @@ describe('Records', () => {
   let srcContractId: string;
 
   beforeAll(() => {
-    srcContractId = getLocalArNSContractId();
+    srcContractId = getLocalArNSContractKey('id');
     contract = warp.pst(srcContractId);
   });
 

@@ -1,7 +1,7 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import { IOState } from '../src/types';
-import { getLocalArNSContractId, getLocalWallet } from './utils/helper';
+import { getLocalArNSContractKey, getLocalWallet } from './utils/helper';
 import { arweave, warp } from './utils/services';
 
 describe('Balance', () => {
@@ -9,7 +9,7 @@ describe('Balance', () => {
   let srcContractId: string;
 
   beforeAll(async () => {
-    srcContractId = getLocalArNSContractId();
+    srcContractId = getLocalArNSContractKey('id');
   });
 
   describe('non-contract owner', () => {

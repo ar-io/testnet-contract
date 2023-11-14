@@ -389,14 +389,14 @@ export function getLocalWallet(index = 0): JWKInterface {
   return wallet;
 }
 
-export function getLocalArNSContractId(): string {
+export function getLocalArNSContractKey(key: 'srcTxId' | 'id' = 'id'): string {
   const contract = JSON.parse(
     fs.readFileSync(
       path.join(__dirname, `../contract/arns_contract.json`),
       'utf8',
     ),
-  ) as unknown as IOState & { id: string };
-  return contract.id;
+  ) as unknown as IOState & { id: string; srcTxId: string };
+  return contract[key];
 }
 
 export function getRandomFailedGatewaysSubset(

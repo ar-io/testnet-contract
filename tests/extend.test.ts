@@ -13,7 +13,7 @@ import {
 import {
   addFunds,
   calculateAnnualRenewalFee,
-  getLocalArNSContractId,
+  getLocalArNSContractKey,
   getLocalWallet,
 } from './utils/helper';
 import { arweave, warp } from './utils/services';
@@ -23,7 +23,7 @@ describe('Extend', () => {
   let srcContractId: string;
 
   beforeAll(async () => {
-    srcContractId = getLocalArNSContractId();
+    srcContractId = getLocalArNSContractKey('id');
   });
 
   describe('contract owner', () => {

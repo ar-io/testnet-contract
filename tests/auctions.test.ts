@@ -20,7 +20,7 @@ import { AuctionData, BlockHeight, IOState } from '../src/types';
 import { ANT_CONTRACT_IDS } from './utils/constants';
 import {
   getCurrentBlock,
-  getLocalArNSContractId,
+  getLocalArNSContractKey,
   getLocalWallet,
   mineBlocks,
 } from './utils/helper';
@@ -31,7 +31,7 @@ describe('Auctions', () => {
   let srcContractId: string;
 
   beforeAll(async () => {
-    srcContractId = getLocalArNSContractId();
+    srcContractId = getLocalArNSContractKey('id');
   });
 
   describe('any address', () => {
