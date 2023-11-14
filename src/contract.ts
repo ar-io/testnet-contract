@@ -42,7 +42,22 @@ export async function handle(
 ): Promise<ContractReadResult | ContractWriteResult> {
   const input = action.input;
 
-  // tick state on any interaction, even when reading, so users get the most recent evaluation
+  // don't tick on evolutions, it should only update the source code transaction
+  if (input.function === 'evolve') {
+    return evolve(state, action);
+  }
+
+  // TODO: this is an interaction specific for testing and updating state without having to fork the contract, it should be removed for mainnet deployment
+  if (input.function === 'evolveState') {
+    return evolveState(state, action);
+  }
+
+  // directly call tick for tick interaction
+  if (input.function === 'tick') {
+    return tick(state);
+  }
+
+  // all the remaining interactions require a ticked state, even when reading, so users get the most recent evaluation
   const { state: tickedState } = await tick(state);
 
   switch (input.function as IOContractFunctions) {
@@ -54,10 +69,6 @@ export async function handle(
       return extendRecord(tickedState, action);
     case 'increaseUndernameCount':
       return increaseUndernameCount(tickedState, action);
-    case 'evolve':
-      return evolve(tickedState, action);
-    case 'evolveState':
-      return evolveState(tickedState, action);
     case 'balance':
       return balance(tickedState, action);
     case 'record':
@@ -92,8 +103,6 @@ export async function handle(
       return saveObservations(tickedState, action);
     case 'priceForInteraction':
       return getPriceForInteraction(tickedState, action);
-    case 'tick':
-      return tick(tickedState);
     default:
       throw new ContractError(
         `No function supplied or function not recognized: "${input.function}"`,
