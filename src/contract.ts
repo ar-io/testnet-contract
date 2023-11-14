@@ -52,11 +52,6 @@ export async function handle(
     return evolveState(state, action);
   }
 
-  // directly call tick for tick interaction
-  if (input.function === 'tick') {
-    return tick(state);
-  }
-
   // all the remaining interactions require a ticked state, even when reading, so users get the most recent evaluation
   const { state: tickedState } = await tick(state);
 
@@ -99,6 +94,9 @@ export async function handle(
       return submitAuctionBid(tickedState, action);
     case 'auction':
       return getAuction(tickedState, action);
+    case 'tick':
+      // we already ticked, so just return the state
+      return { state: tickedState };
     case 'saveObservations':
       return saveObservations(tickedState, action);
     case 'priceForInteraction':
