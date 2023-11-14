@@ -16,8 +16,8 @@ import { getPriceForInteraction } from './actions/read/price';
 import { getRecord } from './actions/read/record';
 import { buyRecord } from './actions/write/buyRecord';
 import { decreaseOperatorStake } from './actions/write/decreaseOperatorStake';
-import { evolve } from './actions/write/evolve';
-import { evolveState } from './actions/write/evolveState';
+// import { evolve } from './actions/write/evolve';
+// import { evolveState } from './actions/write/evolveState';
 import { extendRecord } from './actions/write/extendRecord';
 import { increaseOperatorStake } from './actions/write/increaseOperatorStake';
 import { increaseUndernameCount } from './actions/write/increaseUndernameCount';
@@ -41,16 +41,6 @@ export async function handle(
   action: PstAction,
 ): Promise<ContractReadResult | ContractWriteResult> {
   const input = action.input;
-
-  // don't tick on evolutions, it should only update the source code transaction
-  if (input.function === 'evolve') {
-    return evolve(state, action);
-  }
-
-  // TODO: this is an interaction specific for testing and updating state without having to fork the contract, it should be removed for mainnet deployment
-  if (input.function === 'evolveState') {
-    return evolveState(state, action);
-  }
 
   // all the remaining interactions require a ticked state, even when reading, so users get the most recent evaluation
   const { state: tickedState } = await tick(state);
