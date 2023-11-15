@@ -20,7 +20,7 @@ export const evolveState = async (
   state.settings.auctions = AUCTION_SETTINGS;
 
   // update existing auctions to use the new settings
-  for (const auction in Object.keys(state.auctions)) {
+  for (const auction of Object.keys(state.auctions)) {
     state.auctions[auction] = {
       ...state.auctions[auction],
       settings: AUCTION_SETTINGS,

@@ -58,15 +58,16 @@ export function getAuctionPricesForInterval({
     intervalBlockHeight <= auctionDuration;
     intervalBlockHeight += blocksPerInterval
   ) {
+    const blockHeightForInterval = startHeight.valueOf() + intervalBlockHeight;
     const price = calculateAuctionPriceForBlock({
       startHeight,
       startPrice,
       floorPrice,
-      currentBlockHeight: new BlockHeight(intervalBlockHeight),
+      currentBlockHeight: new BlockHeight(blockHeightForInterval),
       exponentialDecayRate,
       scalingExponent,
     });
-    prices[intervalBlockHeight] = price.valueOf();
+    prices[blockHeightForInterval] = price.valueOf();
   }
   return prices;
 }

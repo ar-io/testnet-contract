@@ -79,7 +79,7 @@ export const getAuction = (
         isActive: false,
         isAvailableForAuction: isAvailableForAuction,
         isRequiredToBeAuctioned: isRequiredToBeAuctioned,
-        minimumBid: auctionObject.floorPrice, // since its not active yet, the minimum bid is the floor price
+        currentPrice: auctionObject.floorPrice, // since its not active yet, the minimum bid is the floor price
         ...auctionObject,
         prices,
       },
@@ -126,7 +126,7 @@ export const getAuction = (
       isActive: expirationHeight >= +SmartWeave.block.height,
       isAvailableForAuction: false,
       isRequiredToBeAuctioned: isRequiredToBeAuctioned,
-      minimumBid: minimumBid.valueOf(),
+      currentPrice: minimumBid.valueOf(),
       ...auction,
       prices,
     },
