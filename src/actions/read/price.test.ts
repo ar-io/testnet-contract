@@ -1,6 +1,6 @@
 import { SECONDS_IN_A_YEAR } from '../../constants';
+import { getBaselineState } from '../../tests/stubs';
 import { IOState } from '../../types';
-import { getBaselineState } from '../write/submitAuctionBid.test';
 import { InteractionsWithFee, getPriceForInteraction } from './price';
 
 describe('getPriceForInteraction', () => {
