@@ -3,10 +3,10 @@ import {
   INVALID_INPUT_MESSAGE,
   NETWORK_LEAVING_STATUS,
 } from '../../constants';
+import { getBaselineState } from '../../tests/stubs';
 import { Gateway, IOState, Observations, WeightedObserver } from '../../types';
 import { getPrescribedObservers } from '../../utilities';
 import { saveObservations } from './saveObservations';
-import { getBaselineState } from './submitAuctionBid.test';
 
 jest.mock('../../utilities', () => ({
   ...jest.requireActual('../../utilities'),

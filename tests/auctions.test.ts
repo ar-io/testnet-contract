@@ -6,7 +6,7 @@ import {
   WriteInteractionResponse,
 } from 'warp-contracts';
 
-import { calculateMinimumAuctionBid } from '../src/auctions';
+import { calculateAuctionPriceForBlock } from '../src/auctions';
 import {
   ARNS_NAME_RESERVED_MESSAGE,
   AUCTION_SETTINGS,
@@ -268,13 +268,13 @@ describe('Auctions', () => {
                 if (!auctionObj) {
                   throw new Error('auctionObj is undefined');
                 }
-                const winningBidQty = calculateMinimumAuctionBid({
+                const winningBidQty = calculateAuctionPriceForBlock({
                   startHeight: new BlockHeight(auctionObj.startHeight),
                   startPrice: auctionObj.startPrice,
                   floorPrice: auctionObj.floorPrice,
                   currentBlockHeight: await getCurrentBlock(arweave),
-                  decayInterval: AUCTION_SETTINGS.decayInterval,
-                  decayRate: AUCTION_SETTINGS.decayRate,
+                  scalingExponent: AUCTION_SETTINGS.scalingExponent,
+                  exponentialDecayRate: AUCTION_SETTINGS.exponentialDecayRate,
                 }).valueOf();
                 const auctionBid = {
                   name: 'apple',
@@ -291,6 +291,14 @@ describe('Auctions', () => {
                   function: 'submitAuctionBid',
                   ...auctionBid,
                 });
+                const pricePaidForBlock = calculateAuctionPriceForBlock({
+                  startHeight: new BlockHeight(auctionObj.startHeight),
+                  startPrice: auctionObj.startPrice,
+                  floorPrice: auctionObj.floorPrice,
+                  currentBlockHeight: await getCurrentBlock(arweave),
+                  scalingExponent: AUCTION_SETTINGS.scalingExponent,
+                  exponentialDecayRate: AUCTION_SETTINGS.exponentialDecayRate,
+                }).valueOf();
                 expect(writeInteraction?.originalTxId).not.toBeUndefined();
                 const { cachedValue } = await contract.readState();
                 expect(cachedValue.errorMessages).not.toContain(auctionTxId);
@@ -302,11 +310,11 @@ describe('Auctions', () => {
                   endTimestamp: expect.any(Number),
                   startTimestamp: expect.any(Number),
                   undernames: expect.any(Number),
-                  purchasePrice: winningBidQty,
+                  purchasePrice: pricePaidForBlock,
                   type: 'lease',
                 });
                 expect(balances[winnerAddress]).toEqual(
-                  prevState.balances[winnerAddress] - winningBidQty,
+                  prevState.balances[winnerAddress] - pricePaidForBlock,
                 );
                 expect(balances[auctionObj.initiator]).toEqual(
                   prevState.balances[auctionObj.initiator] +
@@ -314,7 +322,7 @@ describe('Auctions', () => {
                 );
                 expect(balances[srcContractId]).toEqual(
                   // Uses the smartweave contract ID to act as the protocol balance
-                  prevState.balances[srcContractId] + winningBidQty,
+                  prevState.balances[srcContractId] + pricePaidForBlock,
                 );
                 // clear out the auction obj
                 auctionObj = undefined;
@@ -511,13 +519,13 @@ describe('Auctions', () => {
 
           // fast forward to lower auction price
           await mineBlocks(arweave, 5);
-          const winningBidQty = calculateMinimumAuctionBid({
+          const winningBidQty = calculateAuctionPriceForBlock({
             startHeight: new BlockHeight(auctionObj.startHeight),
             startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
             currentBlockHeight: await getCurrentBlock(arweave),
-            decayInterval: AUCTION_SETTINGS.decayInterval,
-            decayRate: AUCTION_SETTINGS.decayRate,
+            scalingExponent: AUCTION_SETTINGS.scalingExponent,
+            exponentialDecayRate: AUCTION_SETTINGS.exponentialDecayRate,
           }).valueOf();
           const auctionBid = {
             name: 'microsoft',
@@ -534,6 +542,14 @@ describe('Auctions', () => {
             function: 'submitAuctionBid',
             ...auctionBid,
           });
+          const pricePaidForBlock = calculateAuctionPriceForBlock({
+            startHeight: new BlockHeight(auctionObj.startHeight),
+            startPrice: auctionObj.startPrice,
+            floorPrice: auctionObj.floorPrice,
+            currentBlockHeight: await getCurrentBlock(arweave),
+            scalingExponent: AUCTION_SETTINGS.scalingExponent,
+            exponentialDecayRate: AUCTION_SETTINGS.exponentialDecayRate,
+          }).valueOf();
           expect(writeInteraction?.originalTxId).not.toBeUndefined();
           const { cachedValue } = await contract.readState();
           expect(cachedValue.errorMessages).not.toContain(auctionTxId);
@@ -548,17 +564,17 @@ describe('Auctions', () => {
             type: 'permabuy',
             startTimestamp: expect.any(Number),
             undernames: expect.any(Number),
-            purchasePrice: winningBidQty,
+            purchasePrice: pricePaidForBlock,
           });
           expect(auctions[auctionBid.name]).toBeUndefined();
           expect(balances[winnerAddress]).toEqual(
-            prevState.balances[winnerAddress] - winningBidQty,
+            prevState.balances[winnerAddress] - pricePaidForBlock,
           );
           expect(balances[auctionObj.initiator]).toEqual(
             prevState.balances[auctionObj.initiator] + auctionObj.floorPrice,
           );
           expect(balances[srcContractId]).toEqual(
-            prevState.balances[srcContractId] + winningBidQty,
+            prevState.balances[srcContractId] + pricePaidForBlock,
           );
           expect(newDemandFactoringData.purchasesThisPeriod).toEqual(
             prevDemandFactorPurchasesForPeriod + 1,
@@ -611,34 +627,16 @@ describe('Auctions', () => {
           auctionTxId = writeInteraction.originalTxId;
         });
 
-        it.each([-10, -1, 10, 19, 20, 69])(
-          `should expect the bid amount to not exceed the start price after %s blocks`,
-          async (block) => {
-            const winningBidQty = calculateMinimumAuctionBid({
-              startHeight: new BlockHeight(auctionObj.startHeight),
-              startPrice: auctionObj.startPrice,
-              floorPrice: auctionObj.floorPrice,
-              decayInterval: AUCTION_SETTINGS.decayInterval,
-              decayRate: AUCTION_SETTINGS.decayRate,
-              currentBlockHeight: new BlockHeight(
-                auctionObj.startHeight + block,
-              ),
-            }).valueOf();
-
-            expect(winningBidQty).toBeLessThanOrEqual(auctionObj.startPrice);
-          },
-        );
-
         it('should update the records when the caller is the initiator, and only withdraw the difference of the current bid to the original floor price that was already withdrawn from the initiator', async () => {
           // fast forward a few blocks, then construct winning bid
           await mineBlocks(arweave, 5);
-          const winningBidQty = calculateMinimumAuctionBid({
+          const winningBidQty = calculateAuctionPriceForBlock({
             startHeight: new BlockHeight(auctionObj.startHeight),
             startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
             currentBlockHeight: await getCurrentBlock(arweave),
-            decayInterval: AUCTION_SETTINGS.decayInterval,
-            decayRate: AUCTION_SETTINGS.decayRate,
+            scalingExponent: AUCTION_SETTINGS.scalingExponent,
+            exponentialDecayRate: AUCTION_SETTINGS.exponentialDecayRate,
           }).valueOf();
           const auctionBid = {
             name: 'tesla',
@@ -649,6 +647,15 @@ describe('Auctions', () => {
             function: 'submitAuctionBid',
             ...auctionBid,
           });
+          // we always take the lesser of the submitted and the cost of auction at a given block
+          const pricePaidForBlock = calculateAuctionPriceForBlock({
+            startHeight: new BlockHeight(auctionObj.startHeight),
+            startPrice: auctionObj.startPrice,
+            floorPrice: auctionObj.floorPrice,
+            currentBlockHeight: await getCurrentBlock(arweave),
+            scalingExponent: AUCTION_SETTINGS.scalingExponent,
+            exponentialDecayRate: AUCTION_SETTINGS.exponentialDecayRate,
+          }).valueOf();
           expect(writeInteraction?.originalTxId).not.toBeUndefined();
           const { cachedValue } = await contract.readState();
           expect(cachedValue.errorMessages).not.toContain(auctionTxId);
@@ -660,15 +667,16 @@ describe('Auctions', () => {
             endTimestamp: expect.any(Number),
             startTimestamp: expect.any(Number),
             undernames: DEFAULT_UNDERNAME_COUNT,
-            purchasePrice: winningBidQty,
+            purchasePrice: pricePaidForBlock,
           });
-          const excessValueForInitiator = winningBidQty - auctionObj.floorPrice;
+          const excessValueForInitiator =
+            pricePaidForBlock - auctionObj.floorPrice;
           expect(balances[nonContractOwnerAddress]).toEqual(
             prevState.balances[nonContractOwnerAddress] -
               excessValueForInitiator,
           );
           expect(balances[srcContractId]).toEqual(
-            prevState.balances[srcContractId] + winningBidQty,
+            prevState.balances[srcContractId] + pricePaidForBlock,
           );
         });
       });
@@ -681,9 +689,9 @@ async function writeInteractionOrFail<Input = unknown>(
   input: Input,
   options?: WriteInteractionOptions,
 ): Promise<WriteInteractionResponse> {
-  const ret = await contract.writeInteraction(input, options);
-  if (!ret) {
-    throw new Error('writeInteration returned null unexpectedly');
+  const writeInteraction = await contract.writeInteraction(input, options);
+  if (!writeInteraction) {
+    throw new Error('Contract write interaction returned null unexpectedly');
   }
-  return ret;
+  return writeInteraction;
 }

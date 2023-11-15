@@ -12,60 +12,62 @@ import {
   RegistrationType,
 } from './types';
 
-export function calculateMinimumAuctionBid({
+export function calculateAuctionPriceForBlock({
   startHeight,
   startPrice,
   floorPrice,
   currentBlockHeight,
-  decayInterval,
-  decayRate,
+  scalingExponent,
+  exponentialDecayRate,
 }: {
   startHeight: BlockHeight;
   startPrice: number;
   floorPrice: number;
   currentBlockHeight: BlockHeight;
-  decayInterval: number;
-  decayRate: number;
+  scalingExponent: number;
+  exponentialDecayRate: number;
 }): IOToken {
-  const blockIntervalsPassed = Math.max(
-    0,
-    Math.floor(
-      (currentBlockHeight.valueOf() - startHeight.valueOf()) / decayInterval,
-    ),
-  );
+  const blocksSinceStart = currentBlockHeight.valueOf() - startHeight.valueOf();
+  const decaySinceStart = exponentialDecayRate * blocksSinceStart;
   const dutchAuctionBid =
-    startPrice * Math.pow(1 - decayRate, blockIntervalsPassed);
+    startPrice * Math.pow(1 - decaySinceStart, scalingExponent);
   // TODO: we shouldn't be rounding like this, use a separate class to handle the number of allowed decimals for IO values and use them here
-  return new IOToken(Math.max(floorPrice, dutchAuctionBid));
+  return new IOToken(
+    Math.min(startPrice, Math.max(floorPrice, dutchAuctionBid)),
+  );
 }
 
-export function getAuctionPrices({
+export function getAuctionPricesForInterval({
   auctionSettings,
   startHeight,
   startPrice,
   floorPrice,
+  blocksPerInterval,
 }: {
   auctionSettings: AuctionSettings;
   startHeight: BlockHeight;
   startPrice: number;
   floorPrice: number;
+  blocksPerInterval: number;
 }): Record<number, number> {
-  const { auctionDuration, decayRate, decayInterval } = auctionSettings;
-  const intervalCount = auctionDuration / decayInterval;
+  const { auctionDuration, exponentialDecayRate, scalingExponent } =
+    auctionSettings;
   const prices: Record<number, number> = {};
-  for (let i = 0; i <= intervalCount; i++) {
-    const intervalHeight = new BlockHeight(
-      startHeight.valueOf() + i * decayInterval,
-    );
-    const price = calculateMinimumAuctionBid({
+  for (
+    let intervalBlockHeight = 0;
+    intervalBlockHeight <= auctionDuration;
+    intervalBlockHeight += blocksPerInterval
+  ) {
+    const blockHeightForInterval = startHeight.valueOf() + intervalBlockHeight;
+    const price = calculateAuctionPriceForBlock({
       startHeight,
       startPrice,
       floorPrice,
-      currentBlockHeight: intervalHeight,
-      decayInterval,
-      decayRate,
+      currentBlockHeight: new BlockHeight(blockHeightForInterval),
+      exponentialDecayRate,
+      scalingExponent,
     });
-    prices[intervalHeight.valueOf()] = price.valueOf();
+    prices[blockHeightForInterval] = price.valueOf();
   }
   return prices;
 }

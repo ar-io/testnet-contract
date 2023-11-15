@@ -19,6 +19,14 @@ export const evolveState = async (
   // update the auction settings object
   state.settings.auctions = AUCTION_SETTINGS;
 
+  // update existing auctions to use the new settings
+  for (const auction of Object.keys(state.auctions)) {
+    state.auctions[auction] = {
+      ...state.auctions[auction],
+      settings: AUCTION_SETTINGS,
+    };
+  }
+
   // TODO: Should this be using previous contracts DF values?
   // update demand factoring
   state.demandFactoring = {

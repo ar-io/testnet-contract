@@ -1,60 +1,113 @@
 import {
-  calculateMinimumAuctionBid,
-  getAuctionPrices,
+  calculateAuctionPriceForBlock,
+  getAuctionPricesForInterval,
   getEndTimestampForAuction,
 } from './auctions';
-import { SECONDS_IN_A_YEAR } from './constants';
+import { AUCTION_SETTINGS, SECONDS_IN_A_YEAR } from './constants';
 import { AuctionData, BlockTimestamp } from './types';
 import { BlockHeight } from './types';
 
 describe('Auction util functions', () => {
-  describe('calculateMinimumAuctionBid function', () => {
+  describe('validate AUCTION_SETTINGS used in the contract', () => {
+    const basePrice = 30;
+    const allowedThreshold = 0.05; // prices must be within 5% of the expected value
+    const startPrice = basePrice * AUCTION_SETTINGS.startPriceMultiplier;
+    const floorPrice = basePrice * AUCTION_SETTINGS.floorPriceMultiplier;
+    const startHeight = new BlockHeight(0);
+
     it.each([
-      [[0, 0, 0.1], 100],
-      [[0, 1, 0.1], 90],
-      [[0, 2, 0.1], 81],
-      [[0, 3, 0.1], 72.9],
-      [[0, 0, 0.2], 100],
-      [[0, 1, 0.2], 80],
-      [[0, 2, 0.2], 64],
-      [[0, 3, 0.2], 51.2],
+      [
+        'should never be larger than the start price',
+        new BlockHeight(0),
+        startPrice,
+      ],
+      [
+        'should be half the start price after ~2.5 days (1800 blocks)',
+        new BlockHeight(1800),
+        startPrice / 2,
+      ],
+      [
+        'should twice the floor price after ~11.5 days (8300 blocks)',
+        new BlockHeight(8300),
+        floorPrice * 2,
+      ],
+      [
+        'should end at a price larger than the floor price',
+        new BlockHeight(AUCTION_SETTINGS.auctionDuration),
+        floorPrice,
+      ],
+    ])('%s', (_: string, currentBlockHeight: BlockHeight, expectedPrice) => {
+      const priceAtBlock = calculateAuctionPriceForBlock({
+        startHeight,
+        startPrice,
+        floorPrice,
+        currentBlockHeight,
+        exponentialDecayRate: AUCTION_SETTINGS.exponentialDecayRate,
+        scalingExponent: AUCTION_SETTINGS.scalingExponent,
+      });
+      const percentDifference = Math.abs(
+        1 - expectedPrice / priceAtBlock.valueOf(),
+      );
+      expect(priceAtBlock.valueOf()).toBeGreaterThanOrEqual(expectedPrice);
+      expect(percentDifference).toBeLessThanOrEqual(allowedThreshold);
+    });
+  });
+
+  describe('calculateAuctionPriceForBlock function', () => {
+    it.each([
+      // we keep the scalingComponent consistent to make it easier to reason about the test cases, and to represent the decay in the auction curve for block heights and varying decay rates
+      [[0, 0, 0.001, 90], 100],
+      [[0, 1, 0.001, 90], 91.389003],
+      [[0, 2, 0.001, 90], 83.511968],
+      [[0, 3, 0.001, 90], 76.306977],
+      [[0, 0, 0.002, 90], 100],
+      [[0, 1, 0.002, 90], 83.511968],
+      [[0, 2, 0.002, 90], 69.717284],
+      [[0, 3, 0.002, 90], 58.180118],
+      // block heights before the start height should just return the start price
+      [[10, 9, 0.001, 90], 100],
+      [[10, 0, 0.001, 90], 100],
     ])(
       'given [current block height, moving average purchase count] of %j, should return %d',
-      ([startHeight, currentHeight, decayRate], expectedMinimumBid) => {
-        const calculatedMinimumBid = calculateMinimumAuctionBid({
+      (
+        [startHeight, currentHeight, exponentialDecayRate, scalingExponent],
+        expectedPrice,
+      ) => {
+        const calculatedMinimumBid = calculateAuctionPriceForBlock({
           startHeight: new BlockHeight(startHeight),
           startPrice: 100,
           floorPrice: 10,
           currentBlockHeight: new BlockHeight(currentHeight),
-          decayRate: decayRate, // 10% per interval
-          decayInterval: 1,
+          exponentialDecayRate,
+          scalingExponent,
         });
-        expect(calculatedMinimumBid.valueOf()).toEqual(expectedMinimumBid);
+        expect(calculatedMinimumBid.valueOf()).toEqual(expectedPrice);
       },
     );
   });
 
-  describe('getAuctionPrices function', () => {
+  describe('getAuctionPricesForInterval function', () => {
     const baseAuctionSettings = {
       auctionDuration: 3,
-      decayRate: 0.1,
-      decayInterval: 1,
+      exponentialDecayRate: 0.001,
+      scalingExponent: 90,
       floorPriceMultiplier: 1,
       startPriceMultiplier: 10,
     };
 
     it('should return the correct prices for all block heights', () => {
-      const prices = getAuctionPrices({
+      const prices = getAuctionPricesForInterval({
         auctionSettings: baseAuctionSettings,
         startHeight: new BlockHeight(0),
         startPrice: 100,
         floorPrice: 10,
+        blocksPerInterval: 1,
       });
       expect(prices).toEqual({
         0: 100,
-        1: 90,
-        2: 81,
-        3: 72.9,
+        1: 91.389003,
+        2: 83.511968,
+        3: 76.306977,
       });
     });
   });
@@ -71,8 +124,8 @@ describe('Auction util functions', () => {
       years: 1,
       settings: {
         auctionDuration: 3,
-        decayRate: 0.1,
-        decayInterval: 1,
+        exponentialDecayRate: 0.1,
+        scalingExponent: 90,
         floorPriceMultiplier: 1,
         startPriceMultiplier: 10,
       },

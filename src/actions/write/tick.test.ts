@@ -21,8 +21,8 @@ import {
 
 const defaultAuctionSettings = {
   auctionDuration: 2,
-  decayInterval: 1,
-  decayRate: 0.5,
+  scalingExponent: 10,
+  exponentialDecayRate: 0.5,
   floorPriceMultiplier: 1,
   startPriceMultiplier: 10,
 };
