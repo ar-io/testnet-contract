@@ -33,10 +33,11 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
   });
 
   // Read the ANT Registry Contract
-  const contract = warp
+  const contract = await warp
     .pst(arnsContractTxId)
     .connect(wallet)
-    .setEvaluationOptions(evaluationOptions);
+    .setEvaluationOptions(evaluationOptions)
+    .syncState(`https://api.arns.app/v1/contract/${arnsContractTxId}`);
 
   const txId = await contract.writeInteraction(
     {
