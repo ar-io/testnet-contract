@@ -1,5 +1,6 @@
 import { AuctionSettings } from './types';
 
+export const TOTAL_IO_SUPPLY = 1_000_000_000; // 1 billion IO tokens
 export const SECONDS_IN_A_YEAR = 31_536_000; // 52 weeks, 7 days per week, 24 hours per day, sixty minutes per hour, sixty seconds per minute
 export const MAX_YEARS = 5; // the maximum amount of years an arns name could be leased for
 export const MIN_YEARS = 1; // the minimum amount of years an arns name could be leased for
