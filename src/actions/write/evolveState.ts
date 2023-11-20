@@ -1,9 +1,12 @@
+import { NON_CONTRACT_OWNER_MESSAGE, TOTAL_IO_SUPPLY } from '../../constants';
 import {
-  AUCTION_SETTINGS,
-  DEMAND_FACTORING_SETTINGS,
-  NON_CONTRACT_OWNER_MESSAGE,
-} from '../../constants';
-import { ContractWriteResult, IOState, PstAction } from '../../types';
+  AuctionData,
+  ContractWriteResult,
+  Gateway,
+  IOState,
+  PstAction,
+  TokenVault,
+} from '../../types';
 
 // Updates this contract to new source code
 export const evolveState = async (
@@ -16,31 +19,43 @@ export const evolveState = async (
     throw new ContractError(NON_CONTRACT_OWNER_MESSAGE);
   }
 
-  // update the auction settings object
-  state.settings.auctions = AUCTION_SETTINGS;
+  // balances
+  const totalBalances = Object.values(state.balances).reduce(
+    (total, current) => total + current,
+    0,
+  );
 
-  // update existing auctions to use the new settings
-  for (const auction of Object.keys(state.auctions)) {
-    state.auctions[auction] = {
-      ...state.auctions[auction],
-      settings: AUCTION_SETTINGS,
-    };
+  // gateway stakes
+  const totalGatewayStaked = Object.values(state.gateways).reduce(
+    (totalGatewaysStake: number, gateway: Gateway) => {
+      const gatewayStake =
+        gateway.operatorStake +
+        gateway.vaults.reduce(
+          (totalVaulted, currentVault: TokenVault) =>
+            totalVaulted + currentVault.balance,
+          0,
+        );
+      return totalGatewaysStake + gatewayStake;
+    },
+    0,
+  );
+
+  // active auctions
+  const totalAuctionStake = Object.values(state.auctions).reduce(
+    (totalAuctionStake: number, auction: AuctionData) => {
+      return totalAuctionStake + auction.floorPrice;
+    },
+    0,
+  );
+
+  const totalContractIO =
+    totalBalances + totalGatewayStaked + totalAuctionStake;
+
+  const diff = TOTAL_IO_SUPPLY - totalContractIO;
+
+  if (diff > 0) {
+    state.balances[SmartWeave.contract.id] += diff;
   }
-
-  // TODO: Should this be using previous contracts DF values?
-  // update demand factoring
-  state.demandFactoring = {
-    periodZeroBlockHeight: +SmartWeave.block.height,
-    currentPeriod: 0,
-    trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
-    trailingPeriodRevenues: [0, 0, 0, 0, 0, 0, 0],
-    purchasesThisPeriod: 0,
-    revenueThisPeriod: 0,
-    demandFactor: DEMAND_FACTORING_SETTINGS.demandFactorBaseValue,
-    consecutivePeriodsWithMinDemandFactor: 0,
-  };
-
-  state.lastTickedHeight = +SmartWeave.block.height;
 
   return { state };
 };
