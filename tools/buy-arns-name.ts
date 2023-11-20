@@ -36,9 +36,11 @@ import { getContractManifest, initialize, warp } from './utilities';
   });
 
   // Read the ANT Registry Contract
-  const contract = warp
+  const contract = await warp
     .pst(arnsContractTxId)
-    .setEvaluationOptions(evaluationOptions);
+    .setEvaluationOptions(evaluationOptions)
+    .syncState(`https://api.arns.app/v1/contract/${arnsContractTxId}`);
+
   contract.connect(wallet);
 
   // check if this name exists in the registry, if not exit the script.

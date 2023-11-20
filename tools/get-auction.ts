@@ -19,9 +19,10 @@ import { getContractManifest, initialize, warp } from './utilities';
   });
 
   // Read the ArNS Registry Contract
-  const contract = warp
+  const contract = await warp
     .pst(contractTxId)
-    .setEvaluationOptions(evaluationOptions);
+    .setEvaluationOptions(evaluationOptions)
+    .syncState(`https://api.arns.app/v1/contract/${contractTxId}`);
 
   const { result } = await contract.viewState({
     function: 'auction',
