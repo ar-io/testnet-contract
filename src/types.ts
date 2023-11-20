@@ -1,64 +1,88 @@
 import { PstState } from 'warp-contracts';
 
 import {
+  MAX_ALLOWED_DECIMALS,
   NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
-} from './constants.js';
+} from './constants';
+
+export type WalletAddress = string;
+export type TransactionId = string;
+export type DemandFactoringData = {
+  periodZeroBlockHeight: number; // TODO: The block height at which the contract was initialized
+  currentPeriod: number;
+  trailingPeriodPurchases: number[]; // Acts as a ring buffer of trailing period purchase counts
+  trailingPeriodRevenues: number[]; // Acts as a ring buffer of trailing period revenues
+  purchasesThisPeriod: number;
+  revenueThisPeriod: number;
+  demandFactor: number;
+  consecutivePeriodsWithMinDemandFactor: number;
+};
 
 // TODO: add InputValidator class that can be extended for specific methods
-
+export type ArNSName = string;
+export type Balances = Record<WalletAddress, number>;
+export type Gateways = Record<WalletAddress, Gateway>;
+export type Records = Record<ArNSName, ArNSNameData>; // TODO: create ArNS Name type
+export type ReservedNames = Record<ArNSName, ReservedNameData>;
+export type Auctions = Record<ArNSName, AuctionData>;
+export type Fees = Record<string, number>;
 export type IOState = PstState & {
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
-  records: {
-    // A list of all names and their corresponding attributes
-    [name: string]: ArNSName;
-  };
-  gateways: {
-    // a registry of all gateways
-    [address: string]: Gateway; // each gateway uses its public arweave wallet address to identify it in the gateway registry
-  };
-  // A list of all fees for purchasing ArNS names
-  fees: Fees;
+  records: Records; // The list of all ArNS names and their associated data
+  gateways: Gateways; // each gateway uses its public arweave wallet address to identify it in the gateway registry
+  fees: Fees; // starting list of all fees for purchasing ArNS names
   settings: ContractSettings; // protocol settings and parameters
-  reserved: {
-    // A list of all reserved names that are not allowed to be purchased at this time
-    [name: string]: ReservedName;
-  };
-  vaults: {
-    // a list of all vaults that have locked balances
-    [address: string]: TokenVault[];
-    // a wallet can have multiple vaults
-  };
-  // auctions
-  auctions: {
-    [name: string]: Auction;
-  };
+  reserved: ReservedNames; // list of all reserved names that are not allowed to be purchased at this time
+  auctions: Auctions;
+  lastTickedHeight: number; // periodicity management
+  // TODO: epoch tracking - relevant to GAR observers
+  demandFactoring: DemandFactoringData;
+  observations: Observations;
 };
 
-export type Fees = {
-  [nameLength: string]: number;
+export type EpochObservations = {
+  failureSummaries: Record<WalletAddress, WalletAddress[]>; // the gateway that has been marked as down and the gateways that marked it down
+  reports: Record<WalletAddress, TransactionId>;
 };
 
-export type Auction = {
+// The health reports and failure failureSummaries submitted by observers for an epoch
+export type Observations = Record<number, EpochObservations>;
+
+export type WeightedObserver = {
+  gatewayAddress: string;
+  observerAddress: string;
+  stake: number;
+  start: number;
+  stakeWeight: number;
+  tenureWeight: number;
+  gatewayRewardRatioWeight: number;
+  observerRewardRatioWeight: number;
+  compositeWeight: number;
+  normalizedCompositeWeight: number;
+};
+
+export type AuctionData = {
   startPrice: number;
   floorPrice: number;
   startHeight: number;
   endHeight: number;
-  type: 'lease' | 'permabuy';
+  type: RegistrationType;
   initiator: string;
   contractTxId: string;
   years?: number;
   settings: AuctionSettings;
 };
 
+// TODO: Since we're not allowing mutability of this via governance, we could do away with ID-based settings
 export type AuctionSettings = {
-  floorPriceMultiplier: number; // if we ever want to drop prices
+  floorPriceMultiplier: number;
   startPriceMultiplier: number;
+  scalingExponent: number; // the constant used to scale the price of the auction
   auctionDuration: number;
-  decayRate: number;
-  decayInterval: number;
+  exponentialDecayRate: number; // the rate at which the price drops for each block
 };
 
 export type GatewayRegistrySettings = {
@@ -106,20 +130,19 @@ export type GatewaySettings = {
 export type AllowedProtocols = 'http' | 'https';
 export type RegistrationType = 'lease' | 'permabuy';
 
-export type ArNSName = {
+export type ArNSNameData = {
   contractTxId: string; // The ANT Contract used to manage this name
   startTimestamp: number; // At what unix time (seconds since epoch) the lease starts
   endTimestamp?: number; // At what unix time (seconds since epoch) the lease ends
   type: RegistrationType;
   undernames: number;
+  purchasePrice: number;
 };
 
-export type ReservedName = {
+export type ReservedNameData = {
   target?: string; // The target wallet address this name is reserved for
   endTimestamp?: number; // At what unix time (seconds since epoch) this reserved name becomes available
 };
-
-export type WalletAddress = string;
 
 export type TokenVault = {
   balance: number; // Positive integer, the amount locked
@@ -175,14 +198,173 @@ export type GARFunctions =
   | 'finalizeOperatorStakeDecrease'
   | 'updateGatewaySettings';
 
-export type IOContractFunctions = GARFunctions & ArNSFunctions & PstFunctions;
+export type ObservationFunctions =
+  | 'saveObservations'
+  | 'prescribedObserver'
+  | 'prescribedObservers';
 
-export type ContractResult =
-  | { state: IOState }
-  | { result: PstResult }
-  | { result: ArNSNameResult }
-  | {
-      result: {
-        [x: string | number]: any; // eslint-disable-line
-      };
-    };
+export type IOContractFunctions = ObservationFunctions &
+  GARFunctions &
+  ArNSFunctions &
+  PstFunctions;
+
+export type ContractWriteResult = { state: IOState };
+// TODO: make this a union type of all the possible return types
+export type ContractReadResult = {
+  result: unknown;
+};
+
+export interface Equatable<T> {
+  equals(other: T): boolean;
+}
+
+export class PositiveFiniteInteger implements Equatable<PositiveFiniteInteger> {
+  constructor(private readonly positiveFiniteInteger: number) {
+    if (
+      !Number.isFinite(this.positiveFiniteInteger) ||
+      !Number.isInteger(this.positiveFiniteInteger) ||
+      this.positiveFiniteInteger < 0
+    ) {
+      throw new ContractError(
+        `Number must be a non-negative integer value! ${positiveFiniteInteger}`,
+      );
+    }
+  }
+
+  [Symbol.toPrimitive](hint?: string): number | string {
+    if (hint === 'string') {
+      this.toString();
+    }
+
+    return this.positiveFiniteInteger;
+  }
+
+  plus(positiveFiniteInteger: PositiveFiniteInteger): PositiveFiniteInteger {
+    return new PositiveFiniteInteger(
+      this.positiveFiniteInteger + positiveFiniteInteger.positiveFiniteInteger,
+    );
+  }
+
+  minus(positiveFiniteInteger: PositiveFiniteInteger): PositiveFiniteInteger {
+    return new PositiveFiniteInteger(
+      this.positiveFiniteInteger - positiveFiniteInteger.positiveFiniteInteger,
+    );
+  }
+
+  isGreaterThan(positiveFiniteInteger: PositiveFiniteInteger): boolean {
+    return (
+      this.positiveFiniteInteger > positiveFiniteInteger.positiveFiniteInteger
+    );
+  }
+
+  isGreaterThanOrEqualTo(
+    positiveFiniteInteger: PositiveFiniteInteger,
+  ): boolean {
+    return (
+      this.positiveFiniteInteger >= positiveFiniteInteger.positiveFiniteInteger
+    );
+  }
+
+  toString(): string {
+    return `${this.positiveFiniteInteger}`;
+  }
+
+  valueOf(): number {
+    return this.positiveFiniteInteger;
+  }
+
+  toJSON(): number {
+    return this.positiveFiniteInteger;
+  }
+
+  equals(other: PositiveFiniteInteger): boolean {
+    return this.positiveFiniteInteger === other.positiveFiniteInteger;
+  }
+}
+
+export class BlockHeight extends PositiveFiniteInteger {
+  // TODO: Improve upon this technique for sub-type discrimination
+  readonly type = 'BlockHeight';
+  constructor(blockHeight: number) {
+    super(blockHeight);
+  }
+}
+
+export class BlockTimestamp extends PositiveFiniteInteger {
+  // TODO: Improve upon this technique for sub-type discrimination
+  readonly type = 'BlockTimestamp';
+  constructor(blockTimestamp: number) {
+    super(blockTimestamp);
+  }
+}
+
+// Following types were acquired from ts-essentials library
+export type Primitive =
+  | string
+  | number
+  | boolean
+  | bigint
+  | symbol
+  | undefined
+  | null;
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type Builtin = Primitive | Function | Date | Error | RegExp;
+export type AnyArray<Type = any> = Array<Type> | ReadonlyArray<Type>;
+export type IsTuple<Type> = Type extends readonly any[]
+  ? any[] extends Type
+    ? never
+    : Type
+  : never;
+export type IsAny<Type> = 0 extends 1 & Type ? true : false;
+export type IsUnknown<Type> = IsAny<Type> extends true
+  ? false
+  : unknown extends Type
+  ? true
+  : false;
+
+export type DeepReadonly<Type> = Type extends Exclude<Builtin, Error>
+  ? Type
+  : Type extends Map<infer Keys, infer Values>
+  ? ReadonlyMap<DeepReadonly<Keys>, DeepReadonly<Values>>
+  : Type extends ReadonlyMap<infer Keys, infer Values>
+  ? ReadonlyMap<DeepReadonly<Keys>, DeepReadonly<Values>>
+  : Type extends WeakMap<infer Keys, infer Values>
+  ? WeakMap<DeepReadonly<Keys>, DeepReadonly<Values>>
+  : Type extends Set<infer Values>
+  ? ReadonlySet<DeepReadonly<Values>>
+  : Type extends ReadonlySet<infer Values>
+  ? ReadonlySet<DeepReadonly<Values>>
+  : Type extends WeakSet<infer Values>
+  ? WeakSet<DeepReadonly<Values>>
+  : Type extends Promise<infer Value>
+  ? Promise<DeepReadonly<Value>>
+  : Type extends AnyArray<infer Values>
+  ? Type extends IsTuple<Type>
+    ? { readonly [Key in keyof Type]: DeepReadonly<Type[Key]> }
+    : ReadonlyArray<DeepReadonly<Values>>
+  : // eslint-disable-next-line @typescript-eslint/ban-types
+  Type extends {}
+  ? { readonly [Key in keyof Type]: DeepReadonly<Type[Key]> }
+  : IsUnknown<Type> extends true
+  ? unknown
+  : Readonly<Type>;
+
+// TODO: extend this class and use it for all balance/IO token logic
+export class IOToken {
+  protected value: number;
+  constructor(value: number) {
+    // do some big number casting for allowed decimals
+    this.value = +value.toFixed(MAX_ALLOWED_DECIMALS);
+  }
+
+  valueOf(): number {
+    return this.value;
+  }
+}
+
+export class mIOToken extends PositiveFiniteInteger {
+  protected value: number;
+  constructor(value: number) {
+    super(value);
+  }
+}

@@ -3,18 +3,24 @@ import {
   INSUFFICIENT_FUNDS_MESSAGE,
   MAX_ALLOWED_UNDERNAMES,
   MAX_UNDERNAME_MESSAGE,
-  SECONDS_IN_GRACE_PERIOD,
+  PERMABUY_LEASE_FEE_LENGTH,
 } from '../../constants';
-import { ContractResult, IOState, PstAction } from '../../types';
+import { calculateUndernameCost } from '../../pricing';
 import {
-  calculateProRatedUndernameCost,
+  ArNSNameData,
+  BlockTimestamp,
+  ContractWriteResult,
+  IOState,
+  PstAction,
+} from '../../types';
+import {
+  calculateYearsBetweenTimestamps,
   getInvalidAjvMessage,
+  isExistingActiveRecord,
+  safeTransfer,
   walletHasSufficientBalance,
 } from '../../utilities';
-import { validateIncreaseUndernameCount } from '../../validations.mjs';
-
-declare const ContractError;
-declare const SmartWeave: any;
+import { validateIncreaseUndernameCount } from '../../validations';
 
 export class IncreaseUndernameCount {
   function = 'increaseUndernameCount';
@@ -25,7 +31,11 @@ export class IncreaseUndernameCount {
     // validate using ajv validator
     if (!validateIncreaseUndernameCount(input)) {
       throw new ContractError(
-        getInvalidAjvMessage(validateIncreaseUndernameCount, input),
+        getInvalidAjvMessage(
+          validateIncreaseUndernameCount,
+          input,
+          'increaseUndernameCount',
+        ),
       );
     }
     const { name, qty } = input;
@@ -37,50 +47,84 @@ export class IncreaseUndernameCount {
 export const increaseUndernameCount = async (
   state: IOState,
   { caller, input }: PstAction,
-): Promise<ContractResult> => {
+): Promise<ContractWriteResult> => {
   const { name, qty } = new IncreaseUndernameCount(input);
   const { balances, records } = state;
   const record = records[name];
+  const currentBlockTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
 
-  // check if record exists
-  if (!record) {
-    throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
-  }
-
-  const { undernames = 10, type, endTimestamp } = record;
-  const currentBlockTime = +SmartWeave.block.timestamp;
-  const undernameCost = calculateProRatedUndernameCost(
+  // validate record can increase undernames
+  assertRecordCanIncreaseUndernameCount({
+    record,
     qty,
-    currentBlockTime,
-    type,
-    endTimestamp,
-  );
+    currentBlockTimestamp,
+  });
 
-  // the new total qty
-  const incrementedUndernames = undernames + qty;
-  if (incrementedUndernames > MAX_ALLOWED_UNDERNAMES) {
-    throw new ContractError(MAX_UNDERNAME_MESSAGE);
+  const { endTimestamp, type, undernames: existingUndernames } = record;
+  const yearsRemaining = endTimestamp
+    ? calculateYearsBetweenTimestamps({
+        startTimestamp: currentBlockTimestamp,
+        endTimestamp: new BlockTimestamp(endTimestamp),
+      })
+    : PERMABUY_LEASE_FEE_LENGTH;
+
+  const incrementedUndernames = existingUndernames + qty;
+
+  const additionalUndernameCost = calculateUndernameCost({
+    name,
+    fees: state.fees,
+    increaseQty: qty,
+    type,
+    demandFactoring: state.demandFactoring,
+    years: yearsRemaining,
+  });
+
+  // Check if the user has enough tokens to increase the undername count
+  if (!walletHasSufficientBalance(balances, caller, additionalUndernameCost)) {
+    throw new ContractError(
+      `${INSUFFICIENT_FUNDS_MESSAGE}: caller has ${balances[
+        caller
+      ].toLocaleString()} but needs to have ${additionalUndernameCost.toLocaleString()} to pay for this undername increase of ${qty} for ${name}.`,
+    );
   }
+
+  state.records[name].undernames = incrementedUndernames;
+  safeTransfer({
+    balances: state.balances,
+    fromAddr: caller,
+    toAddr: SmartWeave.contract.id,
+    qty: additionalUndernameCost,
+  });
+
+  return { state };
+};
+
+export function assertRecordCanIncreaseUndernameCount({
+  record,
+  qty,
+  currentBlockTimestamp,
+}: {
+  record: ArNSNameData;
+  qty: number;
+  currentBlockTimestamp: BlockTimestamp;
+}): void {
   // This name's lease has expired and cannot be extended
-  if (endTimestamp + SECONDS_IN_GRACE_PERIOD <= currentBlockTime) {
+  if (
+    !isExistingActiveRecord({
+      record,
+      currentBlockTimestamp,
+    })
+  ) {
+    if (!record) {
+      throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
+    }
     throw new ContractError(
       `This name has expired and must renewed before its undername support can be extended.`,
     );
   }
 
-  // Check if the user has enough tokens to increase the undername count
-  if (!walletHasSufficientBalance(balances, caller, undernameCost)) {
-    throw new ContractError(
-      `${INSUFFICIENT_FUNDS_MESSAGE}: caller has ${balances[
-        caller
-      ].toLocaleString()} but needs to have ${undernameCost.toLocaleString()} to pay for this undername increase of ${qty} for ${name}.`,
-    );
+  // the new total qty
+  if (record.undernames + qty > MAX_ALLOWED_UNDERNAMES) {
+    throw new ContractError(MAX_UNDERNAME_MESSAGE);
   }
-
-  // TODO: move cost to protocol balance
-  state.records[name].undernames = incrementedUndernames;
-  state.balances[caller] -= undernameCost;
-  state.balances[SmartWeave.contract.id] += undernameCost;
-
-  return { state };
-};
+}

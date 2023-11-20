@@ -2,12 +2,9 @@ import {
   INSUFFICIENT_FUNDS_MESSAGE,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
-import { ContractResult, IOState, PstAction } from '../../types';
-import { getInvalidAjvMessage } from '../../utilities';
-import { validateJoinNetwork } from '../../validations.mjs';
-
-declare const ContractError;
-declare const SmartWeave: any;
+import { ContractWriteResult, IOState, PstAction } from '../../types';
+import { getInvalidAjvMessage, unsafeDecrementBalance } from '../../utilities';
+import { validateJoinNetwork } from '../../validations';
 
 export class JoinNetwork {
   qty: number;
@@ -22,7 +19,9 @@ export class JoinNetwork {
   constructor(input: any) {
     // validate using ajv validator
     if (!validateJoinNetwork(input)) {
-      throw new ContractError(getInvalidAjvMessage(validateJoinNetwork, input));
+      throw new ContractError(
+        getInvalidAjvMessage(validateJoinNetwork, input, 'joinNetwork'),
+      );
     }
 
     const {
@@ -50,7 +49,7 @@ export class JoinNetwork {
 export const joinNetwork = async (
   state: IOState,
   { caller, input }: PstAction,
-): Promise<ContractResult> => {
+): Promise<ContractWriteResult> => {
   const { balances, gateways = {}, settings } = state;
   const { registry: registrySettings } = settings;
 
@@ -80,7 +79,7 @@ export const joinNetwork = async (
   }
 
   // Join the network
-  state.balances[caller] -= qty;
+  unsafeDecrementBalance(state.balances, caller, qty);
   state.gateways[caller] = {
     operatorStake: qty,
     observerWallet: observerWallet || caller, // if no observer wallet is provided, we add the caller by default

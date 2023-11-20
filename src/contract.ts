@@ -8,79 +8,99 @@ import {
   getGatewayTotalStake,
   getRankedGatewayRegistry,
 } from './actions/read/gateways';
+import {
+  prescribedObserver,
+  prescribedObservers,
+} from './actions/read/observation';
+import { getPriceForInteraction } from './actions/read/price';
 import { getRecord } from './actions/read/record';
 import { buyRecord } from './actions/write/buyRecord';
+import { decreaseOperatorStake } from './actions/write/decreaseOperatorStake';
 import { evolve } from './actions/write/evolve';
 import { evolveState } from './actions/write/evolveState';
 import { extendRecord } from './actions/write/extendRecord';
-import { finalizeLeave } from './actions/write/finalizeLeave';
-import { finalizeOperatorStakeDecrease } from './actions/write/finalizeOperatorStakeDecrease';
 import { increaseOperatorStake } from './actions/write/increaseOperatorStake';
 import { increaseUndernameCount } from './actions/write/increaseUndernameCount';
-import { initiateLeave } from './actions/write/initiateLeave';
-import { initiateOperatorStakeDecrease } from './actions/write/initiateOperatorStakeDecrease';
 import { joinNetwork } from './actions/write/joinNetwork';
+import { leaveNetwork } from './actions/write/leaveNetwork';
+import { saveObservations } from './actions/write/saveObservations';
 import { submitAuctionBid } from './actions/write/submitAuctionBid';
+import { tick } from './actions/write/tick';
 import { transferTokens } from './actions/write/transferTokens';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
 import {
-  ContractResult,
+  ContractReadResult,
+  ContractWriteResult,
   IOContractFunctions,
   IOState,
   PstAction,
 } from './types';
 
-declare const ContractError;
-
 export async function handle(
   state: IOState,
   action: PstAction,
-): Promise<ContractResult> {
+): Promise<ContractReadResult | ContractWriteResult> {
   const input = action.input;
+
+  // don't tick on evolutions, it should only update the source code transaction
+  if (input.function === 'evolve') {
+    return evolve(state, action);
+  }
+
+  // TODO: this is an interaction specific for testing and updating state without having to fork the contract, it should be removed for mainnet deployment
+  if (input.function === 'evolveState') {
+    return evolveState(state, action);
+  }
+
+  // all the remaining interactions require a ticked state, even when reading, so users get the most recent evaluation
+  const { state: tickedState } = await tick(state);
 
   switch (input.function as IOContractFunctions) {
     case 'transfer':
-      return transferTokens(state, action);
+      return transferTokens(tickedState, action);
     case 'buyRecord':
-      return buyRecord(state, action);
+      return buyRecord(tickedState, action);
     case 'extendRecord':
-      return extendRecord(state, action);
+      return extendRecord(tickedState, action);
     case 'increaseUndernameCount':
-      return increaseUndernameCount(state, action);
-    case 'evolve':
-      return evolve(state, action);
-    case 'evolveState':
-      return evolveState(state, action);
+      return increaseUndernameCount(tickedState, action);
     case 'balance':
-      return balance(state, action);
+      return balance(tickedState, action);
     case 'record':
-      return getRecord(state, action);
+      return getRecord(tickedState, action);
     case 'gateway':
-      return getGateway(state, action);
+      return getGateway(tickedState, action);
+    case 'prescribedObserver':
+      return prescribedObserver(tickedState, action);
+    case 'prescribedObservers':
+      return prescribedObservers(tickedState, action);
     case 'gatewayTotalStake':
-      return getGatewayTotalStake(state, action);
+      return getGatewayTotalStake(tickedState, action);
     case 'gatewayRegistry':
-      return getGatewayRegistry(state);
+      return getGatewayRegistry(tickedState);
     case 'rankedGatewayRegistry':
-      return getRankedGatewayRegistry(state);
+      return getRankedGatewayRegistry(tickedState);
     case 'joinNetwork':
-      return joinNetwork(state, action);
-    case 'initiateLeave':
-      return initiateLeave(state, action);
-    case 'finalizeLeave':
-      return finalizeLeave(state, action);
+      return joinNetwork(tickedState, action);
+    case 'leaveNetwork':
+      return leaveNetwork(tickedState, action);
     case 'increaseOperatorStake':
-      return increaseOperatorStake(state, action);
-    case 'initiateOperatorStakeDecrease':
-      return initiateOperatorStakeDecrease(state, action);
-    case 'finalizeOperatorStakeDecrease':
-      return finalizeOperatorStakeDecrease(state, action);
+      return increaseOperatorStake(tickedState, action);
+    case 'decreaseOperatorStake':
+      return decreaseOperatorStake(tickedState, action);
     case 'updateGatewaySettings':
-      return updateGatewaySettings(state, action);
+      return updateGatewaySettings(tickedState, action);
     case 'submitAuctionBid':
-      return submitAuctionBid(state, action);
+      return submitAuctionBid(tickedState, action);
     case 'auction':
-      return getAuction(state, action);
+      return getAuction(tickedState, action);
+    case 'tick':
+      // we already ticked, so just return the state
+      return { state: tickedState };
+    case 'saveObservations':
+      return saveObservations(tickedState, action);
+    case 'priceForInteraction':
+      return getPriceForInteraction(tickedState, action);
     default:
       throw new ContractError(
         `No function supplied or function not recognized: "${input.function}"`,

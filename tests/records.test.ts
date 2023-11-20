@@ -1,6 +1,6 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
-import { IOState } from '../src/types';
+import { BlockTimestamp, IOState } from '../src/types';
 import {
   ANT_CONTRACT_IDS,
   ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE,
@@ -14,7 +14,7 @@ import {
 import {
   calculatePermabuyFee,
   calculateRegistrationFee,
-  getLocalArNSContractId,
+  getLocalArNSContractKey,
   getLocalWallet,
 } from './utils/helper';
 import { arweave, warp } from './utils/services';
@@ -23,8 +23,8 @@ describe('Records', () => {
   let contract: Contract<PstState>;
   let srcContractId: string;
 
-  beforeAll(async () => {
-    srcContractId = getLocalArNSContractId();
+  beforeAll(() => {
+    srcContractId = getLocalArNSContractKey('id');
     contract = warp.pst(srcContractId);
   });
 
@@ -96,19 +96,21 @@ describe('Records', () => {
         type: 'lease',
         fees: prevState.fees,
         years: namePurchase.years,
-        currentBlockTimestamp: currentBlock.timestamp,
+        currentBlockTimestamp: new BlockTimestamp(currentBlock.timestamp),
+        demandFactoring: prevState.demandFactoring, // TODO: is this the right state instance to use?
       });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       const { balances, records } = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-        writeInteraction!.originalTxId,
+        writeInteraction.originalTxId,
       );
       expect(records[namePurchase.name.toLowerCase()]).toEqual({
         contractTxId: ANT_CONTRACT_IDS[0],
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
+        purchasePrice: expectedPurchasePrice,
         undernames: DEFAULT_UNDERNAME_COUNT,
         type: 'lease',
       });
@@ -144,20 +146,22 @@ describe('Records', () => {
         fees: prevState.fees,
         years: 1,
         type: 'lease',
-        currentBlockTimestamp: currentBlock.timestamp,
+        currentBlockTimestamp: new BlockTimestamp(currentBlock.timestamp),
+        demandFactoring: prevState.demandFactoring, // TODO: is this the right state instance to use?
       });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       const { balances, records } = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-        writeInteraction!.originalTxId,
+        writeInteraction.originalTxId,
       );
       expect(records[namePurchase.name.toLowerCase()]).toEqual({
         contractTxId: ANT_CONTRACT_IDS[0],
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
         undernames: DEFAULT_UNDERNAME_COUNT,
+        purchasePrice: expectedPurchasePrice,
         type: 'lease',
       });
       expect(balances[nonContractOwnerAddress]).toEqual(
@@ -188,23 +192,25 @@ describe('Records', () => {
       );
 
       const currentBlock = await arweave.blocks.getCurrent();
-      const expectedPurchasePrice = calculatePermabuyFee(
-        namePurchase.name,
-        prevState.fees,
-        currentBlock.timestamp,
-      );
+      const expectedPurchasePrice = calculatePermabuyFee({
+        name: namePurchase.name,
+        fees: prevState.fees,
+        currentBlockTimestamp: new BlockTimestamp(currentBlock.timestamp),
+        demandFactoring: prevState.demandFactoring, // TODO: is this the right state instance to use?
+      });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       const { balances, records } = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-        writeInteraction!.originalTxId,
+        writeInteraction.originalTxId,
       );
       expect(records[namePurchase.name.toLowerCase()]).toEqual({
         contractTxId: ANT_CONTRACT_IDS[0],
         type: 'permabuy',
         startTimestamp: expect.any(Number),
         undernames: DEFAULT_UNDERNAME_COUNT,
+        purchasePrice: expectedPurchasePrice,
       });
       expect(balances[nonContractOwnerAddress]).toEqual(
         prevBalance - expectedPurchasePrice,
@@ -233,9 +239,9 @@ describe('Records', () => {
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       expect(Object.keys(cachedValue.errorMessages)).toContain(
-        writeInteraction!.originalTxId,
+        writeInteraction.originalTxId,
       );
-      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
+      expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toEqual(
         NON_EXPIRED_ARNS_NAME_MESSAGE,
       );
       expect(cachedValue.state).toEqual(prevState);
@@ -270,10 +276,10 @@ describe('Records', () => {
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue } = await contract.readState();
         expect(Object.keys(cachedValue.errorMessages)).toContain(
-          writeInteraction!.originalTxId,
+          writeInteraction.originalTxId,
         );
         expect(
-          cachedValue.errorMessages[writeInteraction!.originalTxId],
+          cachedValue.errorMessages[writeInteraction.originalTxId],
         ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
         expect(cachedValue.state).toEqual(prevState);
       },
@@ -311,10 +317,10 @@ describe('Records', () => {
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue } = await contract.readState();
         expect(Object.keys(cachedValue.errorMessages)).toContain(
-          writeInteraction!.originalTxId,
+          writeInteraction.originalTxId,
         );
         expect(
-          cachedValue.errorMessages[writeInteraction!.originalTxId],
+          cachedValue.errorMessages[writeInteraction.originalTxId],
         ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
         expect(cachedValue.state).toEqual(prevState);
       },
@@ -341,10 +347,10 @@ describe('Records', () => {
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue } = await contract.readState();
         expect(Object.keys(cachedValue.errorMessages)).toContain(
-          writeInteraction!.originalTxId,
+          writeInteraction.originalTxId,
         );
         expect(
-          cachedValue.errorMessages[writeInteraction!.originalTxId],
+          cachedValue.errorMessages[writeInteraction.originalTxId],
         ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
         expect(cachedValue.state).toEqual(prevState);
       },
@@ -371,10 +377,10 @@ describe('Records', () => {
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue } = await contract.readState();
         expect(Object.keys(cachedValue.errorMessages)).toContain(
-          writeInteraction!.originalTxId,
+          writeInteraction.originalTxId,
         );
         expect(
-          cachedValue.errorMessages[writeInteraction!.originalTxId],
+          cachedValue.errorMessages[writeInteraction.originalTxId],
         ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
         expect(cachedValue.state).toEqual(prevState);
       },
@@ -398,7 +404,7 @@ describe('Records', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
+      expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toEqual(
         ARNS_NAME_RESERVED_MESSAGE,
       );
       expect(cachedValue.state).toEqual(prevState);
@@ -422,7 +428,7 @@ describe('Records', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toEqual(
+      expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toEqual(
         INVALID_SHORT_NAME,
       );
       expect(cachedValue.state).toEqual(prevState);
@@ -448,7 +454,7 @@ describe('Records', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(
+      expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toBe(
         ARNS_NAME_RESERVED_MESSAGE,
       );
       expect(cachedValue.state).toEqual(prevState);
@@ -472,7 +478,7 @@ describe('Records', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(
+      expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toBe(
         ARNS_NAME_RESERVED_MESSAGE,
       );
       expect(cachedValue.state).toEqual(prevState);
@@ -495,6 +501,16 @@ describe('Records', () => {
         },
       );
 
+      const currentBlock = await arweave.blocks.getCurrent();
+      const expectedPurchasePrice = calculateRegistrationFee({
+        name: namePurchase.name,
+        type: 'lease',
+        fees: prevState.fees,
+        years: namePurchase.years,
+        currentBlockTimestamp: new BlockTimestamp(currentBlock.timestamp),
+        demandFactoring: prevState.demandFactoring, // TODO: is this the right state instance to use?
+      });
+
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       const { records, reserved } = cachedValue.state as IOState;
@@ -504,9 +520,10 @@ describe('Records', () => {
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
         undernames: DEFAULT_UNDERNAME_COUNT,
+        purchasePrice: expectedPurchasePrice,
         type: 'lease',
       });
-      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(
+      expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toBe(
         undefined,
       );
       expect(reserved[namePurchase.name.toLowerCase()]).toEqual(undefined);
@@ -531,7 +548,7 @@ describe('Records', () => {
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
-      expect(cachedValue.errorMessages[writeInteraction!.originalTxId]).toBe(
+      expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toBe(
         ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE,
       );
       expect(cachedValue.state).toEqual(prevState);

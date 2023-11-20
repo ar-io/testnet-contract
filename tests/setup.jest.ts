@@ -1,13 +1,14 @@
 import * as fs from 'fs';
 import path from 'path';
 
-import { WALLET_FUND_AMOUNT } from './utils/constants';
+import { WALLETS_TO_CREATE } from './utils/constants';
 import { createLocalWallet, setupInitialContractState } from './utils/helper';
 import { arlocal, arweave, warp } from './utils/services';
 
+/* eslint-disable no-console */
 module.exports = async () => {
   // start arlocal
-  console.log('\n\nSetting up Warp, Arlocal and Arweave clients...'); // eslint-disable-line
+  console.log('\n\nSetting up Warp, Arlocal and Arweave clients...');
 
   await arlocal.start();
 
@@ -20,10 +21,13 @@ module.exports = async () => {
   );
 
   // create owner wallet
-  const wallets = await Promise.all(
-    Array.from({ length: 10 }).map(() => createLocalWallet(arweave)),
-  );
+  const wallets = [];
+  for (let i = 0; i < WALLETS_TO_CREATE; i++) {
+    wallets.push(await createLocalWallet(arweave));
+  }
   // save wallets to disk
+  console.log('Saving wallets to disk!');
+
   wallets.forEach((w, index) => {
     fs.writeFileSync(
       path.join(__dirname, `./wallets/${index}.json`),
@@ -31,25 +35,30 @@ module.exports = async () => {
     );
   });
 
-  console.log('Successfully created wallets!'); // eslint-disable-line
+  console.log('Successfully created wallets!');
 
-  // // // create initial contract
-  const initialContractState = setupInitialContractState(
+  // create initial contract
+  const initialContractState = await setupInitialContractState(
     wallets[0].address,
     wallets.map((w) => w.address),
   );
 
-  console.log('Successfully created initial contract state!'); // eslint-disable-line
+  console.log('Successfully created initial contract state!');
 
   // deploy contract to arlocal
-  const { contractTxId } = await warp.deploy(
+  const { contractTxId, srcTxId } = await warp.deploy(
     {
       wallet: wallets[0].wallet,
       initState: JSON.stringify(initialContractState),
       src: contractSrcJs,
     },
-    true, // disable bundling
-  );
+    true,
+  ); // disable bundling
+
+  console.log('Successfully deployed contract!', {
+    contractTxId,
+    srcTxId,
+  });
 
   // transfer funds to the protocol balance
   await warp.pst(contractTxId).connect(wallets[0].wallet).writeInteraction({
@@ -64,10 +73,11 @@ module.exports = async () => {
     JSON.stringify({
       initialContractState,
       id: contractTxId,
+      srcTxId: srcTxId,
     }),
   );
 
-  console.log('Successfully setup ArLocal and deployed contract.'); // eslint-disable-line
+  console.log('Successfully setup ArLocal and deployed contract.');
 };
 
 function createDirectories() {

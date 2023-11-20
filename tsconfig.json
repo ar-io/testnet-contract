@@ -8,12 +8,20 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "sourceMap": true,
     "allowJs": true,
     "baseUrl": ".",
     "types": ["jest"],
-    "lib": ["esnext"]
+    "lib": ["esnext"],
+
+    // additional checks
+    "pretty": true,
+    "sourceMap": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
   },
-  "include": ["src"],
+  "include": ["src", "src/globals.d.ts"],
   "exclude": ["node_modules", "tests", "src/*.js"]
 }

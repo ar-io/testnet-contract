@@ -7,7 +7,7 @@ logs
 coverage
 
 # ajv
-src/validations.mjs
+src/validations.js
 
 # source
 
@@ -17,6 +17,9 @@ wallets
 
 # local env files
 .env
+
+# test files
+arns_contract.json
 
 # warp
 cache/
@@ -39,3 +42,6 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# tests
+arns_contract.json

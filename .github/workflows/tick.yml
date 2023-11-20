@@ -1,0 +1,24 @@
+name: Tick Contract State
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 0 */3 * *
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+          cache: 'yarn'
+      - run: yarn
+      - run: yarn tick
+        env:
+          ARNS_CONTRACT_TX_ID: ${{ vars.ARNS_CONTRACT_TX_ID }}
+          JWK: ${{ secrets.JWK }}
+          MAX_ALLOWED_TICK_HEIGHT_DIFFERENCE: 25

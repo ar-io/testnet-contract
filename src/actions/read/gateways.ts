@@ -1,12 +1,10 @@
 import { NETWORK_JOIN_STATUS } from '../../constants';
-import { ContractResult, Gateway, IOState, PstAction } from '../../types';
-
-declare const ContractError: any;
+import { ContractReadResult, Gateway, IOState, PstAction } from '../../types';
 
 export const getGateway = async (
   state: IOState,
   { input: { target } }: PstAction,
-): Promise<ContractResult & any> => {
+): Promise<ContractReadResult & any> => {
   const { gateways = {} } = state;
   if (!(target in gateways)) {
     throw new ContractError('This target does not have a registered gateway.');
@@ -20,7 +18,7 @@ export const getGateway = async (
 export const getGatewayTotalStake = async (
   state: IOState,
   { input: { target } }: PstAction,
-): Promise<ContractResult & any> => {
+): Promise<ContractReadResult & any> => {
   const { gateways = {} } = state;
   if (!(target in gateways)) {
     throw new ContractError('This target does not have a registered gateway.');
@@ -33,7 +31,7 @@ export const getGatewayTotalStake = async (
 
 export const getGatewayRegistry = async (
   state: IOState,
-): Promise<ContractResult & any> => {
+): Promise<ContractReadResult & any> => {
   const { gateways = {} } = state;
   return {
     result: gateways,
@@ -42,7 +40,7 @@ export const getGatewayRegistry = async (
 
 export const getRankedGatewayRegistry = async (
   state: IOState,
-): Promise<ContractResult & any> => {
+): Promise<ContractReadResult & any> => {
   const { gateways = {} } = state;
   // Filters the gateway registry for active gateways only
   const filteredGateways: { [address: string]: Gateway } = {};

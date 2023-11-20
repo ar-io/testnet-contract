@@ -1,11 +1,14 @@
-import { ArNSName, ContractResult, IOState, PstAction } from '../../types';
-
-declare const ContractError: any;
+import {
+  ArNSNameData,
+  ContractReadResult,
+  IOState,
+  PstAction,
+} from '../../types';
 
 export const getRecord = async (
   state: IOState,
   { input: { name } }: PstAction,
-): Promise<ContractResult> => {
+): Promise<ContractReadResult> => {
   const records = state.records;
 
   if (typeof name !== 'string') {
@@ -17,7 +20,7 @@ export const getRecord = async (
     throw new ContractError('This name does not exist');
   }
 
-  const arnsName: ArNSName = records[name];
+  const arnsName: ArNSNameData = records[name];
   return {
     result: {
       name,
