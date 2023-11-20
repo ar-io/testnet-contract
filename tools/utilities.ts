@@ -59,7 +59,9 @@ export async function getContractManifest({
   arweave?: Arweave;
   contractTxId: string;
 }): Promise<EvaluationManifest> {
-  const { tags: encodedTags } = await arweave.transactions.get(contractTxId);
+  const { tags: encodedTags = [] } = await arweave.transactions
+    .get(contractTxId)
+    .catch(() => ({ tags: [] }));
   const decodedTags = tagsToObject(encodedTags);
   const contractManifestString = decodedTags['Contract-Manifest'] ?? '{}';
   const contractManifest = JSON.parse(contractManifestString);
