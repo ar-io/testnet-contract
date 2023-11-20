@@ -114,6 +114,23 @@ export const FEE_STRUCTURE = {
   '50': 50,
   '51': 50,
 };
+export const RESERVED_NAMES = [
+  'arns',
+  'ar-io',
+  'gateway',
+  'help',
+  'io',
+  'nodes',
+  'ar',
+  'cookbook',
+  'www',
+
+  // currently owned
+  'arns',
+  'search',
+  'docs',
+  'admin',
+];
 export const AUCTION_SETTINGS: AuctionSettings = {
   floorPriceMultiplier: 1,
   startPriceMultiplier: 50,
@@ -121,7 +138,6 @@ export const AUCTION_SETTINGS: AuctionSettings = {
   scalingExponent: 190,
   auctionDuration: 10_080, // approx 14 days long
 };
-
 export const DEFAULT_EPOCH_BLOCK_LENGTH = 50; // 5000 for mainnet
 export const DEFAULT_START_HEIGHT = 0;
 export const MAX_TENURE_WEIGHT = 2;
