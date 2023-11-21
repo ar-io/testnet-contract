@@ -1,8 +1,67 @@
+import { BlockTimestamp } from './types';
 import {
+  calculateYearsBetweenTimestamps,
   incrementBalance,
   safeTransfer,
   unsafeDecrementBalance,
 } from './utilities';
+
+describe('calculateYearsBetweenTimestamps function', () => {
+  // Don't use the global constant in case someone changes it there
+  //const SECONDS_IN_A_YEAR = 31_536_000;
+
+  it.each([
+    [new BlockTimestamp(0), new BlockTimestamp(0)],
+    [new BlockTimestamp(1), new BlockTimestamp(1)],
+    [
+      new BlockTimestamp(Number.MAX_SAFE_INTEGER),
+      new BlockTimestamp(Number.MAX_SAFE_INTEGER),
+    ],
+  ])(
+    'should return 0 if the timestamps (start: %p, end: %p) are the same',
+    (startTimestamp, endTimestamp) => {
+      expect(
+        calculateYearsBetweenTimestamps({
+          startTimestamp,
+          endTimestamp,
+        }),
+      ).toEqual(0);
+    },
+  );
+
+  it.each([
+    [new BlockTimestamp(0), new BlockTimestamp(157679), 0],
+    [new BlockTimestamp(0), new BlockTimestamp(315359), 0.01],
+    [new BlockTimestamp(0), new BlockTimestamp(315360), 0.01],
+    [new BlockTimestamp(0), new BlockTimestamp(473040), 0.01],
+    [new BlockTimestamp(0), new BlockTimestamp(473041), 0.02],
+  ])(
+    'should have two digits of precision (start: %p, end: %p)',
+    (startTimestamp, endTimestamp, expectedValue) => {
+      expect(
+        calculateYearsBetweenTimestamps({
+          startTimestamp,
+          endTimestamp,
+        }),
+      ).toEqual(expectedValue);
+    },
+  );
+
+  it.each([
+    [new BlockTimestamp(0), new BlockTimestamp(31_536_000), 1],
+    [new BlockTimestamp(31_536_000), new BlockTimestamp(0), -1],
+  ])(
+    'should return positive and negative values (start: %p, end: %p)',
+    (startTimestamp, endTimestamp, expectedValue) => {
+      expect(
+        calculateYearsBetweenTimestamps({
+          startTimestamp,
+          endTimestamp,
+        }),
+      ).toEqual(expectedValue);
+    },
+  );
+});
 
 describe('unsafeDecrementBalance function', () => {
   it('should not throw an error if quantity is negative', () => {
