@@ -6,6 +6,18 @@ describe('incrementBalance function', () => {
       incrementBalance({ foo: 1, bar: 2 }, 'foo', -1);
     }).toThrowError('Amount must be positive');
   });
+
+  it('should add and increment balance of address if it does not yet exist', () => {
+    const balances = { foo: 1, bar: 2 };
+    incrementBalance(balances, 'baz', 1);
+    expect(balances).toEqual({ foo: 1, bar: 2, baz: 1 });
+  });
+
+  it('should increment balance of address if it already exists', () => {
+    const balances = { foo: 1, bar: 2 };
+    incrementBalance(balances, 'foo', 1);
+    expect(balances).toEqual({ foo: 2, bar: 2 });
+  });
 });
 
 describe('safeTransfer function', () => {
