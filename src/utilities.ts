@@ -520,12 +520,14 @@ export function unsafeDecrementBalance(
   }
 }
 
-// TODO: Is this safe enough without amount validation?
 export function incrementBalance(
   balances: Balances,
   address: WalletAddress,
   amount: number,
 ): void {
+  if (amount < 0) {
+    throw new ContractError(`Amount must be positive!`);
+  }
   if (address in balances) {
     balances[address] += amount;
   } else {
