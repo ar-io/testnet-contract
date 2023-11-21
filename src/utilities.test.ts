@@ -68,6 +68,20 @@ describe('safeTransfer function', () => {
     expect(balances).toEqual({ foo: 1, bar: 3 });
   });
 
+  it('should create and increment toAddr balance, and decrement fromAddr, by qty in balances object', () => {
+    const balances = { foo: 2 };
+    const qty = 1;
+    const fromAddr = 'foo';
+    const toAddr = 'bar';
+    safeTransfer({
+      balances,
+      qty,
+      fromAddr,
+      toAddr,
+    });
+    expect(balances).toEqual({ foo: 1, bar: 1 });
+  });
+
   it('should increment toAddr balance in balances object by qty and remove fully decremented fromAddr balance', () => {
     const balances = { foo: 1, bar: 2 };
     const qty = 1;
