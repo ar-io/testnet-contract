@@ -1,4 +1,44 @@
-import { incrementBalance, safeTransfer } from './utilities';
+import {
+  incrementBalance,
+  safeTransfer,
+  unsafeDecrementBalance,
+} from './utilities';
+
+describe('unsafeDecrementBalance function', () => {
+  it('should not throw an error if quantity is negative', () => {
+    const balances = { foo: 1, bar: 2 };
+    expect(() => {
+      unsafeDecrementBalance(balances, 'foo', -1);
+    }).not.toThrow();
+    expect(balances).toEqual({ foo: 2, bar: 2 });
+  });
+
+  it('should not throw an error if address does not exist', () => {
+    const balances = { foo: 1, bar: 2 };
+    expect(() => {
+      unsafeDecrementBalance(balances, 'baz', 1);
+    }).not.toThrow();
+    expect(balances).toEqual({ foo: 1, bar: 2, baz: Number.NaN });
+  });
+
+  it('should decrement balance of address if it exists', () => {
+    const balances = { foo: 1, bar: 2 };
+    unsafeDecrementBalance(balances, 'foo', 1);
+    expect(balances).toEqual({ bar: 2 });
+  });
+
+  it('should decrement and remove balance of address if it exists and is fully drained', () => {
+    const balances = { foo: 1, bar: 2 };
+    unsafeDecrementBalance(balances, 'foo', 1);
+    expect(balances).toEqual({ bar: 2 });
+  });
+
+  it('should decrement and not remove balance of address if it exists and is fully drained when removeIfZero is false', () => {
+    const balances = { foo: 1, bar: 2 };
+    unsafeDecrementBalance(balances, 'foo', 1, false);
+    expect(balances).toEqual({ foo: 0, bar: 2 });
+  });
+});
 
 describe('incrementBalance function', () => {
   it('should throw an error if quantity is negative', () => {
