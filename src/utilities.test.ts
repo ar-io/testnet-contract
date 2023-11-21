@@ -1,4 +1,12 @@
-import { safeTransfer } from './utilities';
+import { incrementBalance, safeTransfer } from './utilities';
+
+describe('incrementBalance function', () => {
+  it('should throw an error if quantity is negative', () => {
+    expect(() => {
+      incrementBalance({ foo: 1, bar: 2 }, 'foo', -1);
+    }).toThrowError('Amount must be positive');
+  });
+});
 
 describe('safeTransfer function', () => {
   it('should throw an error if quantity is negative', () => {
