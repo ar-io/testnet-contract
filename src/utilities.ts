@@ -544,7 +544,10 @@ export function safeTransfer({
   toAddr: WalletAddress;
   qty: number;
 }): void {
-  // TODO: Quantity validation
+  if (qty < 0) {
+    throw new ContractError(`Quantity must be positive!`);
+  }
+
   if (fromAddr === toAddr) {
     throw new ContractError(INVALID_TARGET_MESSAGE);
   }
