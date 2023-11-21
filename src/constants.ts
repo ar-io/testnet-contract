@@ -16,13 +16,12 @@ export const RESERVED_ATOMIC_TX_ID = 'atomic';
 export const NETWORK_JOIN_STATUS = 'joined';
 export const NETWORK_LEAVING_STATUS = 'leaving';
 export const NETWORK_HIDDEN_STATUS = 'hidden';
-export const SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP = 1704092400000; // January 1st, 2024
+export const SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP = 1725080400000; // August 31st, 2024
 export const BLOCKS_PER_DAY = 720;
 export const MAX_ALLOWED_EVOLUTION_DELAY = BLOCKS_PER_DAY * 30;
 export const MINIMUM_ALLOWED_EVOLUTION_DELAY = 3; // 3 blocks for testing purposes, but should be 720 * 7; // 720 blocks per day times 7 days
 export const MINIMUM_ALLOWED_NAME_LENGTH = 5; // names less than 5 characters are reserved for auction
 export const TENURE_WEIGHT_DAYS = 180; // the amount of days in a single tenure weight period used to calculate composite weights for observation
-export const RARITY_MULTIPLIER_HALVENING = 25;
 export const PERMABUY_LEASE_FEE_LENGTH = 10;
 export const ANNUAL_PERCENTAGE_FEE = 0.2; // 20% of cost of name
 export const DEFAULT_UNDERNAME_COUNT = 10;
@@ -114,6 +113,23 @@ export const FEE_STRUCTURE = {
   '50': 50,
   '51': 50,
 };
+export const RESERVED_NAMES = [
+  'arns',
+  'ar-io',
+  'gateway',
+  'help',
+  'io',
+  'nodes',
+  'ar',
+  'cookbook',
+  'www',
+
+  // currently owned
+  'arns',
+  'search',
+  'docs',
+  'admin',
+];
 export const AUCTION_SETTINGS: AuctionSettings = {
   floorPriceMultiplier: 1,
   startPriceMultiplier: 50,
@@ -121,7 +137,6 @@ export const AUCTION_SETTINGS: AuctionSettings = {
   scalingExponent: 190,
   auctionDuration: 10_080, // approx 14 days long
 };
-
 export const DEFAULT_EPOCH_BLOCK_LENGTH = 50; // 5000 for mainnet
 export const DEFAULT_START_HEIGHT = 0;
 export const MAX_TENURE_WEIGHT = 2;
