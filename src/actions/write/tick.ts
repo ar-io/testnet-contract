@@ -286,7 +286,7 @@ export function tickAuctions({
 // Removes gateway from the gateway address registry after the leave period completes
 export const tick = async (state: IOState): Promise<ContractWriteResult> => {
   const interactionHeight = new BlockHeight(+SmartWeave.block.height);
-
+  const interactionTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
   if (interactionHeight.valueOf() === state.lastTickedHeight) {
     return { state };
   }
@@ -307,13 +307,12 @@ export const tick = async (state: IOState): Promise<ContractWriteResult> => {
     tickHeight++
   ) {
     const currentBlockHeight = new BlockHeight(tickHeight);
-    const safeBlock = await SmartWeave.safeArweaveGet(
-      `/block/height/${tickHeight}`,
-    );
-    const currentBlockTimestamp = new BlockTimestamp(safeBlock.timestamp);
+    /**
+     * TODO: once safeArweaveGet is more reliable, we can get the timestamp from the block between ticks to provide the timestamp. We are currently experiencing 'timeout' errors on evaluations for large gaps between interactions so we cannot reliably trust it with the current implementation.
+     * */
     updatedState = tickInternal({
       currentBlockHeight,
-      currentBlockTimestamp,
+      currentBlockTimestamp: interactionTimestamp,
       state: updatedState,
     });
   }
