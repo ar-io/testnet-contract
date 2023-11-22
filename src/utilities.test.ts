@@ -1,5 +1,12 @@
-import { BlockHeight, BlockTimestamp, GatewayStatus } from './types';
 import {
+  AuctionData,
+  BlockHeight,
+  BlockTimestamp,
+  GatewayStatus,
+  IOToken,
+} from './types';
+import {
+  calculateExistingAuctionBidForCaller,
   calculateYearsBetweenTimestamps,
   incrementBalance,
   isGatewayEligibleToBeRemoved,
@@ -9,6 +16,39 @@ import {
   safeTransfer,
   unsafeDecrementBalance,
 } from './utilities';
+
+describe('calculateExistingAuctionBidForCaller function', () => {
+  const nihilisticAuction: AuctionData = {
+    startPrice: Number.NEGATIVE_INFINITY,
+    floorPrice: Number.NEGATIVE_INFINITY,
+    startHeight: Number.NEGATIVE_INFINITY,
+    endHeight: Number.NEGATIVE_INFINITY,
+    type: 'lease',
+    initiator: '',
+    contractTxId: '',
+    years: Number.NEGATIVE_INFINITY,
+    settings: {
+      auctionDuration: Number.NEGATIVE_INFINITY,
+      exponentialDecayRate: Number.NEGATIVE_INFINITY,
+      scalingExponent: Number.NEGATIVE_INFINITY,
+      floorPriceMultiplier: Number.NEGATIVE_INFINITY,
+      startPriceMultiplier: Number.NEGATIVE_INFINITY,
+    },
+  };
+
+  it('should throw if submitted bid is less than the required minimum bid', () => {
+    expect(() => {
+      calculateExistingAuctionBidForCaller({
+        caller: '',
+        auction: nihilisticAuction,
+        submittedBid: 1,
+        requiredMinimumBid: new IOToken(2),
+      });
+    }).toThrowError(
+      'The bid (1 IO) is less than the current required minimum bid of 2 IO.',
+    );
+  });
+});
 
 describe('isGatewayJoined function', () => {
   it('should return false if gateway is undefined', () => {
