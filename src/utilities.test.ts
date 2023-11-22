@@ -5,9 +5,54 @@ import {
   isGatewayEligibleToBeRemoved,
   isGatewayEligibleToLeave,
   isGatewayHidden,
+  isGatewayJoined,
   safeTransfer,
   unsafeDecrementBalance,
 } from './utilities';
+
+describe('isGatewayJoined function', () => {
+  it('should return false if gateway is undefined', () => {
+    expect(
+      isGatewayJoined({
+        gateway: undefined,
+        currentBlockHeight: new BlockHeight(0),
+      }),
+    ).toEqual(false);
+  });
+
+  it.each([
+    [0, 0, 'joined', false],
+    [0, 0, 'hidden', false],
+    [0, 0, 'leaving', false],
+    [0, 1, 'joined', true],
+    [0, 1, 'hidden', false],
+    [0, 1, 'leaving', false],
+  ])(
+    'should, given current block height %d and gateway end height %d and status %s, return %s',
+    (currentBlockHeight, gatewayEndHeight, status, expectedValue) => {
+      expect(
+        isGatewayJoined({
+          gateway: {
+            start: Number.NEGATIVE_INFINITY,
+            end: gatewayEndHeight,
+            status: status as GatewayStatus,
+            vaults: [],
+            operatorStake: Number.NEGATIVE_INFINITY,
+            observerWallet: '',
+            settings: {
+              // None of these values should be relevant to this test
+              label: '',
+              fqdn: '',
+              port: Number.NEGATIVE_INFINITY,
+              protocol: 'https',
+            },
+          },
+          currentBlockHeight: new BlockHeight(currentBlockHeight),
+        }),
+      ).toEqual(expectedValue);
+    },
+  );
+});
 
 describe('isGatewayHidden function', () => {
   it('should return false if gateway is undefined', () => {

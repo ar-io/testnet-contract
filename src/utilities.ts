@@ -449,9 +449,8 @@ export function isGatewayJoined({
   gateway: DeepReadonly<Gateway> | undefined;
   currentBlockHeight: BlockHeight;
 }): boolean {
-  if (!gateway) return false;
   return (
-    gateway.status === 'joined' && gateway.end > currentBlockHeight.valueOf()
+    gateway?.status === 'joined' && gateway?.end > currentBlockHeight.valueOf()
   );
 }
 
