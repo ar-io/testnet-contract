@@ -13,6 +13,7 @@
     "test:integration": "yarn build && jest --testPathPattern=tests --globalSetup=./tests/setup.jest.ts --globalTeardown=./tests/teardown.jest.ts --runInBand",
     "test": "yarn build && yarn test:unit ; yarn test:integration",
     "evolve": "yarn ts-node ./tools/evolve-contract.ts",
+    "evolve:state": "yarn ts-node ./tools/evolve-state.ts",
     "tick": "yarn ts-node ./tools/tick.ts",
     "prepare": "husky install",
     "pre-commit": "lint-staged"
