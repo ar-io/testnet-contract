@@ -472,7 +472,8 @@ export function isGatewayEligibleToBeRemoved({
   currentBlockHeight: BlockHeight;
 }): boolean {
   return (
-    gateway.status === 'leaving' && gateway.end <= currentBlockHeight.valueOf()
+    gateway?.status === 'leaving' &&
+    gateway?.end <= currentBlockHeight.valueOf()
   );
 }
 
