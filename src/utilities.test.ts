@@ -4,9 +4,46 @@ import {
   incrementBalance,
   isGatewayEligibleToBeRemoved,
   isGatewayEligibleToLeave,
+  isGatewayHidden,
   safeTransfer,
   unsafeDecrementBalance,
 } from './utilities';
+
+describe('isGatewayHidden function', () => {
+  it('should return false if gateway is undefined', () => {
+    expect(
+      isGatewayHidden({
+        gateway: undefined,
+      }),
+    ).toEqual(false);
+  });
+
+  it.each([
+    ['joined', false],
+    ['hidden', true],
+    ['leaving', false],
+  ])('should return %s if gateway status is %s', (status, expectedValue) => {
+    expect(
+      isGatewayHidden({
+        gateway: {
+          start: Number.NEGATIVE_INFINITY,
+          end: Number.MAX_SAFE_INTEGER,
+          status: status as GatewayStatus,
+          vaults: [],
+          operatorStake: Number.NEGATIVE_INFINITY,
+          observerWallet: '',
+          settings: {
+            // None of these values should be relevant to this test
+            label: '',
+            fqdn: '',
+            port: Number.NEGATIVE_INFINITY,
+            protocol: 'https',
+          },
+        },
+      }),
+    ).toEqual(expectedValue);
+  });
+});
 
 describe('isGatewayEligibleToBeRemoved function', () => {
   it('should return false if gateway is undefined', () => {

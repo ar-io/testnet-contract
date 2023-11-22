@@ -460,8 +460,7 @@ export function isGatewayHidden({
 }: {
   gateway: DeepReadonly<Gateway> | undefined;
 }): boolean {
-  if (!gateway) return false;
-  return gateway.status === 'hidden';
+  return gateway?.status === 'hidden';
 }
 
 export function isGatewayEligibleToBeRemoved({
