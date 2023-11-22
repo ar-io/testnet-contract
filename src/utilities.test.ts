@@ -2,10 +2,58 @@ import { BlockHeight, BlockTimestamp, GatewayStatus } from './types';
 import {
   calculateYearsBetweenTimestamps,
   incrementBalance,
+  isGatewayEligibleToBeRemoved,
   isGatewayEligibleToLeave,
   safeTransfer,
   unsafeDecrementBalance,
 } from './utilities';
+
+describe('isGatewayEligibleToBeRemoved function', () => {
+  it('should return false if gateway is undefined', () => {
+    expect(
+      isGatewayEligibleToBeRemoved({
+        gateway: undefined,
+        currentBlockHeight: new BlockHeight(0),
+      }),
+    ).toEqual(false);
+  });
+
+  it.each([
+    [0, 1, 'joined', false],
+    [0, 1, 'hidden', false],
+    [0, 1, 'leaving', false],
+    [1, 1, 'joined', false],
+    [1, 1, 'hidden', false],
+    [1, 1, 'leaving', true],
+    [2, 1, 'joined', false],
+    [2, 1, 'hidden', false],
+    [2, 1, 'leaving', true],
+  ])(
+    `should, given current block height %d, gateway end block %d and status %s, return %s`,
+    (currentBlockHeight, gatewayEndBlock, status, expectedValue) => {
+      expect(
+        isGatewayEligibleToBeRemoved({
+          gateway: {
+            start: Number.NEGATIVE_INFINITY,
+            end: gatewayEndBlock,
+            status: status as GatewayStatus,
+            vaults: [],
+            operatorStake: Number.NEGATIVE_INFINITY,
+            observerWallet: '',
+            settings: {
+              // None of these values should be relevant to this test
+              label: '',
+              fqdn: '',
+              port: Number.NEGATIVE_INFINITY,
+              protocol: 'https',
+            },
+          },
+          currentBlockHeight: new BlockHeight(currentBlockHeight),
+        }),
+      ).toEqual(expectedValue);
+    },
+  );
+});
 
 describe('isGatewayEligibleToLeave function', () => {
   it('should return false if gateway is undefined', () => {
