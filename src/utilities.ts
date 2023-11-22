@@ -432,6 +432,12 @@ export function calculateExistingAuctionBidForCaller({
   submittedBid: number;
   requiredMinimumBid: IOToken;
 }): IOToken {
+  if (submittedBid < requiredMinimumBid.valueOf()) {
+    throw new ContractError(
+      `The bid (${submittedBid} IO) is less than the current required minimum bid of ${requiredMinimumBid.valueOf()} IO.`,
+    );
+  }
+
   let finalBid = submittedBid
     ? Math.min(submittedBid, requiredMinimumBid.valueOf())
     : requiredMinimumBid.valueOf();
