@@ -1,15 +1,89 @@
-import { BlockTimestamp } from './types';
+import { BlockHeight, BlockTimestamp, GatewayStatus } from './types';
 import {
   calculateYearsBetweenTimestamps,
   incrementBalance,
+  isGatewayEligibleToLeave,
   safeTransfer,
   unsafeDecrementBalance,
 } from './utilities';
 
-describe('calculateYearsBetweenTimestamps function', () => {
-  // Don't use the global constant in case someone changes it there
-  //const SECONDS_IN_A_YEAR = 31_536_000;
+describe('isGatewayEligibleToLeave function', () => {
+  it('should return false if gateway is undefined', () => {
+    expect(
+      isGatewayEligibleToLeave({
+        gateway: undefined,
+        currentBlockHeight: new BlockHeight(0),
+        registrySettings: {
+          // None of these values should be relevant to this test
+          minLockLength: Number.NEGATIVE_INFINITY,
+          maxLockLength: Number.NEGATIVE_INFINITY,
+          minNetworkJoinStakeAmount: Number.NEGATIVE_INFINITY,
+          minGatewayJoinLength: Number.NEGATIVE_INFINITY,
+          gatewayLeaveLength: Number.NEGATIVE_INFINITY,
+          operatorStakeWithdrawLength: Number.NEGATIVE_INFINITY,
+        },
+      }),
+    ).toEqual(false);
+  });
 
+  it.each([
+    [0, 0, Number.MAX_SAFE_INTEGER, 'joined', false],
+    [0, 0, Number.MAX_SAFE_INTEGER, 'hidden', false],
+    [0, 0, Number.MAX_SAFE_INTEGER, 'leaving', false],
+    [1, 0, Number.MAX_SAFE_INTEGER, 'joined', false],
+    [1, 0, Number.MAX_SAFE_INTEGER, 'hidden', false],
+    [1, 0, Number.MAX_SAFE_INTEGER, 'leaving', false],
+    [2, 0, Number.MAX_SAFE_INTEGER, 'joined', true],
+    [2, 0, Number.MAX_SAFE_INTEGER, 'hidden', true], // TODO: SURPRISING?
+    [2, 0, Number.MAX_SAFE_INTEGER, 'leaving', false],
+    [2, 0, 2, 'joined', false],
+    [2, 0, 2, 'hidden', true], // TODO: SURPRISING?
+    [2, 0, 2, 'leaving', false],
+    [2, 0, 3, 'joined', true],
+    [2, 0, 3, 'hidden', true],
+    [2, 0, 3, 'leaving', false],
+  ])(
+    `should, given current block height %d, gateway start/end blocks (%d, %d) and status %s, return %s`,
+    (
+      currentBlockHeight,
+      gatewayStartBlock,
+      gatewayEndBlock,
+      status,
+      expectedValue,
+    ) => {
+      expect(
+        isGatewayEligibleToLeave({
+          gateway: {
+            start: gatewayStartBlock,
+            end: gatewayEndBlock,
+            status: status as GatewayStatus,
+            vaults: [],
+            operatorStake: 0,
+            observerWallet: '',
+            settings: {
+              // None of these values should be relevant to this test
+              label: '',
+              fqdn: '',
+              port: Number.NEGATIVE_INFINITY,
+              protocol: 'https',
+            },
+          },
+          currentBlockHeight: new BlockHeight(currentBlockHeight),
+          registrySettings: {
+            minLockLength: Number.NEGATIVE_INFINITY,
+            maxLockLength: Number.NEGATIVE_INFINITY,
+            minNetworkJoinStakeAmount: Number.NEGATIVE_INFINITY,
+            minGatewayJoinLength: 2, // The only value relevant to this test
+            gatewayLeaveLength: Number.NEGATIVE_INFINITY,
+            operatorStakeWithdrawLength: Number.NEGATIVE_INFINITY,
+          },
+        }),
+      ).toEqual(expectedValue);
+    },
+  );
+});
+
+describe('calculateYearsBetweenTimestamps function', () => {
   it.each([
     [new BlockTimestamp(0), new BlockTimestamp(0)],
     [new BlockTimestamp(1), new BlockTimestamp(1)],
