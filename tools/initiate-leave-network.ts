@@ -41,7 +41,7 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
 
   const txId = await contract.writeInteraction(
     {
-      function: 'initiateLeave',
+      function: 'leaveNetwork',
     },
     {
       disableBundling: true,
