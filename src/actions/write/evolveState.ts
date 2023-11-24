@@ -1,4 +1,8 @@
-import { NON_CONTRACT_OWNER_MESSAGE, RESERVED_NAMES } from '../../constants';
+import {
+  NON_CONTRACT_OWNER_MESSAGE,
+  RESERVED_NAMES,
+  SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
+} from '../../constants';
 import { ContractWriteResult, IOState, PstAction } from '../../types';
 
 // Updates this contract to new source code
@@ -23,6 +27,7 @@ export const evolveState = async (
     // add the reserved name for the contract owner
     state.reserved[name] = {
       target: owner,
+      endTimestamp: SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
     };
   }
 
