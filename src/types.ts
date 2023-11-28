@@ -41,6 +41,11 @@ export type IOState = PstState & {
   // TODO: epoch tracking - relevant to GAR observers
   demandFactoring: DemandFactoringData;
   observations: Observations;
+  vaults: {
+    // a list of all vaults that have locked balances
+    [address: string]: [TokenVault];
+    // a wallet can have multiple vaults
+  };
 };
 
 export type EpochObservations = {
@@ -178,6 +183,12 @@ export type ArNSNameResult = {
 };
 
 export type PstFunctions = 'balance' | 'transfer' | 'evolve';
+
+export type VaultFunctions =
+  | 'transferLocked'
+  | 'createVault'
+  | 'extendVault'
+  | 'increaseVault';
 
 export type ArNSFunctions =
   | 'buyRecord'

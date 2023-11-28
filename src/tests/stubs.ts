@@ -28,6 +28,7 @@ export const getBaselineState = (): IOState => ({
   evolve: '',
   records: {},
   balances: {},
+  vaults: {},
   reserved: {},
   fees: {
     ...FEE_STRUCTURE,
