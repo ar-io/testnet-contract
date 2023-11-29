@@ -21,7 +21,7 @@ module.exports = async () => {
   );
 
   // create owner wallet
-  const wallets = [];
+  const wallets: any = [];
   for (let i = 0; i < WALLETS_TO_CREATE; i++) {
     wallets.push(await createLocalWallet(arweave));
   }
