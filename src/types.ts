@@ -217,7 +217,8 @@ export type ObservationFunctions =
 export type IOContractFunctions = ObservationFunctions &
   GARFunctions &
   ArNSFunctions &
-  PstFunctions;
+  PstFunctions &
+  VaultFunctions;
 
 export type ContractWriteResult = { state: IOState };
 // TODO: make this a union type of all the possible return types

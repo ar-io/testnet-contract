@@ -1,5 +1,4 @@
-import { INSUFFICIENT_FUNDS_MESSAGE } from 'src/constants';
-
+import { INSUFFICIENT_FUNDS_MESSAGE } from '../../constants';
 import { ContractWriteResult, IOState, PstAction } from '../../types';
 import {
   getInvalidAjvMessage,
