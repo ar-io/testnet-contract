@@ -130,14 +130,24 @@ export type GatewaySettings = {
 export type AllowedProtocols = 'http' | 'https';
 export type RegistrationType = 'lease' | 'permabuy';
 
-export type ArNSNameData = {
+export type ArNSBaseNameData = {
   contractTxId: string; // The ANT Contract used to manage this name
   startTimestamp: number; // At what unix time (seconds since epoch) the lease starts
-  endTimestamp?: number; // At what unix time (seconds since epoch) the lease ends
   type: RegistrationType;
   undernames: number;
   purchasePrice: number;
 };
+
+export type ArNSPermabuyData = ArNSBaseNameData & {
+  type: 'permabuy';
+};
+
+export type ArNSLeaseData = ArNSBaseNameData & {
+  type: 'lease';
+  endTimestamp: number; // At what unix time (seconds since epoch) the lease ends
+};
+
+export type ArNSNameData = ArNSPermabuyData | ArNSLeaseData;
 
 export type ReservedNameData = {
   target?: string; // The target wallet address this name is reserved for
@@ -363,7 +373,6 @@ export class IOToken {
 }
 
 export class mIOToken extends PositiveFiniteInteger {
-  protected value: number;
   constructor(value: number) {
     super(value);
   }

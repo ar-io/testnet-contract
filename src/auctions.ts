@@ -86,11 +86,11 @@ export function createAuctionObject({
   name: string;
   fees: Fees;
   auctionSettings: AuctionSettings;
-  contractTxId: string | undefined;
+  contractTxId: string;
   currentBlockHeight: BlockHeight;
   currentBlockTimestamp: BlockTimestamp;
   type: RegistrationType;
-  initiator: string | undefined;
+  initiator: string;
   demandFactoring: DeepReadonly<DemandFactoringData>;
 }): AuctionData {
   const initialRegistrationFee = calculateRegistrationFee({
@@ -132,7 +132,7 @@ export function getEndTimestampForAuction({
       return undefined;
     case 'lease':
       return new BlockTimestamp(
-        currentBlockTimestamp.valueOf() + SECONDS_IN_A_YEAR * auction.years,
+        currentBlockTimestamp.valueOf() + SECONDS_IN_A_YEAR * auction.years!, // TODO: Don't force unwrap years
       );
     default:
       throw new ContractError('Invalid auction type');

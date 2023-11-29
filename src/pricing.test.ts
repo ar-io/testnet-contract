@@ -288,14 +288,14 @@ describe('Pricing functions:', () => {
 
   describe('demandIsIncreasing function', () => {
     it.each([
-      ['purchases', [0, 0, 0, 0], false],
-      ['purchases', [0, 1, 0, 0], false],
-      ['purchases', [1, 1, 0, 0], true],
-      ['purchases', [2, 1, 0, 0], true],
-      ['revenue', [0, 0, 0, 0], false],
-      ['revenue', [0, 0, 0, 1], false],
-      ['revenue', [0, 0, 1, 1], true],
-      ['revenue', [0, 0, 2, 1], true],
+      ['purchases' as DemandFactoringCriteria, [0, 0, 0, 0], false],
+      ['purchases' as DemandFactoringCriteria, [0, 1, 0, 0], false],
+      ['purchases' as DemandFactoringCriteria, [1, 1, 0, 0], true],
+      ['purchases' as DemandFactoringCriteria, [2, 1, 0, 0], true],
+      ['revenue' as DemandFactoringCriteria, [0, 0, 0, 0], false],
+      ['revenue' as DemandFactoringCriteria, [0, 0, 0, 1], false],
+      ['revenue' as DemandFactoringCriteria, [0, 0, 1, 1], true],
+      ['revenue' as DemandFactoringCriteria, [0, 0, 2, 1], true],
     ])(
       'given [current period purchase count, moving average purchase count] of %j, should return %d',
       (

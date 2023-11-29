@@ -180,17 +180,28 @@ function handleBidForExistingAuction({
   });
 
   // the bid has been won, update the records
-  updatedRecords[name] = {
-    contractTxId: contractTxId, // only update the new contract tx id
-    type: existingAuction.type,
-    startTimestamp: +SmartWeave.block.timestamp, // overwrite initial start timestamp
-    undernames: DEFAULT_UNDERNAME_COUNT,
-    // only include timestamp on lease, endTimestamp is easy in this situation since it was a second interaction that won it
-    ...(endTimestamp && {
-      endTimestamp: endTimestamp.valueOf(),
-    }),
-    purchasePrice: currentRequiredMinimumBid.valueOf(), // the total amount paid for the name
-  };
+  switch (existingAuction.type) {
+    case 'permabuy':
+      updatedRecords[name] = {
+        contractTxId: contractTxId, // only update the new contract tx id
+        type: existingAuction.type,
+        startTimestamp: +SmartWeave.block.timestamp, // overwrite initial start timestamp
+        undernames: DEFAULT_UNDERNAME_COUNT,
+        purchasePrice: currentRequiredMinimumBid.valueOf(), // the total amount paid for the name
+      };
+      break;
+    case 'lease':
+      updatedRecords[name] = {
+        contractTxId: contractTxId, // only update the new contract tx id
+        type: existingAuction.type,
+        startTimestamp: +SmartWeave.block.timestamp, // overwrite initial start timestamp
+        undernames: DEFAULT_UNDERNAME_COUNT,
+        // only include timestamp on lease, endTimestamp is easy in this situation since it was a second interaction that won it
+        endTimestamp: endTimestamp!.valueOf(), // TODO: don't force unwrap endTimestamp
+        purchasePrice: currentRequiredMinimumBid.valueOf(), // the total amount paid for the name
+      };
+      break;
+  }
 
   /**
    * Give the total value to the protocol

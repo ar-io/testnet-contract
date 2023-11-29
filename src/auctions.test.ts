@@ -4,7 +4,7 @@ import {
   getEndTimestampForAuction,
 } from './auctions';
 import { AUCTION_SETTINGS, SECONDS_IN_A_YEAR } from './constants';
-import { AuctionData, BlockTimestamp } from './types';
+import { AuctionData, BlockTimestamp, RegistrationType } from './types';
 import { BlockHeight } from './types';
 
 describe('Auction util functions', () => {
@@ -136,7 +136,7 @@ describe('Auction util functions', () => {
         'should return the correct endTimestamp for a lease',
         {
           ...baselineAuctionData,
-          type: 'lease',
+          type: 'lease' as RegistrationType,
         },
         1,
         new BlockTimestamp(SECONDS_IN_A_YEAR + 1),
@@ -145,7 +145,7 @@ describe('Auction util functions', () => {
         'should return undefined for a permabuy',
         {
           ...baselineAuctionData,
-          type: 'permabuy',
+          type: 'permabuy' as RegistrationType,
         },
         1,
         undefined,

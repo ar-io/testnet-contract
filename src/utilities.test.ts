@@ -1,4 +1,6 @@
 import {
+  ArNSBaseNameData,
+  ArNSNameData,
   AuctionData,
   BlockHeight,
   BlockTimestamp,
@@ -13,6 +15,7 @@ import {
   isGatewayEligibleToLeave,
   isGatewayHidden,
   isGatewayJoined,
+  isLeaseRecord,
   safeTransfer,
   unsafeDecrementBalance,
 } from './utilities';
@@ -387,8 +390,6 @@ describe('safeTransfer function', () => {
   });
 
   it.each([
-    [{ foo: 1, bar: 2 }, undefined],
-    [{ foo: 1, bar: 2 }, null],
     [{ foo: 1, bar: 2 }, 'baz'],
     [{ foo: Number.NaN, bar: 2 }, 'foo'],
     [{ foo: Math.sqrt(-1), bar: 2 }, 'foo'],
@@ -458,4 +459,31 @@ describe('safeTransfer function', () => {
     });
     expect(balances).toEqual({ bar: 3 });
   });
+});
+
+describe('isLeaseRecord function', () => {
+  const stubBaseNameData: ArNSBaseNameData = {
+    contractTxId: '',
+    startTimestamp: 0,
+    type: 'permabuy',
+    undernames: 0,
+    purchasePrice: 0,
+  };
+
+  it.each([
+    [stubBaseNameData, false],
+    [
+      {
+        ...stubBaseNameData,
+        type: 'lease',
+        endTimestamp: 1,
+      },
+      true,
+    ],
+  ])(
+    'should, for record %p, return %s',
+    (record: ArNSNameData, expectedValue: boolean) => {
+      expect(isLeaseRecord(record)).toEqual(expectedValue);
+    },
+  );
 });

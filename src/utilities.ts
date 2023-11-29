@@ -19,6 +19,7 @@ import {
   TENURE_WEIGHT_DAYS,
 } from './constants';
 import {
+  ArNSLeaseData,
   ArNSNameData,
   AuctionData,
   Balances,
@@ -83,7 +84,7 @@ export function isNameInGracePeriod({
   record,
 }: {
   currentBlockTimestamp: BlockTimestamp;
-  record: ArNSNameData;
+  record: ArNSLeaseData;
 }): boolean {
   if (!record.endTimestamp) return false;
   const recordIsExpired = currentBlockTimestamp.valueOf() > record.endTimestamp;
@@ -99,7 +100,7 @@ export function getMaxAllowedYearsExtensionForRecord({
   record,
 }: {
   currentBlockTimestamp: BlockTimestamp;
-  record: ArNSNameData;
+  record: ArNSLeaseData;
 }): number {
   if (!record.endTimestamp) {
     return 0;
@@ -298,7 +299,7 @@ export function isExistingActiveRecord({
   record,
   currentBlockTimestamp,
 }: {
-  record: ArNSNameData;
+  record: ArNSNameData | undefined;
   currentBlockTimestamp: BlockTimestamp;
 }): boolean {
   if (!record) return false;
@@ -307,11 +308,10 @@ export function isExistingActiveRecord({
     return true;
   }
 
-  if (record.type === 'lease') {
+  if (record.type === 'lease' && record.endTimestamp) {
     return (
-      record.endTimestamp &&
-      (record.endTimestamp > currentBlockTimestamp.valueOf() ||
-        isNameInGracePeriod({ currentBlockTimestamp, record }))
+      record.endTimestamp > currentBlockTimestamp.valueOf() ||
+      isNameInGracePeriod({ currentBlockTimestamp, record })
     );
   }
   return false;
@@ -429,10 +429,10 @@ export function calculateExistingAuctionBidForCaller({
 }: {
   caller: string;
   auction: AuctionData;
-  submittedBid: number;
+  submittedBid: number | undefined;
   requiredMinimumBid: IOToken;
 }): IOToken {
-  if (submittedBid < requiredMinimumBid.valueOf()) {
+  if (submittedBid && submittedBid < requiredMinimumBid.valueOf()) {
     throw new ContractError(
       `The bid (${submittedBid} IO) is less than the current required minimum bid of ${requiredMinimumBid.valueOf()} IO.`,
     );
@@ -569,4 +569,9 @@ export function safeTransfer({
 
   incrementBalance(balances, toAddr, qty);
   unsafeDecrementBalance(balances, fromAddr, qty);
+}
+
+// A predicate function that checks if the arnsNameData is an ArNSLeaseData object
+export function isLeaseRecord(record: ArNSNameData): record is ArNSLeaseData {
+  return record.type === 'lease';
 }
