@@ -29,5 +29,6 @@ jobs:
         if: matrix.step == 'test' && success() || failure()
         with:
           name: Jest
+          only-summary: true
           path: junit.xml
           reporter: jest-junit
