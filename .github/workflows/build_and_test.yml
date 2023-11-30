@@ -11,9 +11,23 @@ jobs:
   build:
     runs-on: ubuntu-latest
     environment: develop
+    permissions:
+      actions: write
+      id-token: write
+      contents: read
+      checks: write
+      packages: write
+      pull-requests: write
     strategy:
       matrix:
-        step: ['format:check', 'lint:check', 'build', 'test']
+        step:
+          [
+            'format:check',
+            'lint:check',
+            'build',
+            'test:unit',
+            'test:integration',
+          ]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -24,3 +38,8 @@ jobs:
       - run: yarn ${{ matrix.step }}
         env:
           ARNS_CONTRACT_TX_ID: ${{ vars.ARNS_CONTRACT_TX_ID }}
+      - name: Upload to Codecov
+        if: matrix.step == 'test:unit'
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

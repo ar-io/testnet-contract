@@ -40,8 +40,8 @@ export const getAuction = (
       currentBlockTimestamp,
       demandFactoring: state.demandFactoring,
       currentBlockHeight,
-      contractTxId: undefined,
-      initiator: undefined,
+      contractTxId: '',
+      initiator: '',
     });
 
     const prices = getAuctionPricesForInterval({

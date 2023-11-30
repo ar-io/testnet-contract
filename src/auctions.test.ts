@@ -4,10 +4,10 @@ import {
   getEndTimestampForAuction,
 } from './auctions';
 import { AUCTION_SETTINGS, SECONDS_IN_A_YEAR } from './constants';
-import { AuctionData, BlockTimestamp } from './types';
+import { ArNSAuctionData, ArNSBaseAuctionData, BlockTimestamp } from './types';
 import { BlockHeight } from './types';
 
-describe('Auction util functions', () => {
+describe('calculateAuctionPriceForBlock', () => {
   describe('validate AUCTION_SETTINGS used in the contract', () => {
     const basePrice = 30;
     const allowedThreshold = 0.05; // prices must be within 5% of the expected value
@@ -51,9 +51,7 @@ describe('Auction util functions', () => {
       expect(priceAtBlock.valueOf()).toBeGreaterThanOrEqual(expectedPrice);
       expect(percentDifference).toBeLessThanOrEqual(allowedThreshold);
     });
-  });
 
-  describe('calculateAuctionPriceForBlock function', () => {
     it.each([
       // we keep the scalingComponent consistent to make it easier to reason about the test cases, and to represent the decay in the auction curve for block heights and varying decay rates
       [[0, 0, 0.001, 90], 100],
@@ -113,7 +111,7 @@ describe('Auction util functions', () => {
   });
 
   describe('getEndTimestampForAuction function', () => {
-    const baselineAuctionData: AuctionData = {
+    const baselineAuctionData: ArNSBaseAuctionData = {
       startHeight: 1,
       endHeight: 4,
       type: 'lease',
@@ -121,7 +119,6 @@ describe('Auction util functions', () => {
       floorPrice: 10,
       initiator: 'initiator',
       contractTxId: 'atomic',
-      years: 1,
       settings: {
         auctionDuration: 3,
         exponentialDecayRate: 0.1,
@@ -137,6 +134,7 @@ describe('Auction util functions', () => {
         {
           ...baselineAuctionData,
           type: 'lease',
+          years: 1,
         },
         1,
         new BlockTimestamp(SECONDS_IN_A_YEAR + 1),
@@ -154,7 +152,7 @@ describe('Auction util functions', () => {
       '%s',
       (
         _,
-        auctionData: AuctionData,
+        auctionData: ArNSAuctionData,
         currentTimestamp: number,
         expectedEndTimestamp: BlockTimestamp | undefined,
       ) => {

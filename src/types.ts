@@ -26,7 +26,7 @@ export type Balances = Record<WalletAddress, number>;
 export type Gateways = Record<WalletAddress, Gateway>;
 export type Records = Record<ArNSName, ArNSNameData>; // TODO: create ArNS Name type
 export type ReservedNames = Record<ArNSName, ReservedNameData>;
-export type Auctions = Record<ArNSName, AuctionData>;
+export type Auctions = Record<ArNSName, ArNSAuctionData>;
 export type Fees = Record<string, number>;
 export type IOState = PstState & {
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
@@ -41,6 +41,11 @@ export type IOState = PstState & {
   // TODO: epoch tracking - relevant to GAR observers
   demandFactoring: DemandFactoringData;
   observations: Observations;
+  vaults: {
+    // a list of all vaults that have locked balances
+    [address: string]: [TokenVault];
+    // a wallet can have multiple vaults
+  };
 };
 
 export type EpochObservations = {
@@ -64,7 +69,7 @@ export type WeightedObserver = {
   normalizedCompositeWeight: number;
 };
 
-export type AuctionData = {
+export type ArNSBaseAuctionData = {
   startPrice: number;
   floorPrice: number;
   startHeight: number;
@@ -72,9 +77,19 @@ export type AuctionData = {
   type: RegistrationType;
   initiator: string;
   contractTxId: string;
-  years?: number;
   settings: AuctionSettings;
 };
+
+export type ArNSLeaseAuctionData = ArNSBaseAuctionData & {
+  type: 'lease';
+  years: 1;
+};
+
+export type ArNSPermabuyAuctionData = ArNSBaseAuctionData & {
+  type: 'permabuy';
+};
+
+export type ArNSAuctionData = ArNSLeaseAuctionData | ArNSPermabuyAuctionData;
 
 // TODO: Since we're not allowing mutability of this via governance, we could do away with ID-based settings
 export type AuctionSettings = {
@@ -130,14 +145,24 @@ export type GatewaySettings = {
 export type AllowedProtocols = 'http' | 'https';
 export type RegistrationType = 'lease' | 'permabuy';
 
-export type ArNSNameData = {
+export type ArNSBaseNameData = {
   contractTxId: string; // The ANT Contract used to manage this name
   startTimestamp: number; // At what unix time (seconds since epoch) the lease starts
-  endTimestamp?: number; // At what unix time (seconds since epoch) the lease ends
   type: RegistrationType;
   undernames: number;
   purchasePrice: number;
 };
+
+export type ArNSPermabuyData = ArNSBaseNameData & {
+  type: 'permabuy';
+};
+
+export type ArNSLeaseData = ArNSBaseNameData & {
+  type: 'lease';
+  endTimestamp: number; // At what unix time (seconds since epoch) the lease ends
+};
+
+export type ArNSNameData = ArNSPermabuyData | ArNSLeaseData;
 
 export type ReservedNameData = {
   target?: string; // The target wallet address this name is reserved for
@@ -179,6 +204,12 @@ export type ArNSNameResult = {
 
 export type PstFunctions = 'balance' | 'transfer' | 'evolve';
 
+export type VaultFunctions =
+  | 'transferLocked'
+  | 'createVault'
+  | 'extendVault'
+  | 'increaseVault';
+
 export type ArNSFunctions =
   | 'buyRecord'
   | 'extendRecord'
@@ -206,7 +237,8 @@ export type ObservationFunctions =
 export type IOContractFunctions = ObservationFunctions &
   GARFunctions &
   ArNSFunctions &
-  PstFunctions;
+  PstFunctions &
+  VaultFunctions;
 
 export type ContractWriteResult = { state: IOState };
 // TODO: make this a union type of all the possible return types
@@ -363,7 +395,6 @@ export class IOToken {
 }
 
 export class mIOToken extends PositiveFiniteInteger {
-  protected value: number;
   constructor(value: number) {
     super(value);
   }

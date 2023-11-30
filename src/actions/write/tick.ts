@@ -236,29 +236,31 @@ export function tickAuctions({
       return acc;
     }
     // create the new record object
-    const getEndTimestamp = () => {
-      switch (auction.type) {
-        case 'permabuy':
-          return {};
-        case 'lease':
+    switch (auction.type) {
+      case 'permabuy':
+        updatedRecords[key] = {
+          type: auction.type,
+          contractTxId: auction.contractTxId,
+          startTimestamp: currentBlockTimestamp.valueOf(),
+          undernames: DEFAULT_UNDERNAME_COUNT,
+          purchasePrice: auction.floorPrice,
+        };
+        break;
+      case 'lease':
+        updatedRecords[key] = {
+          type: auction.type,
+          contractTxId: auction.contractTxId,
+          startTimestamp: currentBlockTimestamp.valueOf(),
+          undernames: DEFAULT_UNDERNAME_COUNT,
           // TODO: Block timestamps is broken here - user could be getting bonus time here when the next write interaction occurs
           // update the records field but do not decrement balance from the initiator as that happens on auction initiation
-          return {
-            endTimestamp:
-              +auction.years * SECONDS_IN_A_YEAR +
-              currentBlockTimestamp.valueOf(),
-          };
-      }
-    };
-    const endTimestamp = getEndTimestamp();
-    updatedRecords[key] = {
-      type: auction.type,
-      contractTxId: auction.contractTxId,
-      startTimestamp: currentBlockTimestamp.valueOf(),
-      undernames: DEFAULT_UNDERNAME_COUNT,
-      ...endTimestamp,
-      purchasePrice: auction.floorPrice,
-    };
+          endTimestamp:
+            +auction.years! * SECONDS_IN_A_YEAR + // TODO: Avoid force unwrapping years
+            currentBlockTimestamp.valueOf(),
+          purchasePrice: auction.floorPrice,
+        };
+        break;
+    }
 
     updatedDemandFactoring = tallyNamePurchase(
       updatedDemandFactoring,

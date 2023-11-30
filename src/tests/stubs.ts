@@ -1,5 +1,5 @@
 import { FEE_STRUCTURE } from '../constants';
-import { AuctionData, DemandFactoringData, IOState } from '../types';
+import { ArNSLeaseAuctionData, DemandFactoringData, IOState } from '../types';
 
 export const baselineDemandFactorData: DemandFactoringData = {
   periodZeroBlockHeight: 0,
@@ -28,6 +28,7 @@ export const getBaselineState = (): IOState => ({
   evolve: '',
   records: {},
   balances: {},
+  vaults: {},
   reserved: {},
   fees: {
     ...FEE_STRUCTURE,
@@ -56,7 +57,7 @@ export const getBaselineState = (): IOState => ({
   },
 });
 
-export const baselineAuctionData: AuctionData = {
+export const baselineAuctionData: ArNSLeaseAuctionData = {
   startHeight: 1,
   startPrice: 1_000,
   endHeight: 101,
