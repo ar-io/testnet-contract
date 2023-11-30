@@ -571,7 +571,6 @@ export function safeTransfer({
   unsafeDecrementBalance(balances, fromAddr, qty);
 }
 
-// A predicate function that checks if the arnsNameData is an ArNSLeaseData object
 export function isLeaseRecord(record: ArNSNameData): record is ArNSLeaseData {
   return record.type === 'lease';
 }
