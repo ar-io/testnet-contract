@@ -1,11 +1,6 @@
 name: Build and Test
 
-on:
-  workflow_dispatch:
-  push:
-    branches-ignore:
-      - main
-      - develop
+on: [push, pull_request, workflow_dispatch, workflow_call]
 
 jobs:
   build:
