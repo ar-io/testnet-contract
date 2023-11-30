@@ -4,7 +4,7 @@ import {
   getEndTimestampForAuction,
 } from './auctions';
 import { AUCTION_SETTINGS, SECONDS_IN_A_YEAR } from './constants';
-import { AuctionData, BlockTimestamp, RegistrationType } from './types';
+import { ArNSAuctionData, ArNSBaseAuctionData, BlockTimestamp } from './types';
 import { BlockHeight } from './types';
 
 describe('Auction util functions', () => {
@@ -113,7 +113,7 @@ describe('Auction util functions', () => {
   });
 
   describe('getEndTimestampForAuction function', () => {
-    const baselineAuctionData: AuctionData = {
+    const baselineAuctionData: ArNSBaseAuctionData = {
       startHeight: 1,
       endHeight: 4,
       type: 'lease',
@@ -121,7 +121,6 @@ describe('Auction util functions', () => {
       floorPrice: 10,
       initiator: 'initiator',
       contractTxId: 'atomic',
-      years: 1,
       settings: {
         auctionDuration: 3,
         exponentialDecayRate: 0.1,
@@ -136,7 +135,8 @@ describe('Auction util functions', () => {
         'should return the correct endTimestamp for a lease',
         {
           ...baselineAuctionData,
-          type: 'lease' as RegistrationType,
+          type: 'lease',
+          years: 1,
         },
         1,
         new BlockTimestamp(SECONDS_IN_A_YEAR + 1),
@@ -145,7 +145,7 @@ describe('Auction util functions', () => {
         'should return undefined for a permabuy',
         {
           ...baselineAuctionData,
-          type: 'permabuy' as RegistrationType,
+          type: 'permabuy',
         },
         1,
         undefined,
@@ -154,7 +154,7 @@ describe('Auction util functions', () => {
       '%s',
       (
         _,
-        auctionData: AuctionData,
+        auctionData: ArNSAuctionData,
         currentTimestamp: number,
         expectedEndTimestamp: BlockTimestamp | undefined,
       ) => {

@@ -21,9 +21,9 @@ import {
   TENURE_WEIGHT_DAYS,
 } from './constants';
 import {
+  ArNSAuctionData,
   ArNSLeaseData,
   ArNSNameData,
-  AuctionData,
   Balances,
   BlockHeight,
   BlockTimestamp,
@@ -431,7 +431,7 @@ export function calculateExistingAuctionBidForCaller({
   requiredMinimumBid,
 }: {
   caller: string;
-  auction: AuctionData;
+  auction: ArNSAuctionData;
   submittedBid: number | undefined;
   requiredMinimumBid: IOToken;
 }): IOToken {
@@ -576,6 +576,7 @@ export function safeTransfer({
 
 export function isLeaseRecord(record: ArNSNameData): record is ArNSLeaseData {
   return record.type === 'lease';
+}
 
 export function safeTransferLocked({
   balances,

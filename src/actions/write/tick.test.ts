@@ -6,7 +6,7 @@ import {
 } from '../../actions/write/tick';
 import { SECONDS_IN_A_YEAR, SECONDS_IN_GRACE_PERIOD } from '../../constants';
 import {
-  AuctionData,
+  ArNSPermabuyAuctionData,
   Auctions,
   Balances,
   BlockHeight,
@@ -27,7 +27,7 @@ const defaultAuctionSettings = {
   startPriceMultiplier: 10,
 };
 
-const testAuction: AuctionData = {
+const testAuction: ArNSPermabuyAuctionData = {
   startPrice: 100,
   floorPrice: 10,
   startHeight: 0,

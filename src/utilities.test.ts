@@ -1,7 +1,7 @@
 import {
   ArNSBaseNameData,
+  ArNSLeaseAuctionData,
   ArNSNameData,
-  AuctionData,
   BlockHeight,
   BlockTimestamp,
   GatewayStatus,
@@ -21,7 +21,7 @@ import {
 } from './utilities';
 
 describe('calculateExistingAuctionBidForCaller function', () => {
-  const nihilisticAuction: AuctionData = {
+  const nihilisticAuction: ArNSLeaseAuctionData = {
     startPrice: Number.NEGATIVE_INFINITY,
     floorPrice: Number.NEGATIVE_INFINITY,
     startHeight: Number.NEGATIVE_INFINITY,
@@ -29,7 +29,7 @@ describe('calculateExistingAuctionBidForCaller function', () => {
     type: 'lease',
     initiator: '',
     contractTxId: '',
-    years: Number.NEGATIVE_INFINITY,
+    years: 1,
     settings: {
       auctionDuration: Number.NEGATIVE_INFINITY,
       exponentialDecayRate: Number.NEGATIVE_INFINITY,
