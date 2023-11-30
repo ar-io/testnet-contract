@@ -18,6 +18,7 @@ import {
 import {
   assertAvailableRecord,
   calculateYearsBetweenTimestamps,
+  isLeaseRecord,
 } from '../../utilities';
 import { BuyRecord } from '../write/buyRecord';
 import { ExtendRecord, assertRecordCanBeExtended } from '../write/extendRecord';
@@ -138,7 +139,10 @@ export function getPriceForInteraction(
         qty,
         currentBlockTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),
       });
-      const { endTimestamp, type } = record;
+      const { type } = record;
+      const endTimestamp = isLeaseRecord(record)
+        ? record.endTimestamp
+        : undefined;
       const yearsRemaining = endTimestamp
         ? calculateYearsBetweenTimestamps({
             startTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),

@@ -236,29 +236,31 @@ export function tickAuctions({
       return acc;
     }
     // create the new record object
-    const getEndTimestamp = () => {
-      switch (auction.type) {
-        case 'permabuy':
-          return {};
-        case 'lease':
+    switch (auction.type) {
+      case 'permabuy':
+        updatedRecords[key] = {
+          type: auction.type,
+          contractTxId: auction.contractTxId,
+          startTimestamp: currentBlockTimestamp.valueOf(),
+          undernames: DEFAULT_UNDERNAME_COUNT,
+          purchasePrice: auction.floorPrice,
+        };
+        break;
+      case 'lease':
+        updatedRecords[key] = {
+          type: auction.type,
+          contractTxId: auction.contractTxId,
+          startTimestamp: currentBlockTimestamp.valueOf(),
+          undernames: DEFAULT_UNDERNAME_COUNT,
           // TODO: Block timestamps is broken here - user could be getting bonus time here when the next write interaction occurs
           // update the records field but do not decrement balance from the initiator as that happens on auction initiation
-          return {
-            endTimestamp:
-              +auction.years * SECONDS_IN_A_YEAR +
-              currentBlockTimestamp.valueOf(),
-          };
-      }
-    };
-    const endTimestamp = getEndTimestamp();
-    updatedRecords[key] = {
-      type: auction.type,
-      contractTxId: auction.contractTxId,
-      startTimestamp: currentBlockTimestamp.valueOf(),
-      undernames: DEFAULT_UNDERNAME_COUNT,
-      ...endTimestamp,
-      purchasePrice: auction.floorPrice,
-    };
+          endTimestamp:
+            +auction.years! * SECONDS_IN_A_YEAR + // TODO: Avoid force unwrapping years
+            currentBlockTimestamp.valueOf(),
+          purchasePrice: auction.floorPrice,
+        };
+        break;
+    }
 
     updatedDemandFactoring = tallyNamePurchase(
       updatedDemandFactoring,
@@ -286,7 +288,7 @@ export function tickAuctions({
 // Removes gateway from the gateway address registry after the leave period completes
 export const tick = async (state: IOState): Promise<ContractWriteResult> => {
   const interactionHeight = new BlockHeight(+SmartWeave.block.height);
-
+  const interactionTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
   if (interactionHeight.valueOf() === state.lastTickedHeight) {
     return { state };
   }
@@ -307,13 +309,12 @@ export const tick = async (state: IOState): Promise<ContractWriteResult> => {
     tickHeight++
   ) {
     const currentBlockHeight = new BlockHeight(tickHeight);
-    const safeBlock = await SmartWeave.safeArweaveGet(
-      `/block/height/${tickHeight}`,
-    );
-    const currentBlockTimestamp = new BlockTimestamp(safeBlock.timestamp);
+    /**
+     * TODO: once safeArweaveGet is more reliable, we can get the timestamp from the block between ticks to provide the timestamp. We are currently experiencing 'timeout' errors on evaluations for large gaps between interactions so we cannot reliably trust it with the current implementation.
+     * */
     updatedState = tickInternal({
       currentBlockHeight,
-      currentBlockTimestamp,
+      currentBlockTimestamp: interactionTimestamp,
       state: updatedState,
     });
   }

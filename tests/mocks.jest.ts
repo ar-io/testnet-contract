@@ -13,6 +13,8 @@ SmartWeave = {
   transaction: {
     id: 'stubbed-transaction-id',
   },
+  // tests should implement their own mocks for safeArweaveGet depending on their needs and avoid a global mock that could hide potential bugs
+  safeArweaveGet: jest.fn().mockRejectedValue('safeArweaveGet not implemented'),
 };
 
 // map it to a standard error

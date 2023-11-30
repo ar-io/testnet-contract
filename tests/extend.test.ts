@@ -15,6 +15,7 @@ import {
   calculateAnnualRenewalFee,
   getLocalArNSContractKey,
   getLocalWallet,
+  isLeaseRecord,
 } from './utils/helper';
 import { arweave, warp } from './utils/services';
 
@@ -172,7 +173,10 @@ describe('Extend', () => {
         const name = `grace-period-name${years}`;
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevState = prevCachedValue.state as IOState;
-        const record = prevState.records[name];
+        const prevStateRecord = prevState.records[name];
+        if (!isLeaseRecord(prevStateRecord)) {
+          fail(`prevStateRecord should be a lease record!`);
+        }
         const prevBalance = prevState.balances[nonContractOwnerAddress];
         const fees = prevState.fees;
         const totalExtensionAnnualFee = calculateAnnualRenewalFee({
@@ -193,8 +197,12 @@ describe('Extend', () => {
         expect(Object.keys(cachedValue.errorMessages)).not.toContain(
           writeInteraction.originalTxId,
         );
-        expect(state.records[name].endTimestamp).toEqual(
-          record.endTimestamp + years * SECONDS_IN_A_YEAR,
+        const record = state.records[name];
+        if (!isLeaseRecord(record)) {
+          fail(`record should be a lease record!`);
+        }
+        expect(record.endTimestamp).toEqual(
+          prevStateRecord.endTimestamp + years * SECONDS_IN_A_YEAR,
         );
         expect(state.balances[nonContractOwnerAddress]).toEqual(
           prevBalance - totalExtensionAnnualFee,
@@ -212,7 +220,10 @@ describe('Extend', () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevState = prevCachedValue.state as IOState;
         const prevBalance = prevState.balances[nonContractOwnerAddress];
-        const record = prevState.records[name];
+        const prevStateRecord = prevState.records[name];
+        if (!isLeaseRecord(prevStateRecord)) {
+          fail(`prevStateRecord should be a lease record!`);
+        }
         const fees = prevState.fees;
 
         const totalExtensionAnnualFee = calculateAnnualRenewalFee({
@@ -233,8 +244,12 @@ describe('Extend', () => {
         expect(Object.keys(cachedValue.errorMessages)).not.toContain(
           writeInteraction.originalTxId,
         );
-        expect(state.records[name].endTimestamp).toEqual(
-          record.endTimestamp + years * SECONDS_IN_A_YEAR,
+        const record = state.records[name];
+        if (!isLeaseRecord(record)) {
+          fail(`record should be a lease record!`);
+        }
+        expect(record.endTimestamp).toEqual(
+          prevStateRecord.endTimestamp + years * SECONDS_IN_A_YEAR,
         );
         expect(state.balances[nonContractOwnerAddress]).toEqual(
           prevBalance - totalExtensionAnnualFee,
