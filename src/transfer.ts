@@ -59,10 +59,8 @@ export function safeTransferLocked({
   qty: number;
   lockLength: number;
 }): void {
-  if (!Number.isInteger(qty) || qty <= 0) {
-    throw new ContractError(
-      'Invalid value for "qty". Must be an integer greater than 0',
-    );
+  if (qty < 0) {
+    throw new ContractError(`Quantity must be positive!`);
   }
 
   if (balances[fromAddr] === null || isNaN(balances[fromAddr])) {
@@ -74,7 +72,6 @@ export function safeTransferLocked({
   }
 
   if (
-    !Number.isInteger(lockLength) ||
     lockLength < MIN_TOKEN_LOCK_LENGTH ||
     lockLength > MAX_TOKEN_LOCK_LENGTH
   ) {

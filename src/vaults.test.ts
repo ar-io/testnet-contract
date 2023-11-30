@@ -12,9 +12,7 @@ describe('createVault function', () => {
         vaults: {},
         lockLength: MIN_TOKEN_LOCK_LENGTH,
       });
-    }).toThrowError(
-      'Invalid value for "qty". Must be an integer greater than 0',
-    );
+    }).toThrowError('Quantity must be positive!');
   });
 
   it.each([

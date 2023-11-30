@@ -1,4 +1,8 @@
-import { MAX_TOKEN_LOCK_LENGTH, MIN_TOKEN_LOCK_LENGTH } from './constants';
+import {
+  INSUFFICIENT_FUNDS_MESSAGE,
+  MAX_TOKEN_LOCK_LENGTH,
+  MIN_TOKEN_LOCK_LENGTH,
+} from './constants';
 import { safeTransfer, safeTransferLocked } from './transfer';
 import { TokenVault } from './types';
 
@@ -108,9 +112,7 @@ describe('safeTransferLocked function', () => {
         vaults: {},
         lockLength: MIN_TOKEN_LOCK_LENGTH,
       });
-    }).toThrowError(
-      'Invalid value for "qty". Must be an integer greater than 0',
-    );
+    }).toThrowError('Quantity must be positive!');
   });
 
   it.each([
@@ -143,11 +145,11 @@ describe('safeTransferLocked function', () => {
         vaults: {},
         lockLength: MIN_TOKEN_LOCK_LENGTH,
       });
-    }).toThrowError('Insufficient funds for this transaction.');
+    }).toThrowError(INSUFFICIENT_FUNDS_MESSAGE);
   });
 
   it.each([0, -1, MAX_TOKEN_LOCK_LENGTH + 1])(
-    'should throw an error if locklength is invalid %s',
+    'should throw an error if lock length is invalid %s',
     (lockLength) => {
       expect(() => {
         const balances = { foo: 2, bar: 2 };
@@ -163,7 +165,7 @@ describe('safeTransferLocked function', () => {
     },
   );
 
-  it('should create vault in toAddr with qty and locklength, and decrement fromAddr, by qty in balances object', () => {
+  it('should create vault in toAddr with qty and lock length, and decrement fromAddr, by qty in balances object', () => {
     const balances = { foo: 2, bar: 2 };
     const vaults: {
       // a list of all vaults that have locked balances
@@ -218,7 +220,7 @@ describe('safeTransferLocked function', () => {
     );
   });
 
-  it('should create vault in toAddr with qty and locklength and remove fully decremented fromAddr balance', () => {
+  it('should create vault in toAddr with qty and lock length and remove fully decremented fromAddr balance', () => {
     const balances = { foo: 1, bar: 2 };
     const vaults: {
       // a list of all vaults that have locked balances
@@ -240,7 +242,7 @@ describe('safeTransferLocked function', () => {
     expect(vaults[toAddr][0].balance).toEqual(qty);
   });
 
-  it('should create vault in toAddr with qty and locklength, and decrement fromAddr, by qty in balances object when they are both the same', () => {
+  it('should create vault in toAddr with qty and lock length, and decrement fromAddr, by qty in balances object when they are both the same', () => {
     const balances = { foo: 2, bar: 2 };
     const vaults: {
       // a list of all vaults that have locked balances
