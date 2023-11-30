@@ -1,5 +1,6 @@
+import { safeTransferLocked } from '../../transfer';
 import { ContractWriteResult, IOState, PstAction } from '../../types';
-import { getInvalidAjvMessage, safeTransferLocked } from '../../utilities';
+import { getInvalidAjvMessage } from '../../utilities';
 import { validateTransferTokensLocked } from '../../validations';
 
 // TODO: use top level class

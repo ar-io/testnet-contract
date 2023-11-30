@@ -6,6 +6,7 @@ import {
   SECONDS_IN_A_YEAR,
 } from '../../constants';
 import { calculateAnnualRenewalFee, tallyNamePurchase } from '../../pricing';
+import { safeTransfer } from '../../transfer';
 import {
   ArNSNameData,
   BlockTimestamp,
@@ -18,7 +19,6 @@ import {
   getMaxAllowedYearsExtensionForRecord,
   isExistingActiveRecord,
   isLeaseRecord,
-  safeTransfer,
   walletHasSufficientBalance,
 } from '../../utilities';
 import { validateExtendRecord } from '../../validations';

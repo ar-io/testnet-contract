@@ -1,6 +1,7 @@
 import { ContractWriteResult, IOState, PstAction } from '../../types';
-import { getInvalidAjvMessage, safeExtendVault } from '../../utilities';
+import { getInvalidAjvMessage } from '../../utilities';
 import { validateExtendVault } from '../../validations';
+import { safeExtendVault } from '../../vaults';
 
 // TODO: use top level class
 export class ExtendVault {
@@ -26,7 +27,7 @@ export const extendVault = async (
   const { vaults } = state;
   const { id, lockLength } = new ExtendVault(input);
 
-  safeExtendVault(vaults, caller, id, lockLength);
+  safeExtendVault({ vaults, address: caller, id, lockLength });
 
   return { state };
 };
