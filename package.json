@@ -9,7 +9,7 @@
     "format:fix": "prettier . --write",
     "lint:check": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test:unit": "jest --testPathPattern=src --coverage",
+    "test:unit": "yarn build && jest --testPathPattern=src --coverage",
     "test:integration": "yarn build && jest --testPathPattern=tests --globalSetup=./tests/setup.jest.ts --globalTeardown=./tests/teardown.jest.ts --runInBand",
     "test": "yarn build && yarn test:unit ; yarn test:integration",
     "evolve": "yarn ts-node ./tools/evolve-contract.ts",
