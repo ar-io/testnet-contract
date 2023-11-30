@@ -26,7 +26,7 @@ export type Balances = Record<WalletAddress, number>;
 export type Gateways = Record<WalletAddress, Gateway>;
 export type Records = Record<ArNSName, ArNSNameData>; // TODO: create ArNS Name type
 export type ReservedNames = Record<ArNSName, ReservedNameData>;
-export type Auctions = Record<ArNSName, AuctionData>;
+export type Auctions = Record<ArNSName, ArNSAuctionData>;
 export type Fees = Record<string, number>;
 export type IOState = PstState & {
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
@@ -69,7 +69,7 @@ export type WeightedObserver = {
   normalizedCompositeWeight: number;
 };
 
-export type AuctionData = {
+export type ArNSBaseAuctionData = {
   startPrice: number;
   floorPrice: number;
   startHeight: number;
@@ -77,9 +77,19 @@ export type AuctionData = {
   type: RegistrationType;
   initiator: string;
   contractTxId: string;
-  years?: number;
   settings: AuctionSettings;
 };
+
+export type ArNSLeaseAuctionData = ArNSBaseAuctionData & {
+  type: 'lease';
+  years: 1;
+};
+
+export type ArNSPermabuyAuctionData = ArNSBaseAuctionData & {
+  type: 'permabuy';
+};
+
+export type ArNSAuctionData = ArNSLeaseAuctionData | ArNSPermabuyAuctionData;
 
 // TODO: Since we're not allowing mutability of this via governance, we could do away with ID-based settings
 export type AuctionSettings = {

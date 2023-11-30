@@ -11,6 +11,7 @@ import {
 } from '../../constants';
 import { tallyNamePurchase } from '../../pricing';
 import {
+  ArNSAuctionData,
   AuctionSettings,
   Balances,
   BlockHeight,
@@ -127,7 +128,7 @@ function handleBidForExistingAuction({
   };
 
   // all the things we need to handle an auction bid
-  const existingAuction = state.auctions[name];
+  const existingAuction: ArNSAuctionData = state.auctions[name];
 
   // Prepare to update the initiator's balance in addition
   // to the planned updates to the protocol and bidder balances
@@ -197,7 +198,7 @@ function handleBidForExistingAuction({
         startTimestamp: +SmartWeave.block.timestamp, // overwrite initial start timestamp
         undernames: DEFAULT_UNDERNAME_COUNT,
         // only include timestamp on lease, endTimestamp is easy in this situation since it was a second interaction that won it
-        endTimestamp: endTimestamp!.valueOf(), // TODO: don't force unwrap endTimestamp
+        endTimestamp: endTimestamp.valueOf(),
         purchasePrice: currentRequiredMinimumBid.valueOf(), // the total amount paid for the name
       };
       break;

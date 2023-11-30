@@ -13,7 +13,7 @@ import {
   baselineDemandFactorData,
   getBaselineState,
 } from '../../tests/stubs';
-import { AuctionData, IOState } from '../../types';
+import { ArNSAuctionData, IOState } from '../../types';
 
 describe('submitAuctionBid', () => {
   it.each([
@@ -285,7 +285,7 @@ describe('submitAuctionBid', () => {
       const auction = {
         ...baselineAuctionData,
         ...inputAuctionData,
-      } as AuctionData;
+      } as ArNSAuctionData;
       const inputData: IOState = {
         ...getBaselineState(),
         auctions: {
