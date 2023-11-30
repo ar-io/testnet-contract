@@ -1,5 +1,7 @@
 # AR.IO Network Test SmartWeave Contract
 
+[![codecov](https://codecov.io/gh/ar-io/testnet-contract/graph/badge.svg?token=J2H5WQQ0IX)](https://codecov.io/gh/ar-io/testnet-contract)
+
 ## Project setup
 
 Clone this repository and install the dependencies.
