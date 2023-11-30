@@ -1,3 +1,4 @@
+import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import path from 'path';
 
@@ -21,7 +22,7 @@ module.exports = async () => {
   );
 
   // create owner wallet
-  const wallets = [];
+  const wallets: { wallet: JWKInterface; address: string }[] = [];
   for (let i = 0; i < WALLETS_TO_CREATE; i++) {
     wallets.push(await createLocalWallet(arweave));
   }
