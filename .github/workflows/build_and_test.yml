@@ -24,3 +24,10 @@ jobs:
       - run: yarn ${{ matrix.step }}
         env:
           ARNS_CONTRACT_TX_ID: ${{ vars.ARNS_CONTRACT_TX_ID }}
+      - name: Report test results
+        uses: dorny/test-reporter@v1
+        if: matrix.step == 'test' && success() || failure()
+        with:
+          name: Jest
+          path: junit.xml
+          reporter: jest-junit
