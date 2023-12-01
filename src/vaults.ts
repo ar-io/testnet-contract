@@ -4,9 +4,8 @@ import {
   MIN_TOKEN_LOCK_LENGTH,
 } from './constants';
 import { safeTransferLocked } from './transfer';
-import { Balances, TokenVault, Vaults, WalletAddress } from './types';
+import { Balances, Vaults, WalletAddress } from './types';
 import {
-  incrementBalance,
   unsafeDecrementBalance,
   walletHasSufficientBalance,
 } from './utilities';
@@ -126,35 +125,4 @@ export function safeIncreaseVault({
 
   vaults[address][index].balance += qty;
   unsafeDecrementBalance(balances, address, qty);
-}
-
-export function safeUnlockVaults({
-  balances,
-  vaults,
-}: {
-  balances: {
-    [address: string]: number;
-  };
-  vaults: {
-    [address: string]: TokenVault[];
-  };
-}): void {
-  Object.keys(vaults).forEach((address) => {
-    // Filter out vaults that have ended
-    const activeVaults = vaults[address].filter((vault) => {
-      if (vault.end <= +SmartWeave.block.height) {
-        incrementBalance(balances, address, vault.balance);
-        return false;
-      }
-      return true;
-    });
-
-    if (activeVaults.length === 0) {
-      // If there are no active vaults left, delete the key from the vaults object
-      delete vaults[address];
-    } else {
-      // Otherwise, update the vaults[address] with the filtered list
-      vaults[address] = activeVaults;
-    }
-  });
 }
