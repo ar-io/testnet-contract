@@ -4,7 +4,7 @@ import {
   MIN_TOKEN_LOCK_LENGTH,
 } from './constants';
 import { safeTransferLocked } from './transfer';
-import { Balances, TokenVault, WalletAddress } from './types';
+import { Balances, TokenVault, Vaults, WalletAddress } from './types';
 import {
   incrementBalance,
   unsafeDecrementBalance,
@@ -19,9 +19,7 @@ export function safeCreateVault({
   lockLength,
 }: {
   balances: Balances;
-  vaults: {
-    [address: string]: TokenVault[];
-  };
+  vaults: Vaults;
   address: WalletAddress;
   qty: number;
   lockLength: number;
@@ -40,26 +38,24 @@ export function safeCreateVault({
 export function safeExtendVault({
   vaults,
   address,
-  id,
+  index,
   lockLength,
 }: {
-  vaults: {
-    [address: string]: TokenVault[];
-  };
+  vaults: Vaults;
   address: WalletAddress;
-  id: number;
+  index: number;
   lockLength: number;
 }): void {
-  if (!Number.isInteger(id) || id < 0) {
+  if (!Number.isInteger(index) || index < 0) {
     throw new ContractError(
-      'Invalid value for "id". Must be an integer greater than or equal to 0',
+      'Invalid value for "index". Must be an integer greater than or equal to 0',
     );
   }
 
   if (address in vaults) {
-    if (!vaults[address][id]) {
+    if (!vaults[address][index]) {
       throw new ContractError('Invalid vault ID.');
-    } else if (+SmartWeave.block.height >= vaults[address][id].end) {
+    } else if (+SmartWeave.block.height >= vaults[address][index].end) {
       throw new ContractError('This vault has ended.');
     }
   } else {
@@ -76,30 +72,26 @@ export function safeExtendVault({
     );
   }
 
-  const newEnd = vaults[address][id].end + lockLength;
+  const newEnd = vaults[address][index].end + lockLength;
   if (newEnd - +SmartWeave.block.height > MAX_TOKEN_LOCK_LENGTH) {
     throw new ContractError(
       `The new end height is out of range. Tokens cannot be locked for longer than ${MAX_TOKEN_LOCK_LENGTH} blocks.`,
     );
   }
-  vaults[address][id].end = newEnd;
+  vaults[address][index].end = newEnd;
 }
 
 export function safeIncreaseVault({
   balances,
   vaults,
   address,
-  id,
+  index,
   qty,
 }: {
-  balances: {
-    [address: string]: number;
-  };
-  vaults: {
-    [address: string]: TokenVault[];
-  };
+  balances: Balances;
+  vaults: Vaults;
   address: WalletAddress;
-  id: number;
+  index: number;
   qty: number;
 }): void {
   if (!Number.isInteger(qty) || qty <= 0) {
@@ -116,23 +108,23 @@ export function safeIncreaseVault({
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  if (!Number.isInteger(id) || id < 0) {
+  if (!Number.isInteger(index) || index < 0) {
     throw new ContractError(
-      'Invalid value for "id". Must be an integer greater than or equal to 0',
+      'Invalid value for "index". Must be an integer greater than or equal to 0',
     );
   }
 
   if (address in vaults) {
-    if (!vaults[address][id]) {
+    if (!vaults[address][index]) {
       throw new ContractError('Invalid vault ID.');
-    } else if (+SmartWeave.block.height >= vaults[address][id].end) {
+    } else if (+SmartWeave.block.height >= vaults[address][index].end) {
       throw new ContractError('This vault has ended.');
     }
   } else {
     throw new ContractError('Caller does not have a vault.');
   }
 
-  vaults[address][id].balance += qty;
+  vaults[address][index].balance += qty;
   unsafeDecrementBalance(balances, address, qty);
 }
 

@@ -52,7 +52,7 @@ describe('createVault function', () => {
   });
 
   it.each([0, -1, MIN_TOKEN_LOCK_LENGTH - 1, MAX_TOKEN_LOCK_LENGTH + 1])(
-    'should throw an error if locklength is invalid %s',
+    'should throw an error if lock length is invalid %s',
     (lockLength) => {
       expect(() => {
         const balances = { foo: 2, bar: 2 };
@@ -67,7 +67,7 @@ describe('createVault function', () => {
     },
   );
 
-  it('should create vault in address with qty and locklength, and decrement address, by qty in balances object', () => {
+  it('should create vault in address with qty and lock length, and decrement address, by qty in balances object', () => {
     const balances = { foo: 2, bar: 2 };
     const vaults: {
       [address: string]: TokenVault[];
@@ -141,7 +141,7 @@ describe('createVault function', () => {
     );
   });
 
-  it('should create a third vault in address with qty and locklength, and decrement address, by qty in balances object', () => {
+  it('should create a third vault in address with qty and lockLength, and decrement address, by qty in balances object', () => {
     const balances = { foo: 4, bar: 2 };
     const qty = 3;
     const address = 'foo';
@@ -176,7 +176,7 @@ describe('createVault function', () => {
     );
   });
 
-  it('should create vault in address with qty and locklength and remove fully decremented address balance', () => {
+  it('should create vault in address with qty and lockLength and remove fully decremented address balance', () => {
     const balances = { foo: 1, bar: 2 };
     const vaults: {
       [address: string]: TokenVault[];
@@ -201,7 +201,7 @@ describe('extendVault function', () => {
       safeExtendVault({
         vaults: {},
         address: 'bar',
-        id: 0,
+        index: 0,
         lockLength: MIN_TOKEN_LOCK_LENGTH,
       });
     }).toThrowError('Caller does not have a vault.');
@@ -224,7 +224,7 @@ describe('extendVault function', () => {
       safeExtendVault({
         vaults,
         address,
-        id: vaults[address].length + 1,
+        index: vaults[address].length + 1,
         lockLength: MIN_TOKEN_LOCK_LENGTH,
       });
     }).toThrowError('Invalid vault ID.');
@@ -235,16 +235,16 @@ describe('extendVault function', () => {
       safeExtendVault({
         vaults: {},
         address: 'bar',
-        id: -1,
+        index: -1,
         lockLength: MIN_TOKEN_LOCK_LENGTH,
       });
     }).toThrowError(
-      'Invalid value for "id". Must be an integer greater than or equal to 0',
+      'Invalid value for "index". Must be an integer greater than or equal to 0',
     );
   });
 
   it.each([0, -1, MIN_TOKEN_LOCK_LENGTH - 1, MAX_TOKEN_LOCK_LENGTH + 1])(
-    'should throw an error if locklength is invalid %s',
+    'should throw an error if lockLength is invalid %s',
     (lockLength) => {
       expect(() => {
         const address = 'bar';
@@ -262,7 +262,7 @@ describe('extendVault function', () => {
         safeExtendVault({
           vaults,
           address,
-          id: 0,
+          index: 0,
           lockLength,
         });
       }).toThrowError(/lockLength is out of range/);
@@ -286,7 +286,7 @@ describe('extendVault function', () => {
       safeExtendVault({
         vaults,
         address,
-        id: 0,
+        index: 0,
         lockLength: MAX_TOKEN_LOCK_LENGTH,
       });
     }).toThrowError(/The new end height is out of range/);
@@ -309,13 +309,13 @@ describe('extendVault function', () => {
       safeExtendVault({
         vaults,
         address,
-        id: 0,
+        index: 0,
         lockLength: MIN_TOKEN_LOCK_LENGTH,
       });
     }).toThrowError('This vault has ended.');
   });
 
-  it('should extend vault by locklength', () => {
+  it('should extend vault by lockLength', () => {
     const address = 'bar';
     const vaults: {
       [address: string]: TokenVault[];
@@ -331,13 +331,13 @@ describe('extendVault function', () => {
     safeExtendVault({
       vaults,
       address,
-      id: 0,
+      index: 0,
       lockLength: MIN_TOKEN_LOCK_LENGTH,
     });
     expect(vaults[address][0].end).toEqual(100 + MIN_TOKEN_LOCK_LENGTH);
   });
 
-  it('should extend vault to the max locklength', () => {
+  it('should extend vault to the max lockLength', () => {
     const end = 100;
     const address = 'bar';
     const vaults: {
@@ -354,7 +354,7 @@ describe('extendVault function', () => {
     safeExtendVault({
       vaults,
       address,
-      id: 0,
+      index: 0,
       lockLength: MAX_TOKEN_LOCK_LENGTH - end,
     });
     expect(vaults[address][0].end).toEqual(100 + (MAX_TOKEN_LOCK_LENGTH - end));
@@ -384,7 +384,7 @@ describe('increaseVault function', () => {
         };
         safeIncreaseVault({
           balances,
-          id: 0,
+          index: 0,
           qty: 1,
           address: fromAddr,
           vaults,
@@ -409,7 +409,7 @@ describe('increaseVault function', () => {
       };
       safeIncreaseVault({
         balances: { foo: 1, bar: 2 },
-        id: 0,
+        index: 0,
         qty: 2,
         address,
         vaults,
@@ -435,7 +435,7 @@ describe('increaseVault function', () => {
         balances: { foo: 1, bar: 2 },
         vaults,
         address: 'bar',
-        id: 0,
+        index: 0,
         qty: -1,
       });
     }).toThrowError(
@@ -461,11 +461,11 @@ describe('increaseVault function', () => {
         balances: { foo: 1, bar: 2 },
         vaults,
         address: 'bar',
-        id: -1,
+        index: -1,
         qty: 1,
       });
     }).toThrowError(
-      'Invalid value for "id". Must be an integer greater than or equal to 0',
+      'Invalid value for "index". Must be an integer greater than or equal to 0',
     );
   });
 
@@ -487,7 +487,7 @@ describe('increaseVault function', () => {
         balances: { foo: 1, bar: 2 },
         vaults,
         address: 'bar',
-        id: vaults[address].length + 1,
+        index: vaults[address].length + 1,
         qty: 1,
       });
     }).toThrowError('Caller does not have a vault.');
@@ -511,7 +511,7 @@ describe('increaseVault function', () => {
         balances: { foo: 1, bar: 2 },
         vaults,
         address,
-        id: vaults[address].length + 1,
+        index: vaults[address].length + 1,
         qty: 1,
       });
     }).toThrowError('Invalid vault ID.');
@@ -535,7 +535,7 @@ describe('increaseVault function', () => {
         balances: { foo: 1, bar: 2 },
         vaults,
         address,
-        id: 0,
+        index: 0,
         qty: 1,
       });
     }).toThrowError('This vault has ended.');
@@ -558,7 +558,7 @@ describe('increaseVault function', () => {
     safeIncreaseVault({
       balances,
       vaults,
-      id: 0,
+      index: 0,
       qty: 1,
       address,
     });
@@ -590,7 +590,7 @@ describe('increaseVault function', () => {
         };
         safeIncreaseVault({
           balances,
-          id: 0,
+          index: 0,
           qty: 1,
           address: fromAddr,
           vaults,
@@ -615,7 +615,7 @@ describe('increaseVault function', () => {
       };
       safeIncreaseVault({
         balances: { foo: 1, bar: 2 },
-        id: 0,
+        index: 0,
         qty: 2,
         address,
         vaults,
@@ -641,7 +641,7 @@ describe('increaseVault function', () => {
         balances: { foo: 1, bar: 2 },
         vaults,
         address: 'bar',
-        id: 0,
+        index: 0,
         qty: -1,
       });
     }).toThrowError(
@@ -667,11 +667,11 @@ describe('increaseVault function', () => {
         balances: { foo: 1, bar: 2 },
         vaults,
         address: 'bar',
-        id: -1,
+        index: -1,
         qty: 1,
       });
     }).toThrowError(
-      'Invalid value for "id". Must be an integer greater than or equal to 0',
+      'Invalid value for "index". Must be an integer greater than or equal to 0',
     );
   });
 
@@ -693,7 +693,7 @@ describe('increaseVault function', () => {
         balances: { foo: 1, bar: 2 },
         vaults,
         address: 'bar',
-        id: vaults[address].length + 1,
+        index: vaults[address].length + 1,
         qty: 1,
       });
     }).toThrowError('Caller does not have a vault.');
@@ -717,7 +717,7 @@ describe('increaseVault function', () => {
         balances: { foo: 1, bar: 2 },
         vaults,
         address,
-        id: vaults[address].length + 1,
+        index: vaults[address].length + 1,
         qty: 1,
       });
     }).toThrowError('Invalid vault ID.');
@@ -741,7 +741,7 @@ describe('increaseVault function', () => {
         balances: { foo: 1, bar: 2 },
         vaults,
         address,
-        id: 0,
+        index: 0,
         qty: 1,
       });
     }).toThrowError('This vault has ended.');

@@ -4,7 +4,7 @@ import {
   MAX_TOKEN_LOCK_LENGTH,
   MIN_TOKEN_LOCK_LENGTH,
 } from './constants';
-import { Balances, TokenVault, WalletAddress } from './types';
+import { Balances, Vaults, WalletAddress } from './types';
 import {
   incrementBalance,
   unsafeDecrementBalance,
@@ -51,9 +51,7 @@ export function safeTransferLocked({
   lockLength,
 }: {
   balances: Balances;
-  vaults: {
-    [address: string]: TokenVault[];
-  };
+  vaults: Vaults;
   fromAddr: WalletAddress;
   toAddr: WalletAddress;
   qty: number;
