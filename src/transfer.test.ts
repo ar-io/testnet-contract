@@ -169,7 +169,7 @@ describe('safeTransferLocked function', () => {
     const balances = { foo: 2, bar: 2 };
     const vaults: {
       // a list of all vaults that have locked balances
-      [address: string]: [TokenVault];
+      [address: string]: TokenVault[];
       // a wallet can have multiple vaults
     } = {};
     const qty = 1;
@@ -194,7 +194,7 @@ describe('safeTransferLocked function', () => {
     const toAddr = 'bar';
     const vaults: {
       // a list of all vaults that have locked balances
-      [address: string]: [TokenVault];
+      [address: string]: TokenVault[];
       // a wallet can have multiple vaults
     } = {
       [toAddr]: [
@@ -224,7 +224,7 @@ describe('safeTransferLocked function', () => {
     const balances = { foo: 1, bar: 2 };
     const vaults: {
       // a list of all vaults that have locked balances
-      [address: string]: [TokenVault];
+      [address: string]: TokenVault[];
       // a wallet can have multiple vaults
     } = {};
     const qty = 1;
@@ -246,7 +246,7 @@ describe('safeTransferLocked function', () => {
     const balances = { foo: 2, bar: 2 };
     const vaults: {
       // a list of all vaults that have locked balances
-      [address: string]: [TokenVault];
+      [address: string]: TokenVault[];
       // a wallet can have multiple vaults
     } = {};
     const qty = 1;

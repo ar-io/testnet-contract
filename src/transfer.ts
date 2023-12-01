@@ -52,7 +52,7 @@ export function safeTransferLocked({
 }: {
   balances: Balances;
   vaults: {
-    [address: string]: [TokenVault];
+    [address: string]: TokenVault[];
   };
   fromAddr: WalletAddress;
   toAddr: WalletAddress;

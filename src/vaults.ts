@@ -6,6 +6,7 @@ import {
 import { safeTransferLocked } from './transfer';
 import { Balances, TokenVault, WalletAddress } from './types';
 import {
+  incrementBalance,
   unsafeDecrementBalance,
   walletHasSufficientBalance,
 } from './utilities';
@@ -19,7 +20,7 @@ export function safeCreateVault({
 }: {
   balances: Balances;
   vaults: {
-    [address: string]: [TokenVault];
+    [address: string]: TokenVault[];
   };
   address: WalletAddress;
   qty: number;
@@ -43,7 +44,7 @@ export function safeExtendVault({
   lockLength,
 }: {
   vaults: {
-    [address: string]: [TokenVault];
+    [address: string]: TokenVault[];
   };
   address: WalletAddress;
   id: number;
@@ -95,7 +96,7 @@ export function safeIncreaseVault({
     [address: string]: number;
   };
   vaults: {
-    [address: string]: [TokenVault];
+    [address: string]: TokenVault[];
   };
   address: WalletAddress;
   id: number;
@@ -133,4 +134,35 @@ export function safeIncreaseVault({
 
   vaults[address][id].balance += qty;
   unsafeDecrementBalance(balances, address, qty);
+}
+
+export function safeUnlockVaults({
+  balances,
+  vaults,
+}: {
+  balances: {
+    [address: string]: number;
+  };
+  vaults: {
+    [address: string]: TokenVault[];
+  };
+}): void {
+  Object.keys(vaults).forEach((address) => {
+    // Filter out vaults that have ended
+    const activeVaults = vaults[address].filter((vault) => {
+      if (vault.end <= +SmartWeave.block.height) {
+        incrementBalance(balances, address, vault.balance);
+        return false;
+      }
+      return true;
+    });
+
+    if (activeVaults.length === 0) {
+      // If there are no active vaults left, delete the key from the vaults object
+      delete vaults[address];
+    } else {
+      // Otherwise, update the vaults[address] with the filtered list
+      vaults[address] = activeVaults;
+    }
+  });
 }

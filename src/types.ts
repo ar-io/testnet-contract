@@ -43,7 +43,7 @@ export type IOState = PstState & {
   observations: Observations;
   vaults: {
     // a list of all vaults that have locked balances
-    [address: string]: [TokenVault];
+    [address: string]: TokenVault[];
     // a wallet can have multiple vaults
   };
 };
