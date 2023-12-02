@@ -205,7 +205,7 @@ describe('Vaults', () => {
       },
     );
 
-    it.each([undefined, -1, 'bad index', 3])(
+    it.each([undefined, -1, 'bad index', 10])(
       'should not be able to extend vault with an invalid index',
       async (badIndex) => {
         const { cachedValue: prevCachedValue } = await contract.readState();

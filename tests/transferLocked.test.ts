@@ -124,7 +124,10 @@ describe('TransferLocked', () => {
       expect(newState.balances[ownerAddress]).toEqual(
         prevOwnerBalance - TRANSFER_QTY,
       );
-      expect(newState.vaults[ownerAddress][0].balance).toEqual(TRANSFER_QTY);
+      expect(
+        newState.vaults[ownerAddress][newState.vaults[ownerAddress].length - 1]
+          .balance,
+      ).toEqual(TRANSFER_QTY);
     });
 
     it.each([undefined, 'bad-wallet-address', 100])(
