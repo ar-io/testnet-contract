@@ -2,7 +2,7 @@ import { MAX_TOKEN_LOCK_LENGTH, MIN_TOKEN_LOCK_LENGTH } from './constants';
 import { TokenVault } from './types';
 import { safeCreateVault, safeExtendVault, safeIncreaseVault } from './vaults';
 
-describe('createVault function', () => {
+describe('safeCreateVault function', () => {
   it('should throw an error if quantity is negative', () => {
     expect(() => {
       safeCreateVault({
@@ -190,7 +190,7 @@ describe('createVault function', () => {
   });
 });
 
-describe('extendVault function', () => {
+describe('safeExtendVault function', () => {
   it('should throw an error if no vaults exist', () => {
     expect(() => {
       safeExtendVault({
@@ -356,7 +356,7 @@ describe('extendVault function', () => {
   });
 });
 
-describe('increaseVault function', () => {
+describe('safeIncreaseVault function', () => {
   it.each([
     [{ foo: 1, bar: 2 }, 'baz'],
     [{ foo: Number.NaN, bar: 2 }, 'foo'],
