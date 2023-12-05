@@ -46,6 +46,10 @@ export async function handle(
 ): Promise<ContractReadResult | ContractWriteResult> {
   const input = action.input;
 
+  if (SmartWeave.transaction.origin !== 'L1') {
+    throw new ContractError('Only L1 transactions are supported.');
+  }
+
   // don't tick on evolutions, it should only update the source code transaction
   if (input.function === 'evolve') {
     return evolve(state, action);
