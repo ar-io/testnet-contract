@@ -1,6 +1,7 @@
 import { FEE_STRUCTURE } from '../constants';
 import { ArNSLeaseAuctionData, DemandFactoringData, IOState } from '../types';
 
+export const stubbedArweaveTxId = 'thevalidtransactionidthatis43characterslong';
 export const baselineDemandFactorData: DemandFactoringData = {
   periodZeroBlockHeight: 0,
   currentPeriod: 0,

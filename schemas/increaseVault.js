@@ -6,7 +6,7 @@ const increaseVaultSchema = {
       type: 'string',
       const: 'increaseVault',
     },
-    id: {
+    index: {
       type: 'number',
       minimum: 0,
     },
@@ -15,7 +15,7 @@ const increaseVaultSchema = {
       minimum: 1,
     },
   },
-  required: ['id', 'qty'],
+  required: ['index', 'qty'],
   additionalProperties: false,
 };
 

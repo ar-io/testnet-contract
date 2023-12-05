@@ -6,6 +6,7 @@ import {
   PERMABUY_LEASE_FEE_LENGTH,
 } from '../../constants';
 import { calculateUndernameCost } from '../../pricing';
+import { safeTransfer } from '../../transfer';
 import {
   ArNSNameData,
   BlockTimestamp,
@@ -18,7 +19,6 @@ import {
   getInvalidAjvMessage,
   isExistingActiveRecord,
   isLeaseRecord,
-  safeTransfer,
   walletHasSufficientBalance,
 } from '../../utilities';
 import { validateIncreaseUndernameCount } from '../../validations';

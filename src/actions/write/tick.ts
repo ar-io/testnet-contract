@@ -16,6 +16,9 @@ import {
   IOState,
   Records,
   ReservedNames,
+  TokenVault,
+  Vaults,
+  WalletAddress,
 } from '../../types';
 import {
   incrementBalance,
@@ -60,6 +63,16 @@ function tickInternal({
     tickGatewayRegistry({
       currentBlockHeight,
       gateways: updatedState.gateways,
+      balances: updatedState.balances,
+    }),
+  );
+
+  // update vaults and balances if necessary
+  Object.assign(
+    updatedState,
+    tickVaults({
+      currentBlockHeight,
+      vaults: updatedState.vaults,
       balances: updatedState.balances,
     }),
   );
@@ -207,6 +220,51 @@ export function tickGatewayRegistry({
 
   return {
     gateways: updatedRegistry,
+    balances: newBalances,
+  };
+}
+
+export function tickVaults({
+  currentBlockHeight,
+  vaults,
+  balances,
+}: {
+  currentBlockHeight: BlockHeight;
+  vaults: DeepReadonly<Vaults>;
+  balances: DeepReadonly<Balances>;
+}): Pick<IOState, 'vaults' | 'balances'> {
+  const updatedBalances: { [address: string]: number } = {};
+  const updatedVaults = Object.keys(vaults).reduce(
+    (acc: Vaults, address: WalletAddress) => {
+      const activeVaults = vaults[address].filter((vault: TokenVault) => {
+        if (vault.end <= currentBlockHeight.valueOf()) {
+          // Initialize the balance if it hasn't been yet
+          if (!updatedBalances[address]) {
+            updatedBalances[address] = balances[address] ?? 0;
+          }
+          // Unlock the vault and update the balance
+          incrementBalance(updatedBalances, address, vault.balance);
+          return false;
+        }
+        return true;
+      });
+
+      if (activeVaults.length > 0) {
+        // Only add to the accumulator if there are active vaults remaining
+        acc[address] = activeVaults;
+      }
+      return acc;
+    },
+    {},
+  );
+
+  // avoids copying balances if not necessary
+  const newBalances: Balances = Object.keys(updatedBalances).length
+    ? { ...balances, ...updatedBalances }
+    : balances;
+
+  return {
+    vaults: updatedVaults,
     balances: newBalances,
   };
 }

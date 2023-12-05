@@ -1,12 +1,7 @@
-import { INSUFFICIENT_FUNDS_MESSAGE } from '../../constants';
 import { ContractWriteResult, IOState, PstAction } from '../../types';
-import {
-  getInvalidAjvMessage,
-  safeCreateVault,
-  unsafeDecrementBalance,
-  walletHasSufficientBalance,
-} from '../../utilities';
+import { getInvalidAjvMessage } from '../../utilities';
 import { validateCreateVault } from '../../validations';
+import { safeCreateVault } from '../../vaults';
 
 // TODO: use top level class
 export class CreateVault {
@@ -31,22 +26,14 @@ export const createVault = async (
 ): Promise<ContractWriteResult> => {
   const { balances, vaults } = state;
   const { qty, lockLength } = new CreateVault(input);
-  if (!Number.isInteger(qty) || qty <= 0) {
-    throw new ContractError(
-      'Invalid value for "qty". Must be an integer greater than 0',
-    );
-  }
-
-  if (balances[caller] === null || isNaN(balances[caller])) {
-    throw new ContractError(`Caller balance is not defined!`);
-  }
-
-  if (!walletHasSufficientBalance(balances, caller, qty)) {
-    throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
-  }
-
-  safeCreateVault(vaults, caller, qty, lockLength);
-  unsafeDecrementBalance(balances, caller, qty);
+  // transfer tokens into the caller's vault
+  safeCreateVault({
+    balances,
+    vaults,
+    address: caller,
+    qty,
+    lockLength,
+  });
 
   return { state };
 };

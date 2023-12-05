@@ -28,6 +28,7 @@ export type Records = Record<ArNSName, ArNSNameData>; // TODO: create ArNS Name 
 export type ReservedNames = Record<ArNSName, ReservedNameData>;
 export type Auctions = Record<ArNSName, ArNSAuctionData>;
 export type Fees = Record<string, number>;
+export type Vaults = Record<WalletAddress, TokenVault[]>;
 export type IOState = PstState & {
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
@@ -41,11 +42,7 @@ export type IOState = PstState & {
   // TODO: epoch tracking - relevant to GAR observers
   demandFactoring: DemandFactoringData;
   observations: Observations;
-  vaults: {
-    // a list of all vaults that have locked balances
-    [address: string]: [TokenVault];
-    // a wallet can have multiple vaults
-  };
+  vaults: Vaults;
 };
 
 export type EpochObservations = {

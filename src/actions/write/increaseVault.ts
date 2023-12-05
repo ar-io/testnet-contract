@@ -1,10 +1,11 @@
 import { ContractWriteResult, IOState, PstAction } from '../../types';
-import { getInvalidAjvMessage, safeIncreaseVault } from '../../utilities';
+import { getInvalidAjvMessage } from '../../utilities';
 import { validateIncreaseVault } from '../../validations';
+import { safeIncreaseVault } from '../../vaults';
 
 // TODO: use top level class
 export class IncreaseVault {
-  id: number;
+  index: number;
   qty: number;
 
   constructor(input: any) {
@@ -13,8 +14,8 @@ export class IncreaseVault {
         getInvalidAjvMessage(validateIncreaseVault, input, 'increaseVault'),
       );
     }
-    const { id, qty } = input;
-    this.id = id;
+    const { index, qty } = input;
+    this.index = index;
     this.qty = qty;
   }
 }
@@ -24,9 +25,9 @@ export const increaseVault = async (
   { caller, input }: PstAction,
 ): Promise<ContractWriteResult> => {
   const { balances, vaults } = state;
-  const { id, qty } = new IncreaseVault(input);
+  const { index, qty } = new IncreaseVault(input);
 
-  safeIncreaseVault(balances, vaults, caller, id, qty);
+  safeIncreaseVault({ balances, vaults, address: caller, index, qty });
 
   return { state };
 };

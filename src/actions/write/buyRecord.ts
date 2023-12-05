@@ -6,6 +6,7 @@ import {
   SECONDS_IN_A_YEAR,
 } from '../../constants';
 import { calculateRegistrationFee, tallyNamePurchase } from '../../pricing';
+import { safeTransfer } from '../../transfer';
 import {
   BlockTimestamp,
   ContractWriteResult,
@@ -17,7 +18,6 @@ import {
   assertAvailableRecord,
   getInvalidAjvMessage,
   isNameRequiredToBeAuction,
-  safeTransfer,
   walletHasSufficientBalance,
 } from '../../utilities';
 // composed by ajv at build

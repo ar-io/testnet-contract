@@ -6,7 +6,7 @@ const extendVaultSchema = {
       type: 'string',
       const: 'extendVault',
     },
-    id: {
+    index: {
       type: 'number',
       minimum: 0,
     },
@@ -16,7 +16,7 @@ const extendVaultSchema = {
       maximum: 12 * 365 * 720, // TO DO - use constant MAX_TOKEN_LOCK_LENGTH
     },
   },
-  required: ['id', 'lockLength'],
+  required: ['index', 'lockLength'],
   additionalProperties: false,
 };
 
