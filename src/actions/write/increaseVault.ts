@@ -1,12 +1,18 @@
-import { ContractWriteResult, IOState, PstAction } from '../../types';
+import {
+  ContractWriteResult,
+  IOState,
+  PositiveFiniteInteger,
+  PstAction,
+  TransactionId,
+} from '../../types';
 import { getInvalidAjvMessage } from '../../utilities';
 import { validateIncreaseVault } from '../../validations';
 import { safeIncreaseVault } from '../../vaults';
 
 // TODO: use top level class
 export class IncreaseVault {
-  index: number;
-  qty: number;
+  id: TransactionId;
+  qty: PositiveFiniteInteger; // TODO: change to IO Token
 
   constructor(input: any) {
     if (!validateIncreaseVault(input)) {
@@ -14,9 +20,9 @@ export class IncreaseVault {
         getInvalidAjvMessage(validateIncreaseVault, input, 'increaseVault'),
       );
     }
-    const { index, qty } = input;
-    this.index = index;
-    this.qty = qty;
+    const { id, qty } = input;
+    this.id = id;
+    this.qty = new PositiveFiniteInteger(qty);
   }
 }
 
@@ -25,9 +31,15 @@ export const increaseVault = async (
   { caller, input }: PstAction,
 ): Promise<ContractWriteResult> => {
   const { balances, vaults } = state;
-  const { index, qty } = new IncreaseVault(input);
+  const { id, qty } = new IncreaseVault(input);
 
-  safeIncreaseVault({ balances, vaults, address: caller, index, qty });
+  safeIncreaseVault({
+    balances,
+    vaults,
+    address: caller,
+    id,
+    qty,
+  });
 
   return { state };
 };

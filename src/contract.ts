@@ -30,8 +30,8 @@ import { saveObservations } from './actions/write/saveObservations';
 import { submitAuctionBid } from './actions/write/submitAuctionBid';
 import { tick } from './actions/write/tick';
 import { transferTokens } from './actions/write/transferTokens';
-import { transferTokensLocked } from './actions/write/transferTokensLocked';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
+import { vaultedTransfer } from './actions/write/vaultedTransfer';
 import {
   ContractReadResult,
   ContractWriteResult,
@@ -66,8 +66,8 @@ export async function handle(
   switch (input.function as IOContractFunctions) {
     case 'transfer':
       return transferTokens(tickedState, action);
-    case 'transferLocked':
-      return transferTokensLocked(tickedState, action);
+    case 'vaultedTransfer':
+      return vaultedTransfer(tickedState, action);
     case 'createVault':
       return createVault(tickedState, action);
     case 'extendVault':

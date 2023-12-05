@@ -1,7 +1,7 @@
 import { IOState } from 'src/types';
 
 import { INVALID_INPUT_MESSAGE, MIN_TOKEN_LOCK_LENGTH } from '../../constants';
-import { getBaselineState } from '../../tests/stubs';
+import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
 import { extendVault } from './extendVault';
 
 describe('extendVault', () => {
@@ -14,20 +14,20 @@ describe('extendVault', () => {
         const initialState: IOState = {
           ...getBaselineState(),
           vaults: {
-            test: [
-              {
+            test: {
+              [stubbedArweaveTxId]: {
                 balance: 100,
                 end: SmartWeave.block.height + MIN_TOKEN_LOCK_LENGTH,
                 start: SmartWeave.block.height,
               },
-            ],
+            },
           },
         };
         const error = await extendVault(initialState, {
           caller: 'test',
           input: {
-            index: 0,
-            lockLength: badLockLength,
+            id: stubbedArweaveTxId,
+            extendLength: badLockLength,
           },
         }).catch((e) => e);
         expect(error).toBeInstanceOf(Error);
@@ -37,42 +37,42 @@ describe('extendVault', () => {
       },
     );
 
-    it('should throw an error on invalid caller', async () => {
+    it('should throw an error on invalid vault id', async () => {
       const initialState = getBaselineState();
       const error = await extendVault(initialState, {
         caller: 'no-vault',
         input: {
-          index: 0,
-          lockLength: MIN_TOKEN_LOCK_LENGTH,
+          id: stubbedArweaveTxId,
+          extendLength: MIN_TOKEN_LOCK_LENGTH,
         },
       }).catch((e) => e);
       expect(error).toBeInstanceOf(Error);
       expect(error.message).toEqual(
-        expect.stringContaining('Caller does not have a vault.'),
+        expect.stringContaining('Invalid vault ID.'),
       );
     });
 
-    it('should throw an error if the caller does not have a vault at the provided index', async () => {
+    it('should throw an error if the caller does not have a vault with the provided id', async () => {
       const initialState: IOState = {
         ...getBaselineState(),
         balances: {
           test: 99,
         },
         vaults: {
-          test: [
-            {
+          test: {
+            [stubbedArweaveTxId]: {
               balance: 100,
               end: SmartWeave.block.height + MIN_TOKEN_LOCK_LENGTH,
               start: SmartWeave.block.height,
             },
-          ],
+          },
         },
       };
       const error = await extendVault(initialState, {
         caller: 'test',
         input: {
-          index: 1,
-          lockLength: MIN_TOKEN_LOCK_LENGTH,
+          id: stubbedArweaveTxId.replace('a', 'b'),
+          extendLength: MIN_TOKEN_LOCK_LENGTH,
         },
       }).catch((e) => e);
       expect(error).toBeInstanceOf(Error);
@@ -85,13 +85,13 @@ describe('extendVault', () => {
       const initialState: IOState = {
         ...getBaselineState(),
         vaults: {
-          test: [
-            {
+          test: {
+            [stubbedArweaveTxId]: {
               balance: 100,
               end: SmartWeave.block.height + MIN_TOKEN_LOCK_LENGTH,
               start: SmartWeave.block.height,
             },
-          ],
+          },
         },
       };
       // TODO: should we allow extending a vault by 1 block if it already exists?
@@ -99,15 +99,15 @@ describe('extendVault', () => {
       const { state } = await extendVault(initialState, {
         caller: 'test',
         input: {
-          index: 0,
-          lockLength: extensionLength,
+          id: stubbedArweaveTxId,
+          extendLength: extensionLength,
         },
       });
       expect(state).toEqual({
         ...initialState,
         vaults: {
-          test: [
-            {
+          test: {
+            [stubbedArweaveTxId]: {
               balance: 100,
               end:
                 SmartWeave.block.height +
@@ -115,7 +115,7 @@ describe('extendVault', () => {
                 extensionLength,
               start: SmartWeave.block.height,
             },
-          ],
+          },
         },
       });
     });

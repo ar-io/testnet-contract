@@ -15,8 +15,9 @@ import {
   Gateways,
   IOState,
   Records,
+  RegistryVaults,
   ReservedNames,
-  TokenVault,
+  VaultData,
   Vaults,
   WalletAddress,
 } from '../../types';
@@ -182,8 +183,9 @@ export function tickGatewayRegistry({
         if (!updatedBalances[key]) {
           updatedBalances[key] = balances[key] ?? 0;
         }
+
         // gateway is leaving, make sure we return all the vaults to it
-        for (const vault of gateway.vaults) {
+        for (const vault of Object.values(gateway.vaults)) {
           incrementBalance(updatedBalances, key, vault.balance);
         }
         // return any remaining operator stake
@@ -191,8 +193,8 @@ export function tickGatewayRegistry({
         return acc;
       }
       // return any vaulted balances to the owner if they are expired, but keep the gateway
-      const updatedVaults = [];
-      for (const vault of gateway.vaults) {
+      const updatedVaults: Vaults = {};
+      for (const [id, vault] of Object.entries(gateway.vaults)) {
         if (vault.end <= currentBlockHeight.valueOf()) {
           if (!updatedBalances[key]) {
             updatedBalances[key] = balances[key] ?? 0;
@@ -201,7 +203,7 @@ export function tickGatewayRegistry({
           incrementBalance(updatedBalances, key, vault.balance);
         } else {
           // still an active vault
-          updatedVaults.push(vault);
+          updatedVaults[id] = vault;
         }
       }
       acc[key] = {
@@ -230,26 +232,30 @@ export function tickVaults({
   balances,
 }: {
   currentBlockHeight: BlockHeight;
-  vaults: DeepReadonly<Vaults>;
+  vaults: DeepReadonly<RegistryVaults>;
   balances: DeepReadonly<Balances>;
 }): Pick<IOState, 'vaults' | 'balances'> {
   const updatedBalances: { [address: string]: number } = {};
   const updatedVaults = Object.keys(vaults).reduce(
-    (acc: Vaults, address: WalletAddress) => {
-      const activeVaults = vaults[address].filter((vault: TokenVault) => {
-        if (vault.end <= currentBlockHeight.valueOf()) {
-          // Initialize the balance if it hasn't been yet
-          if (!updatedBalances[address]) {
-            updatedBalances[address] = balances[address] ?? 0;
+    (acc: RegistryVaults, address: WalletAddress) => {
+      const activeVaults: Vaults = Object.entries(vaults[address]).reduce(
+        (addressVaults: Vaults, [id, vault]: [string, VaultData]) => {
+          if (vault.end <= currentBlockHeight.valueOf()) {
+            // Initialize the balance if it hasn't been yet
+            if (!updatedBalances[address]) {
+              updatedBalances[address] = balances[address] ?? 0;
+            }
+            // Unlock the vault and update the balance
+            incrementBalance(updatedBalances, address, vault.balance);
+            return addressVaults;
           }
-          // Unlock the vault and update the balance
-          incrementBalance(updatedBalances, address, vault.balance);
-          return false;
-        }
-        return true;
-      });
+          addressVaults[id] = vault;
+          return addressVaults;
+        },
+        {},
+      );
 
-      if (activeVaults.length > 0) {
+      if (Object.keys(activeVaults).length > 0) {
         // Only add to the accumulator if there are active vaults remaining
         acc[address] = activeVaults;
       }

@@ -17,8 +17,8 @@ import {
   GatewaySettings,
   Gateways,
   Records,
+  RegistryVaults,
   ReservedNames,
-  Vaults,
 } from '../../types';
 
 const defaultAuctionSettings = {
@@ -252,13 +252,13 @@ describe('tickGatewayRegistry', () => {
             observerWallet: 'existing-operator',
             start: 0,
             end: 5,
-            vaults: [
-              {
+            vaults: {
+              'existing-vault-id': {
                 balance: 100,
                 start: 0,
                 end: 10,
               },
-            ],
+            },
             status: 'leaving',
             settings: defaultGatewaySettings,
           },
@@ -283,13 +283,13 @@ describe('tickGatewayRegistry', () => {
             observerWallet: 'existing-operator',
             start: 0,
             end: 10,
-            vaults: [
-              {
+            vaults: {
+              'existing-vault-id': {
                 balance: 100,
                 start: 0,
                 end: 2,
               },
-            ],
+            },
             status: 'joined',
             settings: defaultGatewaySettings,
           },
@@ -305,7 +305,7 @@ describe('tickGatewayRegistry', () => {
             observerWallet: 'existing-operator',
             start: 0,
             end: 10,
-            vaults: [],
+            vaults: {},
             status: 'joined',
             settings: defaultGatewaySettings,
           },
@@ -324,13 +324,13 @@ describe('tickGatewayRegistry', () => {
             observerWallet: 'existing-operator',
             start: 0,
             end: 10,
-            vaults: [
-              {
+            vaults: {
+              'existing-vault-id': {
                 balance: 100,
                 start: 0,
                 end: 10,
               },
-            ],
+            },
             status: 'joined',
             settings: defaultGatewaySettings,
           },
@@ -346,13 +346,13 @@ describe('tickGatewayRegistry', () => {
             observerWallet: 'existing-operator',
             start: 0,
             end: 10,
-            vaults: [
-              {
+            vaults: {
+              'existing-vault-id': {
                 balance: 100,
                 start: 0,
                 end: 10,
               },
-            ],
+            },
             status: 'joined',
             settings: defaultGatewaySettings,
           },
@@ -465,7 +465,7 @@ describe('tickReservedNames', () => {
 describe('tickVaults', () => {
   it('should not make changes when vaults are not present', () => {
     const currentBlockHeight = new BlockHeight(5);
-    const vaults: Vaults = {};
+    const vaults: RegistryVaults = {};
     const balances = { foo: 1, bar: 2 };
     const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
       currentBlockHeight,
@@ -476,17 +476,17 @@ describe('tickVaults', () => {
     expect(updatedVaults).toEqual({});
   });
 
-  it('should not unlock single vault if it hasnt ended', () => {
+  it('should not unlock single vault if it has not ended', () => {
     const currentBlockHeight = new BlockHeight(5);
     const address = 'bar';
-    const vaults: Vaults = {
-      [address]: [
-        {
+    const vaults: RegistryVaults = {
+      [address]: {
+        'existing-vault-id': {
           balance: 1,
           end: 100,
           start: 0,
         },
-      ],
+      },
     };
     const balances = { foo: 1, bar: 2 };
     const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
@@ -495,48 +495,48 @@ describe('tickVaults', () => {
       vaults,
     });
     expect(updatedBalances).toEqual({ foo: 1, bar: 2 });
-    expect(updatedVaults[address].length).toEqual(1);
+    expect(updatedVaults[address]).toEqual(vaults[address]);
   });
 
   it('should not unlock multiple vaults if they have not ended', () => {
     const currentBlockHeight = new BlockHeight(5);
-    const vaults: Vaults = {
-      ['foo']: [
-        {
+    const vaults: RegistryVaults = {
+      ['foo']: {
+        'existing-vault-id': {
           balance: 1,
           end: 100,
           start: 0,
         },
-      ],
-      ['bar']: [
-        {
+      },
+      ['bar']: {
+        'other-existing-vault-id': {
           balance: 1,
           end: 100,
           start: 0,
         },
-        {
+        'another-existing-vault-id-2': {
           balance: 2,
           end: 100,
           start: 0,
         },
-      ],
-      ['baz']: [
-        {
+      },
+      ['baz']: {
+        'existing-vault-id': {
           balance: 1,
           end: 100,
           start: 0,
         },
-        {
+        'other-existing-vault-id': {
           balance: 2,
           end: 100,
           start: 0,
         },
-        {
+        'another-existing-vault-id-2': {
           balance: 3,
           end: 100,
           start: 0,
         },
-      ],
+      },
     };
     const balances = { foo: 1, bar: 2, baz: 3 };
     const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
@@ -545,22 +545,22 @@ describe('tickVaults', () => {
       vaults,
     });
     expect(updatedBalances).toEqual({ foo: 1, bar: 2, baz: 3 });
-    expect(updatedVaults['foo'].length).toEqual(1);
-    expect(updatedVaults['bar'].length).toEqual(2);
-    expect(updatedVaults['baz'].length).toEqual(3);
+    expect(updatedVaults['foo']).toEqual(vaults['foo']);
+    expect(updatedVaults['bar']).toEqual(vaults['bar']);
+    expect(updatedVaults['baz']).toEqual(vaults['baz']);
   });
 
   it('should unlock single vault when it is ended', () => {
     const currentBlockHeight = new BlockHeight(6);
     const address = 'bar';
-    const vaults: Vaults = {
-      [address]: [
-        {
+    const vaults: RegistryVaults = {
+      [address]: {
+        'existing-vault-id': {
           balance: 1,
           end: 5,
           start: 0,
         },
-      ],
+      },
     };
     const balances = { foo: 1, bar: 2 };
     const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
@@ -574,43 +574,43 @@ describe('tickVaults', () => {
 
   it('should unlock multiple vaults if they have ended', () => {
     const currentBlockHeight = new BlockHeight(0);
-    const vaults: Vaults = {
-      ['foo']: [
-        {
+    const vaults: RegistryVaults = {
+      ['foo']: {
+        'existing-vault-id': {
           balance: 1,
           end: 0,
           start: 0,
         },
-      ],
-      ['bar']: [
-        {
+      },
+      ['bar']: {
+        'other-existing-vault-id': {
           balance: 1,
           end: 0,
           start: 0,
         },
-        {
+        'another-existing-vault-id-2': {
           balance: 2,
           end: 100,
           start: 0,
         },
-      ],
-      ['baz']: [
-        {
+      },
+      ['baz']: {
+        'existing-vault-id': {
           balance: 1,
           end: 0,
           start: 0,
         },
-        {
+        'other-existing-vault-id': {
           balance: 2,
           end: 0,
           start: 0,
         },
-        {
+        'another-existing-vault-id-2': {
           balance: 3,
           end: 100,
           start: 0,
         },
-      ],
+      },
     };
     const balances = { foo: 1, bar: 2, baz: 3 };
     const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
@@ -620,49 +620,61 @@ describe('tickVaults', () => {
     });
     expect(updatedBalances).toEqual({ foo: 2, bar: 3, baz: 6 });
     expect(updatedVaults['foo']).toEqual(undefined);
-    expect(updatedVaults['bar'].length).toEqual(1);
-    expect(updatedVaults['baz'].length).toEqual(1);
+    expect(updatedVaults['bar']).toEqual({
+      'another-existing-vault-id-2': {
+        balance: 2,
+        end: 100,
+        start: 0,
+      },
+    });
+    expect(updatedVaults['baz']).toEqual({
+      'another-existing-vault-id-2': {
+        balance: 3,
+        end: 100,
+        start: 0,
+      },
+    });
   });
 
   it('should unlock all vaults if they have ended', () => {
     const currentBlockHeight = new BlockHeight(0);
-    const vaults: Vaults = {
-      ['foo']: [
-        {
+    const vaults: RegistryVaults = {
+      ['foo']: {
+        'existing-vault-id': {
           balance: 1,
           end: 0,
           start: 0,
         },
-      ],
-      ['bar']: [
-        {
+      },
+      ['bar']: {
+        'other-existing-vault-id': {
           balance: 1,
           end: 0,
           start: 0,
         },
-        {
+        'another-existing-vault-id-2': {
           balance: 2,
           end: 0,
           start: 0,
         },
-      ],
-      ['baz']: [
-        {
+      },
+      ['baz']: {
+        'existing-vault-id': {
           balance: 1,
           end: 0,
           start: 0,
         },
-        {
+        'other-existing-vault-id': {
           balance: 2,
           end: 0,
           start: 0,
         },
-        {
+        'another-existing-vault-id-2': {
           balance: 3,
           end: 0,
           start: 0,
         },
-      ],
+      },
     };
     const balances = { foo: 1, bar: 2, baz: 3 };
     const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({

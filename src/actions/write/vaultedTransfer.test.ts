@@ -4,22 +4,22 @@ import {
   MIN_TOKEN_LOCK_LENGTH,
 } from '../../constants';
 import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
-import { transferTokensLocked } from './transferTokensLocked';
+import { vaultedTransfer } from './vaultedTransfer';
 
-describe('transferTokensLocked', () => {
+describe('vaultedTransfer', () => {
   describe('invalid inputs', () => {
     it.each([['bad-qty', '0', 0, -1, true, Number.MAX_SAFE_INTEGER]])(
       'should throw an error on invalid qty',
       async (badQty: unknown) => {
         const initialState = getBaselineState();
-        const error = await transferTokensLocked(initialState, {
+        const error = await vaultedTransfer(initialState, {
           caller: 'test',
           input: {
             qty: badQty,
             target: 'new-wallet',
             lockLength: MIN_TOKEN_LOCK_LENGTH,
           },
-        }).catch((e) => e);
+        }).catch((e: any) => e);
         expect(error).toBeInstanceOf(Error);
         expect(error.message).toEqual(
           expect.stringContaining(INVALID_INPUT_MESSAGE),
@@ -31,14 +31,14 @@ describe('transferTokensLocked', () => {
       'should throw an error on invalid target',
       async (badTarget: unknown) => {
         const initialState = getBaselineState();
-        const error = await transferTokensLocked(initialState, {
+        const error = await vaultedTransfer(initialState, {
           caller: 'test',
           input: {
             qty: 100,
             target: badTarget,
             lockLength: MIN_TOKEN_LOCK_LENGTH,
           },
-        }).catch((e) => e);
+        }).catch((e: any) => e);
         expect(error).toBeInstanceOf(Error);
         expect(error.message).toEqual(
           expect.stringContaining(INVALID_INPUT_MESSAGE),
@@ -53,14 +53,14 @@ describe('transferTokensLocked', () => {
           test: 99,
         },
       };
-      const error = await transferTokensLocked(initialState, {
+      const error = await vaultedTransfer(initialState, {
         caller: 'test',
         input: {
           qty: 100,
           target: stubbedArweaveTxId,
           lockLength: MIN_TOKEN_LOCK_LENGTH,
         },
-      }).catch((e) => e);
+      }).catch((e: any) => e);
       expect(error).toBeInstanceOf(Error);
       expect(error.message).toEqual(
         expect.stringContaining(INSUFFICIENT_FUNDS_MESSAGE),
@@ -74,7 +74,7 @@ describe('transferTokensLocked', () => {
           test: 10_000,
         },
       };
-      const { state } = await transferTokensLocked(initialState, {
+      const { state } = await vaultedTransfer(initialState, {
         caller: 'test',
         input: {
           qty: 100,
@@ -88,13 +88,13 @@ describe('transferTokensLocked', () => {
           test: 9_900,
         },
         vaults: {
-          [stubbedArweaveTxId]: [
-            {
+          [stubbedArweaveTxId]: {
+            [SmartWeave.transaction.id]: {
               balance: 100,
               start: 1,
               end: MIN_TOKEN_LOCK_LENGTH + 1,
             },
-          ],
+          },
         },
       });
     });
@@ -106,16 +106,16 @@ describe('transferTokensLocked', () => {
           test: 10_000,
         },
         vaults: {
-          [stubbedArweaveTxId]: [
-            {
+          test: {
+            'existing-vault-id': {
               balance: 10,
               start: 0,
               end: MIN_TOKEN_LOCK_LENGTH,
             },
-          ],
+          },
         },
       };
-      const { state } = await transferTokensLocked(initialState, {
+      const { state } = await vaultedTransfer(initialState, {
         caller: 'test',
         input: {
           qty: 100,
@@ -129,18 +129,20 @@ describe('transferTokensLocked', () => {
           test: 9_900,
         },
         vaults: {
-          [stubbedArweaveTxId]: [
-            {
-              balance: 10,
-              start: 0,
-              end: MIN_TOKEN_LOCK_LENGTH,
-            },
-            {
+          [stubbedArweaveTxId]: {
+            [SmartWeave.transaction.id]: {
               balance: 100,
               start: 1,
               end: MIN_TOKEN_LOCK_LENGTH + 1,
             },
-          ],
+          },
+          test: {
+            'existing-vault-id': {
+              balance: 10,
+              start: 0,
+              end: MIN_TOKEN_LOCK_LENGTH,
+            },
+          },
         },
       });
     });
@@ -149,11 +151,11 @@ describe('transferTokensLocked', () => {
       const initialState = {
         ...getBaselineState(),
         balances: {
-          [stubbedArweaveTxId]: 10_000,
+          test: 10_000,
         },
       };
-      const { state } = await transferTokensLocked(initialState, {
-        caller: stubbedArweaveTxId,
+      const { state } = await vaultedTransfer(initialState, {
+        caller: 'test',
         input: {
           qty: 100,
           target: stubbedArweaveTxId,
@@ -163,16 +165,16 @@ describe('transferTokensLocked', () => {
       expect(state).toEqual({
         ...initialState,
         balances: {
-          [stubbedArweaveTxId]: 9_900,
+          test: 9_900,
         },
         vaults: {
-          [stubbedArweaveTxId]: [
-            {
+          [stubbedArweaveTxId]: {
+            [SmartWeave.transaction.id]: {
               balance: 100,
               start: 1,
               end: MIN_TOKEN_LOCK_LENGTH + 1,
             },
-          ],
+          },
         },
       });
     });
@@ -184,16 +186,16 @@ describe('transferTokensLocked', () => {
           [stubbedArweaveTxId]: 10_000,
         },
         vaults: {
-          [stubbedArweaveTxId]: [
-            {
+          [stubbedArweaveTxId]: {
+            'existing-vault-id': {
               balance: 10,
               start: 0,
               end: MIN_TOKEN_LOCK_LENGTH,
             },
-          ],
+          },
         },
       };
-      const { state } = await transferTokensLocked(initialState, {
+      const { state } = await vaultedTransfer(initialState, {
         caller: stubbedArweaveTxId,
         input: {
           qty: 100,
@@ -207,18 +209,18 @@ describe('transferTokensLocked', () => {
           [stubbedArweaveTxId]: 9_900,
         },
         vaults: {
-          [stubbedArweaveTxId]: [
-            {
-              balance: 10,
-              start: 0,
-              end: MIN_TOKEN_LOCK_LENGTH,
-            },
-            {
+          [stubbedArweaveTxId]: {
+            [SmartWeave.transaction.id]: {
               balance: 100,
               start: 1,
               end: MIN_TOKEN_LOCK_LENGTH + 1,
             },
-          ],
+            'existing-vault-id': {
+              balance: 10,
+              start: 0,
+              end: MIN_TOKEN_LOCK_LENGTH,
+            },
+          },
         },
       });
     });
