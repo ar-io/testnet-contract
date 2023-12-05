@@ -177,7 +177,7 @@ describe('transferTokensLocked', () => {
       });
     });
 
-    it('should transfer locked to second vault for self if the user already has has sufficient balance', async () => {
+    it('should transfer locked to second vault for self if the user already has sufficient balance', async () => {
       const initialState = {
         ...getBaselineState(),
         balances: {
