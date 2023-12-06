@@ -64,10 +64,11 @@ describe('tickAuctions', () => {
 
   it.each([
     [
-      'should tick an auction for a permabuy name that has expired and add the floor price to the protocol balance',
+      'should tick an auction for a permabuy name that has expired and add the floor price to an existing protocol balance',
       {
         balances: {
           'some-other-balance': 1000,
+          [SmartWeave.contract.id]: 1000, // we want to validate this gets incremented by the floor price
         } as Balances,
         auctions: {
           'tick-auction': testAuction,
@@ -78,7 +79,7 @@ describe('tickAuctions', () => {
       {
         balances: {
           'some-other-balance': 1000,
-          [SmartWeave.contract.id]: testAuction.floorPrice,
+          [SmartWeave.contract.id]: 1000 + testAuction.floorPrice,
         } as Balances,
         auctions: {} as Auctions,
         records: {
@@ -98,10 +99,11 @@ describe('tickAuctions', () => {
       },
     ],
     [
-      'should tick an auction for a leased name that has expired and add the floor price to the protocol balance',
+      'should tick an auction for a leased name that has expired and add the floor price to a non-existent protocol balance',
       {
         balances: {
           'some-other-balance': 1000,
+          // not protocol balance, we want to validate it gets created and incremented by the floor price
         } as Balances,
         auctions: {
           'tick-leased-auction': {
