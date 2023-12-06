@@ -140,11 +140,13 @@ describe('safeVaultedTransfer function', () => {
           lockLength: new BlockHeight(lockLength),
           startHeight: new BlockHeight(0),
         });
-      }).toThrowError(/lockLength is out of range/);
+      }).toThrowError(
+        `Invalid lock length. Must be between ${MIN_TOKEN_LOCK_LENGTH} - ${MAX_TOKEN_LOCK_LENGTH}.`,
+      );
     },
   );
 
-  it.only('should create vault in toAddress with qty and lock length, and decrement fromAddress, by qty in balances object', () => {
+  it('should create vault in toAddress with qty and lock length, and decrement fromAddress, by qty in balances object', () => {
     const balances = { foo: 2, bar: 2 };
     const vaults: RegistryVaults = {};
     const qty = 1;
@@ -206,7 +208,7 @@ describe('safeVaultedTransfer function', () => {
     );
   });
 
-  it('should create vault in toAddress with qty and lock length and remove fully decremented fromAddress balance', () => {
+  it('should create vault in toAddress with qty and lock length and  decrement balance of fromAddress', () => {
     const balances = { foo: 1, bar: 2 };
     const vaults: RegistryVaults = {};
     const qty = 1;
@@ -228,7 +230,7 @@ describe('safeVaultedTransfer function', () => {
       end: MIN_TOKEN_LOCK_LENGTH,
     };
     expect(balances).toEqual({ bar: 2 });
-    expect(vaults[toAddress]['new-vaulted-address']).toEqual(
+    expect(vaults[toAddress]['new-vaulted-transfer']).toEqual(
       expectedNewVaultData,
     );
   });
