@@ -5,9 +5,8 @@ on:
     inputs:
       evolve-state-tx-id:
         description: 'Confirm the source code transaction ID you are running evolve state against.'
-        required: false
+        required: true
         type: string
-        default: null
 
 jobs:
   evolve-state:
