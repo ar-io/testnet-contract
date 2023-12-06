@@ -4,7 +4,9 @@ import {
   DEFAULT_START_HEIGHT,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
+import { getEpochStart, getPrescribedObservers } from '../../observers';
 import {
+  BlockHeight,
   ContractWriteResult,
   Gateway,
   IOState,
@@ -12,11 +14,7 @@ import {
   WalletAddress,
   WeightedObserver,
 } from '../../types';
-import {
-  getEpochStart,
-  getInvalidAjvMessage,
-  getPrescribedObservers,
-} from '../../utilities';
+import { getInvalidAjvMessage } from '../../utilities';
 // composed by ajv at build
 import { validateSaveObservations } from '../../validations';
 
@@ -49,9 +47,9 @@ export const saveObservations = async (
   const { observations, gateways, settings } = state;
   const { observerReportTxId, failedGateways } = new SaveObservations(input); // does validation on constructor
   const currentEpochStartHeight = getEpochStart({
-    startHeight: DEFAULT_START_HEIGHT,
-    epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
-    height: +SmartWeave.block.height,
+    startHeight: new BlockHeight(DEFAULT_START_HEIGHT),
+    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+    height: new BlockHeight(+SmartWeave.block.height),
   });
 
   // get the gateway that is creating the observation
@@ -69,7 +67,7 @@ export const saveObservations = async (
   const [observingGatewayAddress, observingGateway]: [WalletAddress, Gateway] =
     observingGatewayArray;
 
-  if (observingGateway.start > currentEpochStartHeight) {
+  if (observingGateway.start > currentEpochStartHeight.valueOf()) {
     throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
   }
 
@@ -91,8 +89,8 @@ export const saveObservations = async (
   }
 
   // check if this is the first report filed in this epoch
-  if (!observations[currentEpochStartHeight]) {
-    observations[currentEpochStartHeight] = {
+  if (!observations[currentEpochStartHeight.valueOf()]) {
+    observations[currentEpochStartHeight.valueOf()] = {
       failureSummaries: {},
       reports: {},
     };
@@ -104,7 +102,7 @@ export const saveObservations = async (
     const failedGateway = gateways[observedFailedGatewayAddress];
     if (
       !failedGateway ||
-      failedGateway.start > currentEpochStartHeight ||
+      failedGateway.start > currentEpochStartHeight.valueOf() ||
       failedGateway.status !== NETWORK_JOIN_STATUS
     ) {
       continue;
@@ -112,7 +110,7 @@ export const saveObservations = async (
 
     // Check if any observer has failed this gateway, and if not, mark it as failed
     const existingObservationInEpochForGateway: WalletAddress[] =
-      observations[currentEpochStartHeight].failureSummaries[
+      observations[currentEpochStartHeight.valueOf()].failureSummaries[
         observedFailedGatewayAddress
       ];
 
@@ -130,14 +128,15 @@ export const saveObservations = async (
     }
 
     // create the new failure summary for the observed gateway
-    observations[currentEpochStartHeight].failureSummaries[
+    observations[currentEpochStartHeight.valueOf()].failureSummaries[
       observedFailedGatewayAddress
     ] = [observingGatewayAddress];
   }
 
   // add this observers report tx id to this epoch
-  state.observations[currentEpochStartHeight].reports[observingGatewayAddress] =
-    observerReportTxId;
+  state.observations[currentEpochStartHeight.valueOf()].reports[
+    observingGatewayAddress
+  ] = observerReportTxId;
 
   return { state };
 };

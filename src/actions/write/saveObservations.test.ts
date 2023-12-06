@@ -3,13 +3,13 @@ import {
   INVALID_INPUT_MESSAGE,
   NETWORK_LEAVING_STATUS,
 } from '../../constants';
+import { getPrescribedObservers } from '../../observers';
 import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
 import { Gateway, IOState, Observations, WeightedObserver } from '../../types';
-import { getPrescribedObservers } from '../../utilities';
 import { saveObservations } from './saveObservations';
 
-jest.mock('../../utilities', () => ({
-  ...jest.requireActual('../../utilities'),
+jest.mock('../../observers', () => ({
+  ...jest.requireActual('../../observers'),
   getPrescribedObservers: jest.fn(),
 }));
 

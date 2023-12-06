@@ -10,6 +10,7 @@ import {
   SECONDS_IN_A_YEAR,
   TALLY_PERIOD_BLOCKS,
 } from '../../constants';
+import { getEpochStart, getPrescribedObservers } from '../../observers';
 import {
   cloneDemandFactoringData,
   tallyNamePurchase,
@@ -38,8 +39,6 @@ import {
   WalletAddress,
 } from '../../types';
 import {
-  getEpochStart,
-  getPrescribedObservers,
   incrementBalance,
   isActiveReservedName,
   isExistingActiveRecord,
@@ -459,18 +458,20 @@ export async function tickRewardDistribution({
   balances: DeepReadonly<Balances>;
   settings: DeepReadonly<ContractSettings>;
 }): Promise<Pick<IOState, 'distributions' | 'balances'>> {
-  const currentEpochStartHeight = getEpochStart({
-    startHeight: DEFAULT_START_HEIGHT,
-    epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
-    height: currentBlockHeight.valueOf(),
-  });
   let eligibleGateways = 0;
+  const currentEpochStartHeight = getEpochStart({
+    startHeight: new BlockHeight(DEFAULT_START_HEIGHT),
+    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+    height: currentBlockHeight,
+  });
   const updatedPassedGatewayEpochs: PassedEpochs = {};
   const updatedPassedObserverEpochs: PassedEpochs = {};
-  const lastEpochStartHeight: number =
-    currentEpochStartHeight - DEFAULT_EPOCH_BLOCK_LENGTH;
-  const lastEpochEndHeight: number =
-    lastEpochStartHeight + DEFAULT_EPOCH_BLOCK_LENGTH;
+  const lastEpochStartHeight: BlockHeight = new BlockHeight(
+    currentEpochStartHeight.valueOf() - DEFAULT_EPOCH_BLOCK_LENGTH,
+  );
+  const lastEpochEndHeight: BlockHeight = new BlockHeight(
+    lastEpochStartHeight.valueOf() + DEFAULT_EPOCH_BLOCK_LENGTH,
+  );
   const updatedBalances: Balances = {};
   const newDistributions: RewardDistributions = {
     lastCompletedEpoch: distributions.lastCompletedEpoch,
@@ -480,12 +481,14 @@ export async function tickRewardDistribution({
 
   // Check if this epoch's tallying period has ended and if it has been observed at all
   if (
-    currentBlockHeight.valueOf() > lastEpochEndHeight + TALLY_PERIOD_BLOCKS &&
-    distributions.lastCompletedEpoch < lastEpochStartHeight &&
-    lastEpochStartHeight in observations[lastEpochStartHeight]
+    currentBlockHeight.valueOf() >
+      lastEpochEndHeight.valueOf() + TALLY_PERIOD_BLOCKS &&
+    distributions.lastCompletedEpoch < lastEpochStartHeight.valueOf() &&
+    lastEpochStartHeight.valueOf() in
+      observations[lastEpochStartHeight.valueOf()]
   ) {
     const totalReportsSubmitted = Object.keys(
-      observations[lastEpochStartHeight].reports,
+      observations[lastEpochStartHeight.valueOf()].reports,
     ).length;
 
     const failureThreshold = Math.floor(
@@ -501,7 +504,7 @@ export async function tickRewardDistribution({
 
     for (const address in gateways) {
       // check if gateway was eligible and check if they were joined by the epoch start
-      if (gateways[address].start > lastEpochStartHeight) {
+      if (gateways[address].start > lastEpochStartHeight.valueOf()) {
         // it is ineligible for gateway or observation rewards.
         continue;
       }
@@ -509,20 +512,22 @@ export async function tickRewardDistribution({
       eligibleGateways++; // this gateway is eligible
 
       // check if each eligible gateway is under the failure threshold for their tallied report
-      if (observations[lastEpochStartHeight].failureSummaries[address]) {
+      if (
+        observations[lastEpochStartHeight.valueOf()].failureSummaries[address]
+      ) {
         if (
-          observations[lastEpochStartHeight].failureSummaries[address].length <=
-          failureThreshold
+          observations[lastEpochStartHeight.valueOf()].failureSummaries[address]
+            .length <= failureThreshold
         ) {
           // gateway gets a reward
           // check if it has ever been rewarded as a gateway before
           if (address in newDistributions.passedGatewayEpochs) {
             newDistributions.passedGatewayEpochs[address].push(
-              lastEpochStartHeight,
+              lastEpochStartHeight.valueOf(),
             );
           } else {
             newDistributions.passedGatewayEpochs[address] = [
-              lastEpochStartHeight,
+              lastEpochStartHeight.valueOf(),
             ];
           }
         } else {
@@ -531,16 +536,16 @@ export async function tickRewardDistribution({
       }
 
       // check if this gateway was prescribed observer to submit a report during this epoch
-      if (address in observations[lastEpochStartHeight].reports) {
+      if (address in observations[lastEpochStartHeight.valueOf()].reports) {
         // observer gets a reward
         // check if it has ever been rewarded as an observer before
         if (address in newDistributions.passedObserverEpochs) {
           newDistributions.passedObserverEpochs[address].push(
-            lastEpochStartHeight,
+            lastEpochStartHeight.valueOf(),
           );
         } else {
           newDistributions.passedObserverEpochs[address] = [
-            lastEpochStartHeight,
+            lastEpochStartHeight.valueOf(),
           ];
         }
       }
@@ -598,7 +603,7 @@ export async function tickRewardDistribution({
             observer.gatewayAddress === address ||
             observer.observerAddress === gateways[address].observerWallet,
         ) &&
-        !(address in observations[lastEpochStartHeight].reports)
+        !(address in observations[lastEpochStartHeight.valueOf()].reports)
       ) {
         // The gateway was prescribed but did not
         updatedGatewayReward = Math.floor(
@@ -626,7 +631,7 @@ export async function tickRewardDistribution({
     }
 
     // Mark this as the last completed epoch
-    newDistributions.lastCompletedEpoch = lastEpochStartHeight;
+    newDistributions.lastCompletedEpoch = lastEpochStartHeight.valueOf();
   } else {
     return { distributions: distributions as RewardDistributions, balances };
   }

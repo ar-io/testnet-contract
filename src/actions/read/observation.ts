@@ -2,22 +2,23 @@ import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_START_HEIGHT,
 } from '../../constants';
-import { ContractReadResult, IOState, PstAction } from '../../types';
-import { getEpochStart, getPrescribedObservers } from '../../utilities';
+import { getEpochStart, getPrescribedObservers } from '../../observers';
+import {
+  BlockHeight,
+  ContractReadResult,
+  IOState,
+  PstAction,
+} from '../../types';
 
 export const prescribedObserver = async (
   state: IOState,
   { input: { target, height } }: PstAction,
 ): Promise<ContractReadResult> => {
   const { settings, gateways } = state;
-  if (!height) {
-    height = +SmartWeave.block.height;
-  }
-
   const currentEpochStartHeight = getEpochStart({
-    startHeight: DEFAULT_START_HEIGHT,
-    epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
-    height: height,
+    startHeight: new BlockHeight(DEFAULT_START_HEIGHT),
+    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+    height: new BlockHeight(height || +SmartWeave.block.height),
   });
 
   const prescribedObservers = await getPrescribedObservers(
@@ -46,13 +47,10 @@ export const prescribedObservers = async (
   { input: { height } }: PstAction,
 ): Promise<ContractReadResult> => {
   const { settings, gateways } = state;
-  if (!height) {
-    height = +SmartWeave.block.height;
-  }
   const currentEpochStartHeight = getEpochStart({
-    startHeight: DEFAULT_START_HEIGHT,
-    epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
-    height: height,
+    startHeight: new BlockHeight(DEFAULT_START_HEIGHT),
+    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+    height: new BlockHeight(height || +SmartWeave.block.height),
   });
 
   const prescribedObservers = await getPrescribedObservers(
