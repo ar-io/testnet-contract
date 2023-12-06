@@ -121,19 +121,14 @@ function handleBidForExistingAuction({
   currentBlockTimestamp: BlockTimestamp;
 }): ContractWriteResult {
   const { name, qty: submittedBid, contractTxId } = auctionBid;
+  // all the things we need to handle an auction bid
+  const existingAuction: ArNSAuctionData = state.auctions[name];
   const updatedRecords: Records = {};
   const updatedBalances: Balances = {
     [SmartWeave.contract.id]: state.balances[SmartWeave.contract.id] || 0,
     [caller]: state.balances[caller] || 0,
+    [existingAuction.initiator]: state.balances[existingAuction.initiator] || 0,
   };
-
-  // all the things we need to handle an auction bid
-  const existingAuction: ArNSAuctionData = state.auctions[name];
-
-  // Prepare to update the initiator's balance in addition
-  // to the planned updates to the protocol and bidder balances
-  updatedBalances[existingAuction.initiator] =
-    state.balances[existingAuction.initiator] || 0;
 
   if (currentBlockHeight.valueOf() > existingAuction.endHeight) {
     throw new ContractError(ARNS_NAME_AUCTION_EXPIRED_MESSAGE);

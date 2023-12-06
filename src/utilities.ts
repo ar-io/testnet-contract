@@ -50,7 +50,7 @@ export function isValidArweaveBase64URL(base64URL: string): boolean {
 export function walletHasSufficientBalance(
   balances: DeepReadonly<Balances>,
   wallet: string,
-  qty: number,
+  qty: number, // TODO: change to IOToken
 ): boolean {
   return !!balances[wallet] && balances[wallet] >= qty;
 }
@@ -427,8 +427,8 @@ export function calculateExistingAuctionBidForCaller({
 }: {
   caller: string;
   auction: ArNSAuctionData;
-  submittedBid: number | undefined;
-  requiredMinimumBid: IOToken;
+  submittedBid: number | undefined; // TODO: change to IOToken
+  requiredMinimumBid: IOToken; // TODO: change to IOToken
 }): IOToken {
   if (submittedBid && submittedBid < requiredMinimumBid.valueOf()) {
     throw new ContractError(
@@ -514,7 +514,7 @@ export function calculateYearsBetweenTimestamps({
 export function unsafeDecrementBalance(
   balances: Balances,
   address: WalletAddress,
-  amount: number,
+  amount: number, // TODO: change to IOToken
   removeIfZero = true,
 ): void {
   balances[address] -= amount;
@@ -526,10 +526,10 @@ export function unsafeDecrementBalance(
 export function incrementBalance(
   balances: Balances,
   address: WalletAddress,
-  amount: number,
+  amount: number, // TODO: change to IO token
 ): void {
-  if (amount < 0) {
-    throw new ContractError(`Amount must be positive!`);
+  if (amount < 1) {
+    throw new ContractError(`"Amount must be positive`);
   }
   if (address in balances) {
     balances[address] += amount;

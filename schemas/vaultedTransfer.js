@@ -4,7 +4,7 @@ const transferTokensLockedSchema = {
   properties: {
     function: {
       type: 'string',
-      const: 'transferLocked',
+      const: 'vaultedTransfer',
     },
     target: {
       type: 'string',

@@ -307,7 +307,7 @@ describe('Network', () => {
           start: (await getCurrentBlock(arweave)).valueOf(),
           end: 0,
           observerWallet: newGatewayOperatorAddress,
-          vaults: [],
+          vaults: {},
           settings: {
             label: joinGatewayPayload.label,
             fqdn: joinGatewayPayload.fqdn,
@@ -396,7 +396,11 @@ describe('Network', () => {
         ).toEqual(
           prevState.gateways[newGatewayOperatorAddress].operatorStake - qty,
         );
-        expect(newState.gateways[newGatewayOperatorAddress].vaults[0]).toEqual({
+        expect(
+          newState.gateways[newGatewayOperatorAddress].vaults[
+            writeInteraction!.originalTxId
+          ],
+        ).toEqual({
           balance: qty,
           end: expectedEndBlock,
           start: expectedStartBlock,
@@ -673,7 +677,7 @@ describe('Network', () => {
           expectedEndBlock,
         );
         // confirm all vaults get updated
-        for (const vault of vaultsForOperator) {
+        for (const vault of Object.values(vaultsForOperator)) {
           expect(vault).toEqual({
             balance: expect.any(Number),
             start: expect.any(Number),
@@ -701,7 +705,7 @@ describe('Network', () => {
         const expectedGatewayObj = expect.objectContaining({
           operatorStake: expect.any(Number),
           status: expect.any(String),
-          vaults: expect.any(Array),
+          vaults: expect.any(Object),
           settings: expect.any(Object),
         });
         expect(gateway).not.toBe(undefined);

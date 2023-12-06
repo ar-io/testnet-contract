@@ -14,15 +14,16 @@ export const leaveNetwork = async (
 ): Promise<ContractWriteResult> => {
   const settings = state.settings.registry;
   const gateways = state.gateways;
+  const gateway = gateways[caller];
   const currentBlockHeight = new BlockHeight(+SmartWeave.block.height);
 
-  if (!gateways[caller]) {
+  if (!gateway) {
     throw new ContractError('This target is not a registered gateway.');
   }
 
   if (
     !isGatewayEligibleToLeave({
-      gateway: gateways[caller],
+      gateway,
       currentBlockHeight,
       registrySettings: settings,
     })
@@ -35,14 +36,14 @@ export const leaveNetwork = async (
   const endHeight = +SmartWeave.block.height + settings.gatewayLeaveLength;
 
   // Add tokens to a vault that unlocks after the withdrawal period ends
-  gateways[caller].vaults.push({
+  gateways[caller].vaults[SmartWeave.transaction.id] = {
     balance: gateways[caller].operatorStake,
     start: +SmartWeave.block.height,
     end: endHeight,
-  });
+  };
 
   // set all the vaults to unlock at the end of the withdrawal period
-  for (const vault of gateways[caller].vaults) {
+  for (const vault of Object.values(gateway.vaults)) {
     vault.end = endHeight;
   }
 

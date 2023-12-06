@@ -126,7 +126,7 @@ function createGateways(wallets: string[]) {
     start: 0,
     end: 0,
     status: NETWORK_JOIN_STATUS,
-    vaults: [],
+    vaults: {},
     settings: {
       label: 'Arweave Community Gateway', // The friendly name used to label this gateway
       fqdn: 'arweave.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -143,7 +143,7 @@ function createGateways(wallets: string[]) {
     status: NETWORK_JOIN_STATUS,
     start: 0,
     end: 0,
-    vaults: [],
+    vaults: {},
     settings: {
       label: 'Slashme', // The friendly name used to label this gateway
       fqdn: 'slash-this-gateway.io', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -160,7 +160,7 @@ function createGateways(wallets: string[]) {
     status: NETWORK_JOIN_STATUS,
     start: 0,
     end: 0,
-    vaults: [],
+    vaults: {},
     settings: {
       label: 'Delegateme', // The friendly name used to label this gateway
       fqdn: 'delegate.org', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -177,7 +177,7 @@ function createGateways(wallets: string[]) {
     status: NETWORK_HIDDEN_STATUS,
     start: 0,
     end: 0,
-    vaults: [],
+    vaults: {},
     settings: {
       label: 'Wack-gateway', // The friendly name used to label this gateway
       fqdn: 'brokeninfra.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -194,7 +194,7 @@ function createGateways(wallets: string[]) {
     status: NETWORK_JOIN_STATUS,
     start: 0,
     end: 0,
-    vaults: [],
+    vaults: {},
     settings: {
       label: 'Observation', // The friendly name used to label this gateway
       fqdn: 'observation.com', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -211,7 +211,7 @@ function createGateways(wallets: string[]) {
     status: NETWORK_JOIN_STATUS,
     start: 0,
     end: 0,
-    vaults: [],
+    vaults: {},
     settings: {
       label: 'Another Observer', // The friendly name used to label this gateway
       fqdn: 'observation-again.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -228,7 +228,7 @@ function createGateways(wallets: string[]) {
     status: NETWORK_JOIN_STATUS,
     start: 10,
     end: 0,
-    vaults: [],
+    vaults: {},
     settings: {
       label: 'Leaving', // The friendly name used to label this gateway
       fqdn: 'leaving.io', // the fully qualified domain name this gateway can be reached at. eg arweave.net

@@ -78,7 +78,7 @@ describe('isGatewayJoined function', () => {
             start: Number.NEGATIVE_INFINITY,
             end: gatewayEndHeight,
             status: status as GatewayStatus,
-            vaults: [],
+            vaults: {},
             operatorStake: Number.NEGATIVE_INFINITY,
             observerWallet: '',
             settings: {
@@ -116,7 +116,7 @@ describe('isGatewayHidden function', () => {
           start: Number.NEGATIVE_INFINITY,
           end: Number.MAX_SAFE_INTEGER,
           status: status as GatewayStatus,
-          vaults: [],
+          vaults: {},
           operatorStake: Number.NEGATIVE_INFINITY,
           observerWallet: '',
           settings: {
@@ -161,7 +161,7 @@ describe('isGatewayEligibleToBeRemoved function', () => {
             start: Number.NEGATIVE_INFINITY,
             end: gatewayEndBlock,
             status: status as GatewayStatus,
-            vaults: [],
+            vaults: {},
             operatorStake: Number.NEGATIVE_INFINITY,
             observerWallet: '',
             settings: {
@@ -229,7 +229,7 @@ describe('isGatewayEligibleToLeave function', () => {
             start: gatewayStartBlock,
             end: gatewayEndBlock,
             status: status as GatewayStatus,
-            vaults: [],
+            vaults: {},
             operatorStake: 0,
             observerWallet: '',
             settings: {
