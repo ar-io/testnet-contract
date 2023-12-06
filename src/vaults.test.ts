@@ -1,5 +1,6 @@
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
+  INVALID_VAULT_LOCK_LENGTH_MESSAGE,
   MAX_TOKEN_LOCK_LENGTH,
   MIN_TOKEN_LOCK_LENGTH,
 } from './constants';
@@ -42,6 +43,28 @@ describe('safeCreateVault function', () => {
     }).toThrowError('Insufficient funds for this transaction.');
   });
 
+  it('should throw an error if address already has a vault with the given address', () => {
+    expect(() => {
+      safeCreateVault({
+        balances: { foo: 1 },
+        qty: new PositiveFiniteInteger(1),
+        address: 'foo',
+        vaults: {
+          foo: {
+            'existing-vault-id': {
+              balance: 1,
+              end: 100,
+              start: 0,
+            },
+          },
+        },
+        id: 'existing-vault-id',
+        lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+        startHeight: new BlockHeight(0),
+      });
+    }).toThrowError("Vault with id 'existing-vault-id' already exists");
+  });
+
   it.each([0, MIN_TOKEN_LOCK_LENGTH - 1, MAX_TOKEN_LOCK_LENGTH + 1])(
     'should throw an error if lock length is invalid %s',
     (lockLength) => {
@@ -56,7 +79,7 @@ describe('safeCreateVault function', () => {
           id: 'new-vault-id',
           startHeight: new BlockHeight(0),
         });
-      }).toThrowError(/lockLength is out of range/);
+      }).toThrowError(INVALID_VAULT_LOCK_LENGTH_MESSAGE);
     },
   );
 
@@ -272,7 +295,7 @@ describe('safeExtendVault function', () => {
           id: 'existing-vault-id',
           extendLength: new BlockHeight(extendLength),
         });
-      }).toThrowError(/lockLength is out of range/);
+      }).toThrowError(INVALID_VAULT_LOCK_LENGTH_MESSAGE);
     },
   );
 

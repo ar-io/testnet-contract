@@ -1,5 +1,6 @@
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
+  INVALID_VAULT_LOCK_LENGTH_MESSAGE,
   MAX_TOKEN_LOCK_LENGTH,
   MIN_TOKEN_LOCK_LENGTH,
 } from './constants';
@@ -46,9 +47,7 @@ export function safeCreateVault({
     lockLength.valueOf() < MIN_TOKEN_LOCK_LENGTH ||
     lockLength.valueOf() > MAX_TOKEN_LOCK_LENGTH
   ) {
-    throw new ContractError(
-      `lockLength is out of range. lockLength must be between ${MIN_TOKEN_LOCK_LENGTH} - ${MAX_TOKEN_LOCK_LENGTH}.`,
-    );
+    throw new ContractError(INVALID_VAULT_LOCK_LENGTH_MESSAGE);
   }
 
   const end = startHeight.valueOf() + lockLength.valueOf();
@@ -91,9 +90,7 @@ export function safeExtendVault({
     extendLength.valueOf() > MAX_TOKEN_LOCK_LENGTH ||
     totalBlocksRemaining + extendLength.valueOf() > MAX_TOKEN_LOCK_LENGTH
   ) {
-    throw new ContractError(
-      `lockLength is out of range. lockLength must be between ${MIN_TOKEN_LOCK_LENGTH} - ${MAX_TOKEN_LOCK_LENGTH} blocks.`,
-    );
+    throw new ContractError(INVALID_VAULT_LOCK_LENGTH_MESSAGE);
   }
 
   const newEnd = currentEnd + extendLength.valueOf();

@@ -1,5 +1,6 @@
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
+  INVALID_VAULT_LOCK_LENGTH_MESSAGE,
   MAX_TOKEN_LOCK_LENGTH,
   MIN_TOKEN_LOCK_LENGTH,
 } from './constants';
@@ -140,9 +141,7 @@ describe('safeVaultedTransfer function', () => {
           lockLength: new BlockHeight(lockLength),
           startHeight: new BlockHeight(0),
         });
-      }).toThrowError(
-        `Invalid lock length. Must be between ${MIN_TOKEN_LOCK_LENGTH} - ${MAX_TOKEN_LOCK_LENGTH}.`,
-      );
+      }).toThrowError(INVALID_VAULT_LOCK_LENGTH_MESSAGE);
     },
   );
 

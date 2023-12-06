@@ -1,6 +1,7 @@
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_TARGET_MESSAGE,
+  INVALID_VAULT_LOCK_LENGTH_MESSAGE,
   MAX_TOKEN_LOCK_LENGTH,
   MIN_TOKEN_LOCK_LENGTH,
 } from './constants';
@@ -77,9 +78,7 @@ export function safeVaultedTransfer({
     lockLength.valueOf() < MIN_TOKEN_LOCK_LENGTH ||
     lockLength.valueOf() > MAX_TOKEN_LOCK_LENGTH
   ) {
-    throw new ContractError(
-      `Invalid lock length. Must be between ${MIN_TOKEN_LOCK_LENGTH} - ${MAX_TOKEN_LOCK_LENGTH}.`,
-    );
+    throw new ContractError(INVALID_VAULT_LOCK_LENGTH_MESSAGE);
   }
 
   const newVault: VaultData = {
