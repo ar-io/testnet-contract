@@ -67,8 +67,8 @@ describe('tickAuctions', () => {
       'should tick an auction for a permabuy name that has expired and add the floor price to the protocol balance',
       {
         balances: {
-          [SmartWeave.contract.id]: 0,
-        },
+          'some-other-balance': 1000,
+        } as Balances,
         auctions: {
           'tick-auction': testAuction,
         } as Auctions,
@@ -77,8 +77,9 @@ describe('tickAuctions', () => {
       },
       {
         balances: {
+          'some-other-balance': 1000,
           [SmartWeave.contract.id]: testAuction.floorPrice,
-        },
+        } as Balances,
         auctions: {} as Auctions,
         records: {
           'tick-auction': {
@@ -100,8 +101,8 @@ describe('tickAuctions', () => {
       'should tick an auction for a leased name that has expired and add the floor price to the protocol balance',
       {
         balances: {
-          [SmartWeave.contract.id]: 0,
-        },
+          'some-other-balance': 1000,
+        } as Balances,
         auctions: {
           'tick-leased-auction': {
             ...testAuction,
@@ -114,8 +115,9 @@ describe('tickAuctions', () => {
       },
       {
         balances: {
+          'some-other-balance': 1000,
           [SmartWeave.contract.id]: testAuction.floorPrice,
-        },
+        } as Balances,
         auctions: {},
         records: {
           'tick-leased-auction': {
@@ -138,8 +140,8 @@ describe('tickAuctions', () => {
       'should not tick an auction that has not expired yet',
       {
         balances: {
-          [SmartWeave.contract.id]: 0,
-        },
+          'some-other-balance': 1000,
+        } as Balances,
         auctions: {
           'do-not-tick': {
             ...testAuction,
@@ -150,8 +152,8 @@ describe('tickAuctions', () => {
       },
       {
         balances: {
-          [SmartWeave.contract.id]: 0,
-        },
+          'some-other-balance': 1000,
+        } as Balances,
         auctions: {
           'do-not-tick': {
             ...testAuction,
@@ -179,10 +181,8 @@ describe('tickAuctions', () => {
         currentBlockHeight: new BlockHeight(5),
         currentBlockTimestamp: new BlockTimestamp(blockTimestamp),
         records: {},
-        balances: {
-          [SmartWeave.contract.id]: 0,
-        },
-        auctions: inputData.auctions as DeepReadonly<Auctions>,
+        balances: inputData.balances,
+        auctions: inputData.auctions,
         demandFactoring: inputData.demandFactoring,
       });
       expect(balances).toEqual(expectedData.balances);

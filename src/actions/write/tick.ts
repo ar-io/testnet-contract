@@ -293,9 +293,7 @@ export function tickAuctions({
 }): Pick<IOState, 'balances' | 'auctions' | 'records' | 'demandFactoring'> {
   // handle expired auctions
   const updatedRecords: Records = {};
-  const updatedBalances: Balances = {
-    [SmartWeave.contract.id]: balances[SmartWeave.contract.id] ?? 0,
-  };
+  const updatedBalances: Balances = {};
   let updatedDemandFactoring = cloneDemandFactoringData(demandFactoring);
   const updatedAuctions = Object.keys(auctions).reduce((acc: Auctions, key) => {
     const auction = auctions[key];
@@ -332,8 +330,18 @@ export function tickAuctions({
         break;
     }
 
+    // set it if we do not have it yet
+    if (!updatedBalances[SmartWeave.contract.id]) {
+      updatedBalances[SmartWeave.contract.id] =
+        balances[SmartWeave.contract.id] ?? 0;
+    }
+
     // give the auction floor to the protocol balance
-    updatedBalances[SmartWeave.contract.id] += auction.floorPrice;
+    incrementBalance(
+      updatedBalances,
+      SmartWeave.contract.id,
+      auction.floorPrice,
+    );
 
     // update the demand factor
     updatedDemandFactoring = tallyNamePurchase(
