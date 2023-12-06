@@ -1,12 +1,18 @@
-import { ContractWriteResult, IOState, PstAction } from '../../types';
+import {
+  BlockHeight,
+  ContractWriteResult,
+  IOState,
+  PstAction,
+  TransactionId,
+} from '../../types';
 import { getInvalidAjvMessage } from '../../utilities';
 import { validateExtendVault } from '../../validations';
 import { safeExtendVault } from '../../vaults';
 
 // TODO: use top level class
 export class ExtendVault {
-  index: number;
-  lockLength: number;
+  id: TransactionId;
+  extendLength: BlockHeight;
 
   constructor(input: any) {
     if (!validateExtendVault(input)) {
@@ -14,9 +20,9 @@ export class ExtendVault {
         getInvalidAjvMessage(validateExtendVault, input, 'extendVault'),
       );
     }
-    const { index, lockLength } = input;
-    this.index = index;
-    this.lockLength = lockLength;
+    const { id, extendLength } = input;
+    this.id = id;
+    this.extendLength = new BlockHeight(extendLength);
   }
 }
 
@@ -25,9 +31,9 @@ export const extendVault = async (
   { caller, input }: PstAction,
 ): Promise<ContractWriteResult> => {
   const { vaults } = state;
-  const { index, lockLength } = new ExtendVault(input);
+  const { id, extendLength } = new ExtendVault(input);
 
-  safeExtendVault({ vaults, address: caller, index, lockLength });
+  safeExtendVault({ vaults, address: caller, id, extendLength });
 
   return { state };
 };

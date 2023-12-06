@@ -92,13 +92,13 @@ describe('createVault', () => {
       expect(state).toEqual({
         ...initialState,
         vaults: {
-          test: [
-            {
+          test: {
+            [SmartWeave.transaction.id]: {
               balance: 100,
               end: SmartWeave.block.height + MIN_TOKEN_LOCK_LENGTH,
               start: SmartWeave.block.height,
             },
-          ],
+          },
         },
         balances: {
           test: 9_900,

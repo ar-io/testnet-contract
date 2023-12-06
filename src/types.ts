@@ -1,5 +1,3 @@
-import { PstState } from 'warp-contracts';
-
 import {
   MAX_ALLOWED_DECIMALS,
   NETWORK_HIDDEN_STATUS,
@@ -28,8 +26,14 @@ export type Records = Record<ArNSName, ArNSNameData>; // TODO: create ArNS Name 
 export type ReservedNames = Record<ArNSName, ReservedNameData>;
 export type Auctions = Record<ArNSName, ArNSAuctionData>;
 export type Fees = Record<string, number>;
-export type Vaults = Record<WalletAddress, TokenVault[]>;
-export type IOState = PstState & {
+export type Vaults = Record<TransactionId, VaultData>;
+export type RegistryVaults = Record<WalletAddress, Vaults>;
+export type PassedEpochs = Record<WalletAddress, number[]>; // the list of epochs that have passed for a given gateway or observer
+export type IOState = {
+  ticker: string;
+  balances: Balances;
+  owner: string;
+  canEvolve: boolean; // Whether or not this contract can evolve
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
   records: Records; // The list of all ArNS names and their associated data
@@ -41,8 +45,8 @@ export type IOState = PstState & {
   lastTickedHeight: number; // periodicity management
   demandFactoring: DemandFactoringData;
   observations: Observations;
-  vaults: Vaults;
   distributions: RewardDistributions;
+  vaults: RegistryVaults;
 };
 
 // The distributions made at the end of each epoch
@@ -51,8 +55,6 @@ export type RewardDistributions = {
   passedGatewayEpochs: PassedEpochs;
   passedObserverEpochs: PassedEpochs;
 };
-
-export type PassedEpochs = Record<WalletAddress, number[]>;
 
 export type EpochObservations = {
   failureSummaries: Record<WalletAddress, WalletAddress[]>; // the gateway that has been marked as down and the gateways that marked it down
@@ -134,7 +136,7 @@ export type Gateway = {
   start: number; // At what block the gateway joined the network.
   end: number; // At what block the gateway can leave the network.  0 means no end date.
   status: GatewayStatus; // hidden represents not leaving, but not participating
-  vaults: TokenVault[]; // the locked tokens staked by this gateway operator
+  vaults: Vaults; // the locked tokens staked by this gateway operator
   settings: GatewaySettings;
 };
 
@@ -175,13 +177,7 @@ export type ReservedNameData = {
   endTimestamp?: number; // At what unix time (seconds since epoch) this reserved name becomes available
 };
 
-export type TokenVault = {
-  balance: number; // Positive integer, the amount locked
-  start: number; // At what block the lock starts.
-  end: number; // At what block the lock ends.  0 means no end date.
-};
-
-export type VaultParameters = {
+export type VaultData = {
   balance: number;
   start: number;
   end: number;
@@ -208,10 +204,10 @@ export type ArNSNameResult = {
   endTimestamp: number; // At what unix time (seconds since epoch) the lease ends
 };
 
-export type PstFunctions = 'balance' | 'transfer' | 'evolve';
+export type BaseFunctions = 'balance' | 'transfer' | 'evolve';
 
 export type VaultFunctions =
-  | 'transferLocked'
+  | 'vaultedTransfer'
   | 'createVault'
   | 'extendVault'
   | 'increaseVault';
@@ -223,16 +219,14 @@ export type ArNSFunctions =
   | 'record'
   | 'submitAuctionBid';
 
-export type GARFunctions =
+export type RegistryFunctions =
   | 'joinNetwork'
   | 'gatewayRegistry'
   | 'gatewayTotalStake'
-  | 'initiateLeave'
-  | 'finalizeLeave'
+  | 'leaveNetwork'
   | 'increaseOperatorStake'
   | 'rankedGatewayRegistry'
   | 'initiateOperatorStakeDecrease'
-  | 'finalizeOperatorStakeDecrease'
   | 'updateGatewaySettings';
 
 export type ObservationFunctions =
@@ -240,10 +234,11 @@ export type ObservationFunctions =
   | 'prescribedObserver'
   | 'prescribedObservers';
 
-export type IOContractFunctions = ObservationFunctions &
-  GARFunctions &
+export type IOContractFunctions = BaseFunctions &
+  ObservationFunctions &
+  RegistryFunctions &
   ArNSFunctions &
-  PstFunctions &
+  BaseFunctions &
   VaultFunctions;
 
 export type ContractWriteResult = { state: IOState };

@@ -10,7 +10,7 @@
     "allowSyntheticDefaultImports": true,
     "allowJs": true,
     "baseUrl": ".",
-    "types": ["jest"],
+    "types": ["node", "jest"],
     "lib": ["esnext"],
 
     // additional checks

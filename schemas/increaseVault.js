@@ -6,16 +6,16 @@ const increaseVaultSchema = {
       type: 'string',
       const: 'increaseVault',
     },
-    index: {
-      type: 'number',
-      minimum: 0,
+    id: {
+      type: 'string',
+      pattern: '^[a-zA-Z0-9-_]{43}$',
     },
     qty: {
       type: 'number',
       minimum: 1,
     },
   },
-  required: ['index', 'qty'],
+  required: ['id', 'qty'],
   additionalProperties: false,
 };
 

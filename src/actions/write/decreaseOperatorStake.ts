@@ -34,12 +34,12 @@ export const decreaseOperatorStake = async (
   gateways[caller].operatorStake -= qty;
 
   // Add tokens to a vault that unlocks after the withdrawal period ends
-  gateways[caller].vaults.push({
+  gateways[caller].vaults[SmartWeave.transaction.id] = {
     balance: qty,
     start: +SmartWeave.block.height,
     end:
       +SmartWeave.block.height + registrySettings.operatorStakeWithdrawLength,
-  });
+  };
 
   // update state
   state.gateways = gateways;

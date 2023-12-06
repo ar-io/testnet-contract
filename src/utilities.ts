@@ -3,15 +3,11 @@ import {
   BLOCKS_PER_DAY,
   DEFAULT_NUM_SAMPLED_BLOCKS,
   DEFAULT_SAMPLED_BLOCKS_OFFSET,
-  INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
   INVALID_SHORT_NAME,
-  INVALID_TARGET_MESSAGE,
   MAX_TENURE_WEIGHT,
-  MAX_TOKEN_LOCK_LENGTH,
   MAX_YEARS,
   MINIMUM_ALLOWED_NAME_LENGTH,
-  MIN_TOKEN_LOCK_LENGTH,
   NAMESPACE_LENGTH,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
   NUM_OBSERVERS_PER_EPOCH,
@@ -36,8 +32,6 @@ import {
   RegistrationType,
   ReservedNameData,
   ReservedNames,
-  TokenVault,
-  Vaults,
   WalletAddress,
   WeightedObserver,
 } from './types';
@@ -57,7 +51,7 @@ export function isValidArweaveBase64URL(base64URL: string): boolean {
 export function walletHasSufficientBalance(
   balances: DeepReadonly<Balances>,
   wallet: string,
-  qty: number,
+  qty: number, // TODO: change to IOToken
 ): boolean {
   return !!balances[wallet] && balances[wallet] >= qty;
 }
@@ -432,8 +426,8 @@ export function calculateExistingAuctionBidForCaller({
 }: {
   caller: string;
   auction: ArNSAuctionData;
-  submittedBid: number | undefined;
-  requiredMinimumBid: IOToken;
+  submittedBid: number | undefined; // TODO: change to IOToken
+  requiredMinimumBid: IOToken; // TODO: change to IOToken
 }): IOToken {
   if (submittedBid && submittedBid < requiredMinimumBid.valueOf()) {
     throw new ContractError(
@@ -519,7 +513,7 @@ export function calculateYearsBetweenTimestamps({
 export function unsafeDecrementBalance(
   balances: Balances,
   address: WalletAddress,
-  amount: number,
+  amount: number, // TODO: change to IOToken
   removeIfZero = true,
 ): void {
   balances[address] -= amount;
@@ -531,10 +525,10 @@ export function unsafeDecrementBalance(
 export function incrementBalance(
   balances: Balances,
   address: WalletAddress,
-  amount: number,
+  amount: number, // TODO: change to IO token
 ): void {
-  if (amount < 0) {
-    throw new ContractError(`Amount must be positive!`);
+  if (amount < 1) {
+    throw new ContractError(`"Amount must be positive`);
   }
   if (address in balances) {
     balances[address] += amount;
@@ -545,167 +539,4 @@ export function incrementBalance(
 
 export function isLeaseRecord(record: ArNSNameData): record is ArNSLeaseData {
   return record.type === 'lease';
-}
-
-export function safeTransferLocked({
-  balances,
-  vaults,
-  fromAddr,
-  toAddr,
-  qty,
-  lockLength,
-}: {
-  balances: Balances;
-  vaults: {
-    [address: string]: [TokenVault];
-  };
-  fromAddr: WalletAddress;
-  toAddr: WalletAddress;
-  qty: number;
-  lockLength: number;
-}): void {
-  if (!Number.isInteger(qty) || qty <= 0) {
-    throw new ContractError(
-      'Invalid value for "qty". Must be an integer greater than 0',
-    );
-  }
-  if (fromAddr === toAddr) {
-    throw new ContractError(INVALID_TARGET_MESSAGE);
-  }
-
-  if (balances[fromAddr] === null || isNaN(balances[fromAddr])) {
-    throw new ContractError(`Caller balance is not defined!`);
-  }
-
-  if (!walletHasSufficientBalance(balances, fromAddr, qty)) {
-    throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
-  }
-
-  if (
-    !Number.isInteger(lockLength) ||
-    lockLength < MIN_TOKEN_LOCK_LENGTH ||
-    lockLength > MAX_TOKEN_LOCK_LENGTH
-  ) {
-    throw new ContractError(
-      `lockLength is out of range. lockLength must be between ${MIN_TOKEN_LOCK_LENGTH} - ${MAX_TOKEN_LOCK_LENGTH}.`,
-    );
-  }
-
-  safeCreateVault(vaults, toAddr, qty, lockLength);
-  unsafeDecrementBalance(balances, fromAddr, qty);
-}
-
-export function safeCreateVault(
-  vaults: {
-    [address: string]: [TokenVault];
-  },
-  address: WalletAddress,
-  qty: number,
-  lockLength: number,
-): void {
-  const start = +SmartWeave.block.height;
-  const end = start + lockLength;
-  if (address in vaults) {
-    // Address already exists in vaults, add a new vault
-    vaults[address].push({
-      balance: qty,
-      end,
-      start,
-    });
-  } else {
-    // Address is vaulting tokens for the first time
-    vaults[address] = [
-      {
-        balance: qty,
-        end,
-        start,
-      },
-    ];
-  }
-}
-
-export function safeExtendVault(
-  vaults: {
-    [address: string]: [TokenVault];
-  },
-  caller: WalletAddress,
-  index: number,
-  lockLength: number,
-): void {
-  if (!Number.isInteger(index) || index < 0) {
-    throw new ContractError(
-      'Invalid value for "index". Must be an integer greater than or equal to 0',
-    );
-  }
-
-  if (caller in vaults) {
-    if (!vaults[caller][index]) {
-      throw new ContractError('Invalid vault ID.');
-    } else if (+SmartWeave.block.height >= vaults[caller][index].end) {
-      throw new ContractError('This vault has ended.');
-    }
-  } else {
-    throw new ContractError('Caller does not have a vault.');
-  }
-
-  if (
-    !Number.isInteger(lockLength) ||
-    lockLength < MIN_TOKEN_LOCK_LENGTH ||
-    lockLength > MAX_TOKEN_LOCK_LENGTH
-  ) {
-    throw new ContractError(
-      `lockLength is out of range. lockLength must be between ${MIN_TOKEN_LOCK_LENGTH} - ${MAX_TOKEN_LOCK_LENGTH} blocks.`,
-    );
-  }
-
-  const newEnd = vaults[caller][index].end + lockLength;
-  if (newEnd - +SmartWeave.block.height > MAX_TOKEN_LOCK_LENGTH) {
-    throw new ContractError(
-      `The new end height is out of range. Tokens cannot be locked for longer than ${MAX_TOKEN_LOCK_LENGTH} blocks.`,
-    );
-  }
-  vaults[caller][index].end = newEnd;
-}
-
-export function safeIncreaseVault(
-  balances: {
-    [address: string]: number;
-  },
-  vaults: Vaults,
-  caller: WalletAddress,
-  index: number,
-  qty: number,
-): void {
-  if (!Number.isInteger(qty) || qty <= 0) {
-    throw new ContractError(
-      'Invalid value for "qty". Must be an integer greater than 0',
-    );
-  }
-
-  if (balances[caller] === null || isNaN(balances[caller])) {
-    throw new ContractError(`Caller balance is not defined!`);
-  }
-
-  if (!walletHasSufficientBalance(balances, caller, qty)) {
-    throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
-  }
-
-  if (!Number.isInteger(index) || index < 0) {
-    throw new ContractError(
-      'Invalid value for "index". Must be an integer greater than or equal to 0',
-    );
-  }
-
-  if (caller in vaults) {
-    if (!vaults[caller][index]) {
-      throw new ContractError('Invalid vault ID.');
-    } else if (+SmartWeave.block.height >= vaults[caller][index].end) {
-      throw new ContractError('This vault has ended.');
-    }
-  } else {
-    throw new ContractError('Caller does not have a vault.');
-  }
-
-  vaults[caller][index].balance += qty;
-  unsafeDecrementBalance(balances, caller, qty);
 }

@@ -15,6 +15,7 @@ import {
   tallyNamePurchase,
   updateDemandFactor,
 } from '../../pricing';
+import { safeTransfer } from '../../transfer';
 import {
   Auctions,
   Balances,
@@ -29,8 +30,12 @@ import {
   Observations,
   PassedEpochs,
   Records,
+  RegistryVaults,
   ReservedNames,
   RewardDistributions,
+  VaultData,
+  Vaults,
+  WalletAddress,
 } from '../../types';
 import {
   getEpochStart,
@@ -59,7 +64,7 @@ function tickInternal({
     updateDemandFactor(currentBlockHeight, prevDemandFactoring, prevFees),
   );
 
-  // Update auctions, records, and demand factor if necessary
+  // Update auctions, balances, records, and demand factor if necessary
   Object.assign(
     updatedState,
     tickAuctions({
@@ -67,6 +72,7 @@ function tickInternal({
       currentBlockTimestamp,
       records: updatedState.records,
       auctions: updatedState.auctions,
+      balances: updatedState.balances,
       demandFactoring: updatedState.demandFactoring,
     }),
   );
@@ -77,6 +83,16 @@ function tickInternal({
     tickGatewayRegistry({
       currentBlockHeight,
       gateways: updatedState.gateways,
+      balances: updatedState.balances,
+    }),
+  );
+
+  // update vaults and balances if necessary
+  Object.assign(
+    updatedState,
+    tickVaults({
+      currentBlockHeight,
+      vaults: updatedState.vaults,
       balances: updatedState.balances,
     }),
   );
@@ -197,10 +213,11 @@ export function tickGatewayRegistry({
         })
       ) {
         if (!updatedBalances[key]) {
-          updatedBalances[key] = balances[key] ?? 0;
+          updatedBalances[key] = balances[key] || 0;
         }
+
         // gateway is leaving, make sure we return all the vaults to it
-        for (const vault of gateway.vaults) {
+        for (const vault of Object.values(gateway.vaults)) {
           incrementBalance(updatedBalances, key, vault.balance);
         }
         // return any remaining operator stake
@@ -208,17 +225,17 @@ export function tickGatewayRegistry({
         return acc;
       }
       // return any vaulted balances to the owner if they are expired, but keep the gateway
-      const updatedVaults = [];
-      for (const vault of gateway.vaults) {
+      const updatedVaults: Vaults = {};
+      for (const [id, vault] of Object.entries(gateway.vaults)) {
         if (vault.end <= currentBlockHeight.valueOf()) {
           if (!updatedBalances[key]) {
-            updatedBalances[key] = balances[key] ?? 0;
+            updatedBalances[key] = balances[key] || 0;
           }
           // return the vault balance to the owner and do not add back vault
           incrementBalance(updatedBalances, key, vault.balance);
         } else {
           // still an active vault
-          updatedVaults.push(vault);
+          updatedVaults[id] = vault;
         }
       }
       acc[key] = {
@@ -241,21 +258,73 @@ export function tickGatewayRegistry({
   };
 }
 
+export function tickVaults({
+  currentBlockHeight,
+  vaults,
+  balances,
+}: {
+  currentBlockHeight: BlockHeight;
+  vaults: DeepReadonly<RegistryVaults>;
+  balances: DeepReadonly<Balances>;
+}): Pick<IOState, 'vaults' | 'balances'> {
+  const updatedBalances: { [address: string]: number } = {};
+  const updatedVaults = Object.keys(vaults).reduce(
+    (acc: RegistryVaults, address: WalletAddress) => {
+      const activeVaults: Vaults = Object.entries(vaults[address]).reduce(
+        (addressVaults: Vaults, [id, vault]: [string, VaultData]) => {
+          if (vault.end <= currentBlockHeight.valueOf()) {
+            // Initialize the balance if it hasn't been yet
+            if (!updatedBalances[address]) {
+              updatedBalances[address] = balances[address] || 0;
+            }
+            // Unlock the vault and update the balance
+            incrementBalance(updatedBalances, address, vault.balance);
+            return addressVaults;
+          }
+          addressVaults[id] = vault;
+          return addressVaults;
+        },
+        {},
+      );
+
+      if (Object.keys(activeVaults).length > 0) {
+        // Only add to the accumulator if there are active vaults remaining
+        acc[address] = activeVaults;
+      }
+      return acc;
+    },
+    {},
+  );
+
+  // avoids copying balances if not necessary
+  const newBalances: Balances = Object.keys(updatedBalances).length
+    ? { ...balances, ...updatedBalances }
+    : balances;
+
+  return {
+    vaults: updatedVaults,
+    balances: newBalances,
+  };
+}
+
 export function tickAuctions({
   currentBlockHeight,
   currentBlockTimestamp,
   records,
+  balances,
   auctions,
   demandFactoring,
 }: {
   currentBlockHeight: BlockHeight;
   currentBlockTimestamp: BlockTimestamp;
   records: DeepReadonly<Records>;
+  balances: DeepReadonly<Balances>;
   auctions: DeepReadonly<Auctions>;
   demandFactoring: DeepReadonly<DemandFactoringData>;
-}): Pick<IOState, 'auctions' | 'records' | 'demandFactoring'> {
+}): Pick<IOState, 'balances' | 'auctions' | 'records' | 'demandFactoring'> {
   // handle expired auctions
   const updatedRecords: Records = {};
+  const updatedBalances: Balances = {};
   let updatedDemandFactoring = cloneDemandFactoringData(demandFactoring);
   const updatedAuctions = Object.keys(auctions).reduce((acc: Auctions, key) => {
     const auction = auctions[key];
@@ -292,6 +361,20 @@ export function tickAuctions({
         break;
     }
 
+    // set it if we do not have it yet
+    if (!updatedBalances[SmartWeave.contract.id]) {
+      updatedBalances[SmartWeave.contract.id] =
+        balances[SmartWeave.contract.id] || 0;
+    }
+
+    // give the auction floor to the protocol balance
+    incrementBalance(
+      updatedBalances,
+      SmartWeave.contract.id,
+      auction.floorPrice,
+    );
+
+    // update the demand factor
     updatedDemandFactoring = tallyNamePurchase(
       updatedDemandFactoring,
       auction.floorPrice,
@@ -307,9 +390,18 @@ export function tickAuctions({
         ...updatedRecords,
       }
     : records;
-  // update auctions
+
+  const newBalances = Object.keys(updatedBalances).length
+    ? {
+        ...balances,
+        ...updatedBalances,
+      }
+    : balances;
+
+  // results
   return {
     auctions: updatedAuctions,
+    balances: newBalances,
     records: newRecords,
     demandFactoring: updatedDemandFactoring,
   };
@@ -379,9 +471,7 @@ export async function tickRewardDistribution({
     currentEpochStartHeight - DEFAULT_EPOCH_BLOCK_LENGTH;
   const lastEpochEndHeight: number =
     lastEpochStartHeight + DEFAULT_EPOCH_BLOCK_LENGTH;
-  const updatedBalances: Balances = {
-    [SmartWeave.contract.id]: balances[SmartWeave.contract.id] || 0,
-  };
+  const updatedBalances: Balances = {};
   const newDistributions: RewardDistributions = {
     lastCompletedEpoch: distributions.lastCompletedEpoch,
     passedGatewayEpochs: {},
@@ -412,13 +502,13 @@ export async function tickRewardDistribution({
     for (const address in gateways) {
       // check if gateway was eligible and check if they were joined by the epoch start
       if (gateways[address].start > lastEpochStartHeight) {
-        // it is inelligible for gateway or observation rewards.
+        // it is ineligible for gateway or observation rewards.
         continue;
       }
 
       eligibleGateways++; // this gateway is eligible
 
-      // check if each eligible gateway is under the failure threashold for their tallied report
+      // check if each eligible gateway is under the failure threshold for their tallied report
       if (observations[lastEpochStartHeight].failureSummaries[address]) {
         if (
           observations[lastEpochStartHeight].failureSummaries[address].length <=
@@ -479,9 +569,23 @@ export async function tickRewardDistribution({
 
     // distribute observer tokens
     for (const address in newDistributions.passedObserverEpochs) {
-      updatedBalances[address] =
-        (updatedBalances[address] ?? balances[address] ?? 0) + observerReward;
-      updatedBalances[SmartWeave.contract.id] -= observerReward;
+      // add protocol balance if we do not have it
+      if (!updatedBalances[SmartWeave.contract.id]) {
+        updatedBalances[SmartWeave.contract.id] =
+          balances[SmartWeave.contract.id] || 0;
+      }
+
+      // add the address if we do not have it
+      if (!updatedBalances[address]) {
+        updatedBalances[address] = balances[address] || 0;
+      }
+
+      safeTransfer({
+        balances: updatedBalances,
+        fromAddress: SmartWeave.contract.id,
+        toAddress: address,
+        qty: observerReward,
+      });
     }
 
     // distribute gateway tokens
@@ -501,10 +605,24 @@ export async function tickRewardDistribution({
           updatedGatewayReward * BAD_OBSERVER_GATEWAY_PENALTY,
         );
       }
-      updatedBalances[address] +=
-        (updatedBalances[address] ?? balances[address] ?? 0) +
-        updatedGatewayReward;
-      updatedBalances[SmartWeave.contract.id] -= updatedGatewayReward;
+
+      // add protocol balance if we do not have it
+      if (!updatedBalances[SmartWeave.contract.id]) {
+        updatedBalances[SmartWeave.contract.id] =
+          balances[SmartWeave.contract.id] || 0;
+      }
+
+      // add the address if we do not have it
+      if (!updatedBalances[address]) {
+        updatedBalances[address] = balances[address] || 0;
+      }
+
+      safeTransfer({
+        balances: updatedBalances,
+        fromAddress: SmartWeave.contract.id,
+        toAddress: address,
+        qty: updatedGatewayReward,
+      });
     }
 
     // Mark this as the last completed epoch
@@ -512,10 +630,6 @@ export async function tickRewardDistribution({
   } else {
     return { distributions: distributions as RewardDistributions, balances };
   }
-  // avoids copying balances if not necessary
-  const newBalances: Balances = Object.keys(updatedBalances).length
-    ? { ...balances, ...updatedBalances }
-    : balances;
 
   // MAKE THIS A FUNCTION
   for (const [address, epochs] of Object.entries(
@@ -538,6 +652,11 @@ export async function tickRewardDistribution({
     passedGatewayEpochs: updatedPassedGatewayEpochs,
     passedObserverEpochs: updatedPassedObserverEpochs,
   };
+
+  // avoids copying balances if not necessary
+  const newBalances: Balances = Object.keys(updatedBalances).length
+    ? { ...balances, ...updatedBalances }
+    : balances;
 
   return {
     distributions: updatedDistributions,

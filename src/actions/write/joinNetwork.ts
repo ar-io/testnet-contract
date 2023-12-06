@@ -83,7 +83,7 @@ export const joinNetwork = async (
   state.gateways[caller] = {
     operatorStake: qty,
     observerWallet: observerWallet || caller, // if no observer wallet is provided, we add the caller by default
-    vaults: [],
+    vaults: {},
     settings: {
       ...gatewaySettings,
     },

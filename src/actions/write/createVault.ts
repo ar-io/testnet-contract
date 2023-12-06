@@ -1,12 +1,18 @@
-import { ContractWriteResult, IOState, PstAction } from '../../types';
+import {
+  BlockHeight,
+  ContractWriteResult,
+  IOState,
+  PositiveFiniteInteger,
+  PstAction,
+} from '../../types';
 import { getInvalidAjvMessage } from '../../utilities';
 import { validateCreateVault } from '../../validations';
 import { safeCreateVault } from '../../vaults';
 
 // TODO: use top level class
 export class CreateVault {
-  qty: number;
-  lockLength: number;
+  qty: PositiveFiniteInteger; // TODO: use IOToken
+  lockLength: BlockHeight;
 
   constructor(input: any) {
     if (!validateCreateVault(input)) {
@@ -15,8 +21,8 @@ export class CreateVault {
       );
     }
     const { qty, lockLength } = input;
-    this.qty = qty;
-    this.lockLength = lockLength;
+    this.qty = new PositiveFiniteInteger(qty);
+    this.lockLength = new BlockHeight(lockLength);
   }
 }
 
@@ -33,6 +39,8 @@ export const createVault = async (
     address: caller,
     qty,
     lockLength,
+    id: SmartWeave.transaction.id,
+    startHeight: new BlockHeight(SmartWeave.block.height),
   });
 
   return { state };

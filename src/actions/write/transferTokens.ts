@@ -29,8 +29,8 @@ export const transferTokens = async (
 
   safeTransfer({
     balances,
-    fromAddr: caller,
-    toAddr: target,
+    fromAddress: caller,
+    toAddress: target,
     qty,
   });
 
