@@ -14,6 +14,11 @@ export const evolveState = async (
 
   state.vaults = {};
   state.canEvolve = true;
+  state.distributions = {
+    lastCompletedEpoch: +SmartWeave.block.height,
+    passedObserverEpochs: {},
+    passedGatewayEpochs: {},
+  };
 
   for (const gateway of Object.values(state.gateways)) {
     gateway.vaults = {};
