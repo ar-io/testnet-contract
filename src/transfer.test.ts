@@ -261,4 +261,31 @@ describe('safeVaultedTransfer function', () => {
       expectedNewVaultData,
     );
   });
+
+  it('should error if the vault id for the toAddress already exists', () => {
+    const balances = { foo: 2, bar: 2 };
+    const fromAddress = 'foo';
+    const toAddress = 'bar';
+    const vaults: RegistryVaults = {
+      [toAddress]: {
+        'existing-vault-id': {
+          balance: 1,
+          end: 100,
+          start: 0,
+        },
+      },
+    };
+    expect(() =>
+      safeVaultedTransfer({
+        balances,
+        qty: new IOToken(1),
+        fromAddress,
+        toAddress,
+        vaults,
+        lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+        startHeight: new BlockHeight(0),
+        id: 'existing-vault-id',
+      }),
+    ).toThrowError(`Vault with id 'existing-vault-id' already exists`);
+  });
 });
