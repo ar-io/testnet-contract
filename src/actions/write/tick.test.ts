@@ -16,6 +16,7 @@ import {
   DemandFactoringData,
   GatewaySettings,
   Gateways,
+  IOState,
   Records,
   RegistryVaults,
   ReservedNames,
@@ -63,15 +64,22 @@ describe('tickAuctions', () => {
 
   it.each([
     [
-      'should tick an auction for a permabuy name that has expired',
+      'should tick an auction for a permabuy name that has expired and add the floor price to the protocol balance',
       {
+        balances: {
+          [SmartWeave.contract.id]: 0,
+        },
         auctions: {
           'tick-auction': testAuction,
-        },
+        } as Auctions,
+        records: {},
         demandFactoring: demandFactorData,
       },
       {
-        auctions: {},
+        balances: {
+          [SmartWeave.contract.id]: testAuction.floorPrice,
+        },
+        auctions: {} as Auctions,
         records: {
           'tick-auction': {
             contractTxId: 'test-tx-id',
@@ -80,16 +88,20 @@ describe('tickAuctions', () => {
             undernames: 10,
             purchasePrice: 10, // the floor price
           },
-        },
+        } as Records,
         demandFactoring: {
+          ...demandFactorData,
           purchasesThisPeriod: 1,
           revenueThisPeriod: 10,
         },
       },
     ],
     [
-      'should tick an auction for a leased name that has expired',
+      'should tick an auction for a leased name that has expired and add the floor price to the protocol balance',
       {
+        balances: {
+          [SmartWeave.contract.id]: 0,
+        },
         auctions: {
           'tick-leased-auction': {
             ...testAuction,
@@ -97,9 +109,13 @@ describe('tickAuctions', () => {
             years: 1,
           },
         },
+        records: {},
         demandFactoring: demandFactorData,
       },
       {
+        balances: {
+          [SmartWeave.contract.id]: testAuction.floorPrice,
+        },
         auctions: {},
         records: {
           'tick-leased-auction': {
@@ -112,6 +128,7 @@ describe('tickAuctions', () => {
           },
         },
         demandFactoring: {
+          ...demandFactorData,
           purchasesThisPeriod: 1,
           revenueThisPeriod: 10,
         },
@@ -120,6 +137,9 @@ describe('tickAuctions', () => {
     [
       'should not tick an auction that has not expired yet',
       {
+        balances: {
+          [SmartWeave.contract.id]: 0,
+        },
         auctions: {
           'do-not-tick': {
             ...testAuction,
@@ -129,6 +149,9 @@ describe('tickAuctions', () => {
         demandFactoring: demandFactorData,
       },
       {
+        balances: {
+          [SmartWeave.contract.id]: 0,
+        },
         auctions: {
           'do-not-tick': {
             ...testAuction,
@@ -136,24 +159,41 @@ describe('tickAuctions', () => {
           },
         },
         records: {},
-        demandFactoring: {},
+        demandFactoring: demandFactorData,
       },
     ],
-  ])('%s', (_, inputData, expectedData) => {
-    const { auctions, records, demandFactoring } = tickAuctions({
-      currentBlockHeight: new BlockHeight(5),
-      currentBlockTimestamp: new BlockTimestamp(blockTimestamp),
-      records: {},
-      auctions: inputData.auctions as DeepReadonly<Auctions>,
-      demandFactoring: inputData.demandFactoring,
-    });
-    expect(auctions).toEqual(expectedData.auctions);
-    expect(records).toEqual(expectedData.records);
-    expect(demandFactoring).toEqual({
-      ...inputData.demandFactoring,
-      ...expectedData.demandFactoring,
-    });
-  });
+  ])(
+    '%s',
+    (
+      _: string,
+      inputData: Pick<
+        IOState,
+        'balances' | 'auctions' | 'records' | 'demandFactoring'
+      >,
+      expectedData: Pick<
+        IOState,
+        'balances' | 'auctions' | 'records' | 'demandFactoring'
+      >,
+    ) => {
+      const { auctions, records, balances, demandFactoring } = tickAuctions({
+        currentBlockHeight: new BlockHeight(5),
+        currentBlockTimestamp: new BlockTimestamp(blockTimestamp),
+        records: {},
+        balances: {
+          [SmartWeave.contract.id]: 0,
+        },
+        auctions: inputData.auctions as DeepReadonly<Auctions>,
+        demandFactoring: inputData.demandFactoring,
+      });
+      expect(balances).toEqual(expectedData.balances);
+      expect(auctions).toEqual(expectedData.auctions);
+      expect(records).toEqual(expectedData.records);
+      expect(demandFactoring).toEqual({
+        ...inputData.demandFactoring,
+        ...expectedData.demandFactoring,
+      });
+    },
+  );
 });
 
 describe('tickRecords', () => {

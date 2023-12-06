@@ -46,7 +46,7 @@ function tickInternal({
     updateDemandFactor(currentBlockHeight, prevDemandFactoring, prevFees),
   );
 
-  // Update auctions, records, and demand factor if necessary
+  // Update auctions, balances, records, and demand factor if necessary
   Object.assign(
     updatedState,
     tickAuctions({
@@ -54,6 +54,7 @@ function tickInternal({
       currentBlockTimestamp,
       records: updatedState.records,
       auctions: updatedState.auctions,
+      balances: updatedState.balances,
       demandFactoring: updatedState.demandFactoring,
     }),
   );
@@ -279,17 +280,22 @@ export function tickAuctions({
   currentBlockHeight,
   currentBlockTimestamp,
   records,
+  balances,
   auctions,
   demandFactoring,
 }: {
   currentBlockHeight: BlockHeight;
   currentBlockTimestamp: BlockTimestamp;
   records: DeepReadonly<Records>;
+  balances: DeepReadonly<Balances>;
   auctions: DeepReadonly<Auctions>;
   demandFactoring: DeepReadonly<DemandFactoringData>;
-}): Pick<IOState, 'auctions' | 'records' | 'demandFactoring'> {
+}): Pick<IOState, 'balances' | 'auctions' | 'records' | 'demandFactoring'> {
   // handle expired auctions
   const updatedRecords: Records = {};
+  const updatedBalances: Balances = {
+    [SmartWeave.contract.id]: balances[SmartWeave.contract.id] ?? 0,
+  };
   let updatedDemandFactoring = cloneDemandFactoringData(demandFactoring);
   const updatedAuctions = Object.keys(auctions).reduce((acc: Auctions, key) => {
     const auction = auctions[key];
@@ -326,6 +332,10 @@ export function tickAuctions({
         break;
     }
 
+    // give the auction floor to the protocol balance
+    updatedBalances[SmartWeave.contract.id] += auction.floorPrice;
+
+    // update the demand factor
     updatedDemandFactoring = tallyNamePurchase(
       updatedDemandFactoring,
       auction.floorPrice,
@@ -341,9 +351,18 @@ export function tickAuctions({
         ...updatedRecords,
       }
     : records;
-  // update auctions
+
+  const newBalances = Object.keys(updatedBalances).length
+    ? {
+        ...balances,
+        ...updatedBalances,
+      }
+    : balances;
+
+  // results
   return {
     auctions: updatedAuctions,
+    balances: newBalances,
     records: newRecords,
     demandFactoring: updatedDemandFactoring,
   };
