@@ -1,0 +1,41 @@
+name: Evolve Contract State
+
+on:
+  workflow_dispatch:
+    inputs:
+      evolve-state-tx-id:
+        description: 'Confirm the source code transaction ID you are running evolve state against.'
+        required: false
+        type: string
+        default: null
+
+jobs:
+  evolve-state:
+    if: github.event.inputs.evolve-state-tx-id != null
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+          cache: 'yarn'
+      - name: Validate Input
+        run: |
+          SOURCE_CODE_TX_ID=$(curl https://api.arns.app/v1/contract/${{ vars.ARNS_CONTRACT_TX_ID }} | jq -r '.state.evolve')
+          if [ -z "${{ github.event.inputs.evolve-state-tx-id }}" ]; then
+              echo "No evolve-state-tx-id provided. Exiting."
+          exit 1
+          fi
+
+          if [ "${{ github.event.inputs.evolve-state-tx-id }}" = "$SOURCE_CODE_TX_ID" ]; then
+              echo "The evolve-state-tx-id the current source code TX ID of the contract. Evolving state..."
+          else
+              echo "The evolve-state-tx-id does not match the current source code TX ID of the contract. Exiting."
+          exit 1
+          fi
+      - run: yarn install
+      - run: yarn evolve:state
+        env:
+          ARNS_CONTRACT_TX_ID: ${{ vars.ARNS_CONTRACT_TX_ID }}
+          JWK: ${{ secrets.JWK }}
