@@ -182,7 +182,7 @@ export function tickGatewayRegistry({
         })
       ) {
         if (!updatedBalances[key]) {
-          updatedBalances[key] = balances[key] ?? 0;
+          updatedBalances[key] = balances[key] || 0;
         }
 
         // gateway is leaving, make sure we return all the vaults to it
@@ -198,7 +198,7 @@ export function tickGatewayRegistry({
       for (const [id, vault] of Object.entries(gateway.vaults)) {
         if (vault.end <= currentBlockHeight.valueOf()) {
           if (!updatedBalances[key]) {
-            updatedBalances[key] = balances[key] ?? 0;
+            updatedBalances[key] = balances[key] || 0;
           }
           // return the vault balance to the owner and do not add back vault
           incrementBalance(updatedBalances, key, vault.balance);
@@ -244,7 +244,7 @@ export function tickVaults({
           if (vault.end <= currentBlockHeight.valueOf()) {
             // Initialize the balance if it hasn't been yet
             if (!updatedBalances[address]) {
-              updatedBalances[address] = balances[address] ?? 0;
+              updatedBalances[address] = balances[address] || 0;
             }
             // Unlock the vault and update the balance
             incrementBalance(updatedBalances, address, vault.balance);
@@ -333,7 +333,7 @@ export function tickAuctions({
     // set it if we do not have it yet
     if (!updatedBalances[SmartWeave.contract.id]) {
       updatedBalances[SmartWeave.contract.id] =
-        balances[SmartWeave.contract.id] ?? 0;
+        balances[SmartWeave.contract.id] || 0;
     }
 
     // give the auction floor to the protocol balance

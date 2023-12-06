@@ -374,7 +374,7 @@ describe('Vaults', () => {
       const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
       const prevOwnerBalance = prevState.balances[ownerAddress];
-      const prevTargetBalance = prevState.balances[srcContractId] ?? 0;
+      const prevTargetBalance = prevState.balances[srcContractId] || 0;
 
       const writeInteraction = await contract.writeInteraction({
         function: 'vaultedTransfer',
@@ -430,7 +430,7 @@ describe('Vaults', () => {
     it('should be able to transfer tokens locked to the same wallet', async () => {
       const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
-      const prevOwnerBalance = prevState.balances[ownerAddress] ?? 0;
+      const prevOwnerBalance = prevState.balances[ownerAddress] || 0;
       const writeInteraction = await contract.writeInteraction({
         function: 'vaultedTransfer',
         target: ownerAddress,
