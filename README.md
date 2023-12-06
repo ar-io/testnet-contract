@@ -1,5 +1,7 @@
 # AR.IO Network Test SmartWeave Contract
 
+[![codecov](https://codecov.io/gh/ar-io/testnet-contract/graph/badge.svg?token=J2H5WQQ0IX)](https://codecov.io/gh/ar-io/testnet-contract)
+
 ## Project setup
 
 Clone this repository and install the dependencies.
@@ -88,23 +90,23 @@ The following tools can be used to perform basic AR.IO Network operations, such 
   yarn ts-node tools/increase-operator-stake.ts
   ```
 
-- [initiate-operator-stake-decrease] - initiate a stake decrease for an existing registered Gateway
+- [decrease-operator-stake] - decrease stake for an existing registered Gateway. Tokens are put into a vault and then returned to the gateway address after the specified duration.
 
   ```shell
-  yarn ts-node tools/initiate-operator-stake-decrease.ts
+  yarn ts-node tools/decrease-operator-stake.ts
   ```
 
-- [initiate-leave-network] - initiate network withdraw period to remove a registered Gateway from the Gateway Address Registry and return all gateway operator stakes.
+- [leave-network] - remove a registered Gateway from the Gateway Address Registry and return all gateway operator stakes. Tokens are put into a vault and then returned to the gateway address after the specified duration.
 
   ```shell
-  yarn ts-node tools/initiate-leave-network.ts
+  yarn ts-node tools/leave-network.ts
   ```
 
 [join-network]: tools/join-network.ts
 [update-gateway-settings]: tools/update-gateway-settings.ts
 [increase-operator-stake]: tools/increase-operator-stake.ts
-[initiate-operator-stake-decrease]: tools/initiate-operator-stake-decrease.ts
-[initiate-leave-network]: tools/initiate-leave-network.ts
+[decrease-operator-stake]: tools/decrease-operator-stake.ts
+[leave-network]: tools/leave-network.ts
 [buy-arns-name]: tools/buy-arns-name.ts
 [buy-arns-name-atomic-ant]: /tools/buy-arns-name-atomic-ant.ts
 [tests/unit]: /tests/unit

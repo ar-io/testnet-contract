@@ -42,7 +42,7 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
 
   const txId = await pst.writeInteraction(
     {
-      function: 'initiateOperatorStakeDecrease',
+      function: 'decreaseOperatorStake',
       qty,
     },
     {

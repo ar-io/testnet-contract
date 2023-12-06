@@ -16,6 +16,9 @@ import {
   IOState,
   Records,
   ReservedNames,
+  TokenVault,
+  Vaults,
+  WalletAddress,
 } from '../../types';
 import {
   incrementBalance,
@@ -60,6 +63,16 @@ function tickInternal({
     tickGatewayRegistry({
       currentBlockHeight,
       gateways: updatedState.gateways,
+      balances: updatedState.balances,
+    }),
+  );
+
+  // update vaults and balances if necessary
+  Object.assign(
+    updatedState,
+    tickVaults({
+      currentBlockHeight,
+      vaults: updatedState.vaults,
       balances: updatedState.balances,
     }),
   );
@@ -211,6 +224,51 @@ export function tickGatewayRegistry({
   };
 }
 
+export function tickVaults({
+  currentBlockHeight,
+  vaults,
+  balances,
+}: {
+  currentBlockHeight: BlockHeight;
+  vaults: DeepReadonly<Vaults>;
+  balances: DeepReadonly<Balances>;
+}): Pick<IOState, 'vaults' | 'balances'> {
+  const updatedBalances: { [address: string]: number } = {};
+  const updatedVaults = Object.keys(vaults).reduce(
+    (acc: Vaults, address: WalletAddress) => {
+      const activeVaults = vaults[address].filter((vault: TokenVault) => {
+        if (vault.end <= currentBlockHeight.valueOf()) {
+          // Initialize the balance if it hasn't been yet
+          if (!updatedBalances[address]) {
+            updatedBalances[address] = balances[address] ?? 0;
+          }
+          // Unlock the vault and update the balance
+          incrementBalance(updatedBalances, address, vault.balance);
+          return false;
+        }
+        return true;
+      });
+
+      if (activeVaults.length > 0) {
+        // Only add to the accumulator if there are active vaults remaining
+        acc[address] = activeVaults;
+      }
+      return acc;
+    },
+    {},
+  );
+
+  // avoids copying balances if not necessary
+  const newBalances: Balances = Object.keys(updatedBalances).length
+    ? { ...balances, ...updatedBalances }
+    : balances;
+
+  return {
+    vaults: updatedVaults,
+    balances: newBalances,
+  };
+}
+
 export function tickAuctions({
   currentBlockHeight,
   currentBlockTimestamp,
@@ -236,29 +294,31 @@ export function tickAuctions({
       return acc;
     }
     // create the new record object
-    const getEndTimestamp = () => {
-      switch (auction.type) {
-        case 'permabuy':
-          return {};
-        case 'lease':
+    switch (auction.type) {
+      case 'permabuy':
+        updatedRecords[key] = {
+          type: auction.type,
+          contractTxId: auction.contractTxId,
+          startTimestamp: currentBlockTimestamp.valueOf(),
+          undernames: DEFAULT_UNDERNAME_COUNT,
+          purchasePrice: auction.floorPrice,
+        };
+        break;
+      case 'lease':
+        updatedRecords[key] = {
+          type: auction.type,
+          contractTxId: auction.contractTxId,
+          startTimestamp: currentBlockTimestamp.valueOf(),
+          undernames: DEFAULT_UNDERNAME_COUNT,
           // TODO: Block timestamps is broken here - user could be getting bonus time here when the next write interaction occurs
           // update the records field but do not decrement balance from the initiator as that happens on auction initiation
-          return {
-            endTimestamp:
-              +auction.years * SECONDS_IN_A_YEAR +
-              currentBlockTimestamp.valueOf(),
-          };
-      }
-    };
-    const endTimestamp = getEndTimestamp();
-    updatedRecords[key] = {
-      type: auction.type,
-      contractTxId: auction.contractTxId,
-      startTimestamp: currentBlockTimestamp.valueOf(),
-      undernames: DEFAULT_UNDERNAME_COUNT,
-      ...endTimestamp,
-      purchasePrice: auction.floorPrice,
-    };
+          endTimestamp:
+            +auction.years! * SECONDS_IN_A_YEAR + // TODO: Avoid force unwrapping years
+            currentBlockTimestamp.valueOf(),
+          purchasePrice: auction.floorPrice,
+        };
+        break;
+    }
 
     updatedDemandFactoring = tallyNamePurchase(
       updatedDemandFactoring,

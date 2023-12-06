@@ -6,6 +6,7 @@ import {
   SECONDS_IN_A_YEAR,
 } from '../../constants';
 import { calculateRegistrationFee, tallyNamePurchase } from '../../pricing';
+import { safeTransfer } from '../../transfer';
 import {
   BlockTimestamp,
   ContractWriteResult,
@@ -17,7 +18,6 @@ import {
   assertAvailableRecord,
   getInvalidAjvMessage,
   isNameRequiredToBeAuction,
-  safeTransfer,
   walletHasSufficientBalance,
 } from '../../utilities';
 // composed by ajv at build
@@ -30,7 +30,6 @@ export class BuyRecord {
   years: number;
   type: RegistrationType;
   auction: boolean;
-  qty: number;
 
   constructor(input: any) {
     // validate using ajv validator
@@ -91,12 +90,6 @@ export const buyRecord = (
     throw new ContractError(ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE);
   }
 
-  // set the end lease period for this based on number of years if it's a lease
-  const endTimestamp =
-    type === 'lease'
-      ? currentBlockTimestamp.valueOf() + SECONDS_IN_A_YEAR * years
-      : undefined;
-
   const totalRegistrationFee = calculateRegistrationFee({
     name,
     fees,
@@ -119,15 +112,29 @@ export const buyRecord = (
     qty: totalRegistrationFee,
   });
 
-  records[name] = {
-    contractTxId,
-    type,
-    startTimestamp: +SmartWeave.block.timestamp,
-    undernames: DEFAULT_UNDERNAME_COUNT,
-    purchasePrice: totalRegistrationFee,
-    // only include timestamp on lease
-    ...(endTimestamp && { endTimestamp }),
-  };
+  switch (type) {
+    case 'permabuy':
+      records[name] = {
+        contractTxId,
+        type,
+        startTimestamp: +SmartWeave.block.timestamp,
+        undernames: DEFAULT_UNDERNAME_COUNT,
+        purchasePrice: totalRegistrationFee,
+      };
+      break;
+    case 'lease':
+      records[name] = {
+        contractTxId,
+        type,
+        startTimestamp: +SmartWeave.block.timestamp,
+        undernames: DEFAULT_UNDERNAME_COUNT,
+        purchasePrice: totalRegistrationFee,
+        // set the end lease period for this based on number of years if it's a lease
+        endTimestamp:
+          currentBlockTimestamp.valueOf() + SECONDS_IN_A_YEAR * years,
+      };
+      break;
+  }
 
   // delete the reserved name if it exists
   if (reserved[name]) {

@@ -6,6 +6,9 @@ node_modules
 logs
 coverage
 
+# tests
+*.xml
+
 # ajv
 src/validations.js
 

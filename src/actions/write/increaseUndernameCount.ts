@@ -6,6 +6,7 @@ import {
   PERMABUY_LEASE_FEE_LENGTH,
 } from '../../constants';
 import { calculateUndernameCost } from '../../pricing';
+import { safeTransfer } from '../../transfer';
 import {
   ArNSNameData,
   BlockTimestamp,
@@ -17,7 +18,7 @@ import {
   calculateYearsBetweenTimestamps,
   getInvalidAjvMessage,
   isExistingActiveRecord,
-  safeTransfer,
+  isLeaseRecord,
   walletHasSufficientBalance,
 } from '../../utilities';
 import { validateIncreaseUndernameCount } from '../../validations';
@@ -60,7 +61,9 @@ export const increaseUndernameCount = async (
     currentBlockTimestamp,
   });
 
-  const { endTimestamp, type, undernames: existingUndernames } = record;
+  const { type, undernames: existingUndernames } = record;
+  const endTimestamp = isLeaseRecord(record) ? record.endTimestamp : undefined;
+
   const yearsRemaining = endTimestamp
     ? calculateYearsBetweenTimestamps({
         startTimestamp: currentBlockTimestamp,
@@ -108,6 +111,10 @@ export function assertRecordCanIncreaseUndernameCount({
   qty: number;
   currentBlockTimestamp: BlockTimestamp;
 }): void {
+  if (!record) {
+    throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
+  }
+
   // This name's lease has expired and cannot be extended
   if (
     !isExistingActiveRecord({
@@ -115,9 +122,6 @@ export function assertRecordCanIncreaseUndernameCount({
       currentBlockTimestamp,
     })
   ) {
-    if (!record) {
-      throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
-    }
     throw new ContractError(
       `This name has expired and must renewed before its undername support can be extended.`,
     );

@@ -3,10 +3,11 @@ import {
   tickGatewayRegistry,
   tickRecords,
   tickReservedNames,
+  tickVaults,
 } from '../../actions/write/tick';
 import { SECONDS_IN_A_YEAR, SECONDS_IN_GRACE_PERIOD } from '../../constants';
 import {
-  AuctionData,
+  ArNSPermabuyAuctionData,
   Auctions,
   Balances,
   BlockHeight,
@@ -17,6 +18,7 @@ import {
   Gateways,
   Records,
   ReservedNames,
+  Vaults,
 } from '../../types';
 
 const defaultAuctionSettings = {
@@ -27,7 +29,7 @@ const defaultAuctionSettings = {
   startPriceMultiplier: 10,
 };
 
-const testAuction: AuctionData = {
+const testAuction: ArNSPermabuyAuctionData = {
   startPrice: 100,
   floorPrice: 10,
   startHeight: 0,
@@ -457,5 +459,220 @@ describe('tickReservedNames', () => {
       reservedNames: inputData.reserved as DeepReadonly<ReservedNames>,
     });
     expect(reserved).toEqual(expectedData.reserved);
+  });
+});
+
+describe('tickVaults', () => {
+  it('should not make changes when vaults are not present', () => {
+    const currentBlockHeight = new BlockHeight(5);
+    const vaults: Vaults = {};
+    const balances = { foo: 1, bar: 2 };
+    const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
+      currentBlockHeight,
+      balances,
+      vaults,
+    });
+    expect(updatedBalances).toEqual({ foo: 1, bar: 2 });
+    expect(updatedVaults).toEqual({});
+  });
+
+  it('should not unlock single vault if it hasnt ended', () => {
+    const currentBlockHeight = new BlockHeight(5);
+    const address = 'bar';
+    const vaults: Vaults = {
+      [address]: [
+        {
+          balance: 1,
+          end: 100,
+          start: 0,
+        },
+      ],
+    };
+    const balances = { foo: 1, bar: 2 };
+    const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
+      currentBlockHeight,
+      balances,
+      vaults,
+    });
+    expect(updatedBalances).toEqual({ foo: 1, bar: 2 });
+    expect(updatedVaults[address].length).toEqual(1);
+  });
+
+  it('should not unlock multiple vaults if they have not ended', () => {
+    const currentBlockHeight = new BlockHeight(5);
+    const vaults: Vaults = {
+      ['foo']: [
+        {
+          balance: 1,
+          end: 100,
+          start: 0,
+        },
+      ],
+      ['bar']: [
+        {
+          balance: 1,
+          end: 100,
+          start: 0,
+        },
+        {
+          balance: 2,
+          end: 100,
+          start: 0,
+        },
+      ],
+      ['baz']: [
+        {
+          balance: 1,
+          end: 100,
+          start: 0,
+        },
+        {
+          balance: 2,
+          end: 100,
+          start: 0,
+        },
+        {
+          balance: 3,
+          end: 100,
+          start: 0,
+        },
+      ],
+    };
+    const balances = { foo: 1, bar: 2, baz: 3 };
+    const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
+      currentBlockHeight,
+      balances,
+      vaults,
+    });
+    expect(updatedBalances).toEqual({ foo: 1, bar: 2, baz: 3 });
+    expect(updatedVaults['foo'].length).toEqual(1);
+    expect(updatedVaults['bar'].length).toEqual(2);
+    expect(updatedVaults['baz'].length).toEqual(3);
+  });
+
+  it('should unlock single vault when it is ended', () => {
+    const currentBlockHeight = new BlockHeight(6);
+    const address = 'bar';
+    const vaults: Vaults = {
+      [address]: [
+        {
+          balance: 1,
+          end: 5,
+          start: 0,
+        },
+      ],
+    };
+    const balances = { foo: 1, bar: 2 };
+    const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
+      currentBlockHeight,
+      balances,
+      vaults,
+    });
+    expect(updatedVaults[address]).toEqual(undefined);
+    expect(updatedBalances).toEqual({ foo: 1, bar: 3 });
+  });
+
+  it('should unlock multiple vaults if they have ended', () => {
+    const currentBlockHeight = new BlockHeight(0);
+    const vaults: Vaults = {
+      ['foo']: [
+        {
+          balance: 1,
+          end: 0,
+          start: 0,
+        },
+      ],
+      ['bar']: [
+        {
+          balance: 1,
+          end: 0,
+          start: 0,
+        },
+        {
+          balance: 2,
+          end: 100,
+          start: 0,
+        },
+      ],
+      ['baz']: [
+        {
+          balance: 1,
+          end: 0,
+          start: 0,
+        },
+        {
+          balance: 2,
+          end: 0,
+          start: 0,
+        },
+        {
+          balance: 3,
+          end: 100,
+          start: 0,
+        },
+      ],
+    };
+    const balances = { foo: 1, bar: 2, baz: 3 };
+    const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
+      currentBlockHeight,
+      balances,
+      vaults,
+    });
+    expect(updatedBalances).toEqual({ foo: 2, bar: 3, baz: 6 });
+    expect(updatedVaults['foo']).toEqual(undefined);
+    expect(updatedVaults['bar'].length).toEqual(1);
+    expect(updatedVaults['baz'].length).toEqual(1);
+  });
+
+  it('should unlock all vaults if they have ended', () => {
+    const currentBlockHeight = new BlockHeight(0);
+    const vaults: Vaults = {
+      ['foo']: [
+        {
+          balance: 1,
+          end: 0,
+          start: 0,
+        },
+      ],
+      ['bar']: [
+        {
+          balance: 1,
+          end: 0,
+          start: 0,
+        },
+        {
+          balance: 2,
+          end: 0,
+          start: 0,
+        },
+      ],
+      ['baz']: [
+        {
+          balance: 1,
+          end: 0,
+          start: 0,
+        },
+        {
+          balance: 2,
+          end: 0,
+          start: 0,
+        },
+        {
+          balance: 3,
+          end: 0,
+          start: 0,
+        },
+      ],
+    };
+    const balances = { foo: 1, bar: 2, baz: 3 };
+    const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
+      currentBlockHeight,
+      balances,
+      vaults,
+    });
+    expect(updatedBalances).toEqual({ foo: 2, bar: 5, baz: 9 });
+    expect(updatedVaults['foo']).toEqual(undefined);
+    expect(updatedVaults['bar']).toEqual(undefined);
+    expect(updatedVaults['baz']).toEqual(undefined);
   });
 });

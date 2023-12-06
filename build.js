@@ -11,6 +11,10 @@ const {
   increaseUndernameCountSchema,
   joinNetworkSchema,
   transferTokensSchema,
+  transferTokensLockedSchema,
+  createVaultSchema,
+  extendVaultSchema,
+  increaseVaultSchema,
   saveObservationsSchema,
 } = require('./schemas');
 
@@ -23,6 +27,10 @@ const ajv = new Ajv({
     increaseUndernameCountSchema,
     joinNetworkSchema,
     transferTokensSchema,
+    transferTokensLockedSchema,
+    createVaultSchema,
+    extendVaultSchema,
+    increaseVaultSchema,
     saveObservationsSchema,
   ],
   code: { source: true, esm: true },
@@ -36,6 +44,10 @@ const moduleCode = standaloneCode(ajv, {
   validateIncreaseUndernameCount: '#/definitions/increaseUndernameCount',
   validateJoinNetwork: '#/definitions/joinNetwork',
   validateTransferToken: '#/definitions/transferTokens',
+  validateTransferTokensLocked: '#/definitions/transferTokensLocked',
+  validateCreateVault: '#/definitions/createVault',
+  validateExtendVault: '#/definitions/extendVault',
+  validateIncreaseVault: '#/definitions/increaseVault',
   validateSaveObservations: '#/definitions/saveObservations',
 });
 

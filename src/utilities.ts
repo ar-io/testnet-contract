@@ -3,10 +3,8 @@ import {
   BLOCKS_PER_DAY,
   DEFAULT_NUM_SAMPLED_BLOCKS,
   DEFAULT_SAMPLED_BLOCKS_OFFSET,
-  INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
   INVALID_SHORT_NAME,
-  INVALID_TARGET_MESSAGE,
   MAX_TENURE_WEIGHT,
   MAX_YEARS,
   MINIMUM_ALLOWED_NAME_LENGTH,
@@ -19,8 +17,9 @@ import {
   TENURE_WEIGHT_DAYS,
 } from './constants';
 import {
+  ArNSAuctionData,
+  ArNSLeaseData,
   ArNSNameData,
-  AuctionData,
   Balances,
   BlockHeight,
   BlockTimestamp,
@@ -42,7 +41,7 @@ export function isValidFQDN(fqdn: string): boolean {
   return fqdnRegex.test(fqdn);
 }
 
-// check if it is a valid arweave base64url for a wallet public address, transaction id or smartweave contract
+// check if it is a valid arweave base64url for a wallet public address, transaction index or smartweave contract
 export function isValidArweaveBase64URL(base64URL: string): boolean {
   const base64URLRegex = new RegExp('^[a-zA-Z0-9_-]{43}$');
   return base64URLRegex.test(base64URL);
@@ -83,7 +82,7 @@ export function isNameInGracePeriod({
   record,
 }: {
   currentBlockTimestamp: BlockTimestamp;
-  record: ArNSNameData;
+  record: ArNSLeaseData;
 }): boolean {
   if (!record.endTimestamp) return false;
   const recordIsExpired = currentBlockTimestamp.valueOf() > record.endTimestamp;
@@ -99,7 +98,7 @@ export function getMaxAllowedYearsExtensionForRecord({
   record,
 }: {
   currentBlockTimestamp: BlockTimestamp;
-  record: ArNSNameData;
+  record: ArNSLeaseData;
 }): number {
   if (!record.endTimestamp) {
     return 0;
@@ -298,7 +297,7 @@ export function isExistingActiveRecord({
   record,
   currentBlockTimestamp,
 }: {
-  record: ArNSNameData;
+  record: ArNSNameData | undefined;
   currentBlockTimestamp: BlockTimestamp;
 }): boolean {
   if (!record) return false;
@@ -307,11 +306,10 @@ export function isExistingActiveRecord({
     return true;
   }
 
-  if (record.type === 'lease') {
+  if (record.type === 'lease' && record.endTimestamp) {
     return (
-      record.endTimestamp &&
-      (record.endTimestamp > currentBlockTimestamp.valueOf() ||
-        isNameInGracePeriod({ currentBlockTimestamp, record }))
+      record.endTimestamp > currentBlockTimestamp.valueOf() ||
+      isNameInGracePeriod({ currentBlockTimestamp, record })
     );
   }
   return false;
@@ -428,10 +426,16 @@ export function calculateExistingAuctionBidForCaller({
   requiredMinimumBid,
 }: {
   caller: string;
-  auction: AuctionData;
-  submittedBid: number;
+  auction: ArNSAuctionData;
+  submittedBid: number | undefined;
   requiredMinimumBid: IOToken;
 }): IOToken {
+  if (submittedBid && submittedBid < requiredMinimumBid.valueOf()) {
+    throw new ContractError(
+      `The bid (${submittedBid} IO) is less than the current required minimum bid of ${requiredMinimumBid.valueOf()} IO.`,
+    );
+  }
+
   let finalBid = submittedBid
     ? Math.min(submittedBid, requiredMinimumBid.valueOf())
     : requiredMinimumBid.valueOf();
@@ -449,9 +453,8 @@ export function isGatewayJoined({
   gateway: DeepReadonly<Gateway> | undefined;
   currentBlockHeight: BlockHeight;
 }): boolean {
-  if (!gateway) return false;
   return (
-    gateway.status === 'joined' && gateway.end > currentBlockHeight.valueOf()
+    gateway?.status === 'joined' && gateway?.end > currentBlockHeight.valueOf()
   );
 }
 
@@ -460,8 +463,7 @@ export function isGatewayHidden({
 }: {
   gateway: DeepReadonly<Gateway> | undefined;
 }): boolean {
-  if (!gateway) return false;
-  return gateway.status === 'hidden';
+  return gateway?.status === 'hidden';
 }
 
 export function isGatewayEligibleToBeRemoved({
@@ -472,7 +474,8 @@ export function isGatewayEligibleToBeRemoved({
   currentBlockHeight: BlockHeight;
 }): boolean {
   return (
-    gateway.status === 'leaving' && gateway.end <= currentBlockHeight.valueOf()
+    gateway?.status === 'leaving' &&
+    gateway?.end <= currentBlockHeight.valueOf()
   );
 }
 
@@ -520,12 +523,14 @@ export function unsafeDecrementBalance(
   }
 }
 
-// TODO: Is this safe enough without amount validation?
 export function incrementBalance(
   balances: Balances,
   address: WalletAddress,
   amount: number,
 ): void {
+  if (amount < 0) {
+    throw new ContractError(`Amount must be positive!`);
+  }
   if (address in balances) {
     balances[address] += amount;
   } else {
@@ -533,30 +538,6 @@ export function incrementBalance(
   }
 }
 
-export function safeTransfer({
-  balances,
-  fromAddr,
-  toAddr,
-  qty,
-}: {
-  balances: Balances;
-  fromAddr: WalletAddress;
-  toAddr: WalletAddress;
-  qty: number;
-}): void {
-  // TODO: Quantity validation
-  if (fromAddr === toAddr) {
-    throw new ContractError(INVALID_TARGET_MESSAGE);
-  }
-
-  if (balances[fromAddr] === null || isNaN(balances[fromAddr])) {
-    throw new ContractError(`Caller balance is not defined!`);
-  }
-
-  if (!walletHasSufficientBalance(balances, fromAddr, qty)) {
-    throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
-  }
-
-  incrementBalance(balances, toAddr, qty);
-  unsafeDecrementBalance(balances, fromAddr, qty);
+export function isLeaseRecord(record: ArNSNameData): record is ArNSLeaseData {
+  return record.type === 'lease';
 }
