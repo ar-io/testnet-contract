@@ -94,8 +94,8 @@ export const increaseUndernameCount = async (
   state.records[name].undernames = incrementedUndernames;
   safeTransfer({
     balances: state.balances,
-    fromAddr: caller,
-    toAddr: SmartWeave.contract.id,
+    fromAddress: caller,
+    toAddress: SmartWeave.contract.id,
     qty: additionalUndernameCost,
   });
 

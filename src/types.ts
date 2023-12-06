@@ -1,5 +1,3 @@
-import { PstState } from 'warp-contracts';
-
 import {
   MAX_ALLOWED_DECIMALS,
   NETWORK_HIDDEN_STATUS,
@@ -28,8 +26,13 @@ export type Records = Record<ArNSName, ArNSNameData>; // TODO: create ArNS Name 
 export type ReservedNames = Record<ArNSName, ReservedNameData>;
 export type Auctions = Record<ArNSName, ArNSAuctionData>;
 export type Fees = Record<string, number>;
-export type Vaults = Record<WalletAddress, TokenVault[]>;
-export type IOState = PstState & {
+export type Vaults = Record<TransactionId, VaultData>;
+export type RegistryVaults = Record<WalletAddress, Vaults>;
+export type IOState = {
+  ticker: string;
+  balances: Balances;
+  owner: string;
+  canEvolve: boolean; // Whether or not this contract can evolve
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
   records: Records; // The list of all ArNS names and their associated data
@@ -42,7 +45,7 @@ export type IOState = PstState & {
   // TODO: epoch tracking - relevant to GAR observers
   demandFactoring: DemandFactoringData;
   observations: Observations;
-  vaults: Vaults;
+  vaults: RegistryVaults;
 };
 
 export type EpochObservations = {
@@ -125,7 +128,7 @@ export type Gateway = {
   start: number; // At what block the gateway joined the network.
   end: number; // At what block the gateway can leave the network.  0 means no end date.
   status: GatewayStatus; // hidden represents not leaving, but not participating
-  vaults: TokenVault[]; // the locked tokens staked by this gateway operator
+  vaults: Vaults; // the locked tokens staked by this gateway operator
   settings: GatewaySettings;
 };
 
@@ -166,13 +169,7 @@ export type ReservedNameData = {
   endTimestamp?: number; // At what unix time (seconds since epoch) this reserved name becomes available
 };
 
-export type TokenVault = {
-  balance: number; // Positive integer, the amount locked
-  start: number; // At what block the lock starts.
-  end: number; // At what block the lock ends.  0 means no end date.
-};
-
-export type VaultParameters = {
+export type VaultData = {
   balance: number;
   start: number;
   end: number;
@@ -202,7 +199,7 @@ export type ArNSNameResult = {
 export type PstFunctions = 'balance' | 'transfer' | 'evolve';
 
 export type VaultFunctions =
-  | 'transferLocked'
+  | 'vaultedTransfer'
   | 'createVault'
   | 'extendVault'
   | 'increaseVault';

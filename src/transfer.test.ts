@@ -1,30 +1,20 @@
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
+  INVALID_VAULT_LOCK_LENGTH_MESSAGE,
   MAX_TOKEN_LOCK_LENGTH,
   MIN_TOKEN_LOCK_LENGTH,
 } from './constants';
-import { safeTransfer, safeTransferLocked } from './transfer';
-import { TokenVault } from './types';
+import { safeTransfer, safeVaultedTransfer } from './transfer';
+import { BlockHeight, IOToken, RegistryVaults, VaultData } from './types';
 
 describe('safeTransfer function', () => {
-  it('should throw an error if quantity is negative', () => {
-    expect(() => {
-      safeTransfer({
-        balances: { foo: 1, bar: 2 },
-        qty: -1,
-        fromAddr: 'foo',
-        toAddr: 'bar',
-      });
-    }).toThrowError('Quantity must be positive');
-  });
-
-  it('should throw an error if fromAddr is the same as toAddr', () => {
+  it('should throw an error if fromAddress is the same as toAddress', () => {
     expect(() => {
       safeTransfer({
         balances: { foo: 1, bar: 2 },
         qty: 1,
-        fromAddr: 'foo',
-        toAddr: 'foo',
+        fromAddress: 'foo',
+        toAddress: 'foo',
       });
     }).toThrowError('Invalid target specified');
   });
@@ -34,233 +24,267 @@ describe('safeTransfer function', () => {
     [{ foo: Number.NaN, bar: 2 }, 'foo'],
     [{ foo: Math.sqrt(-1), bar: 2 }, 'foo'],
   ])(
-    "should throw an error if balances %p can't be used to retrieve fromAddr %s",
-    (balances, fromAddr) => {
+    "should throw an error if balances %p can't be used to retrieve fromAddress %s",
+    (balances, fromAddress) => {
       expect(() => {
         safeTransfer({
           balances,
           qty: 1,
-          fromAddr,
-          toAddr: 'biz',
+          fromAddress,
+          toAddress: 'biz',
         });
       }).toThrowError('Caller balance is not defined!');
     },
   );
 
-  it('should throw an error if fromAddr does not have enough balance', () => {
+  it('should throw an error if fromAddress does not have enough balance', () => {
     expect(() => {
       safeTransfer({
         balances: { foo: 1, bar: 2 },
         qty: 2,
-        fromAddr: 'foo',
-        toAddr: 'bar',
+        fromAddress: 'foo',
+        toAddress: 'bar',
       });
     }).toThrowError('Insufficient funds for this transaction.');
   });
 
-  it('should increment toAddr balance, and decrement fromAddr, by qty in balances object', () => {
+  it('should increment toAddress balance, and decrement fromAddress, by qty in balances object', () => {
     const balances = { foo: 2, bar: 2 };
-    const qty = 1;
-    const fromAddr = 'foo';
-    const toAddr = 'bar';
+    const fromAddress = 'foo';
+    const toAddress = 'bar';
     safeTransfer({
       balances,
-      qty,
-      fromAddr,
-      toAddr,
+      qty: 1,
+      fromAddress,
+      toAddress,
     });
     expect(balances).toEqual({ foo: 1, bar: 3 });
   });
 
-  it('should create and increment toAddr balance, and decrement fromAddr, by qty in balances object', () => {
+  it('should create and increment toAddress balance, and decrement fromAddress, by qty in balances object', () => {
     const balances = { foo: 2 };
-    const qty = 1;
-    const fromAddr = 'foo';
-    const toAddr = 'bar';
+    const fromAddress = 'foo';
+    const toAddress = 'bar';
     safeTransfer({
       balances,
-      qty,
-      fromAddr,
-      toAddr,
+      qty: 1,
+      fromAddress,
+      toAddress,
     });
     expect(balances).toEqual({ foo: 1, bar: 1 });
   });
 
-  it('should increment toAddr balance in balances object by qty and remove fully decremented fromAddr balance', () => {
+  it('should increment toAddress balance in balances object by qty and remove fully decremented fromAddress balance', () => {
     const balances = { foo: 1, bar: 2 };
-    const qty = 1;
-    const fromAddr = 'foo';
-    const toAddr = 'bar';
+    const fromAddress = 'foo';
+    const toAddress = 'bar';
     safeTransfer({
       balances,
-      qty,
-      fromAddr,
-      toAddr,
+      qty: 1,
+      fromAddress,
+      toAddress,
     });
     expect(balances).toEqual({ bar: 3 });
   });
 });
 
-describe('safeTransferLocked function', () => {
-  it('should throw an error if quantity is negative', () => {
-    expect(() => {
-      safeTransferLocked({
-        balances: { foo: 1, bar: 2 },
-        qty: -1,
-        fromAddr: 'foo',
-        toAddr: 'bar',
-        vaults: {},
-        lockLength: MIN_TOKEN_LOCK_LENGTH,
-      });
-    }).toThrowError('Quantity must be positive!');
-  });
-
+describe('safeVaultedTransfer function', () => {
   it.each([
     [{ foo: 1, bar: 2 }, 'baz'],
     [{ foo: Number.NaN, bar: 2 }, 'foo'],
     [{ foo: Math.sqrt(-1), bar: 2 }, 'foo'],
   ])(
-    "should throw an error if balances %p can't be used to retrieve fromAddr %s",
-    (balances, fromAddr) => {
+    "should throw an error if balances %p can't be used to retrieve fromAddress %s",
+    (balances, fromAddress) => {
       expect(() => {
-        safeTransferLocked({
+        safeVaultedTransfer({
           balances,
-          qty: 1,
-          fromAddr,
-          toAddr: 'biz',
           vaults: {},
-          lockLength: MIN_TOKEN_LOCK_LENGTH,
+          qty: new IOToken(1),
+          fromAddress,
+          id: 'new-vaulted-transfer',
+          toAddress: 'biz',
+          lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+          startHeight: new BlockHeight(0),
         });
-      }).toThrowError('Caller balance is not defined!');
+      }).toThrowError(INSUFFICIENT_FUNDS_MESSAGE);
     },
   );
 
-  it('should throw an error if fromAddr does not have enough balance', () => {
+  it('should throw an error if fromAddress does not have enough balance', () => {
     expect(() => {
-      safeTransferLocked({
-        balances: { foo: 1, bar: 2 },
-        qty: 2,
-        fromAddr: 'foo',
-        toAddr: 'bar',
+      safeVaultedTransfer({
+        balances: { foo: 0 },
         vaults: {},
-        lockLength: MIN_TOKEN_LOCK_LENGTH,
+        qty: new IOToken(1),
+        fromAddress: 'foo',
+        id: 'new-vaulted-transfer',
+        toAddress: 'biz',
+        lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+        startHeight: new BlockHeight(0),
       });
     }).toThrowError(INSUFFICIENT_FUNDS_MESSAGE);
   });
 
-  it.each([0, -1, MAX_TOKEN_LOCK_LENGTH + 1])(
+  it.each([0, MAX_TOKEN_LOCK_LENGTH + 1])(
     'should throw an error if lock length is invalid %s',
     (lockLength) => {
       expect(() => {
         const balances = { foo: 2, bar: 2 };
-        safeTransferLocked({
+        safeVaultedTransfer({
           balances,
-          qty: 1,
-          fromAddr: 'foo',
-          toAddr: 'biz',
           vaults: {},
-          lockLength,
+          qty: new IOToken(1),
+          fromAddress: 'foo',
+          id: 'new-vaulted-transfer',
+          toAddress: 'biz',
+          lockLength: new BlockHeight(lockLength),
+          startHeight: new BlockHeight(0),
         });
-      }).toThrowError(/lockLength is out of range/);
+      }).toThrowError(INVALID_VAULT_LOCK_LENGTH_MESSAGE);
     },
   );
 
-  it('should create vault in toAddr with qty and lock length, and decrement fromAddr, by qty in balances object', () => {
+  it('should create vault in toAddress with qty and lock length, and decrement fromAddress, by qty in balances object', () => {
     const balances = { foo: 2, bar: 2 };
-    const vaults: {
-      // a list of all vaults that have locked balances
-      [address: string]: TokenVault[];
-      // a wallet can have multiple vaults
-    } = {};
+    const vaults: RegistryVaults = {};
     const qty = 1;
-    const fromAddr = 'foo';
-    const toAddr = 'bar';
-    safeTransferLocked({
+    const fromAddress = 'foo';
+    const toAddress = 'bar';
+    const expectedNewVaultData: VaultData = {
+      balance: qty,
+      start: 0,
+      end: MIN_TOKEN_LOCK_LENGTH,
+    };
+    safeVaultedTransfer({
       balances,
-      qty,
-      fromAddr,
-      toAddr,
-      vaults,
-      lockLength: MIN_TOKEN_LOCK_LENGTH,
+      vaults: vaults,
+      qty: new IOToken(1),
+      fromAddress,
+      id: 'new-vaulted-transfer',
+      toAddress,
+      lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+      startHeight: new BlockHeight(0),
     });
     expect(balances).toEqual({ foo: 1, bar: 2 });
-    expect(vaults[toAddr][0].balance).toEqual(qty);
+    expect(vaults[toAddress]['new-vaulted-transfer']).toEqual(
+      expectedNewVaultData,
+    );
   });
 
-  it('should create a second vault in toAddr with qty and locklength, and decrement fromAddr, by qty in balances object', () => {
+  it('should create a second vault in toAddress with qty and lock length, and decrement fromAddress, by qty in balances object', () => {
     const balances = { foo: 2, bar: 2 };
     const qty = 1;
-    const fromAddr = 'foo';
-    const toAddr = 'bar';
-    const vaults: {
-      // a list of all vaults that have locked balances
-      [address: string]: TokenVault[];
-      // a wallet can have multiple vaults
-    } = {
-      [toAddr]: [
-        {
+    const fromAddress = 'foo';
+    const toAddress = 'bar';
+    const vaults: RegistryVaults = {
+      [toAddress]: {
+        'existing-vault-id': {
           balance: 1,
           end: 100,
           start: 0,
         },
-      ],
+      },
     };
-    safeTransferLocked({
+    const expectedNewVaultData: VaultData = {
+      balance: qty,
+      start: 0,
+      end: MIN_TOKEN_LOCK_LENGTH,
+    };
+    safeVaultedTransfer({
       balances,
-      qty,
-      fromAddr,
-      toAddr,
+      qty: new IOToken(1),
+      fromAddress,
+      toAddress,
       vaults,
-      lockLength: MIN_TOKEN_LOCK_LENGTH,
+      lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+      startHeight: new BlockHeight(0),
+      id: 'new-vaulted-transfer',
     });
     expect(balances).toEqual({ foo: 1, bar: 2 });
-    expect(vaults[toAddr][vaults[toAddr].length - 1].balance).toEqual(qty);
-    expect(vaults[toAddr][vaults[toAddr].length - 1].end).toEqual(
-      MIN_TOKEN_LOCK_LENGTH + 1,
+    expect(vaults[toAddress]['new-vaulted-transfer']).toEqual(
+      expectedNewVaultData,
     );
   });
 
-  it('should create vault in toAddr with qty and lock length and remove fully decremented fromAddr balance', () => {
+  it('should create vault in toAddress with qty and lock length and  decrement balance of fromAddress', () => {
     const balances = { foo: 1, bar: 2 };
-    const vaults: {
-      // a list of all vaults that have locked balances
-      [address: string]: TokenVault[];
-      // a wallet can have multiple vaults
-    } = {};
+    const vaults: RegistryVaults = {};
     const qty = 1;
-    const fromAddr = 'foo';
-    const toAddr = 'bar';
-    safeTransferLocked({
+    const fromAddress = 'foo';
+    const toAddress = 'bar';
+    safeVaultedTransfer({
       balances,
-      qty,
-      fromAddr,
-      toAddr,
+      qty: new IOToken(1),
+      fromAddress,
+      toAddress,
       vaults,
-      lockLength: MIN_TOKEN_LOCK_LENGTH,
+      lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+      startHeight: new BlockHeight(0),
+      id: 'new-vaulted-transfer',
     });
+    const expectedNewVaultData: VaultData = {
+      balance: qty,
+      start: 0,
+      end: MIN_TOKEN_LOCK_LENGTH,
+    };
     expect(balances).toEqual({ bar: 2 });
-    expect(vaults[toAddr][0].balance).toEqual(qty);
+    expect(vaults[toAddress]['new-vaulted-transfer']).toEqual(
+      expectedNewVaultData,
+    );
   });
 
-  it('should create vault in toAddr with qty and lock length, and decrement fromAddr, by qty in balances object when they are both the same', () => {
+  it('should create vault in toAddress with qty and lock length, and decrement fromAddress, by qty in balances object when they are both the same', () => {
     const balances = { foo: 2, bar: 2 };
-    const vaults: {
-      // a list of all vaults that have locked balances
-      [address: string]: TokenVault[];
-      // a wallet can have multiple vaults
-    } = {};
+    const vaults: RegistryVaults = {};
     const qty = 1;
-    const fromAddr = 'foo';
-    const toAddr = fromAddr;
-    safeTransferLocked({
+    const fromAddress = 'foo';
+    const toAddress = fromAddress;
+    safeVaultedTransfer({
       balances,
-      qty,
-      fromAddr,
-      toAddr,
+      qty: new IOToken(1),
+      fromAddress,
+      toAddress,
       vaults,
-      lockLength: MIN_TOKEN_LOCK_LENGTH,
+      lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+      startHeight: new BlockHeight(0),
+      id: 'new-vaulted-transfer',
     });
+    const expectedNewVaultData: VaultData = {
+      balance: qty,
+      start: 0,
+      end: MIN_TOKEN_LOCK_LENGTH,
+    };
     expect(balances).toEqual({ foo: 1, bar: 2 });
-    expect(vaults[toAddr][0].balance).toEqual(qty);
+    expect(vaults[toAddress]['new-vaulted-transfer']).toEqual(
+      expectedNewVaultData,
+    );
+  });
+
+  it('should error if the vault id for the toAddress already exists', () => {
+    const balances = { foo: 2, bar: 2 };
+    const fromAddress = 'foo';
+    const toAddress = 'bar';
+    const vaults: RegistryVaults = {
+      [toAddress]: {
+        'existing-vault-id': {
+          balance: 1,
+          end: 100,
+          start: 0,
+        },
+      },
+    };
+    expect(() =>
+      safeVaultedTransfer({
+        balances,
+        qty: new IOToken(1),
+        fromAddress,
+        toAddress,
+        vaults,
+        lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+        startHeight: new BlockHeight(0),
+        id: 'existing-vault-id',
+      }),
+    ).toThrowError(`Vault with id 'existing-vault-id' already exists`);
   });
 });

@@ -1,10 +1,19 @@
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_TARGET_MESSAGE,
+  INVALID_VAULT_LOCK_LENGTH_MESSAGE,
   MAX_TOKEN_LOCK_LENGTH,
   MIN_TOKEN_LOCK_LENGTH,
 } from './constants';
-import { Balances, Vaults, WalletAddress } from './types';
+import {
+  Balances,
+  BlockHeight,
+  IOToken,
+  RegistryVaults,
+  TransactionId,
+  VaultData,
+  WalletAddress,
+} from './types';
 import {
   incrementBalance,
   unsafeDecrementBalance,
@@ -13,89 +22,76 @@ import {
 
 export function safeTransfer({
   balances,
-  fromAddr,
-  toAddr,
+  fromAddress,
+  toAddress,
   qty,
 }: {
   balances: Balances;
-  fromAddr: WalletAddress;
-  toAddr: WalletAddress;
-  qty: number;
+  fromAddress: WalletAddress;
+  toAddress: WalletAddress;
+  qty: number; // TODO: use IOToken
 }): void {
-  if (qty < 0) {
-    throw new ContractError(`Quantity must be positive!`);
-  }
-
-  if (fromAddr === toAddr) {
+  if (fromAddress === toAddress) {
     throw new ContractError(INVALID_TARGET_MESSAGE);
   }
 
-  if (balances[fromAddr] === null || isNaN(balances[fromAddr])) {
+  if (balances[fromAddress] === null || isNaN(balances[fromAddress])) {
     throw new ContractError(`Caller balance is not defined!`);
   }
 
-  if (!walletHasSufficientBalance(balances, fromAddr, qty)) {
+  if (!walletHasSufficientBalance(balances, fromAddress, qty.valueOf())) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  incrementBalance(balances, toAddr, qty);
-  unsafeDecrementBalance(balances, fromAddr, qty);
+  incrementBalance(balances, toAddress, qty);
+  unsafeDecrementBalance(balances, fromAddress, qty);
 }
 
-export function safeTransferLocked({
+export function safeVaultedTransfer({
   balances,
   vaults,
-  fromAddr,
-  toAddr,
+  fromAddress,
+  toAddress,
+  startHeight,
+  id,
   qty,
   lockLength,
 }: {
   balances: Balances;
-  vaults: Vaults;
-  fromAddr: WalletAddress;
-  toAddr: WalletAddress;
-  qty: number;
-  lockLength: number;
+  vaults: RegistryVaults;
+  fromAddress: WalletAddress;
+  toAddress: WalletAddress;
+  id: TransactionId;
+  qty: IOToken;
+  startHeight: BlockHeight;
+  lockLength: BlockHeight;
 }): void {
-  if (qty < 0) {
-    throw new ContractError(`Quantity must be positive!`);
-  }
-
-  if (balances[fromAddr] === null || isNaN(balances[fromAddr])) {
-    throw new ContractError(`Caller balance is not defined!`);
-  }
-
-  if (!walletHasSufficientBalance(balances, fromAddr, qty)) {
+  if (!walletHasSufficientBalance(balances, fromAddress, qty.valueOf())) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  if (
-    lockLength < MIN_TOKEN_LOCK_LENGTH ||
-    lockLength > MAX_TOKEN_LOCK_LENGTH
-  ) {
-    throw new ContractError(
-      `lockLength is out of range. lockLength must be between ${MIN_TOKEN_LOCK_LENGTH} - ${MAX_TOKEN_LOCK_LENGTH}.`,
-    );
+  if (vaults[toAddress] && id in vaults[toAddress]) {
+    throw new ContractError(`Vault with id '${id}' already exists`);
   }
 
-  const start = +SmartWeave.block.height;
-  const end = start + lockLength;
-  if (toAddr in vaults) {
-    // Address already exists in vaults, add a new vault
-    vaults[toAddr].push({
-      balance: qty,
-      end,
-      start,
-    });
-  } else {
-    // Address is vaulting tokens for the first time
-    vaults[toAddr] = [
-      {
-        balance: qty,
-        end,
-        start,
-      },
-    ];
+  if (
+    lockLength.valueOf() < MIN_TOKEN_LOCK_LENGTH ||
+    lockLength.valueOf() > MAX_TOKEN_LOCK_LENGTH
+  ) {
+    throw new ContractError(INVALID_VAULT_LOCK_LENGTH_MESSAGE);
   }
-  unsafeDecrementBalance(balances, fromAddr, qty);
+
+  const newVault: VaultData = {
+    balance: qty.valueOf(),
+    start: startHeight.valueOf(),
+    end: startHeight.valueOf() + lockLength.valueOf(),
+  };
+
+  // create the new vault
+  vaults[toAddress] = {
+    ...vaults[toAddress],
+    [id]: newVault,
+  };
+
+  unsafeDecrementBalance(balances, fromAddress, qty.valueOf());
 }

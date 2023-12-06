@@ -107,8 +107,8 @@ export const buyRecord = (
 
   safeTransfer({
     balances,
-    fromAddr: caller,
-    toAddr: SmartWeave.contract.id,
+    fromAddress: caller,
+    toAddress: SmartWeave.contract.id,
     qty: totalRegistrationFee,
   });
 
