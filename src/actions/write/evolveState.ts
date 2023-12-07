@@ -15,6 +15,7 @@ export const evolveState = async (
 
   state.vaults = {};
   state.canEvolve = true;
+  state.observations = {};
 
   for (const gateway of Object.values(state.gateways)) {
     gateway.vaults = {};
