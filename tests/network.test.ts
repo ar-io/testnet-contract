@@ -66,7 +66,7 @@ describe('Network', () => {
           });
           const { cachedValue: newCachedValue } = await contract.readState();
           expect(Object.keys(newCachedValue.errorMessages)).toContain(
-            writeInteraction!.originalTxId,
+            writeInteraction?.originalTxId,
           );
           expect(newCachedValue.state).toEqual(prevCachedValue.state);
         },
@@ -144,7 +144,7 @@ describe('Network', () => {
         });
         const { cachedValue: newCachedValue } = await contract.readState();
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
-          writeInteraction!.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
@@ -187,7 +187,7 @@ describe('Network', () => {
         });
         const { cachedValue: newCachedValue } = await contract.readState();
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
-          writeInteraction!.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
@@ -214,7 +214,7 @@ describe('Network', () => {
         });
         const { cachedValue: newCachedValue } = await contract.readState();
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
-          writeInteraction!.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
@@ -242,7 +242,7 @@ describe('Network', () => {
         });
         const { cachedValue: newCachedValue } = await contract.readState();
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
-          writeInteraction!.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
@@ -269,7 +269,7 @@ describe('Network', () => {
         });
         const { cachedValue: newCachedValue } = await contract.readState();
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
-          writeInteraction!.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
@@ -296,7 +296,7 @@ describe('Network', () => {
         const { cachedValue: newCachedValue } = await contract.readState();
         const newState = newCachedValue.state as IOState;
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
-          writeInteraction!.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(newState.balances[newGatewayOperatorAddress]).toEqual(
           prevBalance - joinGatewayPayload.qty,
@@ -398,7 +398,7 @@ describe('Network', () => {
         );
         expect(
           newState.gateways[newGatewayOperatorAddress].vaults[
-            writeInteraction!.originalTxId
+            writeInteraction?.originalTxId
           ],
         ).toEqual({
           balance: qty,
@@ -498,7 +498,7 @@ describe('Network', () => {
           expect(writeInteraction?.originalTxId).not.toBe(undefined);
           const { cachedValue: newCachedValue } = await contract.readState();
           expect(Object.keys(newCachedValue.errorMessages)).toContain(
-            writeInteraction!.originalTxId,
+            writeInteraction?.originalTxId,
           );
           expect(newCachedValue.state).toEqual(prevCachedValue.state);
         },

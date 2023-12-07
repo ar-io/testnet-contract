@@ -198,7 +198,7 @@ describe('Observation', () => {
         const { cachedValue: newCachedValue } = await contract.readState();
         const newState = newCachedValue.state as IOState;
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
-          writeInteraction!.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(
           newState.observations[currentEpochStartHeight.valueOf()].reports[
@@ -327,12 +327,15 @@ describe('Observation', () => {
         ).toEqual(true);
 
         expect(
-          writeInteractions.every(
-            (interaction) =>
-              !Object.keys(newCachedValue.errorMessages).includes(
-                interaction?.originalTxId,
-              ),
-          ),
+          writeInteractions.every((interaction) => {
+            // eslint-disable-next-line no-console
+            console.log(
+              newCachedValue.errorMessages[interaction?.originalTxId],
+            );
+            return !Object.keys(newCachedValue.errorMessages).includes(
+              interaction?.originalTxId,
+            );
+          }),
         ).toEqual(true);
         expect(reportLength).toEqual(NUM_OBSERVERS_PER_EPOCH);
       });
@@ -358,7 +361,7 @@ describe('Observation', () => {
             });
             const { cachedValue: newCachedValue } = await contract.readState();
             expect(Object.keys(newCachedValue.errorMessages)).toContain(
-              writeInteraction!.originalTxId,
+              writeInteraction?.originalTxId,
             );
             expect(newCachedValue.state).toEqual(prevCachedValue.state);
           },
@@ -381,7 +384,7 @@ describe('Observation', () => {
             });
             const { cachedValue: newCachedValue } = await contract.readState();
             expect(Object.keys(newCachedValue.errorMessages)).toContain(
-              writeInteraction!.originalTxId,
+              writeInteraction?.originalTxId,
             );
             expect(newCachedValue.state).toEqual(prevCachedValue.state);
           },
@@ -418,7 +421,7 @@ describe('Observation', () => {
         });
         const { cachedValue: newCachedValue } = await contract.readState();
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
-          writeInteraction!.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
@@ -434,7 +437,7 @@ describe('Observation', () => {
         });
         const { cachedValue: newCachedValue } = await contract.readState();
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
-          writeInteraction!.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
