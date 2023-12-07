@@ -1,7 +1,7 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts/lib/types';
 
 import { getEpochStart } from '../src/observers';
-import { BlockHeight, IOState } from '../src/types';
+import { BlockHeight, IOState, WeightedObserver } from '../src/types';
 import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_START_HEIGHT,
@@ -17,7 +17,6 @@ import {
   getLocalArNSContractKey,
   getLocalWallet,
   getRandomFailedGatewaysSubset,
-  mineBlock,
   mineBlocks,
 } from './utils/helper';
 import { arweave, warp } from './utils/services';
@@ -49,82 +48,65 @@ describe('Observation', () => {
 
   describe('valid observer', () => {
     describe('read operations', () => {
+      let height: number;
+      let prescribedObserversForHeight: WeightedObserver[] = [];
+
+      beforeEach(async () => {
+        height = (await getCurrentBlock(arweave)).valueOf();
+        const { result }: { result: WeightedObserver[] } =
+          await contract.viewState({
+            function: 'prescribedObservers',
+            height,
+          });
+        prescribedObserversForHeight = result;
+      });
+
       it('should get prescribed observers with height', async () => {
-        const height = (await getCurrentBlock(arweave)).valueOf();
-        const { result: prescribedObservers } = (await contract.viewState({
-          function: 'prescribedObservers',
-          height,
-        })) as any;
-        expect(prescribedObservers).toHaveLength(NUM_OBSERVERS_PER_EPOCH);
+        expect(prescribedObserversForHeight).toHaveLength(
+          NUM_OBSERVERS_PER_EPOCH,
+        );
       });
 
       it('should get prescribed observers without height', async () => {
-        const { result: prescribedObservers } = (await contract.viewState({
-          function: 'prescribedObservers',
-        })) as any;
-        expect(prescribedObservers).toHaveLength(NUM_OBSERVERS_PER_EPOCH);
-      });
-
-      it('prescribed observers must be the same within an epoch', async () => {
-        const { result: prescribedObservers } = (await contract.viewState({
-          function: 'prescribedObservers',
-        })) as any;
-        expect(prescribedObservers).toHaveLength(NUM_OBSERVERS_PER_EPOCH);
-        await mineBlock;
-        const { result: prescribedObservers2 } = (await contract.viewState({
-          function: 'prescribedObservers',
-        })) as any;
-        expect(prescribedObservers2).toHaveLength(NUM_OBSERVERS_PER_EPOCH);
-        expect(prescribedObservers).toEqual(prescribedObservers2);
+        const { result: prescribedObserversWithoutHeight } =
+          await contract.viewState({
+            function: 'prescribedObservers',
+          });
+        expect(prescribedObserversWithoutHeight).toEqual(
+          prescribedObserversForHeight,
+        );
       });
 
       it('should be able to check if target gateway wallet is valid observer for a given epoch', async () => {
-        const height = (await getCurrentBlock(arweave)).valueOf();
-        const { result: prescribedObservers } = (await contract.viewState({
-          function: 'prescribedObservers',
-          height,
-        })) as any;
-        const { result: prescribedGatewayWallet } = (await contract.viewState({
+        const {
+          result: prescribedGatewayWallet,
+        }: { result: WeightedObserver[] } = await contract.viewState({
           function: 'prescribedObserver',
-          target: prescribedObservers[0].gatewayAddress,
+          target: prescribedObserversForHeight[0].gatewayAddress,
           height,
-        })) as any;
-        expect(prescribedGatewayWallet).toBe(true);
-      });
-
-      it('should be able to check if target gateway wallet is valid observer for a given epoch without height', async () => {
-        const { result: prescribedObservers } = (await contract.viewState({
-          function: 'prescribedObservers',
-        })) as any;
-        const { result: prescribedGatewayWallet } = (await contract.viewState({
-          function: 'prescribedObserver',
-          target: prescribedObservers[0].gatewayAddress,
-        })) as any;
+        });
         expect(prescribedGatewayWallet).toBe(true);
       });
 
       it('should be able to check if target observer wallet is valid observer for a given epoch', async () => {
-        const height = (await getCurrentBlock(arweave)).valueOf();
-        const { result: prescribedObservers } = (await contract.viewState({
-          function: 'prescribedObservers',
-          height,
-        })) as any;
-        const { result: prescribedObserverWallet } = (await contract.viewState({
+        const {
+          result: prescribedObserverWallet,
+        }: { result: WeightedObserver[] } = await contract.viewState({
           function: 'prescribedObserver',
-          target: prescribedObservers[0].observerAddress,
+          target: prescribedObserversForHeight[0].observerAddress,
           height,
-        })) as any;
+        });
         expect(prescribedObserverWallet).toBe(true);
       });
 
       it('should be able to check if target wallet is not a valid observer for a given epoch', async () => {
         const notJoinedGateway = await createLocalWallet(arweave);
-        const height = (await getCurrentBlock(arweave)).valueOf();
-        const { result: notPrescribedWallet } = (await contract.viewState({
-          function: 'prescribedObserver',
-          target: notJoinedGateway.address,
-          height,
-        })) as any;
+        const { result: notPrescribedWallet }: { result: WeightedObserver[] } =
+          await contract.viewState({
+            function: 'prescribedObserver',
+            target: notJoinedGateway.address,
+            height,
+          });
         expect(notPrescribedWallet).toBe(false);
       });
     });
@@ -138,10 +120,11 @@ describe('Observation', () => {
 
       beforeEach(async () => {
         const height = await getCurrentBlock(arweave);
-        const { result: prescribedObservers } = (await contract.viewState({
-          function: 'prescribedObservers',
-          height: height.valueOf(),
-        })) as any;
+        const { result: prescribedObservers }: { result: WeightedObserver[] } =
+          await contract.viewState({
+            function: 'prescribedObservers',
+            height: height.valueOf(),
+          });
         prescribedObserverWallets = wallets.filter((wallet) =>
           prescribedObservers.find(
             (observer: { gatewayAddress: string }) =>
@@ -179,7 +162,7 @@ describe('Observation', () => {
           writeInteractions.every(
             (interaction) =>
               !Object.keys(newCachedValue.errorMessages).includes(
-                interaction!.originalTxId,
+                interaction?.originalTxId,
               ),
           ),
         ).toEqual(true);
@@ -225,10 +208,11 @@ describe('Observation', () => {
           epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
           height,
         });
-        const { result: prescribedObservers } = (await contract.viewState({
-          function: 'prescribedObservers',
-          height: height.valueOf(),
-        })) as any;
+        const { result: prescribedObservers }: { result: WeightedObserver[] } =
+          await contract.viewState({
+            function: 'prescribedObservers',
+            height: height.valueOf(),
+          });
         prescribedObserverWallets = wallets.filter((wallet) =>
           prescribedObservers.find(
             (observer: { gatewayAddress: string }) =>
@@ -262,7 +246,7 @@ describe('Observation', () => {
           writeInteractions.every(
             (interaction) =>
               !Object.keys(newCachedValue.errorMessages).includes(
-                interaction!.originalTxId,
+                interaction?.originalTxId,
               ),
           ),
         ).toEqual(true);
@@ -293,7 +277,7 @@ describe('Observation', () => {
           writeInteractions.every(
             (interaction) =>
               !Object.keys(newCachedValue.errorMessages).includes(
-                interaction!.originalTxId,
+                interaction?.originalTxId,
               ),
           ),
         ).toEqual(true);
@@ -322,10 +306,6 @@ describe('Observation', () => {
 
         expect(
           writeInteractions.every((interaction) => {
-            // eslint-disable-next-line no-console
-            console.log(
-              newCachedValue.errorMessages[interaction?.originalTxId],
-            );
             return !Object.keys(newCachedValue.errorMessages).includes(
               interaction?.originalTxId,
             );
@@ -390,10 +370,11 @@ describe('Observation', () => {
     describe('write interactions', () => {
       it('should not save observation report if not prescribed observer', async () => {
         const height = (await getCurrentBlock(arweave)).valueOf();
-        const { result: prescribedObservers } = (await contract.viewState({
-          function: 'prescribedObservers',
-          height,
-        })) as any;
+        const { result: prescribedObservers }: { result: WeightedObserver[] } =
+          await contract.viewState({
+            function: 'prescribedObservers',
+            height,
+          });
         const { cachedValue: prevCachedValue } = await contract.readState();
         // Connect as an invalid observer
         for (let i = 0; i < WALLETS_TO_CREATE; i++) {
