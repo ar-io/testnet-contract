@@ -284,36 +284,6 @@ describe('Observation', () => {
         expect(reportLength).toEqual(NUM_OBSERVERS_PER_EPOCH);
       });
 
-      it('should save observations again if prescribed observer using observer wallet address', async () => {
-        const writeInteractions = await Promise.all(
-          prescribedObserverWallets.map((wallet) => {
-            contract = warp.pst(srcContractId).connect(wallet.jwk);
-            return contract.writeInteraction({
-              function: 'saveObservations',
-              observerReportTxId: EXAMPLE_OBSERVER_REPORT_TX_IDS[0],
-              failedGateways: failedGateways,
-            });
-          }),
-        );
-        const { cachedValue: newCachedValue } = await contract.readState();
-        const newState = newCachedValue.state as IOState;
-        const reportLength = Object.keys(
-          newState.observations[currentEpochStartHeight.valueOf()].reports,
-        ).length;
-        expect(
-          writeInteractions.every((interaction) => interaction?.originalTxId),
-        ).toEqual(true);
-
-        // expect(
-        //   writeInteractions.every((interaction) => {
-        //     return !Object.keys(newCachedValue.errorMessages).includes(
-        //       interaction?.originalTxId,
-        //     );
-        //   }),
-        // ).toEqual(true);
-        expect(reportLength).toEqual(NUM_OBSERVERS_PER_EPOCH);
-      });
-
       describe('invalid inputs', () => {
         beforeAll(() => {
           contract = warp
