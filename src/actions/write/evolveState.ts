@@ -14,6 +14,7 @@ export const evolveState = async (
 
   state.vaults = {};
   state.canEvolve = true;
+  state.observations = {};
   state.distributions = {
     lastCompletedEpoch: +SmartWeave.block.height,
     passedObserverEpochs: {},

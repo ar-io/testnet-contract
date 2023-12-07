@@ -4,6 +4,7 @@
   "version": "0.0.18",
   "owner": "",
   "evolve": null,
+  "canEvolve": true,
   "records": {},
   "balances": {},
   "vaults": {},
