@@ -1,3 +1,5 @@
+import { TOTAL_IO_SUPPLY } from './constants';
+import { getBaselineState } from './tests/stubs';
 import {
   ArNSBaseNameData,
   ArNSLeaseAuctionData,
@@ -5,6 +7,7 @@ import {
   BlockHeight,
   BlockTimestamp,
   GatewayStatus,
+  IOState,
   IOToken,
 } from './types';
 import {
@@ -16,6 +19,7 @@ import {
   isGatewayHidden,
   isGatewayJoined,
   isLeaseRecord,
+  resetProtocolBalance,
   unsafeDecrementBalance,
 } from './utilities';
 
@@ -390,4 +394,81 @@ describe('isLeaseRecord function', () => {
       expect(isLeaseRecord(record)).toEqual(expectedValue);
     },
   );
+});
+
+describe('resetProtocolBalance function', () => {
+  it('should reset protocol balance to the expected differnce', () => {
+    const initialProtocolBalance = 100;
+    const testingState: IOState = {
+      ...getBaselineState(),
+      balances: {
+        [SmartWeave.contract.id]: initialProtocolBalance,
+        'address-1': 100,
+        'address-2': 100,
+        'address-3': 100,
+      },
+      vaults: {
+        'address-2': {
+          'vault-1': {
+            balance: 100,
+            start: 0,
+            end: 0,
+          },
+          'vault-2': {
+            balance: 100,
+            start: 0,
+            end: 0,
+          },
+        },
+      },
+      auctions: {
+        'fake-auction': {
+          startPrice: 0,
+          floorPrice: 200,
+          startHeight: 0,
+          endHeight: 0,
+          type: 'lease',
+          initiator: 'address-3',
+          contractTxId: '',
+          years: 1,
+          settings: {
+            auctionDuration: 0,
+            exponentialDecayRate: 0,
+            scalingExponent: 0,
+            floorPriceMultiplier: 0,
+            startPriceMultiplier: 0,
+          },
+        },
+      },
+      gateways: {
+        'address-1': {
+          start: 0,
+          end: 0,
+          status: 'joined',
+          vaults: {
+            'vault-1': {
+              balance: 100,
+              start: 0,
+              end: 0,
+            },
+          },
+          operatorStake: 100,
+          observerWallet: '',
+          settings: {
+            label: '',
+            fqdn: '',
+            port: 1234,
+            protocol: 'https',
+          },
+        },
+      },
+    };
+    const totalNonProtocolBalances = 900;
+    const expectedProtocolBalance = TOTAL_IO_SUPPLY - totalNonProtocolBalances;
+    const { balances: updatedBalances } = resetProtocolBalance(testingState);
+    expect(updatedBalances).toEqual({
+      ...testingState.balances,
+      [SmartWeave.contract.id]: expectedProtocolBalance,
+    });
+  });
 });
