@@ -3,11 +3,11 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts/lib/types';
 import { getEpochStart } from '../src/observers';
 import { BlockHeight, IOState } from '../src/types';
 import {
-  CALLER_NOT_VALID_OBSERVER_MESSAGE,
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_START_HEIGHT,
   EXAMPLE_LIST_OF_FAILED_GATEWAYS,
   EXAMPLE_OBSERVER_REPORT_TX_IDS,
+  INVALID_OBSERVATION_CALLER_MESSAGE,
   NUM_OBSERVERS_PER_EPOCH,
   WALLETS_TO_CREATE,
 } from './utils/constants';
@@ -434,7 +434,7 @@ describe('Observation', () => {
         );
         expect(
           newCachedValue.errorMessages[writeInteraction?.originalTxId],
-        ).toEqual(CALLER_NOT_VALID_OBSERVER_MESSAGE);
+        ).toEqual(INVALID_OBSERVATION_CALLER_MESSAGE);
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
     });

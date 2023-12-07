@@ -1,7 +1,7 @@
 import {
-  CALLER_NOT_VALID_OBSERVER_MESSAGE,
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_START_HEIGHT,
+  INVALID_OBSERVATION_CALLER_MESSAGE,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import { getEpochStart, getPrescribedObservers } from '../../observers';
@@ -60,7 +60,7 @@ export const saveObservations = async (
 
   // no observer found
   if (!observingGatewayArray) {
-    throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
+    throw new ContractError(INVALID_OBSERVATION_CALLER_MESSAGE);
   }
 
   // get the gateway address and observer address of the gateway that is creating the observation
@@ -68,7 +68,7 @@ export const saveObservations = async (
     observingGatewayArray;
 
   if (observingGateway.start > currentEpochStartHeight.valueOf()) {
-    throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
+    throw new ContractError(INVALID_OBSERVATION_CALLER_MESSAGE);
   }
 
   const prescribedObservers = await getPrescribedObservers(
@@ -85,7 +85,7 @@ export const saveObservations = async (
         prescribedObserver.gatewayAddress === observingGateway.observerWallet,
     )
   ) {
-    throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
+    throw new ContractError(INVALID_OBSERVATION_CALLER_MESSAGE);
   }
 
   // check if this is the first report filed in this epoch

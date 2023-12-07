@@ -1,6 +1,6 @@
 import {
-  CALLER_NOT_VALID_OBSERVER_MESSAGE,
   INVALID_INPUT_MESSAGE,
+  INVALID_OBSERVATION_CALLER_MESSAGE,
   NETWORK_LEAVING_STATUS,
 } from '../../constants';
 import { getPrescribedObservers } from '../../observers';
@@ -125,7 +125,7 @@ describe('saveObservations', () => {
               failedGateways: [],
             },
           },
-          CALLER_NOT_VALID_OBSERVER_MESSAGE,
+          INVALID_OBSERVATION_CALLER_MESSAGE,
         ],
         [
           'should throw an error if the caller is a registered gateway that has not started observing yet',
@@ -145,7 +145,7 @@ describe('saveObservations', () => {
               failedGateways: [],
             },
           },
-          CALLER_NOT_VALID_OBSERVER_MESSAGE,
+          INVALID_OBSERVATION_CALLER_MESSAGE,
         ],
         [
           'should throw an error if the caller is not a prescribed observer for the epoch',
@@ -165,7 +165,7 @@ describe('saveObservations', () => {
               failedGateways: [],
             },
           },
-          CALLER_NOT_VALID_OBSERVER_MESSAGE,
+          INVALID_OBSERVATION_CALLER_MESSAGE,
         ],
       ])('%s', async (_, initialState: IOState, inputData, errorMessage) => {
         const error = await saveObservations(initialState, inputData).catch(

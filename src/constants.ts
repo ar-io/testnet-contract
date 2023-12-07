@@ -39,11 +39,11 @@ export const ARNS_NAME_IN_AUCTION_MESSAGE = 'Name is currently in auction.';
 export const ARNS_NAME_AUCTION_EXPIRED_MESSAGE = 'Auction has expired.';
 export const INVALID_INPUT_MESSAGE = 'Invalid input for interaction';
 export const INVALID_VAULT_LOCK_LENGTH_MESSAGE = `Invalid lock length. Must be between ${MIN_TOKEN_LOCK_LENGTH} - ${MAX_TOKEN_LOCK_LENGTH}.`;
-export const CALLER_NOT_VALID_OBSERVER_MESSAGE =
-  'Cannot submit observation report because caller is not eligible to observe';
-export const TARGET_GATEWAY_NOT_REGISTERED =
+export const INVALID_OBSERVATION_CALLER_MESSAGE =
+  'Invalid caller. Caller is not eligible to submit observation reports';
+export const INVALID_GATEWAY_REGISTERED_MESSAGE =
   'Target gateway is not currently registered';
-export const INVALID_OBSERVATION_TARGET =
+export const INVALID_OBSERVATION_TARGET_MESSAGE =
   'Target gateway is leaving the network and must not be observed';
 export const DEFAULT_NUM_SAMPLED_BLOCKS = 3;
 export const DEFAULT_SAMPLED_BLOCKS_OFFSET = 50;
