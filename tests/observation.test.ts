@@ -3,6 +3,7 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts/lib/types';
 import { getEpochStart } from '../src/observers';
 import { BlockHeight, IOState } from '../src/types';
 import {
+  CALLER_NOT_VALID_OBSERVER_MESSAGE,
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_START_HEIGHT,
   EXAMPLE_LIST_OF_FAILED_GATEWAYS,
@@ -214,6 +215,7 @@ describe('Observation', () => {
         jwk: JWKInterface;
       }[] = [];
       let currentEpochStartHeight: BlockHeight;
+      let failedGateways: string[] = [];
 
       beforeAll(async () => {
         await mineBlocks(arweave, DEFAULT_EPOCH_BLOCK_LENGTH);
@@ -233,12 +235,10 @@ describe('Observation', () => {
               observer.gatewayAddress === wallet.addr,
           ),
         );
+        failedGateways = getRandomFailedGatewaysSubset(gatewayWalletAddresses);
       });
 
       it('should save observations if prescribed observer with all using multiple failed gateways', async () => {
-        const failedGateways = getRandomFailedGatewaysSubset(
-          gatewayWalletAddresses,
-        );
         const writeInteractions = await Promise.all(
           prescribedObserverWallets.map((wallet) => {
             contract = warp.pst(srcContractId).connect(wallet.jwk);
@@ -272,9 +272,6 @@ describe('Observation', () => {
       it('save observations again if prescribed observer with random failed gateways', async () => {
         const writeInteractions = await Promise.all(
           prescribedObserverWallets.map((wallet) => {
-            const failedGateways = getRandomFailedGatewaysSubset(
-              gatewayWalletAddresses,
-            );
             contract = warp.pst(srcContractId).connect(wallet.jwk);
             return contract.writeInteraction({
               function: 'saveObservations',
@@ -305,10 +302,7 @@ describe('Observation', () => {
 
       it('should save observations again if prescribed observer using observer wallet address', async () => {
         const writeInteractions = await Promise.all(
-          prescribedObserverWallets.map(async (wallet) => {
-            const failedGateways = getRandomFailedGatewaysSubset(
-              gatewayWalletAddresses,
-            );
+          prescribedObserverWallets.map((wallet) => {
             contract = warp.pst(srcContractId).connect(wallet.jwk);
             return contract.writeInteraction({
               function: 'saveObservations',
@@ -351,7 +345,6 @@ describe('Observation', () => {
           'it must not allow interactions with malformed report tx id',
           async (observerReportTxId) => {
             const { cachedValue: prevCachedValue } = await contract.readState();
-
             const writeInteraction = await contract.writeInteraction({
               function: 'saveObservations',
               observerReportTxId,
@@ -439,6 +432,9 @@ describe('Observation', () => {
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
           writeInteraction?.originalTxId,
         );
+        expect(
+          newCachedValue.errorMessages[writeInteraction?.originalTxId],
+        ).toEqual(CALLER_NOT_VALID_OBSERVER_MESSAGE);
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
     });
