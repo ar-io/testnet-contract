@@ -9,22 +9,29 @@ import {
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
+  TOTAL_IO_SUPPLY,
 } from './constants';
 import {
   ArNSAuctionData,
   ArNSLeaseData,
   ArNSNameData,
+  Auctions,
   Balances,
   BlockHeight,
   BlockTimestamp,
   DeepReadonly,
   Gateway,
   GatewayRegistrySettings,
+  Gateways,
+  IOState,
   IOToken,
   Records,
   RegistrationType,
+  RegistryVaults,
   ReservedNameData,
   ReservedNames,
+  VaultData,
+  Vaults,
   WalletAddress,
 } from './types';
 
@@ -68,6 +75,81 @@ export function calculateUndernamePermutations(domain: string): number {
     }
   }
   return numberOfPossibleUndernames;
+}
+
+export function resetProtocolBalance({
+  balances,
+  auctions,
+  vaults,
+  gateways,
+}: {
+  balances: DeepReadonly<Balances>;
+  auctions: DeepReadonly<Auctions>;
+  vaults: DeepReadonly<RegistryVaults>;
+  gateways: DeepReadonly<Gateways>;
+}): Pick<IOState, 'balances'> {
+  const updatedBalances: Balances = {};
+  // balances
+  const totalBalances = Object.values(balances).reduce(
+    (total: number, current: number) => total + current,
+    0,
+  );
+
+  // gateway stakes
+  const totalGatewayStaked = Object.values(gateways).reduce(
+    (totalGatewaysStake: number, gateway: Gateway) => {
+      const gatewayStake =
+        gateway.operatorStake +
+        Object.values(gateway.vaults).reduce(
+          (totalVaulted: number, currentVault: VaultData) =>
+            totalVaulted + currentVault.balance,
+          0,
+        );
+      return totalGatewaysStake + gatewayStake;
+    },
+    0,
+  );
+
+  // active auctions
+  const totalAuctionStake = Object.values(auctions).reduce(
+    (totalAuctionStake: number, auction: ArNSAuctionData) => {
+      return totalAuctionStake + auction.floorPrice;
+    },
+    0,
+  );
+
+  // vaults
+  const totalVaultedStake = Object.values(vaults).reduce(
+    (totalVaulted: number, vault: Vaults) => {
+      return (
+        totalVaulted +
+        Object.values(vault).reduce(
+          (totalAddressVaulted: number, currentVault: VaultData) =>
+            currentVault.balance + totalAddressVaulted,
+          0,
+        )
+      );
+    },
+    0,
+  );
+
+  const totalContractIO =
+    totalBalances + totalGatewayStaked + totalAuctionStake + totalVaultedStake;
+
+  const diff = TOTAL_IO_SUPPLY - totalContractIO;
+
+  if (diff > 0) {
+    updatedBalances[SmartWeave.contract.id] =
+      balances[SmartWeave.contract.id] + diff;
+  }
+
+  const newBalances = Object.keys(updatedBalances).length
+    ? { ...balances, ...updatedBalances }
+    : balances;
+
+  return {
+    balances: newBalances,
+  };
 }
 
 export function isNameInGracePeriod({
