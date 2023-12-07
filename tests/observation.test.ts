@@ -235,7 +235,7 @@ describe('Observation', () => {
         );
       });
 
-      it('should change epoch and save observations if prescribed observer with all using multiple failed gateways', async () => {
+      it('should save observations if prescribed observer with all using multiple failed gateways', async () => {
         const failedGateways = getRandomFailedGatewaysSubset(
           gatewayWalletAddresses,
         );
@@ -303,7 +303,7 @@ describe('Observation', () => {
         expect(reportLength).toEqual(NUM_OBSERVERS_PER_EPOCH);
       });
 
-      it('should change epoch and save observations again if prescribed observer using observer wallet address', async () => {
+      it('should save observations again if prescribed observer using observer wallet address', async () => {
         const writeInteractions = await Promise.all(
           prescribedObserverWallets.map(async (wallet) => {
             const failedGateways = getRandomFailedGatewaysSubset(
@@ -330,7 +330,7 @@ describe('Observation', () => {
           writeInteractions.every(
             (interaction) =>
               !Object.keys(newCachedValue.errorMessages).includes(
-                interaction!.originalTxId,
+                interaction?.originalTxId,
               ),
           ),
         ).toEqual(true);
