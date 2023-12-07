@@ -15,12 +15,15 @@ import {
 import { getPriceForInteraction } from './actions/read/price';
 import { getRecord } from './actions/read/record';
 import { buyRecord } from './actions/write/buyRecord';
+import { createVault } from './actions/write/createVault';
 import { decreaseOperatorStake } from './actions/write/decreaseOperatorStake';
 import { evolve } from './actions/write/evolve';
 import { evolveState } from './actions/write/evolveState';
 import { extendRecord } from './actions/write/extendRecord';
+import { extendVault } from './actions/write/extendVault';
 import { increaseOperatorStake } from './actions/write/increaseOperatorStake';
 import { increaseUndernameCount } from './actions/write/increaseUndernameCount';
+import { increaseVault } from './actions/write/increaseVault';
 import { joinNetwork } from './actions/write/joinNetwork';
 import { leaveNetwork } from './actions/write/leaveNetwork';
 import { saveObservations } from './actions/write/saveObservations';
@@ -28,6 +31,7 @@ import { submitAuctionBid } from './actions/write/submitAuctionBid';
 import { tick } from './actions/write/tick';
 import { transferTokens } from './actions/write/transferTokens';
 import { updateGatewaySettings } from './actions/write/updateGatewaySettings';
+import { vaultedTransfer } from './actions/write/vaultedTransfer';
 import {
   ContractReadResult,
   ContractWriteResult,
@@ -41,6 +45,10 @@ export async function handle(
   action: PstAction,
 ): Promise<ContractReadResult | ContractWriteResult> {
   const input = action.input;
+
+  if (SmartWeave.transaction.origin !== 'L1') {
+    throw new ContractError('Only L1 transactions are supported.');
+  }
 
   // don't tick on evolutions, it should only update the source code transaction
   if (input.function === 'evolve') {
@@ -58,6 +66,14 @@ export async function handle(
   switch (input.function as IOContractFunctions) {
     case 'transfer':
       return transferTokens(tickedState, action);
+    case 'vaultedTransfer':
+      return vaultedTransfer(tickedState, action);
+    case 'createVault':
+      return createVault(tickedState, action);
+    case 'extendVault':
+      return extendVault(tickedState, action);
+    case 'increaseVault':
+      return increaseVault(tickedState, action);
     case 'buyRecord':
       return buyRecord(tickedState, action);
     case 'extendRecord':

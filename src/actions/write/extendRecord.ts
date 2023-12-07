@@ -6,6 +6,7 @@ import {
   SECONDS_IN_A_YEAR,
 } from '../../constants';
 import { calculateAnnualRenewalFee, tallyNamePurchase } from '../../pricing';
+import { safeTransfer } from '../../transfer';
 import {
   ArNSNameData,
   BlockTimestamp,
@@ -17,7 +18,7 @@ import {
   getInvalidAjvMessage,
   getMaxAllowedYearsExtensionForRecord,
   isExistingActiveRecord,
-  safeTransfer,
+  isLeaseRecord,
   walletHasSufficientBalance,
 } from '../../utilities';
 import { validateExtendRecord } from '../../validations';
@@ -55,6 +56,9 @@ export const extendRecord = async (
   const currentBlockTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
   const { name, years } = new ExtendRecord(input);
   const record = records[name];
+  if (!record) {
+    throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
+  }
 
   if (
     !balances[caller] ||
@@ -63,6 +67,10 @@ export const extendRecord = async (
     isNaN(balances[caller])
   ) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
+  }
+
+  if (!isLeaseRecord(record)) {
+    throw new ContractError(INVALID_NAME_EXTENSION_TYPE_MESSAGE);
   }
 
   assertRecordCanBeExtended({
@@ -86,12 +94,12 @@ export const extendRecord = async (
 
   safeTransfer({
     balances: state.balances,
-    fromAddr: caller,
-    toAddr: SmartWeave.contract.id,
+    fromAddress: caller,
+    toAddress: SmartWeave.contract.id,
     qty: totalExtensionAnnualFee,
   });
 
-  state.records[name].endTimestamp += SECONDS_IN_A_YEAR * years;
+  record.endTimestamp += SECONDS_IN_A_YEAR * years;
   state.demandFactoring = tallyNamePurchase(
     state.demandFactoring,
     totalExtensionAnnualFee,
@@ -116,15 +124,12 @@ export function assertRecordCanBeExtended({
       currentBlockTimestamp,
     })
   ) {
-    if (!record) {
-      throw new ContractError(ARNS_NAME_DOES_NOT_EXIST_MESSAGE);
-    }
     throw new ContractError(
       `This name has expired and must renewed before its undername support can be extended.`,
     );
   }
 
-  if (record.type === 'permabuy') {
+  if (!isLeaseRecord(record)) {
     throw new ContractError(INVALID_NAME_EXTENSION_TYPE_MESSAGE);
   }
 

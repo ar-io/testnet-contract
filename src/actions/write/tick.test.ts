@@ -3,10 +3,11 @@ import {
   tickGatewayRegistry,
   tickRecords,
   tickReservedNames,
+  tickVaults,
 } from '../../actions/write/tick';
 import { SECONDS_IN_A_YEAR, SECONDS_IN_GRACE_PERIOD } from '../../constants';
 import {
-  AuctionData,
+  ArNSPermabuyAuctionData,
   Auctions,
   Balances,
   BlockHeight,
@@ -15,7 +16,9 @@ import {
   DemandFactoringData,
   GatewaySettings,
   Gateways,
+  IOState,
   Records,
+  RegistryVaults,
   ReservedNames,
 } from '../../types';
 
@@ -27,7 +30,7 @@ const defaultAuctionSettings = {
   startPriceMultiplier: 10,
 };
 
-const testAuction: AuctionData = {
+const testAuction: ArNSPermabuyAuctionData = {
   startPrice: 100,
   floorPrice: 10,
   startHeight: 0,
@@ -61,15 +64,24 @@ describe('tickAuctions', () => {
 
   it.each([
     [
-      'should tick an auction for a permabuy name that has expired',
+      'should tick an auction for a permabuy name that has expired and add the floor price to an existing protocol balance',
       {
+        balances: {
+          'some-other-balance': 1000,
+          [SmartWeave.contract.id]: 1000, // we want to validate this gets incremented by the floor price
+        } as Balances,
         auctions: {
           'tick-auction': testAuction,
-        },
+        } as Auctions,
+        records: {},
         demandFactoring: demandFactorData,
       },
       {
-        auctions: {},
+        balances: {
+          'some-other-balance': 1000,
+          [SmartWeave.contract.id]: 1000 + testAuction.floorPrice,
+        } as Balances,
+        auctions: {} as Auctions,
         records: {
           'tick-auction': {
             contractTxId: 'test-tx-id',
@@ -78,16 +90,21 @@ describe('tickAuctions', () => {
             undernames: 10,
             purchasePrice: 10, // the floor price
           },
-        },
+        } as Records,
         demandFactoring: {
+          ...demandFactorData,
           purchasesThisPeriod: 1,
           revenueThisPeriod: 10,
         },
       },
     ],
     [
-      'should tick an auction for a leased name that has expired',
+      'should tick an auction for a leased name that has expired and add the floor price to a non-existent protocol balance',
       {
+        balances: {
+          'some-other-balance': 1000,
+          // not protocol balance, we want to validate it gets created and incremented by the floor price
+        } as Balances,
         auctions: {
           'tick-leased-auction': {
             ...testAuction,
@@ -95,9 +112,14 @@ describe('tickAuctions', () => {
             years: 1,
           },
         },
+        records: {},
         demandFactoring: demandFactorData,
       },
       {
+        balances: {
+          'some-other-balance': 1000,
+          [SmartWeave.contract.id]: testAuction.floorPrice,
+        } as Balances,
         auctions: {},
         records: {
           'tick-leased-auction': {
@@ -110,6 +132,7 @@ describe('tickAuctions', () => {
           },
         },
         demandFactoring: {
+          ...demandFactorData,
           purchasesThisPeriod: 1,
           revenueThisPeriod: 10,
         },
@@ -118,6 +141,9 @@ describe('tickAuctions', () => {
     [
       'should not tick an auction that has not expired yet',
       {
+        balances: {
+          'some-other-balance': 1000,
+        } as Balances,
         auctions: {
           'do-not-tick': {
             ...testAuction,
@@ -127,6 +153,9 @@ describe('tickAuctions', () => {
         demandFactoring: demandFactorData,
       },
       {
+        balances: {
+          'some-other-balance': 1000,
+        } as Balances,
         auctions: {
           'do-not-tick': {
             ...testAuction,
@@ -134,24 +163,39 @@ describe('tickAuctions', () => {
           },
         },
         records: {},
-        demandFactoring: {},
+        demandFactoring: demandFactorData,
       },
     ],
-  ])('%s', (_, inputData, expectedData) => {
-    const { auctions, records, demandFactoring } = tickAuctions({
-      currentBlockHeight: new BlockHeight(5),
-      currentBlockTimestamp: new BlockTimestamp(blockTimestamp),
-      records: {},
-      auctions: inputData.auctions as DeepReadonly<Auctions>,
-      demandFactoring: inputData.demandFactoring,
-    });
-    expect(auctions).toEqual(expectedData.auctions);
-    expect(records).toEqual(expectedData.records);
-    expect(demandFactoring).toEqual({
-      ...inputData.demandFactoring,
-      ...expectedData.demandFactoring,
-    });
-  });
+  ])(
+    '%s',
+    (
+      _: string,
+      inputData: Pick<
+        IOState,
+        'balances' | 'auctions' | 'records' | 'demandFactoring'
+      >,
+      expectedData: Pick<
+        IOState,
+        'balances' | 'auctions' | 'records' | 'demandFactoring'
+      >,
+    ) => {
+      const { auctions, records, balances, demandFactoring } = tickAuctions({
+        currentBlockHeight: new BlockHeight(5),
+        currentBlockTimestamp: new BlockTimestamp(blockTimestamp),
+        records: {},
+        balances: inputData.balances,
+        auctions: inputData.auctions,
+        demandFactoring: inputData.demandFactoring,
+      });
+      expect(balances).toEqual(expectedData.balances);
+      expect(auctions).toEqual(expectedData.auctions);
+      expect(records).toEqual(expectedData.records);
+      expect(demandFactoring).toEqual({
+        ...inputData.demandFactoring,
+        ...expectedData.demandFactoring,
+      });
+    },
+  );
 });
 
 describe('tickRecords', () => {
@@ -250,13 +294,13 @@ describe('tickGatewayRegistry', () => {
             observerWallet: 'existing-operator',
             start: 0,
             end: 5,
-            vaults: [
-              {
+            vaults: {
+              'existing-vault-id': {
                 balance: 100,
                 start: 0,
                 end: 10,
               },
-            ],
+            },
             status: 'leaving',
             settings: defaultGatewaySettings,
           },
@@ -281,13 +325,13 @@ describe('tickGatewayRegistry', () => {
             observerWallet: 'existing-operator',
             start: 0,
             end: 10,
-            vaults: [
-              {
+            vaults: {
+              'existing-vault-id': {
                 balance: 100,
                 start: 0,
                 end: 2,
               },
-            ],
+            },
             status: 'joined',
             settings: defaultGatewaySettings,
           },
@@ -303,7 +347,7 @@ describe('tickGatewayRegistry', () => {
             observerWallet: 'existing-operator',
             start: 0,
             end: 10,
-            vaults: [],
+            vaults: {},
             status: 'joined',
             settings: defaultGatewaySettings,
           },
@@ -322,13 +366,13 @@ describe('tickGatewayRegistry', () => {
             observerWallet: 'existing-operator',
             start: 0,
             end: 10,
-            vaults: [
-              {
+            vaults: {
+              'existing-vault-id': {
                 balance: 100,
                 start: 0,
                 end: 10,
               },
-            ],
+            },
             status: 'joined',
             settings: defaultGatewaySettings,
           },
@@ -344,13 +388,13 @@ describe('tickGatewayRegistry', () => {
             observerWallet: 'existing-operator',
             start: 0,
             end: 10,
-            vaults: [
-              {
+            vaults: {
+              'existing-vault-id': {
                 balance: 100,
                 start: 0,
                 end: 10,
               },
-            ],
+            },
             status: 'joined',
             settings: defaultGatewaySettings,
           },
@@ -457,5 +501,232 @@ describe('tickReservedNames', () => {
       reservedNames: inputData.reserved as DeepReadonly<ReservedNames>,
     });
     expect(reserved).toEqual(expectedData.reserved);
+  });
+});
+
+describe('tickVaults', () => {
+  it('should not make changes when vaults are not present', () => {
+    const currentBlockHeight = new BlockHeight(5);
+    const vaults: RegistryVaults = {};
+    const balances = { foo: 1, bar: 2 };
+    const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
+      currentBlockHeight,
+      balances,
+      vaults,
+    });
+    expect(updatedBalances).toEqual({ foo: 1, bar: 2 });
+    expect(updatedVaults).toEqual({});
+  });
+
+  it('should not unlock single vault if it has not ended', () => {
+    const currentBlockHeight = new BlockHeight(5);
+    const address = 'bar';
+    const vaults: RegistryVaults = {
+      [address]: {
+        'existing-vault-id': {
+          balance: 1,
+          end: 100,
+          start: 0,
+        },
+      },
+    };
+    const balances = { foo: 1, bar: 2 };
+    const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
+      currentBlockHeight,
+      balances,
+      vaults,
+    });
+    expect(updatedBalances).toEqual({ foo: 1, bar: 2 });
+    expect(updatedVaults[address]).toEqual(vaults[address]);
+  });
+
+  it('should not unlock multiple vaults if they have not ended', () => {
+    const currentBlockHeight = new BlockHeight(5);
+    const vaults: RegistryVaults = {
+      ['foo']: {
+        'existing-vault-id': {
+          balance: 1,
+          end: 100,
+          start: 0,
+        },
+      },
+      ['bar']: {
+        'other-existing-vault-id': {
+          balance: 1,
+          end: 100,
+          start: 0,
+        },
+        'another-existing-vault-id-2': {
+          balance: 2,
+          end: 100,
+          start: 0,
+        },
+      },
+      ['baz']: {
+        'existing-vault-id': {
+          balance: 1,
+          end: 100,
+          start: 0,
+        },
+        'other-existing-vault-id': {
+          balance: 2,
+          end: 100,
+          start: 0,
+        },
+        'another-existing-vault-id-2': {
+          balance: 3,
+          end: 100,
+          start: 0,
+        },
+      },
+    };
+    const balances = { foo: 1, bar: 2, baz: 3 };
+    const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
+      currentBlockHeight,
+      balances,
+      vaults,
+    });
+    expect(updatedBalances).toEqual({ foo: 1, bar: 2, baz: 3 });
+    expect(updatedVaults['foo']).toEqual(vaults['foo']);
+    expect(updatedVaults['bar']).toEqual(vaults['bar']);
+    expect(updatedVaults['baz']).toEqual(vaults['baz']);
+  });
+
+  it('should unlock single vault when it is ended', () => {
+    const currentBlockHeight = new BlockHeight(6);
+    const address = 'bar';
+    const vaults: RegistryVaults = {
+      [address]: {
+        'existing-vault-id': {
+          balance: 1,
+          end: 5,
+          start: 0,
+        },
+      },
+    };
+    const balances = { foo: 1, bar: 2 };
+    const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
+      currentBlockHeight,
+      balances,
+      vaults,
+    });
+    expect(updatedVaults[address]).toEqual(undefined);
+    expect(updatedBalances).toEqual({ foo: 1, bar: 3 });
+  });
+
+  it('should unlock multiple vaults if they have ended', () => {
+    const currentBlockHeight = new BlockHeight(0);
+    const vaults: RegistryVaults = {
+      ['foo']: {
+        'existing-vault-id': {
+          balance: 1,
+          end: 0,
+          start: 0,
+        },
+      },
+      ['bar']: {
+        'other-existing-vault-id': {
+          balance: 1,
+          end: 0,
+          start: 0,
+        },
+        'another-existing-vault-id-2': {
+          balance: 2,
+          end: 100,
+          start: 0,
+        },
+      },
+      ['baz']: {
+        'existing-vault-id': {
+          balance: 1,
+          end: 0,
+          start: 0,
+        },
+        'other-existing-vault-id': {
+          balance: 2,
+          end: 0,
+          start: 0,
+        },
+        'another-existing-vault-id-2': {
+          balance: 3,
+          end: 100,
+          start: 0,
+        },
+      },
+    };
+    const balances = { foo: 1, bar: 2, baz: 3 };
+    const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
+      currentBlockHeight,
+      balances,
+      vaults,
+    });
+    expect(updatedBalances).toEqual({ foo: 2, bar: 3, baz: 6 });
+    expect(updatedVaults['foo']).toEqual(undefined);
+    expect(updatedVaults['bar']).toEqual({
+      'another-existing-vault-id-2': {
+        balance: 2,
+        end: 100,
+        start: 0,
+      },
+    });
+    expect(updatedVaults['baz']).toEqual({
+      'another-existing-vault-id-2': {
+        balance: 3,
+        end: 100,
+        start: 0,
+      },
+    });
+  });
+
+  it('should unlock all vaults if they have ended', () => {
+    const currentBlockHeight = new BlockHeight(0);
+    const vaults: RegistryVaults = {
+      ['foo']: {
+        'existing-vault-id': {
+          balance: 1,
+          end: 0,
+          start: 0,
+        },
+      },
+      ['bar']: {
+        'other-existing-vault-id': {
+          balance: 1,
+          end: 0,
+          start: 0,
+        },
+        'another-existing-vault-id-2': {
+          balance: 2,
+          end: 0,
+          start: 0,
+        },
+      },
+      ['baz']: {
+        'existing-vault-id': {
+          balance: 1,
+          end: 0,
+          start: 0,
+        },
+        'other-existing-vault-id': {
+          balance: 2,
+          end: 0,
+          start: 0,
+        },
+        'another-existing-vault-id-2': {
+          balance: 3,
+          end: 0,
+          start: 0,
+        },
+      },
+    };
+    const balances = { foo: 1, bar: 2, baz: 3 };
+    const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
+      currentBlockHeight,
+      balances,
+      vaults,
+    });
+    expect(updatedBalances).toEqual({ foo: 2, bar: 5, baz: 9 });
+    expect(updatedVaults['foo']).toEqual(undefined);
+    expect(updatedVaults['bar']).toEqual(undefined);
+    expect(updatedVaults['baz']).toEqual(undefined);
   });
 });

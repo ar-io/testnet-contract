@@ -1,7 +1,8 @@
 import { SECONDS_IN_A_YEAR } from './constants';
 import { calculateRegistrationFee } from './pricing';
 import {
-  AuctionData,
+  ArNSAuctionData,
+  ArNSBaseAuctionData,
   AuctionSettings,
   BlockHeight,
   BlockTimestamp,
@@ -86,13 +87,13 @@ export function createAuctionObject({
   name: string;
   fees: Fees;
   auctionSettings: AuctionSettings;
-  contractTxId: string | undefined;
+  contractTxId: string;
   currentBlockHeight: BlockHeight;
   currentBlockTimestamp: BlockTimestamp;
   type: RegistrationType;
-  initiator: string | undefined;
+  initiator: string;
   demandFactoring: DeepReadonly<DemandFactoringData>;
-}): AuctionData {
+}): ArNSAuctionData {
   const initialRegistrationFee = calculateRegistrationFee({
     name,
     fees,
@@ -107,7 +108,8 @@ export function createAuctionObject({
     calculatedFloorPrice * auctionSettings.startPriceMultiplier;
   const endHeight =
     currentBlockHeight.valueOf() + auctionSettings.auctionDuration;
-  return {
+
+  const baseAuctionData: ArNSBaseAuctionData = {
     initiator, // the balance that the floor price is decremented from
     contractTxId,
     startPrice,
@@ -115,16 +117,30 @@ export function createAuctionObject({
     startHeight: currentBlockHeight.valueOf(), // auction starts right away
     endHeight, // auction ends after the set duration
     type,
-    ...(type === 'lease' ? { years: 1 } : {}),
     settings: auctionSettings,
   };
+  switch (type) {
+    case 'permabuy':
+      return {
+        ...baseAuctionData,
+        type: 'permabuy',
+      };
+    case 'lease':
+      return {
+        ...baseAuctionData,
+        years: 1,
+        type: 'lease',
+      };
+    default:
+      throw new ContractError('Invalid auction type');
+  }
 }
 
 export function getEndTimestampForAuction({
   auction,
   currentBlockTimestamp,
 }: {
-  auction: AuctionData;
+  auction: ArNSAuctionData;
   currentBlockTimestamp: BlockTimestamp;
 }): BlockTimestamp | undefined {
   switch (auction.type) {

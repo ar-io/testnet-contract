@@ -59,7 +59,7 @@ describe('Transfers', () => {
       const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
       const prevOwnerBalance = prevState.balances[ownerAddress];
-      const prevTargetBalance = prevState.balances[srcContractId] ?? 0;
+      const prevTargetBalance = prevState.balances[srcContractId] || 0;
       const writeInteraction = await contract.writeInteraction({
         function: 'transfer',
         target: srcContractId, // The smartweave contract id acts as the protocol balance

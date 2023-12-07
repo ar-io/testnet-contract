@@ -12,21 +12,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    environment: ${{ github.ref_name }}
-    strategy:
-      matrix:
-        step: ['format:check', 'lint:check', 'build', 'test']
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version-file: .nvmrc
-          cache: 'yarn'
-      - run: yarn install
-      - run: yarn ${{ matrix.step }}
-        env:
-          ARNS_CONTRACT_TX_ID: ${{ vars.ARNS_CONTRACT_TX_ID }}
+    uses: ./.github/workflows/build_and_test.yml
 
   evolve:
     runs-on: ubuntu-latest
@@ -34,6 +20,10 @@ jobs:
     environment: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+          cache: 'yarn'
       - run: yarn install
       - run: yarn build
       - id: evolve

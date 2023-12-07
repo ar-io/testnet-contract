@@ -3,7 +3,7 @@ import {
   INVALID_INPUT_MESSAGE,
   NETWORK_LEAVING_STATUS,
 } from '../../constants';
-import { getBaselineState } from '../../tests/stubs';
+import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
 import { Gateway, IOState, Observations, WeightedObserver } from '../../types';
 import { getPrescribedObservers } from '../../utilities';
 import { saveObservations } from './saveObservations';
@@ -13,10 +13,9 @@ jest.mock('../../utilities', () => ({
   getPrescribedObservers: jest.fn(),
 }));
 
-const validTxId = 'thevalidtransactionidthatis43characterslong';
 export const baselineGatewayData: Gateway = {
   operatorStake: 10_000,
-  vaults: [],
+  vaults: {},
   observerWallet: 'fake-observer-wallet',
   start: 0,
   status: 'joined',
@@ -116,13 +115,13 @@ describe('saveObservations', () => {
           {
             ...getBaselineState(),
             gateways: {
-              validTxId: baselineGatewayData,
+              stubbedArweaveTxId: baselineGatewayData,
             },
           },
           {
             caller: 'fake-caller',
             input: {
-              observerReportTxId: validTxId,
+              observerReportTxId: stubbedArweaveTxId,
               failedGateways: [],
             },
           },
@@ -133,7 +132,7 @@ describe('saveObservations', () => {
           {
             ...getBaselineState(),
             gateways: {
-              validTxId: {
+              stubbedArweaveTxId: {
                 ...baselineGatewayData,
                 start: 10,
               },
@@ -142,7 +141,7 @@ describe('saveObservations', () => {
           {
             caller: 'fake-observer-wallet',
             input: {
-              observerReportTxId: validTxId,
+              observerReportTxId: stubbedArweaveTxId,
               failedGateways: [],
             },
           },
@@ -162,7 +161,7 @@ describe('saveObservations', () => {
           {
             caller: 'fake-observer-wallet',
             input: {
-              observerReportTxId: validTxId,
+              observerReportTxId: stubbedArweaveTxId,
               failedGateways: [],
             },
           },
@@ -182,7 +181,7 @@ describe('saveObservations', () => {
         const existingObservations: Observations = {
           [0]: {
             failureSummaries: {
-              [validTxId]: ['observer-address'],
+              [stubbedArweaveTxId]: ['observer-address'],
             },
             reports: {},
           },
@@ -191,9 +190,9 @@ describe('saveObservations', () => {
           ...getBaselineState(),
           gateways: {
             'observer-address': baselineGatewayData,
-            [validTxId]: {
+            [stubbedArweaveTxId]: {
               ...baselineGatewayData,
-              observerAddress: validTxId,
+              observerAddress: stubbedArweaveTxId,
             },
           },
           observations: existingObservations,
@@ -201,8 +200,8 @@ describe('saveObservations', () => {
         const { state } = await saveObservations(initialState, {
           caller: 'observer-address',
           input: {
-            observerReportTxId: validTxId,
-            failedGateways: [validTxId],
+            observerReportTxId: stubbedArweaveTxId,
+            failedGateways: [stubbedArweaveTxId],
           },
         });
         const expectedState = {
@@ -210,10 +209,10 @@ describe('saveObservations', () => {
           observations: {
             [0]: {
               failureSummaries: {
-                [validTxId]: ['observer-address'],
+                [stubbedArweaveTxId]: ['observer-address'],
               },
               reports: {
-                'observer-address': validTxId,
+                'observer-address': stubbedArweaveTxId,
               },
             },
           },
@@ -232,8 +231,8 @@ describe('saveObservations', () => {
       const { state } = await saveObservations(initialState, {
         caller: 'observer-address',
         input: {
-          observerReportTxId: validTxId,
-          failedGateways: [validTxId],
+          observerReportTxId: stubbedArweaveTxId,
+          failedGateways: [stubbedArweaveTxId],
         },
       });
       const expectedState = {
@@ -242,7 +241,7 @@ describe('saveObservations', () => {
           [0]: {
             failureSummaries: {},
             reports: {
-              'observer-address': validTxId,
+              'observer-address': stubbedArweaveTxId,
             },
           },
         },
@@ -255,7 +254,7 @@ describe('saveObservations', () => {
         ...getBaselineState(),
         gateways: {
           'observer-address': baselineGatewayData,
-          [validTxId]: {
+          [stubbedArweaveTxId]: {
             ...baselineGatewayData,
             start: 10,
           },
@@ -264,8 +263,8 @@ describe('saveObservations', () => {
       const { state } = await saveObservations(initialState, {
         caller: 'observer-address',
         input: {
-          observerReportTxId: validTxId,
-          failedGateways: [validTxId],
+          observerReportTxId: stubbedArweaveTxId,
+          failedGateways: [stubbedArweaveTxId],
         },
       });
       const expectedState = {
@@ -274,7 +273,7 @@ describe('saveObservations', () => {
           [0]: {
             failureSummaries: {},
             reports: {
-              'observer-address': validTxId,
+              'observer-address': stubbedArweaveTxId,
             },
           },
         },
@@ -287,7 +286,7 @@ describe('saveObservations', () => {
         ...getBaselineState(),
         gateways: {
           'observer-address': baselineGatewayData,
-          [validTxId]: {
+          [stubbedArweaveTxId]: {
             ...baselineGatewayData,
             status: NETWORK_LEAVING_STATUS,
           },
@@ -296,8 +295,8 @@ describe('saveObservations', () => {
       const { state } = await saveObservations(initialState, {
         caller: 'observer-address',
         input: {
-          observerReportTxId: validTxId,
-          failedGateways: [validTxId],
+          observerReportTxId: stubbedArweaveTxId,
+          failedGateways: [stubbedArweaveTxId],
         },
       });
       const expectedState = {
@@ -306,7 +305,7 @@ describe('saveObservations', () => {
           [0]: {
             failureSummaries: {},
             reports: {
-              'observer-address': validTxId,
+              'observer-address': stubbedArweaveTxId,
             },
           },
         },
@@ -319,9 +318,9 @@ describe('saveObservations', () => {
         ...getBaselineState(),
         gateways: {
           'observer-address': baselineGatewayData,
-          [validTxId]: {
+          [stubbedArweaveTxId]: {
             ...baselineGatewayData,
-            observerAddress: validTxId,
+            observerAddress: stubbedArweaveTxId,
           },
         },
         observations: {},
@@ -329,17 +328,17 @@ describe('saveObservations', () => {
       const { state } = await saveObservations(initialState, {
         caller: 'observer-address',
         input: {
-          observerReportTxId: validTxId,
-          failedGateways: [validTxId],
+          observerReportTxId: stubbedArweaveTxId,
+          failedGateways: [stubbedArweaveTxId],
         },
       });
       const expectedObservationsForEpoch: Observations = {
         [0]: {
           failureSummaries: {
-            [validTxId]: ['observer-address'],
+            [stubbedArweaveTxId]: ['observer-address'],
           },
           reports: {
-            'observer-address': validTxId,
+            'observer-address': stubbedArweaveTxId,
           },
         },
       };
@@ -354,10 +353,10 @@ describe('saveObservations', () => {
       const initialObservationsForEpoch: Observations = {
         [0]: {
           failureSummaries: {
-            [validTxId]: ['observer-address'],
+            [stubbedArweaveTxId]: ['observer-address'],
           },
           reports: {
-            'observer-address': validTxId,
+            'observer-address': stubbedArweaveTxId,
           },
         },
       };
@@ -369,9 +368,9 @@ describe('saveObservations', () => {
             ...baselineGatewayData,
             observerAddress: 'a-second-observer-address',
           },
-          [validTxId]: {
+          [stubbedArweaveTxId]: {
             ...baselineGatewayData,
-            observerAddress: validTxId,
+            observerAddress: stubbedArweaveTxId,
           },
         },
         observations: initialObservationsForEpoch,
@@ -380,18 +379,21 @@ describe('saveObservations', () => {
       const { state } = await saveObservations(initialState, {
         caller: 'a-second-observer-address',
         input: {
-          observerReportTxId: validTxId,
-          failedGateways: [validTxId],
+          observerReportTxId: stubbedArweaveTxId,
+          failedGateways: [stubbedArweaveTxId],
         },
       });
       const expectedObservationsForEpoch: Observations = {
         [0]: {
           failureSummaries: {
-            [validTxId]: ['observer-address', 'a-second-observer-address'],
+            [stubbedArweaveTxId]: [
+              'observer-address',
+              'a-second-observer-address',
+            ],
           },
           reports: {
-            'observer-address': validTxId,
-            'a-second-observer-address': validTxId,
+            'observer-address': stubbedArweaveTxId,
+            'a-second-observer-address': stubbedArweaveTxId,
           },
         },
       };

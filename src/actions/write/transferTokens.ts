@@ -1,5 +1,6 @@
+import { safeTransfer } from '../../transfer';
 import { ContractWriteResult, IOState, PstAction } from '../../types';
-import { getInvalidAjvMessage, safeTransfer } from '../../utilities';
+import { getInvalidAjvMessage } from '../../utilities';
 import { validateTransferToken } from '../../validations';
 
 // TODO: use top level class
@@ -28,8 +29,8 @@ export const transferTokens = async (
 
   safeTransfer({
     balances,
-    fromAddr: caller,
-    toAddr: target,
+    fromAddress: caller,
+    toAddress: target,
     qty,
   });
 

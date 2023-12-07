@@ -19,6 +19,8 @@ export const NETWORK_HIDDEN_STATUS = 'hidden';
 export const SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP = 1725080400000; // August 31st, 2024
 export const BLOCKS_PER_DAY = 720;
 export const MAX_ALLOWED_EVOLUTION_DELAY = BLOCKS_PER_DAY * 30;
+export const MAX_TOKEN_LOCK_LENGTH = 12 * 365 * BLOCKS_PER_DAY; // The maximum amount of blocks tokens can be locked in a vault (12 years of blocks)
+export const MIN_TOKEN_LOCK_LENGTH = 14 * BLOCKS_PER_DAY; // The minimum amount of blocks tokens can be locked in a vault (14 days of blocks)
 export const MINIMUM_ALLOWED_EVOLUTION_DELAY = 3; // 3 blocks for testing purposes, but should be 720 * 7; // 720 blocks per day times 7 days
 export const MINIMUM_ALLOWED_NAME_LENGTH = 5; // names less than 5 characters are reserved for auction
 export const TENURE_WEIGHT_DAYS = 180; // the amount of days in a single tenure weight period used to calculate composite weights for observation
@@ -36,6 +38,7 @@ export const ARNS_NAME_RESERVED_MESSAGE = 'Name is reserved.';
 export const ARNS_NAME_IN_AUCTION_MESSAGE = 'Name is currently in auction.';
 export const ARNS_NAME_AUCTION_EXPIRED_MESSAGE = 'Auction has expired.';
 export const INVALID_INPUT_MESSAGE = 'Invalid input for interaction';
+export const INVALID_VAULT_LOCK_LENGTH_MESSAGE = `Invalid lock length. Must be between ${MIN_TOKEN_LOCK_LENGTH} - ${MAX_TOKEN_LOCK_LENGTH}.`;
 export const CALLER_NOT_VALID_OBSERVER_MESSAGE =
   'Cannot submit observation report because caller is not eligible to observe';
 export const TARGET_GATEWAY_NOT_REGISTERED =
