@@ -44,7 +44,7 @@ export const saveObservations = async (
   { caller, input }: PstAction,
 ): Promise<ContractWriteResult> => {
   // get all other relevant state data
-  const { observations, gateways, settings } = state;
+  const { observations, distributions, gateways, settings } = state;
   const { observerReportTxId, failedGateways } = new SaveObservations(input); // does validation on constructor
   const currentEpochStartHeight = getEpochStart({
     startHeight: new BlockHeight(DEFAULT_START_HEIGHT),
@@ -73,6 +73,7 @@ export const saveObservations = async (
 
   const prescribedObservers = await getPrescribedObservers(
     gateways,
+    distributions,
     settings.registry.minNetworkJoinStakeAmount,
     settings.registry.gatewayLeaveLength,
     currentEpochStartHeight,

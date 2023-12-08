@@ -14,7 +14,7 @@ export const prescribedObserver = async (
   state: IOState,
   { input: { target, height } }: PstAction,
 ): Promise<ContractReadResult> => {
-  const { settings, gateways } = state;
+  const { settings, gateways, distributions } = state;
   const currentEpochStartHeight = getEpochStart({
     startHeight: new BlockHeight(DEFAULT_START_HEIGHT),
     epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
@@ -23,6 +23,7 @@ export const prescribedObserver = async (
 
   const prescribedObservers = await getPrescribedObservers(
     gateways,
+    distributions,
     settings.registry.minNetworkJoinStakeAmount,
     settings.registry.gatewayLeaveLength,
     currentEpochStartHeight,
@@ -46,7 +47,7 @@ export const prescribedObservers = async (
   state: IOState,
   { input: { height } }: PstAction,
 ): Promise<ContractReadResult> => {
-  const { settings, gateways } = state;
+  const { settings, gateways, distributions } = state;
   const currentEpochStartHeight = getEpochStart({
     startHeight: new BlockHeight(DEFAULT_START_HEIGHT),
     epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
@@ -55,6 +56,7 @@ export const prescribedObservers = async (
 
   const prescribedObservers = await getPrescribedObservers(
     gateways,
+    distributions,
     settings.registry.minNetworkJoinStakeAmount,
     settings.registry.gatewayLeaveLength,
     currentEpochStartHeight,

@@ -1,12 +1,19 @@
 import {
   BLOCKS_PER_DAY,
+  DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_NUM_SAMPLED_BLOCKS,
   DEFAULT_SAMPLED_BLOCKS_OFFSET,
   MAX_TENURE_WEIGHT,
   NUM_OBSERVERS_PER_EPOCH,
   TENURE_WEIGHT_DAYS,
 } from './constants';
-import { BlockHeight, DeepReadonly, Gateways, WeightedObserver } from './types';
+import {
+  BlockHeight,
+  DeepReadonly,
+  Gateways,
+  RewardDistributions,
+  WeightedObserver,
+} from './types';
 
 export function getEpochStart({
   startHeight,
@@ -73,6 +80,7 @@ export async function getEntropy(height: BlockHeight): Promise<Buffer> {
 
 export async function getPrescribedObservers(
   gateways: DeepReadonly<Gateways>,
+  distributions: DeepReadonly<RewardDistributions>,
   minNetworkJoinStakeAmount: number,
   gatewayLeaveLength: number,
   height: BlockHeight,
@@ -102,10 +110,41 @@ export async function getPrescribedObservers(
         tenureWeight = MAX_TENURE_WEIGHT;
       }
 
-      // set reward ratio weights
-      // TO DO AFTER REWARDS ARE IN!
-      const gatewayRewardRatioWeight = 1;
-      const observerRewardRatioWeight = 1;
+      // Set reward ratio weights.
+      // The GRRW is a proxy for a gateway’s performance at resolving ArNS names.
+      // This weight represents the ratio of epochs in which a gateway received rewards for correctly resolving names relative to their total time on the network.
+      const epochsParticipatedIn = Math.floor(
+        (+SmartWeave.block.height - gateways[address].start) /
+          DEFAULT_EPOCH_BLOCK_LENGTH,
+      );
+      let gatewayRewardRatioWeight = 1;
+
+      if (
+        epochsParticipatedIn > 0 &&
+        address in distributions.passedGatewayEpochs
+      ) {
+        const successfulEpochs =
+          distributions.passedGatewayEpochs[address].length;
+        const ratio = successfulEpochs / epochsParticipatedIn;
+
+        // Add the ratio to the base weight and round down to two decimal places
+        gatewayRewardRatioWeight += Math.floor(ratio * 100) / 100;
+      }
+
+      // The ORRW is a proxy for a gateway’s performance at fulfilling observation duties
+      // This weight reflects the ratio of epochs in which a gateway, as an observer, successfully submitted observation reports relative to their total periods of service as an observer.
+      let observerRewardRatioWeight = 1;
+      if (
+        epochsParticipatedIn > 0 &&
+        address in distributions.passedObserverEpochs
+      ) {
+        const successfulEpochs =
+          distributions.passedObserverEpochs[address].length;
+        const ratio = successfulEpochs / epochsParticipatedIn;
+
+        // Add the ratio to the base weight and round down to two decimal places
+        observerRewardRatioWeight += Math.floor(ratio * 100) / 100;
+      }
 
       // calculate composite weight based on sub weights
       const compositeWeight =

@@ -465,6 +465,7 @@ export async function tickRewardDistribution({
 
   const prescribedObservers = await getPrescribedObservers(
     gateways,
+    distributions,
     settings.registry.minNetworkJoinStakeAmount,
     settings.registry.gatewayLeaveLength,
     lastEpochStartHeight, // ensure we get the prescribed observe
