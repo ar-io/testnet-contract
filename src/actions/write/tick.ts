@@ -1,16 +1,17 @@
 import {
   BAD_OBSERVER_GATEWAY_PENALTY,
   DEFAULT_EPOCH_BLOCK_LENGTH,
-  DEFAULT_START_HEIGHT,
   DEFAULT_UNDERNAME_COUNT,
   EPOCH_REWARD_PERCENTAGE,
   GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
-  NUM_OBSERVERS_PER_EPOCH,
   OBSERVATION_FAILURE_THRESHOLD,
   SECONDS_IN_A_YEAR,
   TALLY_PERIOD_BLOCKS,
 } from '../../constants';
-import { getEpochStart, getPrescribedObservers } from '../../observers';
+import {
+  getEligibleGatewaysForEpoch,
+  getPrescribedObserversForEpoch,
+} from '../../observers';
 import {
   cloneDemandFactoringData,
   tallyNamePurchase,
@@ -26,10 +27,12 @@ import {
   ContractWriteResult,
   DeepReadonly,
   DemandFactoringData,
+  GatewayDistributions,
   Gateways,
   IOState,
   Observations,
-  PassedEpochs,
+  ObserverAddress,
+  ObserverDistributions,
   Records,
   RegistryVaults,
   ReservedNames,
@@ -37,6 +40,7 @@ import {
   VaultData,
   Vaults,
   WalletAddress,
+  WeightedObserver,
 } from '../../types';
 import {
   incrementBalance,
@@ -421,32 +425,32 @@ export async function tickRewardDistribution({
   balances: DeepReadonly<Balances>;
   settings: DeepReadonly<ContractSettings>;
 }): Promise<Pick<IOState, 'distributions' | 'balances'>> {
-  const updatedPassedGatewayEpochs: PassedEpochs = {};
-  const updatedPassedObserverEpochs: PassedEpochs = {};
   const updatedBalances: Balances = {};
-  const currentEpochStartHeight = getEpochStart({
-    startHeight: new BlockHeight(DEFAULT_START_HEIGHT),
-    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
-    height: currentBlockHeight,
-  });
-  const lastEpochStartHeight = new BlockHeight(
-    currentEpochStartHeight.valueOf() - DEFAULT_EPOCH_BLOCK_LENGTH,
+  const currentProtocolBalance = balances[SmartWeave.contract.id] || 0;
+  const lastCompletedEpochEndHeight = new BlockHeight(
+    distributions.lastCompletedEpochEndHeight,
   );
-  const lastEpochEndHeight = new BlockHeight(
-    lastEpochStartHeight.valueOf() + DEFAULT_EPOCH_BLOCK_LENGTH,
+  const currentEpochStartHeight = new BlockHeight(
+    lastCompletedEpochEndHeight.valueOf() + 1,
   );
-  const newDistributions: RewardDistributions = {
-    lastCompletedEpoch: distributions.lastCompletedEpoch,
-    passedGatewayEpochs: {},
-    passedObserverEpochs: {},
-  };
+  const currentEpochEndHeight = new BlockHeight(
+    currentEpochStartHeight.valueOf() + DEFAULT_EPOCH_BLOCK_LENGTH,
+  );
+  const updatedGatewayDistributions: GatewayDistributions = {};
+  const updatedObserverDistributions: ObserverDistributions = {};
+
+  // do nothing if there are no protocol balance
+  if (currentProtocolBalance === 0) {
+    return {
+      distributions: distributions as RewardDistributions,
+      balances,
+    };
+  }
 
   // no distribution should happen if the current block height is not greater than the last completed epoch + the required blocks to have passed for a new distribution
   if (
-    currentBlockHeight.valueOf() < distributions.lastCompletedEpoch ||
     currentBlockHeight.valueOf() <
-      lastEpochStartHeight.valueOf() + TALLY_PERIOD_BLOCKS ||
-    !(lastEpochEndHeight.valueOf() in observations)
+    lastCompletedEpochEndHeight.valueOf() + TALLY_PERIOD_BLOCKS
   ) {
     return {
       // remove the readonly and avoid slicing/copying arrays if not necessary
@@ -455,97 +459,131 @@ export async function tickRewardDistribution({
     };
   }
 
+  // get all the reports submitted for the epoch based on its start height
   const totalReportsSubmitted = Object.keys(
-    observations[lastEpochStartHeight.valueOf()].reports,
+    observations[currentEpochEndHeight.valueOf()].reports,
   ).length;
 
-  const failureThreshold = Math.floor(
+  // this should be consistently 50 observers * 51% - if you have more than 26 failed reports - you are not eligible for a reward
+  const failureReportCountThreshold = Math.floor(
     totalReportsSubmitted * OBSERVATION_FAILURE_THRESHOLD,
   );
 
-  const prescribedObservers = await getPrescribedObservers(
+  const prescribedObservers = await getPrescribedObserversForEpoch({
     gateways,
-    settings.registry.minNetworkJoinStakeAmount,
-    settings.registry.gatewayLeaveLength,
-    lastEpochStartHeight, // ensure we get the prescribed observe
-  );
+    epochStartHeight: currentEpochStartHeight,
+    epochEndHeight: currentEpochEndHeight,
+    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
+  });
 
-  const eligibleGatewayAddresses: WalletAddress[] = Object.keys(
+  // filter out gateways eligible for epoch distribution
+  const eligibleGateways = getEligibleGatewaysForEpoch({
+    epochStartHeight: currentEpochStartHeight,
+    epochEndHeight: currentEpochEndHeight,
     gateways,
-  ).filter(
-    (address: WalletAddress) =>
-      gateways[address].start > lastEpochStartHeight.valueOf(),
-  );
+  });
 
-  for (const gatewayAddress of eligibleGatewayAddresses) {
-    // check if each eligible gateway is under the failure threshold for their tallied report
-    if (
-      observations[lastEpochStartHeight.valueOf()].failureSummaries[
-        gatewayAddress
-      ]
-    ) {
-      if (
-        observations[lastEpochStartHeight.valueOf()].failureSummaries[
-          gatewayAddress
-        ].length <= failureThreshold
-      ) {
-        // gateway gets a reward
-        // check if it has ever been rewarded as a gateway before
-        if (gatewayAddress in newDistributions.passedGatewayEpochs) {
-          newDistributions.passedGatewayEpochs[gatewayAddress].push(
-            lastEpochStartHeight.valueOf(),
-          );
-        } else {
-          newDistributions.passedGatewayEpochs[gatewayAddress] = [
-            lastEpochStartHeight.valueOf(),
-          ];
+  const gatewaysToReward: WalletAddress[] = [];
+
+  // identify observers who reported the above gateways as eligible for rewards
+  for (const gatewayAddress in eligibleGateways) {
+    // increment the total number of epochs this gateway this participated in
+    updatedGatewayDistributions[gatewayAddress].totalEpochParticipationCount =
+      distributions.gateways[gatewayAddress].totalEpochParticipationCount ||
+      0 + 1;
+
+    // iterate through all the failure summaries for the gateway
+    const totalNumberOfFailuresReported = prescribedObservers.reduce(
+      (totalFailedNumber: number, observer: WeightedObserver) => {
+        const didFailObserverObservation =
+          observations[currentEpochEndHeight.valueOf()].failureSummaries[
+            observer.observerAddress
+          ].includes(gatewayAddress);
+        if (didFailObserverObservation) {
+          totalFailedNumber++;
         }
-      } else {
-        // do nothing as it is ineligible for rewards since it was above failure threshold
-      }
+        return totalFailedNumber;
+      },
+      0,
+    );
+
+    // no reward given, go to the next eligible gateway
+    if (totalNumberOfFailuresReported > failureReportCountThreshold) {
+      // increment the failed epoch count of the gateway - if three we will kick out the gateway
+      updatedGatewayDistributions[gatewayAddress].failedConsecutiveEpochs =
+        distributions.gateways[gatewayAddress].failedConsecutiveEpochs || 0 + 1;
+
+      // TODO: check if over count and remove from GAR!
+      continue;
     }
 
-    // check if this gateway was prescribed observer to submit a report during this epoch
-    if (
-      gatewayAddress in observations[lastEpochStartHeight.valueOf()].reports
-    ) {
-      // observer gets a reward
-      // check if it has ever been rewarded as an observer before
-      if (gatewayAddress in newDistributions.passedObserverEpochs) {
-        newDistributions.passedObserverEpochs[gatewayAddress].push(
-          lastEpochStartHeight.valueOf(),
-        );
-      } else {
-        newDistributions.passedObserverEpochs[gatewayAddress] = [
-          lastEpochStartHeight.valueOf(),
-        ];
-      }
+    // update the passed epoch count
+    updatedGatewayDistributions[gatewayAddress].passedEpochCount =
+      distributions.gateways[gatewayAddress].passedEpochCount || 0 + 1;
+    // reset its failed epoch count
+    updatedGatewayDistributions[gatewayAddress].failedConsecutiveEpochs = 0;
+
+    // assign it for a reward
+    gatewaysToReward.push(gatewayAddress);
+  }
+
+  const observersToReward: ObserverAddress[] = [];
+
+  // identify observers who reported the above gateways as eligible for rewards
+  for (const observer of prescribedObservers) {
+    const existingObserverSummary =
+      distributions.observers[observer.observerAddress];
+    // increment the total number of epochs this observer this was prescribed
+    updatedObserverDistributions[
+      observer.observerAddress
+    ].totalEpochsPrescribedCount =
+      (existingObserverSummary?.totalEpochsPrescribedCount || 0) + 1;
+
+    const observerSubmittedReportForEpoch =
+      observations[currentEpochEndHeight.valueOf()].reports[
+        observer.observerAddress
+      ];
+    if (!observerSubmittedReportForEpoch) {
+      continue;
     }
+
+    // update the number of epochs this observer has passed
+    updatedObserverDistributions[observer.observerAddress].submittedEpochCount =
+      (existingObserverSummary?.submittedEpochCount || 0) + 1;
+
+    // make it eligible for observer rewards
+    observersToReward.push(observer.observerAddress);
   }
 
   // prepare for distributions
   // calculate epoch rewards X% of current protocol balance split amongst gateways and observers
   const totalPotentialReward = Math.floor(
-    balances[SmartWeave.contract.id] * EPOCH_REWARD_PERCENTAGE,
+    currentProtocolBalance * EPOCH_REWARD_PERCENTAGE,
   );
 
   const totalPotentialGatewayReward = Math.floor(
     totalPotentialReward * GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
   );
 
-  const gatewayReward = Math.floor(
-    totalPotentialGatewayReward / eligibleGatewayAddresses.length,
-  );
+  // there may be a delta depending on the number of failures - it calculates this reward based on the number of distributions that should have passed
+  const perGatewayReward = Object.keys(eligibleGateways).length
+    ? Math.floor(
+        totalPotentialGatewayReward / Object.keys(eligibleGateways).length,
+      )
+    : 0;
 
+  // the remaining (i.e. 5%)
   const totalPotentialObserverReward =
     totalPotentialReward - totalPotentialGatewayReward;
 
-  const observerReward = Math.floor(
-    totalPotentialObserverReward / NUM_OBSERVERS_PER_EPOCH,
-  );
+  const perObserverReward = Object.keys(prescribedObservers).length
+    ? Math.floor(
+        totalPotentialObserverReward / Object.keys(prescribedObservers).length,
+      )
+    : 0;
 
-  // distribute observer tokens
-  for (const passedObserverAddress in newDistributions.passedObserverEpochs) {
+  // // distribute observer tokens
+  for (const gateway in gatewaysToReward) {
     // add protocol balance if we do not have it
     if (!updatedBalances[SmartWeave.contract.id]) {
       updatedBalances[SmartWeave.contract.id] =
@@ -553,41 +591,32 @@ export async function tickRewardDistribution({
     }
 
     // add the address if we do not have it
-    if (!updatedBalances[passedObserverAddress]) {
-      updatedBalances[passedObserverAddress] =
-        balances[passedObserverAddress] || 0;
+    if (!updatedBalances[gateway]) {
+      updatedBalances[gateway] = balances[gateway] || 0;
     }
 
-    safeTransfer({
-      balances: updatedBalances,
-      fromAddress: SmartWeave.contract.id,
-      toAddress: passedObserverAddress,
-      qty: observerReward,
-    });
-  }
-
-  // distribute gateway tokens
-  for (const passedGatewayAddress in newDistributions.passedGatewayEpochs) {
-    let updatedGatewayReward = gatewayReward;
-    // Check if this gateway failed its observation duty
+    let gatewayReward = perGatewayReward;
+    // if you were prescribed observer but didn't submit a report, you get gateway reward penalized
     if (
-      prescribedObservers.some(
-        (observer) =>
-          observer.gatewayAddress === passedGatewayAddress ||
-          observer.observerAddress ===
-            gateways[passedGatewayAddress].observerWallet,
-      ) &&
-      !(
-        passedGatewayAddress in
-        observations[lastEpochStartHeight.valueOf()].reports
-      )
+      Object.keys(prescribedObservers).includes(gateway) &&
+      !Object.keys(observersToReward).includes(gateway)
     ) {
-      // The gateway was prescribed but did not
-      updatedGatewayReward = Math.floor(
-        updatedGatewayReward * BAD_OBSERVER_GATEWAY_PENALTY,
+      // you don't get the full gateway reward if you didn't submit a report
+      gatewayReward = Math.floor(
+        perGatewayReward * BAD_OBSERVER_GATEWAY_PENALTY,
       );
     }
 
+    safeTransfer({
+      balances: updatedBalances,
+      fromAddress: SmartWeave.contract.id,
+      toAddress: gateway,
+      qty: gatewayReward,
+    });
+  }
+
+  // distribute observer tokens
+  for (const gatewayObservedAndPassed in observersToReward) {
     // add protocol balance if we do not have it
     if (!updatedBalances[SmartWeave.contract.id]) {
       updatedBalances[SmartWeave.contract.id] =
@@ -595,48 +624,35 @@ export async function tickRewardDistribution({
     }
 
     // add the address if we do not have it
-    if (!updatedBalances[passedGatewayAddress]) {
-      updatedBalances[passedGatewayAddress] =
-        balances[passedGatewayAddress] || 0;
+    if (!updatedBalances[gatewayObservedAndPassed]) {
+      updatedBalances[gatewayObservedAndPassed] =
+        balances[gatewayObservedAndPassed] || 0;
     }
 
     safeTransfer({
       balances: updatedBalances,
       fromAddress: SmartWeave.contract.id,
-      toAddress: passedGatewayAddress,
-      qty: updatedGatewayReward,
+      toAddress: gatewayObservedAndPassed,
+      qty: perObserverReward,
     });
   }
-
-  // Mark this as the last completed epoch
-  newDistributions.lastCompletedEpoch = lastEpochStartHeight.valueOf();
-
-  // MAKE THIS A FUNCTION - can these be moved into the for loop above
-  for (const [passedGatewayAddress, epochs] of Object.entries(
-    distributions.passedGatewayEpochs,
-  )) {
-    updatedPassedGatewayEpochs[passedGatewayAddress] = newDistributions
-      .passedGatewayEpochs[passedGatewayAddress] || [...epochs];
-  }
-
-  // can these be moved into the for loop above
-  for (const [address, epochs] of Object.entries(
-    distributions.passedObserverEpochs,
-  )) {
-    updatedPassedObserverEpochs[address] = newDistributions
-      .passedObserverEpochs[address] || [...epochs];
-  }
-
-  const updatedDistributions: RewardDistributions = {
-    lastCompletedEpoch: newDistributions.lastCompletedEpoch,
-    passedGatewayEpochs: updatedPassedGatewayEpochs,
-    passedObserverEpochs: updatedPassedObserverEpochs,
-  };
 
   // avoids copying balances if not necessary
   const newBalances: Balances = Object.keys(updatedBalances).length
     ? { ...balances, ...updatedBalances }
     : balances;
+
+  const updatedDistributions = {
+    gateways: {
+      ...distributions.gateways,
+      ...updatedGatewayDistributions,
+    },
+    observers: {
+      ...distributions.observers,
+      ...updatedObserverDistributions,
+    },
+    lastCompletedEpochEndHeight: currentEpochEndHeight.valueOf(),
+  };
 
   return {
     distributions: updatedDistributions,

@@ -3,9 +3,15 @@ import {
   tickGatewayRegistry,
   tickRecords,
   tickReservedNames,
+  tickRewardDistribution,
   tickVaults,
 } from '../../actions/write/tick';
 import { SECONDS_IN_A_YEAR, SECONDS_IN_GRACE_PERIOD } from '../../constants';
+import {
+  baselineGatewayData,
+  getBaselineState,
+  stubbedArweaveTxId,
+} from '../../tests/stubs';
 import {
   ArNSPermabuyAuctionData,
   Auctions,
@@ -728,5 +734,37 @@ describe('tickVaults', () => {
     expect(updatedVaults['foo']).toEqual(undefined);
     expect(updatedVaults['bar']).toEqual(undefined);
     expect(updatedVaults['baz']).toEqual(undefined);
+  });
+});
+
+describe('tickRewardDistribution', () => {
+  const currentBlockHeight = new BlockHeight(0);
+
+  it('should properly distribute rewards to gateway observers and operators', async () => {
+    const initialState: IOState = {
+      ...getBaselineState(),
+      gateways: {
+        [stubbedArweaveTxId]: {
+          ...baselineGatewayData,
+          observerWallet: 'test-observer-wallet',
+        },
+      },
+      observations: {
+        [currentBlockHeight.valueOf()]: {
+          failureSummaries: {},
+          reports: {},
+        },
+      },
+    };
+    const { balances, distributions } = await tickRewardDistribution({
+      currentBlockHeight,
+      gateways: initialState.gateways,
+      balances: initialState.balances,
+      distributions: initialState.distributions,
+      observations: initialState.observations,
+      settings: initialState.settings,
+    });
+    expect(balances).toEqual(initialState.balances);
+    expect(distributions).toEqual(initialState.distributions);
   });
 });

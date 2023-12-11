@@ -1,6 +1,5 @@
 import {
   MAX_ALLOWED_DECIMALS,
-  NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
 } from './constants';
@@ -28,7 +27,6 @@ export type Auctions = Record<ArNSName, ArNSAuctionData>;
 export type Fees = Record<string, number>;
 export type Vaults = Record<TransactionId, VaultData>;
 export type RegistryVaults = Record<WalletAddress, Vaults>;
-export type PassedEpochs = Record<WalletAddress, number[]>; // the list of epochs that have passed for a given gateway or observer
 export type IOState = {
   ticker: string;
   balances: Balances;
@@ -49,20 +47,46 @@ export type IOState = {
   vaults: RegistryVaults;
 };
 
-// The distributions made at the end of each epoch
-export type RewardDistributions = {
-  lastCompletedEpoch: number; // the last epoch that had its rewards distributed
-  passedGatewayEpochs: PassedEpochs;
-  passedObserverEpochs: PassedEpochs;
+export type BaseEpochDistribution = {
+  totalEpochParticipationCount: number; // the total number of epochs this gateway has participated in
 };
 
+export type GatewayDistributionSummary = BaseEpochDistribution & {
+  passedEpochCount: number; // the number of epochs this gateway has passed
+  failedConsecutiveEpochs: number; // the number of consecutive epochs this gateway has failed
+};
+
+export type ObserverDistributionSummary = BaseEpochDistribution & {
+  submittedEpochCount: number; // the number of epochs this observer has submitted reports for
+  totalEpochsPrescribedCount: number; // the total number of epochs this observer was prescribed to submit reports for
+};
+
+export type GatewayDistributions = Record<
+  WalletAddress,
+  GatewayDistributionSummary
+>;
+export type ObserverDistributions = Record<
+  ObserverAddress,
+  ObserverDistributionSummary
+>;
+// The distributions made at the end of each epoch
+export type RewardDistributions = {
+  // epochZeroBlockHeight: number; TODO: add this
+  lastCompletedEpochEndHeight: number; // the height of the last epoch of which rewards were distributed
+  gateways: GatewayDistributions;
+  observers: ObserverDistributions;
+};
+
+export type ObserverAddress = WalletAddress;
+export type FailedGatewayAddress = WalletAddress;
 export type EpochObservations = {
-  failureSummaries: Record<WalletAddress, WalletAddress[]>; // the gateway that has been marked as down and the gateways that marked it down
-  reports: Record<WalletAddress, TransactionId>;
+  failureSummaries: Record<ObserverAddress, FailedGatewayAddress[]>; // an observers summary of all failed gateways in the epoch
+  reports: Record<ObserverAddress, TransactionId>; // a reference point for the report submitted by this observer
 };
 
 // The health reports and failure failureSummaries submitted by observers for an epoch
-export type Observations = Record<number, EpochObservations>;
+export type Epoch = number;
+export type Observations = Record<Epoch, EpochObservations>;
 
 export type WeightedObserver = {
   gatewayAddress: string;
@@ -123,11 +147,7 @@ export type ContractSettings = {
   auctions: AuctionSettings;
 };
 
-const gatewayStatus = [
-  NETWORK_JOIN_STATUS,
-  NETWORK_HIDDEN_STATUS,
-  NETWORK_LEAVING_STATUS,
-] as const;
+const gatewayStatus = [NETWORK_JOIN_STATUS, NETWORK_LEAVING_STATUS] as const;
 export type GatewayStatus = (typeof gatewayStatus)[number];
 
 export type Gateway = {
