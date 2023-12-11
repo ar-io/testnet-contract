@@ -1,8 +1,8 @@
+import { DEFAULT_EPOCH_BLOCK_LENGTH } from '../../constants';
 import {
-  DEFAULT_EPOCH_BLOCK_LENGTH,
-  DEFAULT_START_HEIGHT,
-} from '../../constants';
-import { getEpochStart, getPrescribedObservers } from '../../observers';
+  getEpochBoundaries,
+  getPrescribedObserversForEpoch,
+} from '../../observers';
 import {
   BlockHeight,
   ContractReadResult,
@@ -12,21 +12,25 @@ import {
 
 export const prescribedObserver = async (
   state: IOState,
-  { input: { target, height } }: PstAction,
+  { input: { target } }: PstAction,
 ): Promise<ContractReadResult> => {
-  const { settings, gateways } = state;
-  const currentEpochStartHeight = getEpochStart({
-    startHeight: new BlockHeight(DEFAULT_START_HEIGHT),
+  const { settings, gateways, distributions } = state;
+  const {
+    startHeight: currentEpochStartHeight,
+    endHeight: currentEpochEndHeight,
+  } = getEpochBoundaries({
+    lastCompletedEpoch: new BlockHeight(
+      distributions.lastCompletedEpochEndHeight || 0,
+    ),
     epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
-    height: new BlockHeight(height || +SmartWeave.block.height),
   });
 
-  const prescribedObservers = await getPrescribedObservers(
+  const prescribedObservers = await getPrescribedObserversForEpoch({
     gateways,
-    settings.registry.minNetworkJoinStakeAmount,
-    settings.registry.gatewayLeaveLength,
-    currentEpochStartHeight,
-  );
+    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
+    epochEndHeight: currentEpochEndHeight,
+    epochStartHeight: currentEpochStartHeight,
+  });
 
   if (
     prescribedObservers.some(
@@ -44,21 +48,24 @@ export const prescribedObserver = async (
 
 export const prescribedObservers = async (
   state: IOState,
-  { input: { height } }: PstAction,
 ): Promise<ContractReadResult> => {
-  const { settings, gateways } = state;
-  const currentEpochStartHeight = getEpochStart({
-    startHeight: new BlockHeight(DEFAULT_START_HEIGHT),
+  const { settings, gateways, distributions } = state;
+  const {
+    startHeight: currentEpochStartHeight,
+    endHeight: currentEpochEndHeight,
+  } = getEpochBoundaries({
+    lastCompletedEpoch: new BlockHeight(
+      distributions.lastCompletedEpochEndHeight || 0,
+    ),
     epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
-    height: new BlockHeight(height || +SmartWeave.block.height),
   });
 
-  const prescribedObservers = await getPrescribedObservers(
+  const prescribedObservers = await getPrescribedObserversForEpoch({
     gateways,
-    settings.registry.minNetworkJoinStakeAmount,
-    settings.registry.gatewayLeaveLength,
-    currentEpochStartHeight,
-  );
+    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
+    epochEndHeight: currentEpochEndHeight,
+    epochStartHeight: currentEpochStartHeight,
+  });
 
   return { result: prescribedObservers };
 };

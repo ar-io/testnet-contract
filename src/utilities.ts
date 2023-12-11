@@ -379,14 +379,6 @@ export function isGatewayJoined({
   );
 }
 
-export function isGatewayHidden({
-  gateway,
-}: {
-  gateway: DeepReadonly<Gateway> | undefined;
-}): boolean {
-  return gateway?.status === 'hidden';
-}
-
 export function isGatewayEligibleToBeRemoved({
   gateway,
   currentBlockHeight,
@@ -413,9 +405,7 @@ export function isGatewayEligibleToLeave({
   const joinedForMinimum =
     currentBlockHeight.valueOf() >=
     gateway.start + registrySettings.minGatewayJoinLength;
-  const isActiveOrHidden =
-    isGatewayJoined({ gateway, currentBlockHeight }) ||
-    isGatewayHidden({ gateway });
+  const isActiveOrHidden = isGatewayJoined({ gateway, currentBlockHeight });
   return joinedForMinimum && isActiveOrHidden;
 }
 

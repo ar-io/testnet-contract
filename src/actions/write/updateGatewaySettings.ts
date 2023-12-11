@@ -2,7 +2,6 @@ import {
   MAX_GATEWAY_LABEL_LENGTH,
   MAX_NOTE_LENGTH,
   MAX_PORT_NUMBER,
-  NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import { ContractWriteResult, IOState, PstAction } from '../../types';
@@ -92,14 +91,12 @@ export const updateGatewaySettings = async (
     }
   }
 
-  if (status) {
-    if (!(status === NETWORK_HIDDEN_STATUS || status === NETWORK_JOIN_STATUS)) {
-      throw new ContractError(
-        `Invalid gateway status, must be set to ${NETWORK_HIDDEN_STATUS} or ${NETWORK_JOIN_STATUS}`,
-      );
-    } else {
-      gateways[caller].status = status;
-    }
+  if (status && status !== NETWORK_JOIN_STATUS) {
+    throw new ContractError(
+      `Invalid gateway status, must ${NETWORK_JOIN_STATUS}`,
+    );
+  } else {
+    gateways[caller].status = status;
   }
 
   if (observerWallet) {

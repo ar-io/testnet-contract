@@ -16,7 +16,6 @@ import {
   incrementBalance,
   isGatewayEligibleToBeRemoved,
   isGatewayEligibleToLeave,
-  isGatewayHidden,
   isGatewayJoined,
   isLeaseRecord,
   resetProtocolBalance,
@@ -100,42 +99,6 @@ describe('isGatewayJoined function', () => {
   );
 });
 
-describe('isGatewayHidden function', () => {
-  it('should return false if gateway is undefined', () => {
-    expect(
-      isGatewayHidden({
-        gateway: undefined,
-      }),
-    ).toEqual(false);
-  });
-
-  it.each([
-    ['joined', false],
-    ['hidden', true],
-    ['leaving', false],
-  ])('should return %s if gateway status is %s', (status, expectedValue) => {
-    expect(
-      isGatewayHidden({
-        gateway: {
-          start: Number.NEGATIVE_INFINITY,
-          end: Number.MAX_SAFE_INTEGER,
-          status: status as GatewayStatus,
-          vaults: {},
-          operatorStake: Number.NEGATIVE_INFINITY,
-          observerWallet: '',
-          settings: {
-            // None of these values should be relevant to this test
-            label: '',
-            fqdn: '',
-            port: Number.NEGATIVE_INFINITY,
-            protocol: 'https',
-          },
-        },
-      }),
-    ).toEqual(expectedValue);
-  });
-});
-
 describe('isGatewayEligibleToBeRemoved function', () => {
   it('should return false if gateway is undefined', () => {
     expect(
@@ -204,19 +167,14 @@ describe('isGatewayEligibleToLeave function', () => {
 
   it.each([
     [0, 0, Number.MAX_SAFE_INTEGER, 'joined', false],
-    [0, 0, Number.MAX_SAFE_INTEGER, 'hidden', false],
     [0, 0, Number.MAX_SAFE_INTEGER, 'leaving', false],
     [1, 0, Number.MAX_SAFE_INTEGER, 'joined', false],
-    [1, 0, Number.MAX_SAFE_INTEGER, 'hidden', false],
     [1, 0, Number.MAX_SAFE_INTEGER, 'leaving', false],
     [2, 0, Number.MAX_SAFE_INTEGER, 'joined', true],
-    [2, 0, Number.MAX_SAFE_INTEGER, 'hidden', true], // TODO: SURPRISING?
     [2, 0, Number.MAX_SAFE_INTEGER, 'leaving', false],
     [2, 0, 2, 'joined', false],
-    [2, 0, 2, 'hidden', true], // TODO: SURPRISING?
     [2, 0, 2, 'leaving', false],
     [2, 0, 3, 'joined', true],
-    [2, 0, 3, 'hidden', true],
     [2, 0, 3, 'leaving', false],
   ])(
     `should, given current block height %d, gateway start/end blocks (%d, %d) and status %s, return %s`,

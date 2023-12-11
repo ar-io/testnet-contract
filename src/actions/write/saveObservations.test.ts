@@ -3,14 +3,14 @@ import {
   INVALID_OBSERVATION_CALLER_MESSAGE,
   NETWORK_LEAVING_STATUS,
 } from '../../constants';
-import { getPrescribedObservers } from '../../observers';
+import { getPrescribedObserversForEpoch } from '../../observers';
 import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
 import { Gateway, IOState, Observations, WeightedObserver } from '../../types';
 import { saveObservations } from './saveObservations';
 
 jest.mock('../../observers', () => ({
   ...jest.requireActual('../../observers'),
-  getPrescribedObservers: jest.fn(),
+  getPrescribedObserversForEpoch: jest.fn(),
 }));
 
 export const baselineGatewayData: Gateway = {
@@ -98,7 +98,7 @@ describe('saveObservations', () => {
   describe('valid input', () => {
     beforeAll(() => {
       // adds two prescribed observers to the mock
-      (getPrescribedObservers as jest.Mock).mockResolvedValue([
+      (getPrescribedObserversForEpoch as jest.Mock).mockResolvedValue([
         stubbedWeightedObservers,
         {
           ...stubbedWeightedObservers,
@@ -179,7 +179,7 @@ describe('saveObservations', () => {
     describe('valid caller', () => {
       it('should not save a gateway to the observations list for the epoch if it is already there', async () => {
         const existingObservations: Observations = {
-          [0]: {
+          [1]: {
             failureSummaries: {
               [stubbedArweaveTxId]: ['observer-address'],
             },
@@ -207,7 +207,7 @@ describe('saveObservations', () => {
         const expectedState = {
           ...initialState,
           observations: {
-            [0]: {
+            [1]: {
               failureSummaries: {
                 [stubbedArweaveTxId]: ['observer-address'],
               },
@@ -238,7 +238,7 @@ describe('saveObservations', () => {
       const expectedState = {
         ...initialState,
         observations: {
-          [0]: {
+          [1]: {
             failureSummaries: {},
             reports: {
               'observer-address': stubbedArweaveTxId,
@@ -270,7 +270,7 @@ describe('saveObservations', () => {
       const expectedState = {
         ...initialState,
         observations: {
-          [0]: {
+          [1]: {
             failureSummaries: {},
             reports: {
               'observer-address': stubbedArweaveTxId,
@@ -302,7 +302,7 @@ describe('saveObservations', () => {
       const expectedState = {
         ...initialState,
         observations: {
-          [0]: {
+          [1]: {
             failureSummaries: {},
             reports: {
               'observer-address': stubbedArweaveTxId,
@@ -333,7 +333,7 @@ describe('saveObservations', () => {
         },
       });
       const expectedObservationsForEpoch: Observations = {
-        [0]: {
+        [1]: {
           failureSummaries: {
             [stubbedArweaveTxId]: ['observer-address'],
           },
@@ -351,7 +351,7 @@ describe('saveObservations', () => {
 
     it('should append to the list of failure summaries for a gateway if one already exists and a new report is submitted', async () => {
       const initialObservationsForEpoch: Observations = {
-        [0]: {
+        [1]: {
           failureSummaries: {
             [stubbedArweaveTxId]: ['observer-address'],
           },
@@ -384,7 +384,7 @@ describe('saveObservations', () => {
         },
       });
       const expectedObservationsForEpoch: Observations = {
-        [0]: {
+        [1]: {
           failureSummaries: {
             [stubbedArweaveTxId]: [
               'observer-address',

@@ -1,10 +1,12 @@
 import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
-  DEFAULT_START_HEIGHT,
   INVALID_OBSERVATION_CALLER_MESSAGE,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
-import { getEpochStart, getPrescribedObservers } from '../../observers';
+import {
+  getEpochBoundaries,
+  getPrescribedObserversForEpoch,
+} from '../../observers';
 import {
   BlockHeight,
   ContractWriteResult,
@@ -44,12 +46,16 @@ export const saveObservations = async (
   { caller, input }: PstAction,
 ): Promise<ContractWriteResult> => {
   // get all other relevant state data
-  const { observations, gateways, settings } = state;
+  const { observations, gateways, settings, distributions } = state;
   const { observerReportTxId, failedGateways } = new SaveObservations(input); // does validation on constructor
-  const currentEpochStartHeight = getEpochStart({
-    startHeight: new BlockHeight(DEFAULT_START_HEIGHT),
+  const {
+    startHeight: currentEpochStartHeight,
+    endHeight: currentEpochEndHeight,
+  } = getEpochBoundaries({
+    lastCompletedEpoch: new BlockHeight(
+      distributions.lastCompletedEpochEndHeight || 0,
+    ),
     epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
-    height: new BlockHeight(+SmartWeave.block.height),
   });
 
   // get the gateway that is creating the observation
@@ -71,12 +77,12 @@ export const saveObservations = async (
     throw new ContractError(INVALID_OBSERVATION_CALLER_MESSAGE);
   }
 
-  const prescribedObservers = await getPrescribedObservers(
+  const prescribedObservers = await getPrescribedObserversForEpoch({
     gateways,
-    settings.registry.minNetworkJoinStakeAmount,
-    settings.registry.gatewayLeaveLength,
-    currentEpochStartHeight,
-  );
+    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
+    epochStartHeight: currentEpochStartHeight,
+    epochEndHeight: currentEpochEndHeight,
+  });
 
   if (
     !prescribedObservers.find(
