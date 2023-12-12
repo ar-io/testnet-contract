@@ -71,7 +71,8 @@ export type ObserverDistributions = Record<
 >;
 // The distributions made at the end of each epoch
 export type RewardDistributions = {
-  // epochZeroBlockHeight: number; TODO: add this
+  epochZeroBlockHeight: number;
+  lastCompletedEpochStartHeight: number;
   lastCompletedEpochEndHeight: number; // the height of the last epoch of which rewards were distributed
   gateways: GatewayDistributions;
   observers: ObserverDistributions;

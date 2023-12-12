@@ -1,5 +1,6 @@
 import {
   BLOCKS_PER_DAY,
+  DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_NUM_SAMPLED_BLOCKS,
   DEFAULT_SAMPLED_BLOCKS_OFFSET,
   GATEWAY_LEAVE_LENGTH,
@@ -15,56 +16,47 @@ import {
   WeightedObserver,
 } from './types';
 
-export function getEpochBoundaries({
-  lastCompletedEpoch,
-  epochBlockLength,
+export function getEpochBoundariesForHeight({
+  currentBlockHeight,
+  epochBlockLength = new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+  epochZeroBlockHeight,
 }: {
-  lastCompletedEpoch: BlockHeight;
-  epochBlockLength: BlockHeight;
+  currentBlockHeight: BlockHeight;
+  epochBlockLength?: BlockHeight;
+  epochZeroBlockHeight: BlockHeight;
 }): {
-  startHeight: BlockHeight;
-  endHeight: BlockHeight;
+  epochStartHeight: BlockHeight;
+  epochEndHeight: BlockHeight;
 } {
+  const epochIndexForCurrentBlockHeight = Math.floor(
+    currentBlockHeight.valueOf() / epochBlockLength.valueOf(),
+  );
+  const epochStartHeight =
+    epochZeroBlockHeight.valueOf() +
+    epochBlockLength.valueOf() * epochIndexForCurrentBlockHeight;
   return {
-    startHeight: new BlockHeight(lastCompletedEpoch.valueOf() + 1),
-    endHeight: new BlockHeight(
-      lastCompletedEpoch.valueOf() + epochBlockLength.valueOf(),
+    epochStartHeight: new BlockHeight(epochStartHeight),
+    epochEndHeight: new BlockHeight(
+      epochStartHeight + epochBlockLength.valueOf() - 1,
     ),
   };
 }
 
-export function getEpochEnd({
-  startHeight,
-  epochBlockLength,
-  height,
-}: {
-  startHeight: BlockHeight;
-  epochBlockLength: BlockHeight;
-  height: BlockHeight;
-}): BlockHeight {
-  return new BlockHeight(
-    startHeight.valueOf() +
-      epochBlockLength.valueOf() *
-        (Math.floor(
-          (height.valueOf() - startHeight.valueOf()) /
-            epochBlockLength.valueOf(),
-        ) +
-          1) -
-      1,
-  );
-}
-
 // TODO: can we confidently us buffers here in non-node environments?
-export async function getEntropyForEpoch(
-  epochEndHeight: BlockHeight,
-): Promise<Buffer> {
+export async function getEntropyForEpoch({
+  epochEndHeight,
+}: {
+  epochEndHeight: BlockHeight;
+}): Promise<Buffer> {
   let entropyBuffer: Buffer = Buffer.alloc(0);
   // We hash multiples block hashes to reduce the chance that someone will
   // influence the value produced by grinding with excessive hash power.
   const hashedBlockHeightEnd =
     epochEndHeight.valueOf() - DEFAULT_SAMPLED_BLOCKS_OFFSET;
-  const hashedBlockHeightStart =
-    hashedBlockHeightEnd - DEFAULT_NUM_SAMPLED_BLOCKS;
+  const hashedBlockHeightStart = Math.max(
+    0,
+    hashedBlockHeightEnd - DEFAULT_NUM_SAMPLED_BLOCKS,
+  );
   for (
     let hashedBlockHeight = hashedBlockHeightStart;
     hashedBlockHeight < hashedBlockHeightEnd;
@@ -171,7 +163,6 @@ export async function getPrescribedObserversForEpoch({
     const stake = eligibleGateway.operatorStake;
     const stakeWeight = stake / minNetworkJoinStakeAmount;
 
-    // calculate gateway weight with a max value
     const totalBlocksForGateway =
       epochEndHeight.valueOf() - eligibleGateway.start;
     const calculatedTenureWeightForGateway =
@@ -220,7 +211,7 @@ export async function getPrescribedObserversForEpoch({
   }
 
   // deterministic way to get observers per epoch
-  const entropy = await getEntropyForEpoch(epochEndHeight);
+  const entropy = await getEntropyForEpoch({ epochEndHeight });
   const usedIndexes = new Set<number>();
   let hash = await SmartWeave.arweave.crypto.hash(entropy, 'SHA-256');
   for (let i = 0; i < NUM_OBSERVERS_PER_EPOCH; i++) {

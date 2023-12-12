@@ -21,7 +21,6 @@ import {
   BlockTimestamp,
   DeepReadonly,
   Gateway,
-  GatewayRegistrySettings,
   Gateways,
   IOState,
   IOToken,
@@ -369,14 +368,10 @@ export function calculateExistingAuctionBidForCaller({
 
 export function isGatewayJoined({
   gateway,
-  currentBlockHeight,
 }: {
   gateway: DeepReadonly<Gateway> | undefined;
-  currentBlockHeight: BlockHeight;
 }): boolean {
-  return (
-    gateway?.status === 'joined' && gateway?.end > currentBlockHeight.valueOf()
-  );
+  return gateway?.status === 'joined';
 }
 
 export function isGatewayEligibleToBeRemoved({
@@ -395,17 +390,17 @@ export function isGatewayEligibleToBeRemoved({
 export function isGatewayEligibleToLeave({
   gateway,
   currentBlockHeight,
-  registrySettings,
+  minimumGatewayJoinLength,
 }: {
   gateway: DeepReadonly<Gateway> | undefined;
   currentBlockHeight: BlockHeight;
-  registrySettings: GatewayRegistrySettings;
+  minimumGatewayJoinLength: BlockHeight;
 }): boolean {
   if (!gateway) return false;
   const joinedForMinimum =
     currentBlockHeight.valueOf() >=
-    gateway.start + registrySettings.minGatewayJoinLength;
-  const isActiveOrHidden = isGatewayJoined({ gateway, currentBlockHeight });
+    gateway.start + minimumGatewayJoinLength.valueOf();
+  const isActiveOrHidden = isGatewayJoined({ gateway });
   return joinedForMinimum && isActiveOrHidden;
 }
 

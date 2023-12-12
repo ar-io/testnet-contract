@@ -60,21 +60,18 @@ describe('isGatewayJoined function', () => {
     expect(
       isGatewayJoined({
         gateway: undefined,
-        currentBlockHeight: new BlockHeight(0),
       }),
     ).toEqual(false);
   });
 
   it.each([
-    [0, 0, 'joined', false],
-    [0, 0, 'hidden', false],
-    [0, 0, 'leaving', false],
-    [0, 1, 'joined', true],
-    [0, 1, 'hidden', false],
-    [0, 1, 'leaving', false],
+    [0, 'joined', false],
+    [0, 'leaving', false],
+    [1, 'joined', true],
+    [1, 'leaving', false],
   ])(
     'should, given current block height %d and gateway end height %d and status %s, return %s',
-    (currentBlockHeight, gatewayEndHeight, status, expectedValue) => {
+    (gatewayEndHeight, status, expectedValue) => {
       expect(
         isGatewayJoined({
           gateway: {
@@ -92,7 +89,6 @@ describe('isGatewayJoined function', () => {
               protocol: 'https',
             },
           },
-          currentBlockHeight: new BlockHeight(currentBlockHeight),
         }),
       ).toEqual(expectedValue);
     },
@@ -152,15 +148,7 @@ describe('isGatewayEligibleToLeave function', () => {
       isGatewayEligibleToLeave({
         gateway: undefined,
         currentBlockHeight: new BlockHeight(0),
-        registrySettings: {
-          // None of these values should be relevant to this test
-          minLockLength: Number.NEGATIVE_INFINITY,
-          maxLockLength: Number.NEGATIVE_INFINITY,
-          minNetworkJoinStakeAmount: Number.NEGATIVE_INFINITY,
-          minGatewayJoinLength: Number.NEGATIVE_INFINITY,
-          gatewayLeaveLength: Number.NEGATIVE_INFINITY,
-          operatorStakeWithdrawLength: Number.NEGATIVE_INFINITY,
-        },
+        minimumGatewayJoinLength: new BlockHeight(Number.NEGATIVE_INFINITY),
       }),
     ).toEqual(false);
   });
@@ -203,14 +191,7 @@ describe('isGatewayEligibleToLeave function', () => {
             },
           },
           currentBlockHeight: new BlockHeight(currentBlockHeight),
-          registrySettings: {
-            minLockLength: Number.NEGATIVE_INFINITY,
-            maxLockLength: Number.NEGATIVE_INFINITY,
-            minNetworkJoinStakeAmount: Number.NEGATIVE_INFINITY,
-            minGatewayJoinLength: 2, // The only value relevant to this test
-            gatewayLeaveLength: Number.NEGATIVE_INFINITY,
-            operatorStakeWithdrawLength: Number.NEGATIVE_INFINITY,
-          },
+          minimumGatewayJoinLength: new BlockHeight(2),
         }),
       ).toEqual(expectedValue);
     },

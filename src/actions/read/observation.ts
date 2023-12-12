@@ -1,6 +1,6 @@
 import { DEFAULT_EPOCH_BLOCK_LENGTH } from '../../constants';
 import {
-  getEpochBoundaries,
+  getEpochBoundariesForHeight,
   getPrescribedObserversForEpoch,
 } from '../../observers';
 import {
@@ -12,59 +12,46 @@ import {
 
 export const prescribedObserver = async (
   state: IOState,
-  { input: { target } }: PstAction,
+  { input: { target, height } }: PstAction,
 ): Promise<ContractReadResult> => {
   const { settings, gateways, distributions } = state;
-  const {
-    startHeight: currentEpochStartHeight,
-    endHeight: currentEpochEndHeight,
-  } = getEpochBoundaries({
-    lastCompletedEpoch: new BlockHeight(
-      distributions.lastCompletedEpochEndHeight || 0,
-    ),
+  const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
+    currentBlockHeight: new BlockHeight(height || +SmartWeave.block.height),
+    epochZeroBlockHeight: new BlockHeight(distributions.epochZeroBlockHeight),
     epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
   });
 
   const prescribedObservers = await getPrescribedObserversForEpoch({
     gateways,
     minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
-    epochEndHeight: currentEpochEndHeight,
-    epochStartHeight: currentEpochStartHeight,
+    epochEndHeight: epochEndHeight,
+    epochStartHeight: epochStartHeight,
   });
 
-  if (
-    prescribedObservers.some(
-      (observer) =>
-        observer.gatewayAddress === target ||
-        observer.observerAddress === target,
-    )
-  ) {
-    // The target with the specified address is found in the prescribedObservers list
-    return { result: true };
-  } else {
-    return { result: false };
-  }
+  // The target with the specified address is found in the prescribedObservers list
+  return {
+    result: prescribedObservers.some(
+      (observer) => observer.observerAddress === target,
+    ),
+  };
 };
 
 export const prescribedObservers = async (
   state: IOState,
+  { input: { height } }: PstAction,
 ): Promise<ContractReadResult> => {
   const { settings, gateways, distributions } = state;
-  const {
-    startHeight: currentEpochStartHeight,
-    endHeight: currentEpochEndHeight,
-  } = getEpochBoundaries({
-    lastCompletedEpoch: new BlockHeight(
-      distributions.lastCompletedEpochEndHeight || 0,
-    ),
+  const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
+    currentBlockHeight: new BlockHeight(height || +SmartWeave.block.height),
+    epochZeroBlockHeight: new BlockHeight(distributions.epochZeroBlockHeight),
     epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
   });
 
   const prescribedObservers = await getPrescribedObserversForEpoch({
     gateways,
     minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
-    epochEndHeight: currentEpochEndHeight,
-    epochStartHeight: currentEpochStartHeight,
+    epochStartHeight: epochStartHeight,
+    epochEndHeight: epochEndHeight,
   });
 
   return { result: prescribedObservers };
