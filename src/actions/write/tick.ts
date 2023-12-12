@@ -652,6 +652,8 @@ export async function tickRewardDistribution({
       ...updatedObserverDistributions,
     },
     lastCompletedEpochEndHeight: currentEpochEndHeight.valueOf(),
+    lastCompletedEpochStartHeight: currentEpochStartHeight.valueOf(),
+    epochZeroBlockHeight: distributions.epochZeroBlockHeight,
   };
 
   return {

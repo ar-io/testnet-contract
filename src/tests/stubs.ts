@@ -36,6 +36,8 @@ export const getBaselineState = (): IOState => ({
   balances: {},
   vaults: {},
   distributions: {
+    epochZeroBlockHeight: 0,
+    lastCompletedEpochStartHeight: 0,
     lastCompletedEpochEndHeight: 0,
     gateways: {},
     observers: {},

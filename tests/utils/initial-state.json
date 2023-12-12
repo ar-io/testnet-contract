@@ -15,9 +15,11 @@
   "gateways": {},
   "observations": {},
   "distributions": {
-    "lastCompletedEpoch": 0,
-    "passedGatewayEpochs": {},
-    "passedObserverEpochs": {}
+    "epochZeroBlockHeight": 0,
+    "lastCompletedEpochStartHeight": 0,
+    "lastCompletedEpochEndHeight": 0,
+    "gateways": {},
+    "observers": {}
   },
   "demandFactoring": {
     "periodZeroBlockHeight": 0,

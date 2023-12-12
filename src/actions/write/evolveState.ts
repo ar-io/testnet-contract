@@ -1,6 +1,5 @@
 import { NON_CONTRACT_OWNER_MESSAGE } from '../../constants';
 import { ContractWriteResult, IOState, PstAction } from '../../types';
-import { resetProtocolBalance } from '../../utilities';
 
 // Updates this contract to new source code
 export const evolveState = async (
@@ -13,28 +12,13 @@ export const evolveState = async (
     throw new ContractError(NON_CONTRACT_OWNER_MESSAGE);
   }
 
-  state.vaults = {};
-  state.canEvolve = true;
-  state.observations = {};
   state.distributions = {
-    // TODO: add epoch zero block height
-    lastCompletedEpochEndHeight: +SmartWeave.block.height,
+    epochZeroBlockHeight: +SmartWeave.block.height,
+    lastCompletedEpochStartHeight: 0,
+    lastCompletedEpochEndHeight: 0,
     gateways: {},
     observers: {},
   };
-
-  for (const gateway of Object.values(state.gateways)) {
-    gateway.vaults = {};
-  }
-
-  // reset protocol balance
-  const { balances: updatedBalances } = resetProtocolBalance({
-    balances: state.balances,
-    auctions: state.auctions,
-    vaults: state.vaults,
-    gateways: state.gateways,
-  });
-  state.balances = updatedBalances;
 
   return { state };
 };
