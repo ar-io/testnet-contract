@@ -1,10 +1,12 @@
 import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
   INVALID_OBSERVATION_CALLER_MESSAGE,
+  INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE,
+  INVALID_OBSERVER_STATUS_MESSAGE,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import {
-  getEpochBoundaries,
+  getEpochBoundariesForHeight,
   getPrescribedObserversForEpoch,
 } from '../../observers';
 import {
@@ -13,6 +15,7 @@ import {
   Gateway,
   IOState,
   PstAction,
+  TransactionId,
   WalletAddress,
   WeightedObserver,
 } from '../../types';
@@ -21,8 +24,8 @@ import { getInvalidAjvMessage } from '../../utilities';
 import { validateSaveObservations } from '../../validations';
 
 export class SaveObservations {
-  observerReportTxId: string;
-  failedGateways: string[];
+  observerReportTxId: TransactionId;
+  failedGateways: WalletAddress[];
 
   constructor(input: any) {
     // validate using ajv validator
@@ -47,102 +50,93 @@ export const saveObservations = async (
 ): Promise<ContractWriteResult> => {
   // get all other relevant state data
   const { observations, gateways, settings, distributions } = state;
-  const { observerReportTxId, failedGateways } = new SaveObservations(input); // does validation on constructor
-  const {
-    startHeight: currentEpochStartHeight,
-    endHeight: currentEpochEndHeight,
-  } = getEpochBoundaries({
-    lastCompletedEpoch: new BlockHeight(
-      distributions.lastCompletedEpochEndHeight || 0,
-    ),
+  const { observerReportTxId, failedGateways } = new SaveObservations(input);
+  const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
+    currentBlockHeight: new BlockHeight(+SmartWeave.block.height), // a block height in the middle of the first epoch
+    epochZeroBlockHeight: new BlockHeight(distributions.epochZeroBlockHeight),
     epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
   });
 
   // get the gateway that is creating the observation
-  const observingGatewayArray = Object.entries(gateways).find(
-    ([gatewayAddress, gateway]: [WalletAddress, Gateway]) =>
-      gatewayAddress === caller || gateway.observerWallet === caller,
+  const observingGateway = Object.values(gateways).find(
+    (gateway: Gateway) => gateway.observerWallet === caller,
   );
 
   // no observer found
-  if (!observingGatewayArray) {
-    throw new ContractError(INVALID_OBSERVATION_CALLER_MESSAGE);
+  if (!observingGateway) {
+    throw new ContractError(INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE);
   }
 
-  // get the gateway address and observer address of the gateway that is creating the observation
-  const [observingGatewayAddress, observingGateway]: [WalletAddress, Gateway] =
-    observingGatewayArray;
-
-  if (observingGateway.start > currentEpochStartHeight.valueOf()) {
-    throw new ContractError(INVALID_OBSERVATION_CALLER_MESSAGE);
+  if (
+    observingGateway.start > epochStartHeight.valueOf() ||
+    observingGateway.status !== NETWORK_JOIN_STATUS
+  ) {
+    throw new ContractError(INVALID_OBSERVER_STATUS_MESSAGE);
   }
 
   const prescribedObservers = await getPrescribedObserversForEpoch({
     gateways,
     minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
-    epochStartHeight: currentEpochStartHeight,
-    epochEndHeight: currentEpochEndHeight,
+    epochStartHeight,
+    epochEndHeight,
   });
 
   if (
-    !prescribedObservers.find(
+    !prescribedObservers.some(
       (prescribedObserver: WeightedObserver) =>
-        prescribedObserver.gatewayAddress === observingGatewayAddress ||
-        prescribedObserver.gatewayAddress === observingGateway.observerWallet,
+        prescribedObserver.observerAddress === observingGateway.observerWallet,
     )
   ) {
     throw new ContractError(INVALID_OBSERVATION_CALLER_MESSAGE);
   }
 
-  // check if this is the first report filed in this epoch
-  if (!observations[currentEpochStartHeight.valueOf()]) {
-    observations[currentEpochStartHeight.valueOf()] = {
+  // check if this is the first report filed in this epoch (TODO: use start or end?)
+  if (!observations[epochStartHeight.valueOf()]) {
+    observations[epochStartHeight.valueOf()] = {
       failureSummaries: {},
       reports: {},
     };
   }
 
+  // get the existing set of failed gateways for this observer
+  const existingObservations =
+    observations[epochStartHeight.valueOf()].failureSummaries[
+      observingGateway.observerWallet
+    ] || [];
+
+  // append any new observations to the existing set
+  const updatedFailedGatewaysForObserver: Set<WalletAddress> = new Set([
+    ...existingObservations,
+  ]);
+
   // process the failed gateway summary
-  for (const observedFailedGatewayAddress of failedGateways) {
+  for (const failedGatewayAddress of failedGateways) {
     // validate the gateway is in the gar or is leaving
-    const failedGateway = gateways[observedFailedGatewayAddress];
+    const failedGateway = gateways[failedGatewayAddress];
     if (
       !failedGateway ||
-      failedGateway.start > currentEpochStartHeight.valueOf() ||
+      failedGateway.start > epochStartHeight.valueOf() ||
       failedGateway.status !== NETWORK_JOIN_STATUS
     ) {
       continue;
     }
 
-    // Check if any observer has failed this gateway, and if not, mark it as failed
-    const existingObservationInEpochForGateway: WalletAddress[] =
-      observations[currentEpochStartHeight.valueOf()].failureSummaries[
-        observedFailedGatewayAddress
-      ];
-
-    // editing observation for gateway, add current observing gateway to list of observers
-    if (existingObservationInEpochForGateway) {
-      // the observer has already reported it for the current epoch
-      if (
-        existingObservationInEpochForGateway.includes(observingGatewayAddress)
-      ) {
-        continue;
-      }
-      // add it to the list of observers
-      existingObservationInEpochForGateway.push(observingGatewayAddress);
-      continue;
-    }
-
-    // create the new failure summary for the observed gateway
-    observations[currentEpochStartHeight.valueOf()].failureSummaries[
-      observedFailedGatewayAddress
-    ] = [observingGatewayAddress];
+    // add it to the array for this observer
+    updatedFailedGatewaysForObserver.add(failedGatewayAddress);
   }
 
+  // update/create the failure summary for observer
+  observations[epochStartHeight.valueOf()].failureSummaries[
+    observingGateway.observerWallet
+  ] = [...updatedFailedGatewaysForObserver];
+
   // add this observers report tx id to this epoch
-  state.observations[currentEpochStartHeight.valueOf()].reports[
-    observingGatewayAddress
+  observations[epochStartHeight.valueOf()].reports[
+    observingGateway.observerWallet
   ] = observerReportTxId;
+
+  // update state
+  state.observations = observations;
 
   return { state };
 };

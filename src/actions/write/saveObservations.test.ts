@@ -179,7 +179,7 @@ describe('saveObservations', () => {
     describe('valid caller', () => {
       it('should not save a gateway to the observations list for the epoch if it is already there', async () => {
         const existingObservations: Observations = {
-          [1]: {
+          [0]: {
             failureSummaries: {
               [stubbedArweaveTxId]: ['observer-address'],
             },
@@ -207,7 +207,7 @@ describe('saveObservations', () => {
         const expectedState = {
           ...initialState,
           observations: {
-            [1]: {
+            [0]: {
               failureSummaries: {
                 [stubbedArweaveTxId]: ['observer-address'],
               },
@@ -238,7 +238,7 @@ describe('saveObservations', () => {
       const expectedState = {
         ...initialState,
         observations: {
-          [1]: {
+          [0]: {
             failureSummaries: {},
             reports: {
               'observer-address': stubbedArweaveTxId,
@@ -270,7 +270,7 @@ describe('saveObservations', () => {
       const expectedState = {
         ...initialState,
         observations: {
-          [1]: {
+          [0]: {
             failureSummaries: {},
             reports: {
               'observer-address': stubbedArweaveTxId,
@@ -302,7 +302,7 @@ describe('saveObservations', () => {
       const expectedState = {
         ...initialState,
         observations: {
-          [1]: {
+          [0]: {
             failureSummaries: {},
             reports: {
               'observer-address': stubbedArweaveTxId,
@@ -333,7 +333,7 @@ describe('saveObservations', () => {
         },
       });
       const expectedObservationsForEpoch: Observations = {
-        [1]: {
+        [0]: {
           failureSummaries: {
             [stubbedArweaveTxId]: ['observer-address'],
           },
@@ -351,7 +351,7 @@ describe('saveObservations', () => {
 
     it('should append to the list of failure summaries for a gateway if one already exists and a new report is submitted', async () => {
       const initialObservationsForEpoch: Observations = {
-        [1]: {
+        [0]: {
           failureSummaries: {
             [stubbedArweaveTxId]: ['observer-address'],
           },
@@ -384,7 +384,7 @@ describe('saveObservations', () => {
         },
       });
       const expectedObservationsForEpoch: Observations = {
-        [1]: {
+        [0]: {
           failureSummaries: {
             [stubbedArweaveTxId]: [
               'observer-address',
