@@ -368,10 +368,15 @@ export function calculateExistingAuctionBidForCaller({
 
 export function isGatewayJoined({
   gateway,
+  currentBlockHeight,
 }: {
   gateway: DeepReadonly<Gateway> | undefined;
+  currentBlockHeight: BlockHeight;
 }): boolean {
-  return gateway?.status === 'joined';
+  return (
+    gateway?.status === 'joined' &&
+    gateway?.start <= currentBlockHeight.valueOf()
+  );
 }
 
 export function isGatewayEligibleToBeRemoved({
@@ -400,8 +405,8 @@ export function isGatewayEligibleToLeave({
   const joinedForMinimum =
     currentBlockHeight.valueOf() >=
     gateway.start + minimumGatewayJoinLength.valueOf();
-  const isActiveOrHidden = isGatewayJoined({ gateway });
-  return joinedForMinimum && isActiveOrHidden;
+  const isActive = isGatewayJoined({ gateway, currentBlockHeight });
+  return joinedForMinimum && isActive;
 }
 
 export function calculateYearsBetweenTimestamps({

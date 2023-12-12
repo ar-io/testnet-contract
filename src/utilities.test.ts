@@ -60,26 +60,28 @@ describe('isGatewayJoined function', () => {
     expect(
       isGatewayJoined({
         gateway: undefined,
+        currentBlockHeight: new BlockHeight(0),
       }),
     ).toEqual(false);
   });
 
   it.each([
-    [0, 'joined', false],
-    [0, 'leaving', false],
-    [1, 'joined', true],
-    [1, 'leaving', false],
+    [0, 0, 'joined', true],
+    [0, 0, 'leaving', false],
+    [0, 1, 'joined', false],
+    [0, 1, 'leaving', false],
   ])(
-    'should, given current block height %d and gateway end height %d and status %s, return %s',
-    (gatewayEndHeight, status, expectedValue) => {
+    'should, given current block height %d and gateway start height %d and status %s, return %s',
+    (currentBlockHeight, gatewayStartHeight, status, expectedValue) => {
       expect(
         isGatewayJoined({
+          currentBlockHeight: new BlockHeight(currentBlockHeight),
           gateway: {
-            start: Number.NEGATIVE_INFINITY,
-            end: gatewayEndHeight,
+            start: gatewayStartHeight,
+            end: 0,
             status: status as GatewayStatus,
             vaults: {},
-            operatorStake: Number.NEGATIVE_INFINITY,
+            operatorStake: 10_000,
             observerWallet: '',
             settings: {
               // None of these values should be relevant to this test
@@ -107,16 +109,13 @@ describe('isGatewayEligibleToBeRemoved function', () => {
 
   it.each([
     [0, 1, 'joined', false],
-    [0, 1, 'hidden', false],
     [0, 1, 'leaving', false],
     [1, 1, 'joined', false],
-    [1, 1, 'hidden', false],
     [1, 1, 'leaving', true],
     [2, 1, 'joined', false],
-    [2, 1, 'hidden', false],
     [2, 1, 'leaving', true],
   ])(
-    `should, given current block height %d, gateway end block %d and status %s, return %s`,
+    `should, given current block height %d, gateway start height of %d and status %s, return %s`,
     (currentBlockHeight, gatewayEndBlock, status, expectedValue) => {
       expect(
         isGatewayEligibleToBeRemoved({
@@ -148,7 +147,7 @@ describe('isGatewayEligibleToLeave function', () => {
       isGatewayEligibleToLeave({
         gateway: undefined,
         currentBlockHeight: new BlockHeight(0),
-        minimumGatewayJoinLength: new BlockHeight(Number.NEGATIVE_INFINITY),
+        minimumGatewayJoinLength: new BlockHeight(Number.MAX_SAFE_INTEGER),
       }),
     ).toEqual(false);
   });
@@ -160,7 +159,7 @@ describe('isGatewayEligibleToLeave function', () => {
     [1, 0, Number.MAX_SAFE_INTEGER, 'leaving', false],
     [2, 0, Number.MAX_SAFE_INTEGER, 'joined', true],
     [2, 0, Number.MAX_SAFE_INTEGER, 'leaving', false],
-    [2, 0, 2, 'joined', false],
+    [2, 2, Number.MAX_SAFE_INTEGER, 'joined', false],
     [2, 0, 2, 'leaving', false],
     [2, 0, 3, 'joined', true],
     [2, 0, 3, 'leaving', false],

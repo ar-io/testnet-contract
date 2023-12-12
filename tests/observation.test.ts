@@ -140,13 +140,11 @@ describe('Observation', () => {
         expect(
           newState.observations[currentEpochStartHeight.valueOf()],
         ).toEqual({
-          failureSummaries: prescribedObserverWallets.reduce(
-            (summary, wallet) => ({
-              ...summary,
-              [wallet.addr]: [failedGateways[0]],
-            }),
-            {},
-          ),
+          failureSummaries: {
+            [failedGateways[0]]: expect.arrayContaining(
+              prescribedObservers.map((w) => w.observerAddress),
+            ),
+          },
           reports: prescribedObservers.reduce(
             (report, observer) => ({
               ...report,
@@ -184,10 +182,7 @@ describe('Observation', () => {
         ).toEqual({
           failureSummaries: {
             ...previousSummary,
-            [prescribedObserverWallets[0].addr]: [
-              failedGateways[0],
-              failedGateways[1],
-            ],
+            [failedGateways[1]]: [prescribedObserverWallets[0].addr],
           },
           reports: expect.objectContaining({
             ...previousReports,
@@ -250,13 +245,14 @@ describe('Observation', () => {
         expect(
           updatedState.observations[currentEpochStartHeight.valueOf()],
         ).toEqual({
-          failureSummaries: prescribedObserverWallets.reduce(
-            (summary, wallet) => ({
-              ...summary,
-              [wallet.addr]: [failedGateways[0], failedGateways[1]],
-            }),
-            {},
-          ),
+          failureSummaries: {
+            [failedGateways[0]]: expect.arrayContaining(
+              prescribedObservers.map((w) => w.observerAddress),
+            ),
+            [failedGateways[1]]: expect.arrayContaining(
+              prescribedObservers.map((w) => w.observerAddress),
+            ),
+          },
           reports: prescribedObserverWallets.reduce(
             (report, wallet) => ({
               ...report,

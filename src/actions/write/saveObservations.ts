@@ -2,7 +2,6 @@ import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
   INVALID_OBSERVATION_CALLER_MESSAGE,
   INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE,
-  INVALID_OBSERVER_STATUS_MESSAGE,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import {
@@ -71,7 +70,7 @@ export const saveObservations = async (
     observingGateway.start > epochStartHeight.valueOf() ||
     observingGateway.status !== NETWORK_JOIN_STATUS
   ) {
-    throw new ContractError(INVALID_OBSERVER_STATUS_MESSAGE);
+    throw new ContractError(INVALID_OBSERVATION_CALLER_MESSAGE);
   }
 
   const prescribedObservers = await getPrescribedObserversForEpoch({
@@ -98,17 +97,6 @@ export const saveObservations = async (
     };
   }
 
-  // get the existing set of failed gateways for this observer
-  const existingObservations =
-    observations[epochStartHeight.valueOf()].failureSummaries[
-      observingGateway.observerWallet
-    ] || [];
-
-  // append any new observations to the existing set
-  const updatedFailedGatewaysForObserver: Set<WalletAddress> = new Set([
-    ...existingObservations,
-  ]);
-
   // process the failed gateway summary
   for (const failedGatewayAddress of failedGateways) {
     // validate the gateway is in the gar or is leaving
@@ -121,14 +109,25 @@ export const saveObservations = async (
       continue;
     }
 
-    // add it to the array for this observer
-    updatedFailedGatewaysForObserver.add(failedGatewayAddress);
-  }
+    // get the existing set of failed gateways for this observer
+    const existingObservers =
+      observations[epochStartHeight.valueOf()].failureSummaries[
+        failedGatewayAddress
+      ] || [];
 
-  // update/create the failure summary for observer
-  observations[epochStartHeight.valueOf()].failureSummaries[
-    observingGateway.observerWallet
-  ] = [...updatedFailedGatewaysForObserver];
+    // append any new observations to the existing set
+    const updatedObserversForFailedGateway: Set<WalletAddress> = new Set([
+      ...existingObservers,
+    ]);
+
+    // add it to the array for this observer
+    updatedObserversForFailedGateway.add(observingGateway.observerWallet);
+
+    // update the list of observers that mark the gateway as failed
+    observations[epochStartHeight.valueOf()].failureSummaries[
+      failedGatewayAddress
+    ] = [...updatedObserversForFailedGateway];
+  }
 
   // add this observers report tx id to this epoch
   observations[epochStartHeight.valueOf()].reports[

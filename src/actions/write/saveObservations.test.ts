@@ -1,6 +1,7 @@
 import {
   INVALID_INPUT_MESSAGE,
   INVALID_OBSERVATION_CALLER_MESSAGE,
+  INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE,
   NETWORK_LEAVING_STATUS,
 } from '../../constants';
 import { getPrescribedObserversForEpoch } from '../../observers';
@@ -125,7 +126,7 @@ describe('saveObservations', () => {
               failedGateways: [],
             },
           },
-          INVALID_OBSERVATION_CALLER_MESSAGE,
+          INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE,
         ],
         [
           'should throw an error if the caller is a registered gateway that has not started observing yet',
@@ -189,7 +190,10 @@ describe('saveObservations', () => {
         const initialState = {
           ...getBaselineState(),
           gateways: {
-            'observer-address': baselineGatewayData,
+            'observer-address': {
+              ...baselineGatewayData,
+              observerWallet: 'observer-address',
+            },
             [stubbedArweaveTxId]: {
               ...baselineGatewayData,
               observerAddress: stubbedArweaveTxId,
@@ -225,7 +229,10 @@ describe('saveObservations', () => {
       const initialState = {
         ...getBaselineState(),
         gateways: {
-          'observer-address': baselineGatewayData,
+          'observer-address': {
+            ...baselineGatewayData,
+            observerWallet: 'observer-address',
+          },
         },
       };
       const { state } = await saveObservations(initialState, {
@@ -253,10 +260,14 @@ describe('saveObservations', () => {
       const initialState = {
         ...getBaselineState(),
         gateways: {
-          'observer-address': baselineGatewayData,
+          'observer-address': {
+            ...baselineGatewayData,
+            observerWallet: 'observer-address',
+          },
           [stubbedArweaveTxId]: {
             ...baselineGatewayData,
             start: 10,
+            observerWallet: stubbedArweaveTxId,
           },
         },
       };
@@ -285,7 +296,10 @@ describe('saveObservations', () => {
       const initialState: IOState = {
         ...getBaselineState(),
         gateways: {
-          'observer-address': baselineGatewayData,
+          'observer-address': {
+            ...baselineGatewayData,
+            observerWallet: 'observer-address',
+          },
           [stubbedArweaveTxId]: {
             ...baselineGatewayData,
             status: NETWORK_LEAVING_STATUS,
@@ -317,7 +331,10 @@ describe('saveObservations', () => {
       const initialState = {
         ...getBaselineState(),
         gateways: {
-          'observer-address': baselineGatewayData,
+          'observer-address': {
+            ...baselineGatewayData,
+            observerWallet: 'observer-address',
+          },
           [stubbedArweaveTxId]: {
             ...baselineGatewayData,
             observerAddress: stubbedArweaveTxId,
@@ -363,14 +380,17 @@ describe('saveObservations', () => {
       const initialState = {
         ...getBaselineState(),
         gateways: {
-          'observer-address': baselineGatewayData,
+          'observer-address': {
+            ...baselineGatewayData,
+            observerWallet: 'observer-address',
+          },
           'a-second-observer-address': {
             ...baselineGatewayData,
-            observerAddress: 'a-second-observer-address',
+            observerWallet: 'a-second-observer-address',
           },
           [stubbedArweaveTxId]: {
             ...baselineGatewayData,
-            observerAddress: stubbedArweaveTxId,
+            observerWallet: stubbedArweaveTxId,
           },
         },
         observations: initialObservationsForEpoch,
