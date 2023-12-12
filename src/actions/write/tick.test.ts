@@ -6,7 +6,12 @@ import {
   tickRewardDistribution,
   tickVaults,
 } from '../../actions/write/tick';
-import { SECONDS_IN_A_YEAR, SECONDS_IN_GRACE_PERIOD } from '../../constants';
+import {
+  DEFAULT_EPOCH_BLOCK_LENGTH,
+  SECONDS_IN_A_YEAR,
+  SECONDS_IN_GRACE_PERIOD,
+  TALLY_PERIOD_BLOCKS,
+} from '../../constants';
 import {
   baselineGatewayData,
   getBaselineState,
@@ -740,20 +745,11 @@ describe('tickVaults', () => {
 describe('tickRewardDistribution', () => {
   const currentBlockHeight = new BlockHeight(0);
 
-  it('should properly distribute rewards to gateway observers and operators', async () => {
+  it('should not distribute rewards when protocol balance is 0', async () => {
     const initialState: IOState = {
       ...getBaselineState(),
-      gateways: {
-        [stubbedArweaveTxId]: {
-          ...baselineGatewayData,
-          observerWallet: 'test-observer-wallet',
-        },
-      },
-      observations: {
-        [currentBlockHeight.valueOf()]: {
-          failureSummaries: {},
-          reports: {},
-        },
+      balances: {
+        [SmartWeave.contract.id]: 0,
       },
     };
     const { balances, distributions } = await tickRewardDistribution({
@@ -766,5 +762,150 @@ describe('tickRewardDistribution', () => {
     });
     expect(balances).toEqual(initialState.balances);
     expect(distributions).toEqual(initialState.distributions);
+  });
+
+  it.each([0, 1, TALLY_PERIOD_BLOCKS - 1])(
+    'should not distribute rewards if the current block height is not greater than the required tallying period from the previous epoch',
+    async (blockHeight) => {
+      const initialState: IOState = {
+        ...getBaselineState(),
+        balances: {
+          [SmartWeave.contract.id]: 10_000_000,
+        },
+      };
+      const { balances, distributions } = await tickRewardDistribution({
+        currentBlockHeight: new BlockHeight(blockHeight),
+        gateways: initialState.gateways,
+        balances: initialState.balances,
+        distributions: initialState.distributions,
+        observations: initialState.observations,
+        settings: initialState.settings,
+      });
+      expect(balances).toEqual(initialState.balances);
+      expect(distributions).toEqual(initialState.distributions);
+    },
+  );
+
+  it('should not distribute rewards if there are no gateways or observers in the GAR, but increment distributions epoch heights', async () => {
+    const initialState: IOState = {
+      ...getBaselineState(),
+      balances: {
+        [SmartWeave.contract.id]: 10_000_000,
+      },
+    };
+    const { balances, distributions } = await tickRewardDistribution({
+      currentBlockHeight: new BlockHeight(TALLY_PERIOD_BLOCKS),
+      gateways: initialState.gateways,
+      balances: initialState.balances,
+      distributions: initialState.distributions,
+      observations: initialState.observations,
+      settings: initialState.settings,
+    });
+    expect(balances).toEqual(initialState.balances);
+    expect(distributions).toEqual({
+      ...initialState.distributions,
+      lastCompletedEpochEndHeight: DEFAULT_EPOCH_BLOCK_LENGTH - 1,
+      lastCompletedEpochStartHeight: 0,
+    });
+  });
+
+  it('should distribute rewards to observers who submitted reports and gateways who passed', async () => {
+    const initialState: IOState = {
+      ...getBaselineState(),
+      balances: {
+        [SmartWeave.contract.id]: 10_000_000,
+      },
+      gateways: {
+        'an-observing-gateway': {
+          ...baselineGatewayData,
+          observerWallet: 'an-observing-gateway',
+        },
+        'an-observing-gateway-2': {
+          ...baselineGatewayData,
+          observerWallet: 'an-observing-gateway-2',
+        },
+        'an-observing-gateway-3': {
+          ...baselineGatewayData,
+          observerWallet: 'an-observing-gateway-3',
+        },
+      },
+      observations: {
+        0: {
+          failureSummaries: {
+            // one failure, but not more than half so still gets the reward
+            'an-observing-gateway-2': ['an-observing-gateway'],
+            // observer 3 is failing more according to more than half the gateways
+            'an-observing-gateway-3': [
+              'an-observing-gateway',
+              'an-observing-gateway-2',
+            ],
+          },
+          // all will get observer reward
+          reports: {
+            'an-observing-gateway': stubbedArweaveTxId,
+            'an-observing-gateway-2': stubbedArweaveTxId,
+            // observer 3 did not submit a report
+          },
+        },
+      },
+    };
+    const { balances, distributions } = await tickRewardDistribution({
+      currentBlockHeight: new BlockHeight(TALLY_PERIOD_BLOCKS),
+      gateways: initialState.gateways,
+      balances: initialState.balances,
+      distributions: initialState.distributions,
+      observations: initialState.observations,
+      settings: initialState.settings,
+    });
+    const totalRewardsEligible = 10_000_000 * 0.0025;
+    const totalObserverReward = totalRewardsEligible * 0.05; // 5% of the total distributions
+    const perObserverReward = Math.floor(totalObserverReward / 3); // 3 observers
+    const totalGatewayReward = totalRewardsEligible - totalObserverReward; // 95% of total distribution
+    const perGatewayReward = Math.floor(totalGatewayReward / 3); // 3 gateways
+    const totalRewardsDistributed =
+      perObserverReward * 2 + perGatewayReward * 2; // only two get both
+    expect(balances).toEqual({
+      ...initialState.balances,
+      'an-observing-gateway': perObserverReward + perGatewayReward,
+      'an-observing-gateway-2': perObserverReward + perGatewayReward,
+      // observer three does not get anything!
+      [SmartWeave.contract.id]: 10_000_000 - totalRewardsDistributed,
+    });
+    expect(distributions).toEqual({
+      ...initialState.distributions,
+      lastCompletedEpochEndHeight: DEFAULT_EPOCH_BLOCK_LENGTH - 1,
+      lastCompletedEpochStartHeight: 0,
+      gateways: {
+        'an-observing-gateway': {
+          passedEpochCount: 1,
+          totalEpochParticipationCount: 1,
+          failedConsecutiveEpochs: 0,
+        },
+        'an-observing-gateway-2': {
+          passedEpochCount: 1,
+          totalEpochParticipationCount: 1,
+          failedConsecutiveEpochs: 0,
+        },
+        'an-observing-gateway-3': {
+          passedEpochCount: 0,
+          totalEpochParticipationCount: 1,
+          failedConsecutiveEpochs: 1,
+        },
+      },
+      observers: {
+        'an-observing-gateway': {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 1,
+        },
+        'an-observing-gateway-2': {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 1,
+        },
+        'an-observing-gateway-3': {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 0,
+        },
+      },
+    });
   });
 });

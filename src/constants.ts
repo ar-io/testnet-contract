@@ -147,8 +147,8 @@ export const AUCTION_SETTINGS: AuctionSettings = {
   scalingExponent: 190,
   auctionDuration: 10_080, // approx 14 days long
 };
-export const DEFAULT_EPOCH_BLOCK_LENGTH = 50; // 5000 for mainnet
-export const DEFAULT_START_HEIGHT = 0;
+export const DEFAULT_EPOCH_BLOCK_LENGTH = 50; // TODO: make this 5000 when ready for mainnet
+export const DEFAULT_START_HEIGHT = 0; // TODO: make this a multiple of 5k
 export const MAX_TENURE_WEIGHT = 2;
 export type DemandFactoringCriteria = 'purchases' | 'revenue';
 type DemandFactoringSettings = {

@@ -47,16 +47,13 @@ export type IOState = {
   vaults: RegistryVaults;
 };
 
-export type BaseEpochDistribution = {
+export type GatewayDistributionSummary = {
   totalEpochParticipationCount: number; // the total number of epochs this gateway has participated in
-};
-
-export type GatewayDistributionSummary = BaseEpochDistribution & {
   passedEpochCount: number; // the number of epochs this gateway has passed
   failedConsecutiveEpochs: number; // the number of consecutive epochs this gateway has failed
 };
 
-export type ObserverDistributionSummary = BaseEpochDistribution & {
+export type ObserverDistributionSummary = {
   submittedEpochCount: number; // the number of epochs this observer has submitted reports for
   totalEpochsPrescribedCount: number; // the total number of epochs this observer was prescribed to submit reports for
 };

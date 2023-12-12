@@ -26,7 +26,7 @@ export const baselineAuctionSettings = {
   floorPriceMultiplier: 1,
 };
 
-export const getBaselineState = (): IOState => ({
+export const getBaselineState: () => IOState = (): IOState => ({
   ticker: 'ARNS-TEST',
   name: 'Arweave Name System Test',
   canEvolve: true,
@@ -92,8 +92,8 @@ export const baselineAuctionState: Partial<IOState> = {
 
 export const baselineGatewayData: Gateway = {
   observerWallet: 'test-observer-wallet',
-  start: 1,
-  end: 2,
+  start: 0,
+  end: 0,
   vaults: {},
   operatorStake: 100,
   settings: {
