@@ -1,14 +1,10 @@
-const joinNetworkSchema = {
-  $id: '#/definitions/joinNetwork',
+const updateGatewaySchema = {
+  $id: '#/definitions/updateGateway',
   type: 'object',
   properties: {
     function: {
       type: 'string',
-      const: 'joinNetwork',
-    },
-    qty: {
-      type: 'number',
-      minimum: 1,
+      const: 'updateGatewaySettings',
     },
     fqdn: {
       type: 'string',
@@ -40,10 +36,10 @@ const joinNetworkSchema = {
       pattern: '^(|[a-zA-Z0-9_-]{43})$',
     },
   },
-  required: ['qty', 'fqdn', 'port', 'protocol', 'properties', 'note', 'label'],
+  required: [],
   additionalProperties: false,
 };
 
 module.exports = {
-  joinNetworkSchema,
+  updateGatewaySchema,
 };

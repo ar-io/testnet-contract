@@ -39,6 +39,10 @@ export const ARNS_NAME_IN_AUCTION_MESSAGE = 'Name is currently in auction.';
 export const ARNS_NAME_AUCTION_EXPIRED_MESSAGE = 'Auction has expired.';
 export const INVALID_INPUT_MESSAGE = 'Invalid input for interaction';
 export const INVALID_VAULT_LOCK_LENGTH_MESSAGE = `Invalid lock length. Must be between ${MIN_TOKEN_LOCK_LENGTH} - ${MAX_TOKEN_LOCK_LENGTH}.`;
+export const INVALID_OBSERVER_STATUS_MESSAGE =
+  'Invalid observer. Observer must be joined to the network.';
+export const INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE =
+  'Invalid observer. Observer does not exist as an observer address in the gateway registry.';
 export const INVALID_OBSERVATION_CALLER_MESSAGE =
   'Invalid caller. Caller is not eligible to submit observation reports';
 export const INVALID_GATEWAY_REGISTERED_MESSAGE =

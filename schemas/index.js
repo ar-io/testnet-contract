@@ -9,7 +9,7 @@ const { createVaultSchema } = require('./createVault');
 const { extendVaultSchema } = require('./extendVault');
 const { increaseVaultSchema } = require('./increaseVault');
 const { saveObservationsSchema } = require('./saveObservations');
-
+const { updateGatewaySchema } = require('./updateGateway');
 module.exports = {
   auctionBidSchema,
   buyRecordSchema,
@@ -22,4 +22,5 @@ module.exports = {
   extendVaultSchema,
   increaseVaultSchema,
   saveObservationsSchema,
+  updateGatewaySchema,
 };

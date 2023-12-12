@@ -89,7 +89,7 @@ export async function handle(
     case 'prescribedObserver':
       return prescribedObserver(tickedState, action);
     case 'prescribedObservers':
-      return prescribedObservers(tickedState);
+      return prescribedObservers(tickedState, action);
     case 'gatewayTotalStake':
       return getGatewayTotalStake(tickedState, action);
     case 'gatewayRegistry':
