@@ -95,7 +95,7 @@ describe('Observation', () => {
         const { result: isPrescribedObserver }: { result: WeightedObserver[] } =
           await contract.viewState({
             function: 'prescribedObserver',
-            target: prescribedObservers[0].observerAddress,
+            target: prescribedObserverWallets[0].addr,
             height,
           });
         expect(isPrescribedObserver).toBe(true);
@@ -160,9 +160,10 @@ describe('Observation', () => {
         const previousState = prevCachedValue.state as IOState;
         const previousSummary =
           previousState.observations[currentEpochStartHeight.valueOf()]
-            .failureSummaries;
+            ?.failureSummaries;
         const previousReports =
-          previousState.observations[currentEpochStartHeight.valueOf()].reports;
+          previousState.observations[currentEpochStartHeight.valueOf()]
+            ?.reports;
         contract = warp
           .pst(srcContractId)
           .connect(prescribedObserverWallets[0].jwk);

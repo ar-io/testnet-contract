@@ -109,6 +109,10 @@ describe('saveObservations', () => {
       ]);
     });
 
+    afterAll(() => {
+      jest.resetAllMocks();
+    });
+
     describe('invalid caller', () => {
       it.each([
         [

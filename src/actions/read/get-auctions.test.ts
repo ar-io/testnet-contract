@@ -1,6 +1,5 @@
-import { IOState } from 'src/types';
-
 import { baselineAuctionData, getBaselineState } from '../../tests/stubs';
+import { IOState } from '../../types';
 import { getAuction } from './auction';
 
 describe('getAuction', () => {

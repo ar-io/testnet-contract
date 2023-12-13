@@ -78,6 +78,7 @@ export const saveObservations = async (
     minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
     epochStartHeight,
     epochEndHeight,
+    distributions,
   });
 
   if (

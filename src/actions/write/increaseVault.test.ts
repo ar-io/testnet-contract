@@ -1,11 +1,10 @@
-import { IOState } from 'src/types';
-
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
   MIN_TOKEN_LOCK_LENGTH,
 } from '../../constants';
 import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
+import { IOState } from '../../types';
 import { increaseVault } from './increaseVault';
 
 describe('increaseVault', () => {

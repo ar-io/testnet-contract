@@ -13,6 +13,10 @@ import {
   TALLY_PERIOD_BLOCKS,
 } from '../../constants';
 import {
+  getEligibleGatewaysForEpoch,
+  getPrescribedObserversForEpoch,
+} from '../../observers';
+import {
   baselineGatewayData,
   getBaselineState,
   stubbedArweaveTxId,
@@ -32,6 +36,12 @@ import {
   RegistryVaults,
   ReservedNames,
 } from '../../types';
+
+jest.mock('../../observers', () => ({
+  ...jest.requireActual('../../observers'),
+  getPrescribedObserversForEpoch: jest.fn(),
+  getEligibleGatewaysForEpoch: jest.fn(),
+}));
 
 const defaultAuctionSettings = {
   auctionDuration: 2,
@@ -745,6 +755,65 @@ describe('tickVaults', () => {
 describe('tickRewardDistribution', () => {
   const currentBlockHeight = new BlockHeight(0);
 
+  beforeEach(() => {
+    (getPrescribedObserversForEpoch as jest.Mock).mockResolvedValue([
+      {
+        gatewayAddress: 'a-gateway',
+        observerAddress: 'an-observing-gateway',
+        stake: 100,
+        start: 0,
+        stakeWeight: 10,
+        tenureWeight: 1,
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        compositeWeight: 1,
+        normalizedCompositeWeight: 1,
+      },
+      {
+        gatewayAddress: 'a-gateway-2',
+        observerAddress: 'an-observing-gateway-2',
+        stake: 100,
+        start: 0,
+        stakeWeight: 10,
+        tenureWeight: 1,
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        compositeWeight: 1,
+        normalizedCompositeWeight: 1,
+      },
+      {
+        gatewayAddress: 'a-gateway-3',
+        observerAddress: 'an-observing-gateway-3',
+        stake: 100,
+        start: 0,
+        stakeWeight: 10,
+        tenureWeight: 1,
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        compositeWeight: 1,
+        normalizedCompositeWeight: 1,
+      },
+    ]);
+    (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({
+      'a-gateway': {
+        ...baselineGatewayData,
+        observerWallet: 'an-observing-gateway',
+      },
+      'a-gateway-2': {
+        ...baselineGatewayData,
+        observerWallet: 'an-observing-gateway-2',
+      },
+      'a-gateway-3': {
+        ...baselineGatewayData,
+        observerWallet: 'an-observing-gateway-3',
+      },
+    });
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
   it('should not distribute rewards when protocol balance is 0', async () => {
     const initialState: IOState = {
       ...getBaselineState(),
@@ -786,7 +855,10 @@ describe('tickRewardDistribution', () => {
     },
   );
 
-  it('should not distribute rewards if there are no gateways or observers in the GAR, but increment distributions epoch heights', async () => {
+  it('should not distribute rewards if there are no gateways or observers in the GAR, but increment distributions for observers and epoch heights', async () => {
+    // both of these return empty objects
+    (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({});
+    (getPrescribedObserversForEpoch as jest.Mock).mockResolvedValue([]);
     const initialState: IOState = {
       ...getBaselineState(),
       balances: {
@@ -816,15 +888,15 @@ describe('tickRewardDistribution', () => {
         [SmartWeave.contract.id]: 10_000_000,
       },
       gateways: {
-        'an-observing-gateway': {
+        'a-gateway': {
           ...baselineGatewayData,
           observerWallet: 'an-observing-gateway',
         },
-        'an-observing-gateway-2': {
+        'a-gateway-2': {
           ...baselineGatewayData,
           observerWallet: 'an-observing-gateway-2',
         },
-        'an-observing-gateway-3': {
+        'a-gateway-3': {
           ...baselineGatewayData,
           observerWallet: 'an-observing-gateway-3',
         },
@@ -833,12 +905,9 @@ describe('tickRewardDistribution', () => {
         0: {
           failureSummaries: {
             // one failure, but not more than half so still gets the reward
-            'an-observing-gateway-2': ['an-observing-gateway'],
+            'a-gateway-2': ['an-observing-gateway'],
             // observer 3 is failing more according to more than half the gateways
-            'an-observing-gateway-3': [
-              'an-observing-gateway',
-              'an-observing-gateway-2',
-            ],
+            'a-gateway-3': ['an-observing-gateway', 'an-observing-gateway-2'],
           },
           // all will get observer reward
           reports: {
@@ -866,8 +935,8 @@ describe('tickRewardDistribution', () => {
       perObserverReward * 2 + perGatewayReward * 2; // only two get both
     expect(balances).toEqual({
       ...initialState.balances,
-      'an-observing-gateway': perObserverReward + perGatewayReward,
-      'an-observing-gateway-2': perObserverReward + perGatewayReward,
+      'a-gateway': perObserverReward + perGatewayReward,
+      'a-gateway-2': perObserverReward + perGatewayReward,
       // observer three does not get anything!
       [SmartWeave.contract.id]: 10_000_000 - totalRewardsDistributed,
     });
@@ -876,17 +945,17 @@ describe('tickRewardDistribution', () => {
       lastCompletedEpochEndHeight: DEFAULT_EPOCH_BLOCK_LENGTH - 1,
       lastCompletedEpochStartHeight: 0,
       gateways: {
-        'an-observing-gateway': {
+        'a-gateway': {
           passedEpochCount: 1,
           totalEpochParticipationCount: 1,
           failedConsecutiveEpochs: 0,
         },
-        'an-observing-gateway-2': {
+        'a-gateway-2': {
           passedEpochCount: 1,
           totalEpochParticipationCount: 1,
           failedConsecutiveEpochs: 0,
         },
-        'an-observing-gateway-3': {
+        'a-gateway-3': {
           passedEpochCount: 0,
           totalEpochParticipationCount: 1,
           failedConsecutiveEpochs: 1,

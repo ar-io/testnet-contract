@@ -32,7 +32,6 @@ import {
   Gateways,
   IOState,
   Observations,
-  ObserverAddress,
   ObserverDistributions,
   Records,
   RegistryVaults,
@@ -483,12 +482,13 @@ export async function tickRewardDistribution({
     epochStartHeight,
     epochEndHeight,
     minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
+    distributions,
   });
 
   // TODO: consider having this be a set, gateways can not run on the same wallet
   const gatewaysToReward: WalletAddress[] = [];
   // note this should not be a set, you can run multiple gateways with one wallet
-  const observersToReward: ObserverAddress[] = [];
+  const observerGatewaysToReward: WalletAddress[] = [];
 
   // identify observers who reported the above gateways as eligible for rewards
   for (const gatewayAddress in eligibleGateways) {
@@ -553,8 +553,8 @@ export async function tickRewardDistribution({
       observer.observerAddress
     ].submittedEpochCount += 1;
 
-    // make it eligible for observer rewards
-    observersToReward.push(observer.observerAddress);
+    // make it eligible for observer rewards, use the gateway address and not the observer address
+    observerGatewaysToReward.push(observer.gatewayAddress);
   }
 
   // prepare for distributions
@@ -601,7 +601,7 @@ export async function tickRewardDistribution({
     // if you were prescribed observer but didn't submit a report, you get gateway reward penalized
     if (
       Object.keys(prescribedObservers).includes(gatewayAddress) &&
-      !Object.keys(observersToReward).includes(gatewayAddress)
+      !Object.keys(observerGatewaysToReward).includes(gatewayAddress)
     ) {
       // you don't get the full gateway reward if you didn't submit a report
       totalGatewayReward = Math.floor(
@@ -618,7 +618,7 @@ export async function tickRewardDistribution({
   }
 
   // distribute observer tokens
-  for (const gatewayObservedAndPassed of observersToReward) {
+  for (const gatewayObservedAndPassed of observerGatewaysToReward) {
     // add protocol balance if we do not have it
     if (!updatedBalances[SmartWeave.contract.id]) {
       updatedBalances[SmartWeave.contract.id] =

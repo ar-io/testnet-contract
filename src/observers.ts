@@ -1,18 +1,18 @@
 import {
-  BLOCKS_PER_DAY,
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_NUM_SAMPLED_BLOCKS,
   DEFAULT_SAMPLED_BLOCKS_OFFSET,
   GATEWAY_LEAVE_LENGTH,
   MAX_TENURE_WEIGHT,
   NUM_OBSERVERS_PER_EPOCH,
-  TENURE_WEIGHT_DAYS,
+  TENURE_WEIGHT_TOTAL_BLOCK_COUNT,
 } from './constants';
 import {
   BlockHeight,
   DeepReadonly,
   Gateway,
   Gateways,
+  RewardDistributions,
   WeightedObserver,
 } from './types';
 
@@ -43,40 +43,35 @@ export function getEpochBoundariesForHeight({
 }
 
 // TODO: can we confidently us buffers here in non-node environments?
-export async function getEntropyForEpoch({
-  epochEndHeight,
+export async function getEntropyHashForEpoch({
+  epochStartHeight,
 }: {
-  epochEndHeight: BlockHeight;
+  epochStartHeight: BlockHeight;
 }): Promise<Buffer> {
-  let entropyBuffer: Buffer = Buffer.alloc(0);
+  // used as we don't have access to Hash object in smartweave executions, so we concat our buffer and hash it at the end
+  let bufferHash: Buffer = Buffer.from('');
   // We hash multiples block hashes to reduce the chance that someone will
   // influence the value produced by grinding with excessive hash power.
-  const hashedBlockHeightEnd =
-    epochEndHeight.valueOf() - DEFAULT_SAMPLED_BLOCKS_OFFSET;
-  const hashedBlockHeightStart = Math.max(
-    0,
-    hashedBlockHeightEnd - DEFAULT_NUM_SAMPLED_BLOCKS,
-  );
-  for (
-    let hashedBlockHeight = hashedBlockHeightStart;
-    hashedBlockHeight < hashedBlockHeightEnd;
-    hashedBlockHeight++
-  ) {
-    const path = `/block/height/${hashedBlockHeight}`;
+  for (let i = 0; i < DEFAULT_NUM_SAMPLED_BLOCKS; i++) {
+    const blockHeight = Math.max(
+      0,
+      epochStartHeight.valueOf() - DEFAULT_SAMPLED_BLOCKS_OFFSET - i,
+    );
+    const path = `/block/height/${blockHeight}`;
     const data = await SmartWeave.safeArweaveGet(path);
     const indep_hash = data.indep_hash;
-    if (!indep_hash || typeof indep_hash !== 'string') {
+    // TODO: add regex check on the indep_hash
+    if (!indep_hash) {
       throw new ContractError(
-        `Block ${hashedBlockHeight.valueOf()} has no indep_hash`,
+        `Block ${blockHeight.valueOf()} has no indep_hash`,
       );
     }
-    entropyBuffer = Buffer.concat([
-      entropyBuffer,
+    bufferHash = Buffer.concat([
+      bufferHash,
       Buffer.from(indep_hash, 'base64url'),
     ]);
   }
-  const hash = await SmartWeave.arweave.crypto.hash(entropyBuffer, 'SHA-256');
-  return hash;
+  return SmartWeave.arweave.crypto.hash(bufferHash, 'SHA-256');
 }
 
 export function isGatewayLeaving({
@@ -103,13 +98,14 @@ export function isGatewayEligibleForDistribution({
 }): boolean {
   // TODO: should a gateway be eligible if it's hidden?
   if (!gateway) return false;
-  const isWithinStartRange = gateway.start <= epochStartHeight.valueOf();
+  // gateway must have joined before the epoch started, as it affects weighting for distributions
+  const didStartBeforeEpoch = gateway.start < epochStartHeight.valueOf();
   if (isGatewayLeaving({ gateway, currentBlockHeight: epochEndHeight })) {
     return false;
   }
   // there may be way to consolidate this
-  const isWithinEndRange = gateway.end === 0;
-  return isWithinStartRange && isWithinEndRange;
+  const isWithinEndRange = gateway.end === 0; // TODO: do we need this now that we got rid of hidden
+  return didStartBeforeEpoch && isWithinEndRange;
 }
 
 export function getEligibleGatewaysForEpoch({
@@ -138,16 +134,17 @@ export function getEligibleGatewaysForEpoch({
 
 export async function getPrescribedObserversForEpoch({
   gateways,
+  distributions,
   minNetworkJoinStakeAmount,
   epochStartHeight,
   epochEndHeight,
 }: {
   gateways: DeepReadonly<Gateways>;
+  distributions: DeepReadonly<RewardDistributions>;
   minNetworkJoinStakeAmount: number;
   epochStartHeight: BlockHeight;
   epochEndHeight: BlockHeight;
 }): Promise<WeightedObserver[]> {
-  const prescribedObservers: WeightedObserver[] = [];
   const weightedObservers: WeightedObserver[] = [];
   let totalCompositeWeight = 0;
 
@@ -161,28 +158,43 @@ export async function getPrescribedObserversForEpoch({
   // Get all eligible observers and assign weights
   for (const [address, eligibleGateway] of Object.entries(eligibleGateways)) {
     const stake = eligibleGateway.operatorStake;
-    const stakeWeight = stake / minNetworkJoinStakeAmount;
+    const stakeWeight = stake / minNetworkJoinStakeAmount; // this has to be > 1 to joint he network
 
+    // the percentage of the epoch the gateway was joined for before this epoch
     const totalBlocksForGateway =
-      epochEndHeight.valueOf() - eligibleGateway.start;
+      epochStartHeight.valueOf() - eligibleGateway.start;
     const calculatedTenureWeightForGateway =
-      totalBlocksForGateway / (TENURE_WEIGHT_DAYS * BLOCKS_PER_DAY);
+      totalBlocksForGateway / TENURE_WEIGHT_TOTAL_BLOCK_COUNT; // do not default to 0
     const gatewayTenureWeight = Math.min(
       calculatedTenureWeightForGateway,
       MAX_TENURE_WEIGHT,
     );
 
-    // set reward ratio weights
-    // TO DO AFTER REWARDS ARE IN!
-    const gatewayRewardRatioWeight = 1;
-    const observerRewardRatioWeight = 1;
+    // the percentage of epochs participated in that the gateway passed
+    const totalEpochsParticipatedIn =
+      distributions.gateways[address]?.totalEpochParticipationCount || 0;
+    const totalEpochsGatewayPassed =
+      distributions.gateways[address]?.passedEpochCount || 0;
+    const gatewayRewardRatioWeight = totalEpochsParticipatedIn
+      ? totalEpochsGatewayPassed / totalEpochsParticipatedIn
+      : 1;
 
+    // the percentage of epochs the observer was prescribed and submitted reports for
+    const totalEpochsPrescribed =
+      distributions.observers[address]?.totalEpochsPrescribedCount || 0;
+    const totalEpochsSubmitted =
+      distributions.observers[address]?.submittedEpochCount || 0;
+    const observerRewardRatioWeight = totalEpochsPrescribed
+      ? totalEpochsSubmitted / totalEpochsPrescribed
+      : 1;
+
+    // TODO: should all of these default to one?
     // calculate composite weight based on sub weights
     const compositeWeight =
       stakeWeight *
-      gatewayTenureWeight *
-      gatewayRewardRatioWeight *
-      observerRewardRatioWeight;
+        gatewayTenureWeight *
+        gatewayRewardRatioWeight *
+        observerRewardRatioWeight || 1;
 
     weightedObservers.push({
       gatewayAddress: address,
@@ -199,32 +211,34 @@ export async function getPrescribedObserversForEpoch({
     totalCompositeWeight += compositeWeight;
   }
 
-  // calculate the normalized composite weight for each observer
+  // calculate the normalized composite weight for each observer - do not default to one as these are dependent on the total weights of all observers
   for (const weightedObserver of weightedObservers) {
-    weightedObserver.normalizedCompositeWeight =
-      weightedObserver.compositeWeight / totalCompositeWeight;
+    weightedObserver.normalizedCompositeWeight = totalCompositeWeight
+      ? weightedObserver.compositeWeight / totalCompositeWeight
+      : 0;
   }
 
-  // If we want to source more observers than exist in the list, just return all eligible observers
+  // return all the observers if there are fewer than the number of observers per epoch
   if (NUM_OBSERVERS_PER_EPOCH >= Object.keys(weightedObservers).length) {
     return weightedObservers;
   }
 
-  // deterministic way to get observers per epoch
-  const entropy = await getEntropyForEpoch({ epochEndHeight });
-  const usedIndexes = new Set<number>();
-  let hash = await SmartWeave.arweave.crypto.hash(entropy, 'SHA-256');
+  // deterministic way to get observers per epoch based on the epochs end height
+  const blockHeightEntropyHash = await getEntropyHashForEpoch({
+    epochStartHeight,
+  });
+  const prescribedObservers: Set<WeightedObserver> = new Set();
+  let hash = blockHeightEntropyHash;
   for (let i = 0; i < NUM_OBSERVERS_PER_EPOCH; i++) {
     const random = hash.readUInt32BE(0) / 0xffffffff; // Convert hash to a value between 0 and 1
     let cumulativeNormalizedCompositeWeight = 0;
-    for (let index = 0; index < weightedObservers.length; index++) {
+    for (const observer of weightedObservers) {
       {
         cumulativeNormalizedCompositeWeight +=
-          weightedObservers[index].normalizedCompositeWeight;
+          observer.normalizedCompositeWeight;
         if (random <= cumulativeNormalizedCompositeWeight) {
-          if (!usedIndexes.has(index)) {
-            prescribedObservers.push(weightedObservers[index]);
-            usedIndexes.add(index);
+          if (!prescribedObservers.has(observer)) {
+            prescribedObservers.add(observer);
             break;
           }
         }
@@ -233,5 +247,5 @@ export async function getPrescribedObserversForEpoch({
       hash = await SmartWeave.arweave.crypto.hash(hash, 'SHA-256');
     }
   }
-  return prescribedObservers;
+  return [...prescribedObservers];
 }

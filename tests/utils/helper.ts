@@ -121,7 +121,7 @@ function createGateways(wallets: string[]) {
   const gateways: Gateways = {
     [wallets[0]]: {
       operatorStake: 50_000,
-      start: 0,
+      start: -1,
       end: 0,
       status: NETWORK_JOIN_STATUS,
       vaults: {},
@@ -138,7 +138,7 @@ function createGateways(wallets: string[]) {
     [wallets[1]]: {
       operatorStake: 10_000,
       status: NETWORK_JOIN_STATUS,
-      start: 0,
+      start: -1,
       end: 0,
       vaults: {},
       settings: {
@@ -154,7 +154,7 @@ function createGateways(wallets: string[]) {
     [wallets[2]]: {
       operatorStake: 250_000,
       status: NETWORK_JOIN_STATUS,
-      start: 0,
+      start: -1,
       end: 0,
       vaults: {},
       settings: {
@@ -170,7 +170,7 @@ function createGateways(wallets: string[]) {
     [wallets[3]]: {
       operatorStake: 15_000,
       status: NETWORK_JOIN_STATUS,
-      start: 0,
+      start: -1,
       end: 0,
       vaults: {},
       settings: {
@@ -186,7 +186,7 @@ function createGateways(wallets: string[]) {
     [wallets[4]]: {
       operatorStake: 100_000,
       status: NETWORK_JOIN_STATUS,
-      start: 0,
+      start: -1,
       end: 0,
       vaults: {},
       settings: {
@@ -202,7 +202,7 @@ function createGateways(wallets: string[]) {
     [wallets[5]]: {
       operatorStake: 20_000,
       status: NETWORK_JOIN_STATUS,
-      start: 0,
+      start: -1,
       end: 0,
       vaults: {},
       settings: {
@@ -218,7 +218,7 @@ function createGateways(wallets: string[]) {
     [wallets[6]]: {
       operatorStake: 20_000,
       status: NETWORK_JOIN_STATUS,
-      start: 0,
+      start: -1,
       end: 0,
       vaults: {},
       settings: {
@@ -234,7 +234,7 @@ function createGateways(wallets: string[]) {
     [wallets[7]]: {
       operatorStake: 10_000,
       status: NETWORK_LEAVING_STATUS,
-      start: 0,
+      start: -1,
       end: 0,
       vaults: {},
       settings: {
@@ -263,11 +263,10 @@ function createGateways(wallets: string[]) {
       },
       observerWallet: wallets[8],
     },
-
     [wallets[9]]: {
       operatorStake: 10_000,
       status: NETWORK_LEAVING_STATUS,
-      start: 0,
+      start: -1,
       end: 100,
       vaults: {},
       settings: {

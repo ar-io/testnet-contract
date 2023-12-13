@@ -24,6 +24,8 @@ export const MIN_TOKEN_LOCK_LENGTH = 14 * BLOCKS_PER_DAY; // The minimum amount 
 export const MINIMUM_ALLOWED_EVOLUTION_DELAY = 3; // 3 blocks for testing purposes, but should be 720 * 7; // 720 blocks per day times 7 days
 export const MINIMUM_ALLOWED_NAME_LENGTH = 5; // names less than 5 characters are reserved for auction
 export const TENURE_WEIGHT_DAYS = 180; // the amount of days in a single tenure weight period used to calculate composite weights for observation
+export const TENURE_WEIGHT_TOTAL_BLOCK_COUNT =
+  TENURE_WEIGHT_DAYS * BLOCKS_PER_DAY; // the # of blocks in a single tenure weight period (6-months) used to calculate composite weights for observation
 export const PERMABUY_LEASE_FEE_LENGTH = 10;
 export const ANNUAL_PERCENTAGE_FEE = 0.2; // 20% of cost of name
 export const DEFAULT_UNDERNAME_COUNT = 10;

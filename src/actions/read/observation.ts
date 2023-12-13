@@ -26,6 +26,7 @@ export const prescribedObserver = async (
     minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
     epochEndHeight: epochEndHeight,
     epochStartHeight: epochStartHeight,
+    distributions,
   });
 
   // The target with the specified address is found in the prescribedObservers list
@@ -52,6 +53,7 @@ export const prescribedObservers = async (
     minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
     epochStartHeight: epochStartHeight,
     epochEndHeight: epochEndHeight,
+    distributions,
   });
 
   return { result: prescribedObservers };
