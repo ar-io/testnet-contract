@@ -1,4 +1,4 @@
-import { Contract, JWKInterface, PstState } from 'warp-contracts/lib/types';
+import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import { getEpochBoundariesForHeight } from '../src/observers';
 import { BlockHeight, IOState, WeightedObserver } from '../src/types';
@@ -6,6 +6,7 @@ import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_START_HEIGHT,
   EXAMPLE_OBSERVER_REPORT_TX_IDS,
+  INVALID_OBSERVATION_CALLER_MESSAGE,
   INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE,
   WALLETS_TO_CREATE,
 } from './utils/constants';
@@ -132,9 +133,7 @@ describe('Observation', () => {
 
         expect(
           writeInteractions.every((interaction) => {
-            return !Object.keys(newCachedValue.errorMessages).includes(
-              interaction?.originalTxId,
-            );
+            return !newCachedValue.errorMessages[interaction?.originalTxId];
           }),
         ).toEqual(true);
         expect(
@@ -175,9 +174,9 @@ describe('Observation', () => {
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
         const newState = newCachedValue.state as IOState;
-        expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
-          writeInteraction?.originalTxId,
-        );
+        expect(
+          newCachedValue.errorMessages[writeInteraction?.originalTxId],
+        ).toBeUndefined();
         expect(
           newState.observations[currentEpochStartHeight.valueOf()],
         ).toEqual({
@@ -312,47 +311,34 @@ describe('Observation', () => {
   describe('non-prescribed observer', () => {
     describe('write interactions', () => {
       it('should not save observation report if not prescribed observer', async () => {
-        const height = (await getCurrentBlock(arweave)).valueOf();
-        const { result: prescribedObservers }: { result: WeightedObserver[] } =
-          await contract.viewState({
-            function: 'prescribedObservers',
-            height,
-          });
         const { cachedValue: prevCachedValue } = await contract.readState();
-        const nonPrescribedObserverWallet = wallets.find((wallet) => {
-          return !prescribedObservers.some(
-            (prescribedObserver: { observerAddress: string }) =>
-              prescribedObserver.observerAddress === wallet.addr,
-          );
-        });
-        contract = warp
-          .pst(srcContractId)
-          .connect(nonPrescribedObserverWallet.jwk);
+        const nonPrescribedObserver = wallets[8].jwk; // not allowed to observe
+        contract = warp.pst(srcContractId).connect(nonPrescribedObserver);
         const writeInteraction = await contract.writeInteraction({
           function: 'saveObservations',
           observerReportTxId: EXAMPLE_OBSERVER_REPORT_TX_IDS[0],
           failedGateways: failedGateways,
         });
+        expect(writeInteraction?.originalTxId).toBeDefined();
         const { cachedValue: newCachedValue } = await contract.readState();
-        expect(Object.keys(newCachedValue.errorMessages)).toContain(
-          writeInteraction?.originalTxId,
-        );
+        expect(
+          newCachedValue.errorMessages[writeInteraction?.originalTxId],
+        ).toEqual(INVALID_OBSERVATION_CALLER_MESSAGE);
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
 
-      it('should not save observation report if not in the registry and not observer', async () => {
+      it('should not save observation report if the gateway is not in the registry and not observer', async () => {
+        // const notJoinedGateway = await arweave.wallets.generate();
         const notJoinedGateway = await createLocalWallet(arweave);
         const { cachedValue: prevCachedValue } = await contract.readState();
-        contract = warp.pst(srcContractId).connect(notJoinedGateway.wallet); // The last wallet in the array is not in the GAR
+        contract = warp.pst(srcContractId).connect(notJoinedGateway.wallet);
         const writeInteraction = await contract.writeInteraction({
           function: 'saveObservations',
           observerReportTxId: EXAMPLE_OBSERVER_REPORT_TX_IDS[0],
           failedGateways: failedGateways,
         });
+        expect(writeInteraction?.originalTxId).toBeDefined();
         const { cachedValue: newCachedValue } = await contract.readState();
-        expect(Object.keys(newCachedValue.errorMessages)).toContain(
-          writeInteraction?.originalTxId,
-        );
         expect(
           newCachedValue.errorMessages[writeInteraction?.originalTxId],
         ).toEqual(INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE);
