@@ -1,6 +1,7 @@
 import {
   INVALID_INPUT_MESSAGE,
   INVALID_OBSERVATION_CALLER_MESSAGE,
+  INVALID_OBSERVATION_FOR_GATEWAY_MESSAGE,
   INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE,
   NETWORK_LEAVING_STATUS,
 } from '../../constants';
@@ -53,6 +54,7 @@ describe('saveObservations', () => {
         {
           caller: 'fake-caller',
           input: {
+            gatewayAddress: stubbedArweaveTxId,
             observerReportTxId: 'invalid-tx-id',
             failedGateways: [],
           },
@@ -67,7 +69,8 @@ describe('saveObservations', () => {
         {
           caller: 'fake-caller',
           input: {
-            observerReportTxId: 'invalid-tx-id',
+            gatewayAddress: stubbedArweaveTxId,
+            observerReportTxId: stubbedArweaveTxId,
             failedGateways: {},
           },
         },
@@ -81,8 +84,24 @@ describe('saveObservations', () => {
         {
           caller: 'fake-caller',
           input: {
-            observerReportTxId: 'invalid-tx-id',
+            gatewayAddress: stubbedArweaveTxId,
+            observerReportTxId: stubbedArweaveTxId,
             failedGateways: ['invalid-tx-id'],
+          },
+        },
+        INVALID_INPUT_MESSAGE,
+      ],
+      [
+        'should throw an error if the gatewayAddress is not a valid tx id',
+        {
+          ...getBaselineState(),
+        },
+        {
+          caller: 'fake-caller',
+          input: {
+            gatewayAddress: 'invalid-tx-id',
+            observerReportTxId: stubbedArweaveTxId,
+            failedGateways: [],
           },
         },
         INVALID_INPUT_MESSAGE,
@@ -172,6 +191,56 @@ describe('saveObservations', () => {
             },
           },
           INVALID_OBSERVATION_CALLER_MESSAGE,
+        ],
+        [
+          'should throw an error if the gatewayAddress is not provided and the caller does not exist in the registry',
+          {
+            ...getBaselineState(),
+          },
+          {
+            caller: 'fake-caller',
+            input: {
+              // it should use the caller as the default for gateway address
+              observerReportTxId: stubbedArweaveTxId,
+              failedGateways: [],
+            },
+          },
+          INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE,
+        ],
+        [
+          'should throw an error if the gatewayAddress provided is not in the registry',
+          {
+            ...getBaselineState(),
+          },
+          {
+            caller: 'observer-address',
+            input: {
+              gatewayAddress: stubbedArweaveTxId,
+              observerReportTxId: stubbedArweaveTxId,
+              failedGateways: [],
+            },
+          },
+          INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE,
+        ],
+        [
+          'should throw an error if the gatewayAddress is not provided by the caller does not match the gateway observer address',
+          {
+            ...getBaselineState(),
+            gateways: {
+              'observer-address': {
+                ...baselineGatewayData,
+                observerWallet: 'a-different-address',
+              },
+            },
+          },
+          {
+            caller: 'observer-address', // this does not match the observer address
+            input: {
+              observerReportTxId: stubbedArweaveTxId,
+              failedGateways: [],
+            },
+          },
+          INVALID_OBSERVATION_FOR_GATEWAY_MESSAGE,
         ],
       ])('%s', async (_, initialState: IOState, inputData, errorMessage) => {
         const error = await saveObservations(initialState, inputData).catch(

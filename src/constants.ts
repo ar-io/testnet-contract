@@ -44,7 +44,9 @@ export const INVALID_VAULT_LOCK_LENGTH_MESSAGE = `Invalid lock length. Must be b
 export const INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE =
   'Invalid caller. Observer does not exist as an observer address in the gateway registry.';
 export const INVALID_OBSERVATION_CALLER_MESSAGE =
-  'Invalid caller. Caller is not eligible to submit observation reports';
+  'Invalid caller. Caller is not eligible to submit observation reports for this epoch.';
+export const INVALID_OBSERVATION_FOR_GATEWAY_MESSAGE =
+  'Invalid CALLER. Caller is not the observer wallet for this gateway.';
 export const INVALID_GATEWAY_REGISTERED_MESSAGE =
   'Target gateway is not currently registered';
 export const INVALID_OBSERVATION_TARGET_MESSAGE =

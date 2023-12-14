@@ -1,6 +1,7 @@
 import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
   INVALID_OBSERVATION_CALLER_MESSAGE,
+  INVALID_OBSERVATION_FOR_GATEWAY_MESSAGE,
   INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
@@ -11,7 +12,6 @@ import {
 import {
   BlockHeight,
   ContractWriteResult,
-  Gateway,
   IOState,
   PstAction,
   TransactionId,
@@ -25,8 +25,9 @@ import { validateSaveObservations } from '../../validations';
 export class SaveObservations {
   observerReportTxId: TransactionId;
   failedGateways: WalletAddress[];
+  gatewayAddress: WalletAddress;
 
-  constructor(input: any) {
+  constructor(input: any, caller: TransactionId) {
     // validate using ajv validator
     if (!validateSaveObservations(input)) {
       throw new ContractError(
@@ -37,9 +38,14 @@ export class SaveObservations {
         ),
       );
     }
-    const { observerReportTxId, failedGateways } = input;
+    const {
+      observerReportTxId,
+      failedGateways,
+      gatewayAddress = caller, // default the gateway address to the caller
+    } = input;
     this.observerReportTxId = observerReportTxId;
     this.failedGateways = failedGateways;
+    this.gatewayAddress = gatewayAddress;
   }
 }
 
@@ -49,7 +55,8 @@ export const saveObservations = async (
 ): Promise<ContractWriteResult> => {
   // get all other relevant state data
   const { observations, gateways, settings, distributions } = state;
-  const { observerReportTxId, failedGateways } = new SaveObservations(input);
+  const { gatewayAddress, observerReportTxId, failedGateways } =
+    new SaveObservations(input, caller);
   const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height), // a block height in the middle of the first epoch
     epochZeroBlockHeight: new BlockHeight(distributions.epochZeroBlockHeight),
@@ -57,15 +64,19 @@ export const saveObservations = async (
   });
 
   // get the gateway that is creating the observation
-  const observingGateway = Object.values(gateways).find(
-    (gateway: Gateway) => gateway.observerWallet === caller,
-  );
+  const observingGateway = gateways[gatewayAddress];
 
-  // no observer found
+  // no gateway found found
   if (!observingGateway) {
     throw new ContractError(INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE);
   }
 
+  // gateway found but the caller is not the observer wallet
+  if (observingGateway.observerWallet !== caller) {
+    throw new ContractError(INVALID_OBSERVATION_FOR_GATEWAY_MESSAGE);
+  }
+
+  // gateway found but it is not allowed to submit observations for the epoch
   if (
     observingGateway.start > epochStartHeight.valueOf() ||
     observingGateway.status !== NETWORK_JOIN_STATUS
