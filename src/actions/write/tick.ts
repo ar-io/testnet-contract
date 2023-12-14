@@ -437,8 +437,21 @@ export async function tickRewardDistribution({
     };
   }
 
+  // avoids ticking on the first epoch where lastCompletedEpochEndHeight is 0
+  if (
+    distributions.lastCompletedEpochEndHeight === 0 &&
+    currentBlockHeight.valueOf() <= distributions.epochZeroBlockHeight
+  ) {
+    return {
+      distributions: distributions as RewardDistributions,
+      balances,
+    };
+  }
+
   const lastCompletedEpochEndHeight = new BlockHeight(
-    distributions.lastCompletedEpochEndHeight,
+    distributions.lastCompletedEpochEndHeight
+      ? distributions.lastCompletedEpochEndHeight
+      : distributions.epochZeroBlockHeight + DEFAULT_EPOCH_BLOCK_LENGTH - 1, // the first epoch end height
   );
 
   // distribution should only happen once on block that is TALLY_PERIOD_BLOCKS after the last completed epoch
