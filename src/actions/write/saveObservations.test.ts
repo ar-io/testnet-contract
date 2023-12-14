@@ -120,7 +120,7 @@ describe('saveObservations', () => {
           {
             ...getBaselineState(),
             gateways: {
-              stubbedArweaveTxId: baselineGatewayData,
+              [stubbedArweaveTxId]: baselineGatewayData,
             },
           },
           {
@@ -137,14 +137,15 @@ describe('saveObservations', () => {
           {
             ...getBaselineState(),
             gateways: {
-              stubbedArweaveTxId: {
+              ['observer-address']: {
                 ...baselineGatewayData,
                 start: 10,
+                observerWallet: 'observer-address',
               },
             },
           },
           {
-            caller: 'fake-observer-wallet',
+            caller: 'observer-address',
             input: {
               observerReportTxId: stubbedArweaveTxId,
               failedGateways: [],
