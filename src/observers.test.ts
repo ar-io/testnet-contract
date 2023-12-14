@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
   GATEWAY_LEAVE_LENGTH,
+  MAXIMUM_OBSERVERS_PER_EPOCH,
   TENURE_WEIGHT_TOTAL_BLOCK_COUNT,
 } from './constants';
 import {
@@ -105,12 +106,12 @@ describe('getPrescribedObserversForEpoch', () => {
     ]);
   });
 
-  it('should return the correct all observers with proper weights if less than the number required', async () => {
+  it('should return the correct all observers with proper weights if more than the number required', async () => {
     const epochStartHeight = 10;
     const observers = await getPrescribedObserversForEpoch({
       gateways: {
         ...gateways,
-        // only 4 should get selected
+        // only 4 & 5 should get selected
         'test-observer-wallet-4': {
           ...baselineGatewayData,
           operatorStake: 400,
@@ -120,7 +121,7 @@ describe('getPrescribedObserversForEpoch', () => {
         'test-observer-wallet-5': {
           ...baselineGatewayData,
           operatorStake: 500,
-          start: 10, // it won't be included as an eligible gateway
+          start: epochStartHeight - 1,
           observerWallet: 'test-observer-wallet-5',
         },
       },
@@ -130,7 +131,20 @@ describe('getPrescribedObserversForEpoch', () => {
       epochEndHeight: new BlockHeight(20),
     });
     expect(observers).toBeDefined();
+    expect(observers.length).toBe(MAXIMUM_OBSERVERS_PER_EPOCH);
     expect(observers).toEqual([
+      {
+        compositeWeight: 0.0023148148148148147,
+        gatewayAddress: 'test-observer-wallet-3',
+        gatewayRewardRatioWeight: 1,
+        normalizedCompositeWeight: 0.35294117647058826,
+        observerAddress: 'test-observer-wallet-3',
+        observerRewardRatioWeight: 1,
+        stake: 300,
+        stakeWeight: 30,
+        start: 0,
+        tenureWeight: epochStartHeight / TENURE_WEIGHT_TOTAL_BLOCK_COUNT,
+      },
       {
         gatewayAddress: 'test-observer-wallet-1',
         observerAddress: 'test-observer-wallet-1',
@@ -141,7 +155,7 @@ describe('getPrescribedObserversForEpoch', () => {
         gatewayRewardRatioWeight: 1,
         observerRewardRatioWeight: 1,
         compositeWeight: 0.0007716049382716049,
-        normalizedCompositeWeight: 0.125,
+        normalizedCompositeWeight: 0.11764705882352941,
       },
       {
         gatewayAddress: 'test-observer-wallet-2',
@@ -153,19 +167,7 @@ describe('getPrescribedObserversForEpoch', () => {
         gatewayRewardRatioWeight: 1,
         observerRewardRatioWeight: 1,
         compositeWeight: 0.0015432098765432098,
-        normalizedCompositeWeight: 0.25,
-      },
-      {
-        gatewayAddress: 'test-observer-wallet-3',
-        observerAddress: 'test-observer-wallet-3',
-        stake: 300,
-        start: 0,
-        stakeWeight: 30,
-        tenureWeight: epochStartHeight / TENURE_WEIGHT_TOTAL_BLOCK_COUNT, // epochEnd - gateway start
-        gatewayRewardRatioWeight: 1,
-        observerRewardRatioWeight: 1,
-        compositeWeight: 0.0023148148148148147,
-        normalizedCompositeWeight: 0.375,
+        normalizedCompositeWeight: 0.23529411764705882,
       },
       {
         gatewayAddress: 'test-observer-wallet-4',
@@ -177,7 +179,7 @@ describe('getPrescribedObserversForEpoch', () => {
         gatewayRewardRatioWeight: 1,
         observerRewardRatioWeight: 1,
         compositeWeight: 0.0015432098765432098,
-        normalizedCompositeWeight: 0.25,
+        normalizedCompositeWeight: 0.23529411764705882,
       },
     ]);
   });

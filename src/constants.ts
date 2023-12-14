@@ -58,7 +58,7 @@ export const EPOCH_REWARD_PERCENTAGE = 0.0025; // 0.25% of total available proto
 export const GATEWAY_PERCENTAGE_OF_EPOCH_REWARD = 0.95;
 export const OBSERVATION_FAILURE_THRESHOLD = 0.51;
 export const BAD_OBSERVER_GATEWAY_PENALTY = 0.25;
-export const NUM_OBSERVERS_PER_EPOCH = 4;
+export const MAXIMUM_OBSERVERS_PER_EPOCH = 4; // TODO: CHANGE THIS TO 50;
 export const NON_EXPIRED_ARNS_NAME_MESSAGE =
   'This name already exists in an active lease';
 export const ARNS_NAME_DOES_NOT_EXIST_MESSAGE =

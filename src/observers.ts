@@ -2,8 +2,8 @@ import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_NUM_SAMPLED_BLOCKS,
   DEFAULT_SAMPLED_BLOCKS_OFFSET,
+  MAXIMUM_OBSERVERS_PER_EPOCH,
   MAX_TENURE_WEIGHT,
-  NUM_OBSERVERS_PER_EPOCH,
   TENURE_WEIGHT_TOTAL_BLOCK_COUNT,
 } from './constants';
 import {
@@ -216,7 +216,7 @@ export async function getPrescribedObserversForEpoch({
   }
 
   // return all the observers if there are fewer than the number of observers per epoch
-  if (NUM_OBSERVERS_PER_EPOCH >= Object.keys(weightedObservers).length) {
+  if (MAXIMUM_OBSERVERS_PER_EPOCH >= Object.keys(weightedObservers).length) {
     return weightedObservers;
   }
 
@@ -224,21 +224,21 @@ export async function getPrescribedObserversForEpoch({
   const blockHeightEntropyHash = await getEntropyHashForEpoch({
     epochStartHeight,
   });
+
   const prescribedObservers: Set<WeightedObserver> = new Set();
-  let hash = blockHeightEntropyHash;
-  for (let i = 0; i < NUM_OBSERVERS_PER_EPOCH; i++) {
+  let hash = blockHeightEntropyHash; // our starting hash
+  for (let i = 0; i < MAXIMUM_OBSERVERS_PER_EPOCH; i++) {
     const random = hash.readUInt32BE(0) / 0xffffffff; // Convert hash to a value between 0 and 1
     let cumulativeNormalizedCompositeWeight = 0;
     for (const observer of weightedObservers) {
-      {
-        cumulativeNormalizedCompositeWeight +=
-          observer.normalizedCompositeWeight;
-        if (random <= cumulativeNormalizedCompositeWeight) {
-          if (!prescribedObservers.has(observer)) {
-            prescribedObservers.add(observer);
-            break;
-          }
-        }
+      // skip observers that have already been prescribed
+      if (prescribedObservers.has(observer)) continue;
+      // add the observers normalized composite weight to the cumulative weight
+      cumulativeNormalizedCompositeWeight += observer.normalizedCompositeWeight;
+      // if the random value is less than the cumulative weight, we have found our observer
+      if (random <= cumulativeNormalizedCompositeWeight) {
+        prescribedObservers.add(observer);
+        break;
       }
       // Compute the next hash for the next iteration
       hash = await SmartWeave.arweave.crypto.hash(hash, 'SHA-256');
