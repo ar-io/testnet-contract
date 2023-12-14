@@ -2,7 +2,6 @@ import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_NUM_SAMPLED_BLOCKS,
   DEFAULT_SAMPLED_BLOCKS_OFFSET,
-  GATEWAY_LEAVE_LENGTH,
   MAX_TENURE_WEIGHT,
   NUM_OBSERVERS_PER_EPOCH,
   TENURE_WEIGHT_TOTAL_BLOCK_COUNT,
@@ -82,8 +81,7 @@ export function isGatewayLeaving({
   currentBlockHeight: BlockHeight;
 }): boolean {
   return (
-    gateway.status === 'leaving' &&
-    gateway.end - GATEWAY_LEAVE_LENGTH <= currentBlockHeight.valueOf()
+    gateway.status === 'leaving' && gateway.end <= currentBlockHeight.valueOf()
   );
 }
 
@@ -96,16 +94,15 @@ export function isGatewayEligibleForDistribution({
   epochEndHeight: BlockHeight;
   gateway: DeepReadonly<Gateway> | undefined;
 }): boolean {
-  // TODO: should a gateway be eligible if it's hidden?
   if (!gateway) return false;
   // gateway must have joined before the epoch started, as it affects weighting for distributions
   const didStartBeforeEpoch = gateway.start < epochStartHeight.valueOf();
-  if (isGatewayLeaving({ gateway, currentBlockHeight: epochEndHeight })) {
-    return false;
-  }
-  // there may be way to consolidate this
-  const isWithinEndRange = gateway.end === 0; // TODO: do we need this now that we got rid of hidden
-  return didStartBeforeEpoch && isWithinEndRange;
+  // gateway must not be leaving before the end of the epoch - TODO: confirm this
+  const didNotLeaveDuringEpoch = !isGatewayLeaving({
+    gateway,
+    currentBlockHeight: epochEndHeight,
+  });
+  return didStartBeforeEpoch && didNotLeaveDuringEpoch;
 }
 
 export function getEligibleGatewaysForEpoch({

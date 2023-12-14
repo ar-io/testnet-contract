@@ -1,9 +1,18 @@
 import { createHash } from 'node:crypto';
 
-import { TENURE_WEIGHT_TOTAL_BLOCK_COUNT } from './constants';
-import { getPrescribedObserversForEpoch } from './observers';
+import {
+  DEFAULT_EPOCH_BLOCK_LENGTH,
+  GATEWAY_LEAVE_LENGTH,
+  TENURE_WEIGHT_TOTAL_BLOCK_COUNT,
+} from './constants';
+import {
+  getEntropyHashForEpoch,
+  getEpochBoundariesForHeight,
+  getPrescribedObserversForEpoch,
+  isGatewayEligibleForDistribution,
+} from './observers';
 import { baselineGatewayData } from './tests/stubs';
-import { BlockHeight } from './types';
+import { BlockHeight, Gateway } from './types';
 
 const gateways = {
   'test-observer-wallet-1': {
@@ -171,5 +180,195 @@ describe('getPrescribedObserversForEpoch', () => {
         normalizedCompositeWeight: 0.25,
       },
     ]);
+  });
+});
+
+describe('isGatewayEligibleForDistribution', () => {
+  it.each([
+    [
+      'should be true if the gateway is joined, and started before the epoch start',
+      {
+        ...baselineGatewayData,
+        status: 'joined',
+        start: 0,
+      },
+      10,
+      Number.MAX_SAFE_INTEGER,
+      true,
+    ],
+    [
+      'should be true if the gateway is leaving, but started before the epoch start and leaving after the end of the epoch',
+      {
+        ...baselineGatewayData,
+        status: 'leaving',
+        end: GATEWAY_LEAVE_LENGTH + 1,
+        start: 0,
+      },
+      10,
+      GATEWAY_LEAVE_LENGTH,
+      true,
+    ],
+    [
+      'should be true if the gateway is joined, and started before the epoch with large numbers',
+      {
+        ...baselineGatewayData,
+        start: Number.MAX_SAFE_INTEGER - 1,
+      },
+      Number.MAX_SAFE_INTEGER,
+      Number.MAX_SAFE_INTEGER,
+      true,
+    ],
+    [
+      'should be false if gateway is undefined',
+      undefined,
+      10,
+      Number.MAX_SAFE_INTEGER,
+      false,
+    ],
+    [
+      'should be false if gateway is joined but started after the epoch start',
+      {
+        ...baselineGatewayData,
+        status: 'joined',
+        start: 11,
+      },
+      10,
+      Number.MAX_SAFE_INTEGER,
+      false,
+    ],
+    [
+      'should be false if gateway is leaving before the end of the epoch',
+      {
+        ...baselineGatewayData,
+        status: 'leaving',
+        start: 10,
+        end: GATEWAY_LEAVE_LENGTH - 1,
+      },
+      10,
+      GATEWAY_LEAVE_LENGTH,
+      false,
+    ],
+    [
+      'should be false if gateway is joined and started the same block as the epoch start',
+      {
+        ...baselineGatewayData,
+        start: Number.MAX_SAFE_INTEGER,
+      },
+      Number.MAX_SAFE_INTEGER,
+      Number.MAX_SAFE_INTEGER,
+      false,
+    ],
+  ])(
+    '%s',
+    (
+      _: string,
+      gateway: Gateway,
+      epochStartHeight: number,
+      epochEndHeight: number,
+      result: boolean,
+    ) => {
+      expect(
+        isGatewayEligibleForDistribution({
+          gateway,
+          epochStartHeight: new BlockHeight(epochStartHeight),
+          epochEndHeight: new BlockHeight(epochEndHeight),
+        }),
+      ).toBe(result);
+    },
+  );
+});
+
+describe('getEpochBoundariesForHeight', () => {
+  it.each([
+    [1, 1, 1, 2, 2], // --> this is a weird case
+    [19, 2, 100, 2, 101],
+    [34, 0, Number.MAX_SAFE_INTEGER, 0, Number.MAX_SAFE_INTEGER - 1],
+    // [5, 0, undefined, 0, DEFAULT_EPOCH_BLOCK_LENGTH],
+  ])(
+    'should, given current height of %d, zero block height of %d and epoch length of %d return the epoch start of %d and epoch end %d for block height %d',
+    (
+      currentHeight,
+      zeroHeight,
+      epochLength: number,
+      expectedStart,
+      expectedEnd,
+    ) => {
+      const {
+        epochStartHeight: returnedStartHeight,
+        epochEndHeight: returnedEndHeight,
+      } = getEpochBoundariesForHeight({
+        currentBlockHeight: new BlockHeight(currentHeight),
+        epochZeroBlockHeight: new BlockHeight(zeroHeight),
+        epochBlockLength: new BlockHeight(epochLength),
+      });
+      expect(returnedStartHeight.valueOf()).toBe(expectedStart);
+      expect(returnedEndHeight.valueOf()).toBe(expectedEnd);
+    },
+  );
+
+  it('should default the epoch block length if not provided', () => {
+    const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
+      currentBlockHeight: new BlockHeight(5),
+      epochZeroBlockHeight: new BlockHeight(0),
+    });
+    expect(epochStartHeight.valueOf()).toBe(0);
+    expect(epochEndHeight.valueOf()).toBe(DEFAULT_EPOCH_BLOCK_LENGTH - 1);
+  });
+});
+
+describe('getEntropyForEpoch', () => {
+  beforeEach(() => {
+    // stub arweave crypto hash function
+    SmartWeave.arweave.crypto.hash = (
+      buffer: Buffer,
+      algorithm: string,
+    ): Promise<Buffer> => {
+      const hash = createHash(algorithm);
+      hash.update(buffer);
+      return Promise.resolve(hash.digest());
+    };
+
+    // TODO: hard these values in the test based on the response from arweave.net for our test block heights
+    SmartWeave.safeArweaveGet = (): Promise<any> => {
+      return Promise.resolve({
+        indep_hash: 'test-indep-hash',
+      });
+    };
+  });
+
+  afterEach(() => {
+    // reset stubs
+    jest.resetAllMocks();
+  });
+
+  it('should return the correct entropy for a given epoch', async () => {
+    // we create a hash of three blocks hash data as the entropy
+    const epochStartHeight = 0;
+    const expectedBuffer = Buffer.concat([
+      Buffer.from('test-indep-hash', 'base64url'), // hash from block 1
+      Buffer.from('test-indep-hash', 'base64url'), // hash from block 2
+      Buffer.from('test-indep-hash', 'base64url'), // hash from block 3
+    ]);
+    // we call the smartweave hashing function
+    const expectedHash = await SmartWeave.arweave.crypto.hash(
+      expectedBuffer,
+      'SHA-256',
+    );
+    const entropy = await getEntropyHashForEpoch({
+      epochStartHeight: new BlockHeight(epochStartHeight),
+    });
+    expect(entropy.toString()).toBe(expectedHash.toString());
+  });
+
+  it('should throw an error if a block does not have indep_hash', async () => {
+    SmartWeave.safeArweaveGet = (): Promise<any> => {
+      return Promise.resolve({}); // no indep_hash
+    };
+    // we create a hash of three blocks hash data as the entropy
+    const error = await getEntropyHashForEpoch({
+      epochStartHeight: new BlockHeight(0),
+    }).catch((e) => e);
+    expect(error).toBeInstanceOf(Error);
+    expect(error.message).toBe('Block 0 has no indep_hash');
   });
 });
