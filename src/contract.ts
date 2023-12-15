@@ -9,6 +9,7 @@ import {
   getRankedGatewayRegistry,
 } from './actions/read/gateways';
 import {
+  getEpoch,
   prescribedObserver,
   prescribedObservers,
 } from './actions/read/observation';
@@ -90,6 +91,8 @@ export async function handle(
       return prescribedObserver(tickedState, action);
     case 'prescribedObservers':
       return prescribedObservers(tickedState, action);
+    case 'epoch':
+      return getEpoch(tickedState, action);
     case 'gatewayTotalStake':
       return getGatewayTotalStake(tickedState, action);
     case 'gatewayRegistry':

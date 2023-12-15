@@ -107,3 +107,44 @@ export const prescribedObservers = async (
 
   return { result: prescribedObservers };
 };
+
+export async function getEpoch(
+  state: IOState,
+  { input: { height } }: { input: { height: number } },
+): Promise<ContractReadResult> {
+  const { distributions } = state;
+
+  let epochStartHeight = new BlockHeight(distributions.epochStartHeight);
+  let epochEndHeight = new BlockHeight(distributions.epochEndHeight);
+
+  if (height) {
+    if (
+      isNaN(height) ||
+      height < distributions.epochZeroStartHeight ||
+      height > +SmartWeave.block.height
+    ) {
+      throw new ContractError(
+        'Invalid height. Must be a number less than or equal to the current block height',
+      );
+    }
+
+    const {
+      epochStartHeight: previousEpochStartHeight,
+      epochEndHeight: previousEpochEndHeight,
+    } = getEpochBoundariesForHeight({
+      currentBlockHeight: new BlockHeight(height),
+      epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
+      epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+    });
+
+    epochStartHeight = previousEpochStartHeight;
+    epochEndHeight = previousEpochEndHeight;
+  }
+
+  return {
+    result: {
+      epochStartHeight: epochStartHeight.valueOf(),
+      epochEndHeight: epochEndHeight.valueOf(),
+    },
+  };
+}
