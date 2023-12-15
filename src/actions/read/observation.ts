@@ -145,6 +145,8 @@ export async function getEpoch(
     result: {
       epochStartHeight: epochStartHeight.valueOf(),
       epochEndHeight: epochEndHeight.valueOf(),
+      epochZeroStartHeight: distributions.epochZeroStartHeight,
+      epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
     },
   };
 }

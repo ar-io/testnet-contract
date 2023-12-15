@@ -34,7 +34,6 @@ describe('Observation', () => {
   }[] = [];
   let currentEpochStartHeight: BlockHeight;
   let prescribedObservers: WeightedObserver[] = [];
-  let height: number;
   let failedGateways: string[];
 
   beforeAll(async () => {
@@ -97,7 +96,7 @@ describe('Observation', () => {
           await contract.viewState({
             function: 'prescribedObserver',
             target: prescribedObserverWallets[0].addr,
-            height,
+            height: currentEpochStartHeight.valueOf(),
           });
         expect(isPrescribedObserver).toBe(true);
       });
