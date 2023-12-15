@@ -430,6 +430,7 @@ export async function tickRewardDistribution({
   const updatedObserverDistributions: ObserverDistributions = {};
 
   // do nothing if there are no protocol balance
+  // if there is not enough mIO to give each participant one mIO
   if (currentProtocolBalance === 0) {
     return {
       distributions: distributions as RewardDistributions,
@@ -454,7 +455,7 @@ export async function tickRewardDistribution({
       : distributions.epochZeroBlockHeight + DEFAULT_EPOCH_BLOCK_LENGTH - 1, // the first epoch end height
   );
 
-  // distribution should only happen once on block that is TALLY_PERIOD_BLOCKS after the last completed epoch
+  // distribution should only happen ONCE on block that is TALLY_PERIOD_BLOCKS after the last completed epoch
   if (
     currentBlockHeight.valueOf() !==
     lastCompletedEpochEndHeight.valueOf() + TALLY_PERIOD_BLOCKS
@@ -466,6 +467,7 @@ export async function tickRewardDistribution({
     };
   }
 
+  // get the boundaries of the epoch we care about
   const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
     currentBlockHeight: lastCompletedEpochEndHeight,
     epochZeroBlockHeight: new BlockHeight(distributions.epochZeroBlockHeight),
@@ -491,9 +493,8 @@ export async function tickRewardDistribution({
 
   // get the observers for the epoch
   const prescribedObservers = await getPrescribedObserversForEpoch({
-    gateways,
+    eligibleGateways,
     epochStartHeight,
-    epochEndHeight,
     minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
     distributions,
   });
@@ -527,7 +528,6 @@ export async function tickRewardDistribution({
     if (totalNumberOfFailuresReported > failureReportCountThreshold) {
       // increment the failed epoch count of the gateway - if three we will kick out the gateway
       updatedGatewayDistributions[gatewayAddress].failedConsecutiveEpochs += 1;
-
       // TODO: check if over count and remove from GAR!
       continue;
     }
@@ -536,7 +536,6 @@ export async function tickRewardDistribution({
     updatedGatewayDistributions[gatewayAddress].passedEpochCount += 1;
     // reset its failed epoch count
     updatedGatewayDistributions[gatewayAddress].failedConsecutiveEpochs = 0;
-
     // assign it for a reward
     gatewaysToReward.push(gatewayAddress);
   }
@@ -596,6 +595,8 @@ export async function tickRewardDistribution({
         totalPotentialObserverReward / Object.keys(prescribedObservers).length,
       )
     : 0;
+
+  // TODO: set thresholds for the perGatewayReward and perObserverReward to be greater than at least 1 mIO
 
   // // distribute observer tokens
   for (const gatewayAddress of gatewaysToReward) {
@@ -658,6 +659,7 @@ export async function tickRewardDistribution({
     : balances;
 
   const updatedDistributions = {
+    ...distributions,
     gateways: {
       ...distributions.gateways,
       ...updatedGatewayDistributions,
@@ -668,7 +670,6 @@ export async function tickRewardDistribution({
     },
     lastCompletedEpochStartHeight: epochStartHeight.valueOf(),
     lastCompletedEpochEndHeight: epochEndHeight.valueOf(),
-    epochZeroBlockHeight: distributions.epochZeroBlockHeight,
   };
 
   return {

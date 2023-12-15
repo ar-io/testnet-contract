@@ -23,7 +23,7 @@ const saveObservationsSchema = {
         type: 'string',
         pattern: '^[a-zA-Z0-9-_]{43}$',
         description:
-          'The unique list of gateways the observer has marked as failed',
+          'The unique list of gateway addresses the observer has marked as failed',
       },
       uniqueItems: true,
       minItems: 0,

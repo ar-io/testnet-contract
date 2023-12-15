@@ -278,7 +278,7 @@ describe('Network', () => {
         const prevBalance =
           prevCachedValue.state.balances[newGatewayOperatorAddress];
         const joinGatewayPayload = {
-          observerWallet: '',
+          observerWallet: newGatewayOperatorAddress,
           qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
           label: 'Test Gateway', // friendly label
           fqdn: 'jest.io',

@@ -1,8 +1,14 @@
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
+  INVALID_OBSERVER_WALLET,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
-import { ContractWriteResult, IOState, PstAction } from '../../types';
+import {
+  ContractWriteResult,
+  IOState,
+  PstAction,
+  TransactionId,
+} from '../../types';
 import { getInvalidAjvMessage, unsafeDecrementBalance } from '../../utilities';
 import { validateJoinNetwork } from '../../validations';
 
@@ -16,7 +22,7 @@ export class JoinNetwork {
   port: number;
   observerWallet: string;
 
-  constructor(input: any) {
+  constructor(input: any, caller: TransactionId) {
     // validate using ajv validator
     if (!validateJoinNetwork(input)) {
       throw new ContractError(
@@ -32,7 +38,7 @@ export class JoinNetwork {
       note,
       protocol,
       properties,
-      observerWallet,
+      observerWallet = caller,
     } = input;
     this.qty = qty;
     this.label = label;
@@ -53,7 +59,10 @@ export const joinNetwork = async (
   const { balances, gateways = {}, settings } = state;
   const { registry: registrySettings } = settings;
 
-  const { qty, observerWallet, ...gatewaySettings } = new JoinNetwork(input);
+  const { qty, observerWallet, ...gatewaySettings } = new JoinNetwork(
+    input,
+    caller,
+  );
 
   if (
     !balances[caller] ||
@@ -78,11 +87,19 @@ export const joinNetwork = async (
     throw new ContractError("This Gateway's wallet is already registered");
   }
 
+  if (
+    Object.values(gateways).some(
+      (gateway) => gateway.observerWallet === observerWallet,
+    )
+  ) {
+    throw new ContractError(INVALID_OBSERVER_WALLET);
+  }
+
   // Join the network
   unsafeDecrementBalance(state.balances, caller, qty);
   state.gateways[caller] = {
     operatorStake: qty,
-    observerWallet: observerWallet || caller, // if no observer wallet is provided, we add the caller by default
+    observerWallet, // defaults to caller
     vaults: {},
     settings: {
       ...gatewaySettings,

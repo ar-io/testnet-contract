@@ -71,7 +71,7 @@ describe('getPrescribedObserversForEpoch', () => {
     const totalStake = 100;
     const minNetworkJoinStakeAmount = 10;
     const observers = await getPrescribedObserversForEpoch({
-      gateways: {
+      eligibleGateways: {
         'test-observer-wallet-1': {
           ...baselineGatewayData,
           operatorStake: totalStake,
@@ -82,7 +82,6 @@ describe('getPrescribedObserversForEpoch', () => {
       distributions,
       minNetworkJoinStakeAmount: 10,
       epochStartHeight: new BlockHeight(epochStartHeight),
-      epochEndHeight: new BlockHeight(20),
     });
 
     expect(observers).toBeDefined();
@@ -109,9 +108,8 @@ describe('getPrescribedObserversForEpoch', () => {
   it('should return the correct all observers with proper weights if more than the number required', async () => {
     const epochStartHeight = 10;
     const observers = await getPrescribedObserversForEpoch({
-      gateways: {
+      eligibleGateways: {
         ...gateways,
-        // only 4 & 5 should get selected
         'test-observer-wallet-4': {
           ...baselineGatewayData,
           operatorStake: 400,
@@ -128,7 +126,6 @@ describe('getPrescribedObserversForEpoch', () => {
       distributions,
       minNetworkJoinStakeAmount: 10,
       epochStartHeight: new BlockHeight(epochStartHeight),
-      epochEndHeight: new BlockHeight(20),
     });
     expect(observers).toBeDefined();
     expect(observers.length).toBe(MAXIMUM_OBSERVERS_PER_EPOCH);

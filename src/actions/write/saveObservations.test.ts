@@ -24,7 +24,7 @@ export const baselineGatewayData: Gateway = {
   end: 0,
   settings: {
     label: 'test',
-    fqdn: 'fqdn.com',
+    fqdn: 'test.com',
     port: 443,
     protocol: 'https',
   },
@@ -77,7 +77,7 @@ describe('saveObservations', () => {
         INVALID_INPUT_MESSAGE,
       ],
       [
-        'should throw an error if the failedGateways is not an array of tx ids',
+        'should throw an error if the failedGateways is not an array of fqdns',
         {
           ...getBaselineState(),
         },
@@ -86,7 +86,7 @@ describe('saveObservations', () => {
           input: {
             gatewayAddress: stubbedArweaveTxId,
             observerReportTxId: stubbedArweaveTxId,
-            failedGateways: ['invalid-tx-id'],
+            failedGateways: ['invalid-fqdn'],
           },
         },
         INVALID_INPUT_MESSAGE,
@@ -130,6 +130,34 @@ describe('saveObservations', () => {
 
     afterAll(() => {
       jest.resetAllMocks();
+    });
+
+    describe('invalid epoch', () => {
+      it('should throw an error if epoch zero has not started', async () => {
+        const epochZeroBlockHeight = 10;
+        const error = await saveObservations(
+          {
+            ...getBaselineState(),
+            distributions: {
+              ...getBaselineState().distributions,
+              epochZeroBlockHeight: 10,
+            },
+          },
+          {
+            caller: 'observer-address',
+            input: {
+              observerReportTxId: stubbedArweaveTxId,
+              failedGateways: [],
+            },
+          },
+        ).catch((e) => e);
+        expect(error).toBeInstanceOf(Error);
+        expect(error.message).toEqual(
+          expect.stringContaining(
+            `Observations cannot be submitted before block height: ${epochZeroBlockHeight}`,
+          ),
+        );
+      });
     });
 
     describe('invalid caller', () => {

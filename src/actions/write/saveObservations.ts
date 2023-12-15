@@ -6,12 +6,14 @@ import {
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import {
+  getEligibleGatewaysForEpoch,
   getEpochBoundariesForHeight,
   getPrescribedObserversForEpoch,
 } from '../../observers';
 import {
   BlockHeight,
   ContractWriteResult,
+  Gateway,
   IOState,
   PstAction,
   TransactionId,
@@ -24,7 +26,7 @@ import { validateSaveObservations } from '../../validations';
 
 export class SaveObservations {
   observerReportTxId: TransactionId;
-  failedGateways: WalletAddress[];
+  failedGateways: TransactionId[];
   gatewayAddress: WalletAddress;
 
   constructor(input: any, caller: TransactionId) {
@@ -57,8 +59,16 @@ export const saveObservations = async (
   const { observations, gateways, settings, distributions } = state;
   const { gatewayAddress, observerReportTxId, failedGateways } =
     new SaveObservations(input, caller);
+
+  // TODO: check if current height is less than epochZeroBlockHeight
+  if (+SmartWeave.block.height < distributions.epochZeroBlockHeight) {
+    throw new ContractError(
+      `Observations cannot be submitted before block height: ${distributions.epochZeroBlockHeight}`,
+    );
+  }
+
   const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
-    currentBlockHeight: new BlockHeight(+SmartWeave.block.height), // a block height in the middle of the first epoch
+    currentBlockHeight: new BlockHeight(+SmartWeave.block.height), // observations must be submitted within the epoch
     epochZeroBlockHeight: new BlockHeight(distributions.epochZeroBlockHeight),
     epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
   });
@@ -84,11 +94,17 @@ export const saveObservations = async (
     throw new ContractError(INVALID_OBSERVATION_CALLER_MESSAGE);
   }
 
-  const prescribedObservers = await getPrescribedObserversForEpoch({
-    gateways,
-    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
+  // filter out gateways eligible for epoch distribution
+  const eligibleGateways = getEligibleGatewaysForEpoch({
     epochStartHeight,
     epochEndHeight,
+    gateways,
+  });
+
+  const prescribedObservers = await getPrescribedObserversForEpoch({
+    eligibleGateways,
+    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
+    epochStartHeight,
     distributions,
   });
 
@@ -110,9 +126,9 @@ export const saveObservations = async (
   }
 
   // process the failed gateway summary
-  for (const failedGatewayAddress of failedGateways) {
+  for (const address of failedGateways) {
+    const failedGateway: Gateway = gateways[address];
     // validate the gateway is in the gar or is leaving
-    const failedGateway = gateways[failedGatewayAddress];
     if (
       !failedGateway ||
       failedGateway.start > epochStartHeight.valueOf() ||
@@ -123,9 +139,7 @@ export const saveObservations = async (
 
     // get the existing set of failed gateways for this observer
     const existingObservers =
-      observations[epochStartHeight.valueOf()].failureSummaries[
-        failedGatewayAddress
-      ] || [];
+      observations[epochStartHeight.valueOf()].failureSummaries[address] || [];
 
     // append any new observations to the existing set
     const updatedObserversForFailedGateway: Set<WalletAddress> = new Set([
@@ -136,9 +150,9 @@ export const saveObservations = async (
     updatedObserversForFailedGateway.add(observingGateway.observerWallet);
 
     // update the list of observers that mark the gateway as failed
-    observations[epochStartHeight.valueOf()].failureSummaries[
-      failedGatewayAddress
-    ] = [...updatedObserversForFailedGateway];
+    observations[epochStartHeight.valueOf()].failureSummaries[address] = [
+      ...updatedObserversForFailedGateway,
+    ];
   }
 
   // add this observers report tx id to this epoch

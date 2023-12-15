@@ -49,7 +49,7 @@ export async function getEntropyHashForEpoch({
 }): Promise<Buffer> {
   // used as we don't have access to Hash object in smartweave executions, so we concat our buffer and hash it at the end
   let bufferHash: Buffer = Buffer.from('');
-  // We hash multiples block hashes to reduce the chance that someone will
+  // We hash multiple previous block hashes to reduce the chance that someone will
   // influence the value produced by grinding with excessive hash power.
   for (let i = 0; i < DEFAULT_NUM_SAMPLED_BLOCKS; i++) {
     const blockHeight = Math.max(
@@ -130,68 +130,61 @@ export function getEligibleGatewaysForEpoch({
 }
 
 export async function getPrescribedObserversForEpoch({
-  gateways,
+  eligibleGateways,
   distributions,
   minNetworkJoinStakeAmount,
   epochStartHeight,
-  epochEndHeight,
 }: {
-  gateways: DeepReadonly<Gateways>;
+  eligibleGateways: DeepReadonly<Gateways>;
   distributions: DeepReadonly<RewardDistributions>;
   minNetworkJoinStakeAmount: number;
   epochStartHeight: BlockHeight;
-  epochEndHeight: BlockHeight;
 }): Promise<WeightedObserver[]> {
   const weightedObservers: WeightedObserver[] = [];
   let totalCompositeWeight = 0;
 
-  // filter out gateways eligible for epoch distribution
-  const eligibleGateways = getEligibleGatewaysForEpoch({
-    epochStartHeight,
-    epochEndHeight,
-    gateways,
-  });
-
   // Get all eligible observers and assign weights
   for (const [address, eligibleGateway] of Object.entries(eligibleGateways)) {
-    const stake = eligibleGateway.operatorStake;
-    const stakeWeight = stake / minNetworkJoinStakeAmount; // this has to be > 1 to joint he network
+    const stake = eligibleGateway.operatorStake; // e.g. 100 - no cap to this
+    const stakeWeight = stake / minNetworkJoinStakeAmount; // this is always greater than 1 as the minNetworkJoinStakeAmount is always less than the stake
 
     // the percentage of the epoch the gateway was joined for before this epoch
     const totalBlocksForGateway =
       epochStartHeight.valueOf() - eligibleGateway.start;
     const calculatedTenureWeightForGateway =
-      totalBlocksForGateway / TENURE_WEIGHT_TOTAL_BLOCK_COUNT; // do not default to 0
+      totalBlocksForGateway / TENURE_WEIGHT_TOTAL_BLOCK_COUNT; // TODO: change this variable name to be period
+    // max of 4, which implies after 2 years, you are considered a mature gateway and this number stops increasing
     const gatewayTenureWeight = Math.min(
       calculatedTenureWeightForGateway,
       MAX_TENURE_WEIGHT,
     );
 
     // the percentage of epochs participated in that the gateway passed
-    const totalEpochsParticipatedIn =
-      distributions.gateways[address]?.totalEpochParticipationCount || 0;
     const totalEpochsGatewayPassed =
       distributions.gateways[address]?.passedEpochCount || 0;
+    const totalEpochsParticipatedIn =
+      distributions.gateways[address]?.totalEpochParticipationCount || 0;
+    // default to 1 for gateways that have not participated in a full epoch
     const gatewayRewardRatioWeight = totalEpochsParticipatedIn
       ? totalEpochsGatewayPassed / totalEpochsParticipatedIn
-      : 1;
+      : 1; // NOTE: this could be reduced
 
     // the percentage of epochs the observer was prescribed and submitted reports for
     const totalEpochsPrescribed =
       distributions.observers[address]?.totalEpochsPrescribedCount || 0;
     const totalEpochsSubmitted =
       distributions.observers[address]?.submittedEpochCount || 0;
+    // defaults to one again, encouraging new gateways to join
     const observerRewardRatioWeight = totalEpochsPrescribed
       ? totalEpochsSubmitted / totalEpochsPrescribed
       : 1;
 
-    // TODO: should all of these default to one?
     // calculate composite weight based on sub weights
     const compositeWeight =
       stakeWeight *
-        gatewayTenureWeight *
-        gatewayRewardRatioWeight *
-        observerRewardRatioWeight || 1;
+      gatewayTenureWeight *
+      gatewayRewardRatioWeight *
+      observerRewardRatioWeight;
 
     weightedObservers.push({
       gatewayAddress: address,
@@ -205,6 +198,7 @@ export async function getPrescribedObserversForEpoch({
       compositeWeight,
       normalizedCompositeWeight: compositeWeight,
     });
+    // total weight for all eligible gateways
     totalCompositeWeight += compositeWeight;
   }
 
@@ -225,6 +219,7 @@ export async function getPrescribedObserversForEpoch({
     epochStartHeight,
   });
 
+  // note: this should always result to MAXIMUM_OBSERVERS_PER_EPOCH
   const prescribedObservers: Set<WeightedObserver> = new Set();
   let hash = blockHeightEntropyHash; // our starting hash
   for (let i = 0; i < MAXIMUM_OBSERVERS_PER_EPOCH; i++) {

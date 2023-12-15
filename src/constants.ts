@@ -47,6 +47,8 @@ export const INVALID_OBSERVATION_CALLER_MESSAGE =
   'Invalid caller. Caller is not eligible to submit observation reports for this epoch.';
 export const INVALID_OBSERVATION_FOR_GATEWAY_MESSAGE =
   'Invalid CALLER. Caller is not the observer wallet for this gateway.';
+export const INVALID_OBSERVER_WALLET =
+  'Invalid observer wallet. The provided observer wallet is correlated with another gateway.';
 export const INVALID_GATEWAY_REGISTERED_MESSAGE =
   'Target gateway is not currently registered';
 export const INVALID_OBSERVATION_TARGET_MESSAGE =
@@ -58,7 +60,7 @@ export const EPOCH_REWARD_PERCENTAGE = 0.0025; // 0.25% of total available proto
 export const GATEWAY_PERCENTAGE_OF_EPOCH_REWARD = 0.95;
 export const OBSERVATION_FAILURE_THRESHOLD = 0.51;
 export const BAD_OBSERVER_GATEWAY_PENALTY = 0.25;
-export const MAXIMUM_OBSERVERS_PER_EPOCH = 4; // TODO: CHANGE THIS TO 50;
+export const MAXIMUM_OBSERVERS_PER_EPOCH = 4; // TODO: CHANGE THIS TO 50 for testnet
 export const NON_EXPIRED_ARNS_NAME_MESSAGE =
   'This name already exists in an active lease';
 export const ARNS_NAME_DOES_NOT_EXIST_MESSAGE =
@@ -151,9 +153,9 @@ export const AUCTION_SETTINGS: AuctionSettings = {
   scalingExponent: 190,
   auctionDuration: 10_080, // approx 14 days long
 };
-export const DEFAULT_EPOCH_BLOCK_LENGTH = 50; // TODO: make this 5000 when ready for mainnet
-export const DEFAULT_START_HEIGHT = 0; // TODO: make this a multiple of 5k
-export const MAX_TENURE_WEIGHT = 2;
+export const DEFAULT_EPOCH_BLOCK_LENGTH = 50; // TODO: make this 5000 for testnet
+export const DEFAULT_START_HEIGHT = 0; // TODO: this should be coordinated with the genesis block height
+export const MAX_TENURE_WEIGHT = 4; // 4 - 6 month periods mark you as a mature gateway
 export type DemandFactoringCriteria = 'purchases' | 'revenue';
 type DemandFactoringSettings = {
   movingAvgPeriodCount: number;

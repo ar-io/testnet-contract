@@ -853,8 +853,14 @@ describe('tickRewardDistribution', () => {
     expect(distributions).toEqual(initialState.distributions);
   });
 
-  it.each([0, 1, TALLY_PERIOD_BLOCKS - 1])(
-    'should not distribute rewards if the current block height is not greater than the required tallying period from the previous epoch',
+  it.each([
+    0,
+    1,
+    TALLY_PERIOD_BLOCKS - 1,
+    TALLY_PERIOD_BLOCKS + 1,
+    Number.MAX_SAFE_INTEGER,
+  ])(
+    'should not distribute rewards if the current block height is equal to the last epoch end height + the required tallying period',
     async (blockHeight) => {
       const initialState: IOState = {
         ...getBaselineState(),
@@ -862,13 +868,13 @@ describe('tickRewardDistribution', () => {
           [SmartWeave.contract.id]: 10_000_000,
         },
       };
-      const passedFirstEpochBlock =
+      const firstEpochEndHeight =
         initialState.distributions.epochZeroBlockHeight +
-        DEFAULT_EPOCH_BLOCK_LENGTH;
+        DEFAULT_EPOCH_BLOCK_LENGTH -
+        1;
+      const invalidBlockHeight = firstEpochEndHeight + blockHeight;
       const { balances, distributions } = await tickRewardDistribution({
-        currentBlockHeight: new BlockHeight(
-          passedFirstEpochBlock + blockHeight,
-        ),
+        currentBlockHeight: new BlockHeight(invalidBlockHeight),
         gateways: initialState.gateways,
         balances: initialState.balances,
         distributions: initialState.distributions,
@@ -880,7 +886,7 @@ describe('tickRewardDistribution', () => {
     },
   );
 
-  it.only('should not distribute rewards if there are no gateways or observers in the GAR, but increment distributions for observers and epoch heights', async () => {
+  it('should not distribute rewards if there are no gateways or observers in the GAR, but increment distributions for observers and epoch heights', async () => {
     // both of these return empty objects
     (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({});
     (getPrescribedObserversForEpoch as jest.Mock).mockResolvedValue([]);
