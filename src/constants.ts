@@ -47,12 +47,15 @@ export const INVALID_OBSERVATION_CALLER_MESSAGE =
   'Invalid caller. Caller is not eligible to submit observation reports for this epoch.';
 export const INVALID_OBSERVATION_FOR_GATEWAY_MESSAGE =
   'Invalid CALLER. Caller is not the observer wallet for this gateway.';
+export const INVALID_GATEWAY_STAKE_AMOUNT_MESSAGE = `Quantity must be greater than or equal to the minimum network join stake amount.`;
 export const INVALID_OBSERVER_WALLET =
   'Invalid observer wallet. The provided observer wallet is correlated with another gateway.';
 export const INVALID_GATEWAY_REGISTERED_MESSAGE =
   'Target gateway is not currently registered';
 export const INVALID_OBSERVATION_TARGET_MESSAGE =
   'Target gateway is leaving the network and must not be observed';
+export const INVALID_GATEWAY_EXISTS_MESSAGE =
+  'A gateway with this address already exists.';
 export const DEFAULT_NUM_SAMPLED_BLOCKS = 3;
 export const DEFAULT_SAMPLED_BLOCKS_OFFSET = 50;
 export const TALLY_PERIOD_BLOCKS = 100;

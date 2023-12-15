@@ -1,5 +1,7 @@
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
+  INVALID_GATEWAY_EXISTS_MESSAGE,
+  INVALID_GATEWAY_STAKE_AMOUNT_MESSAGE,
   INVALID_OBSERVER_WALLET,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
@@ -9,7 +11,11 @@ import {
   PstAction,
   TransactionId,
 } from '../../types';
-import { getInvalidAjvMessage, unsafeDecrementBalance } from '../../utilities';
+import {
+  getInvalidAjvMessage,
+  unsafeDecrementBalance,
+  walletHasSufficientBalance,
+} from '../../utilities';
 import { validateJoinNetwork } from '../../validations';
 
 export class JoinNetwork {
@@ -64,27 +70,16 @@ export const joinNetwork = async (
     caller,
   );
 
-  if (
-    !balances[caller] ||
-    balances[caller] == undefined ||
-    balances[caller] == null ||
-    isNaN(balances[caller])
-  ) {
-    throw new ContractError(`Caller balance is not defined!`);
-  }
-
-  if (balances[caller] < qty) {
+  if (!walletHasSufficientBalance(balances, caller, qty)) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
   if (qty < registrySettings.minNetworkJoinStakeAmount) {
-    throw new ContractError(
-      `Quantity must be greater than or equal to the minimum network join stake amount ${registrySettings.minNetworkJoinStakeAmount}.`,
-    );
+    throw new ContractError(INVALID_GATEWAY_STAKE_AMOUNT_MESSAGE);
   }
 
   if (caller in gateways) {
-    throw new ContractError("This Gateway's wallet is already registered");
+    throw new ContractError(INVALID_GATEWAY_EXISTS_MESSAGE);
   }
 
   if (
