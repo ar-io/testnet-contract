@@ -18,7 +18,8 @@ import {
 } from '../../observers';
 import {
   baselineGatewayData,
-  getBaselineState, // stubbedArweaveTxId,
+  getBaselineState,
+  stubbedArweaveTxId, // stubbedArweaveTxId,
 } from '../../tests/stubs';
 import {
   ArNSPermabuyAuctionData,
@@ -917,100 +918,105 @@ describe('tickRewardDistribution', () => {
     });
   });
 
-  // it('should distribute rewards to observers who submitted reports and gateways who passed', async () => {
-  //   const initialState: IOState = {
-  //     ...getBaselineState(),
-  //     balances: {
-  //       [SmartWeave.contract.id]: 10_000_000,
-  //     },
-  //     gateways: {
-  //       'a-gateway': {
-  //         ...baselineGatewayData,
-  //         observerWallet: 'an-observing-gateway',
-  //       },
-  //       'a-gateway-2': {
-  //         ...baselineGatewayData,
-  //         observerWallet: 'an-observing-gateway-2',
-  //       },
-  //       'a-gateway-3': {
-  //         ...baselineGatewayData,
-  //         observerWallet: 'an-observing-gateway-3',
-  //       },
-  //     },
-  //     observations: {
-  //       0: {
-  //         failureSummaries: {
-  //           // one failure, but not more than half so still gets the reward
-  //           'a-gateway-2': ['an-observing-gateway'],
-  //           // observer 3 is failing more according to more than half the gateways
-  //           'a-gateway-3': ['an-observing-gateway', 'an-observing-gateway-2'],
-  //         },
-  //         // all will get observer reward
-  //         reports: {
-  //           'an-observing-gateway': stubbedArweaveTxId,
-  //           'an-observing-gateway-2': stubbedArweaveTxId,
-  //           // observer 3 did not submit a report
-  //         },
-  //       },
-  //     },
-  //   };
-  //   const { balances, distributions } = await tickRewardDistribution({
-  //     currentBlockHeight: new BlockHeight(TALLY_PERIOD_BLOCKS),
-  //     gateways: initialState.gateways,
-  //     balances: initialState.balances,
-  //     distributions: initialState.distributions,
-  //     observations: initialState.observations,
-  //     settings: initialState.settings,
-  //   });
-  //   const totalRewardsEligible = 10_000_000 * 0.0025;
-  //   const totalObserverReward = totalRewardsEligible * 0.05; // 5% of the total distributions
-  //   const perObserverReward = Math.floor(totalObserverReward / 3); // 3 observers
-  //   const totalGatewayReward = totalRewardsEligible - totalObserverReward; // 95% of total distribution
-  //   const perGatewayReward = Math.floor(totalGatewayReward / 3); // 3 gateways
-  //   const totalRewardsDistributed =
-  //     perObserverReward * 2 + perGatewayReward * 2; // only two get both
-  //   expect(balances).toEqual({
-  //     ...initialState.balances,
-  //     'a-gateway': perObserverReward + perGatewayReward,
-  //     'a-gateway-2': perObserverReward + perGatewayReward,
-  //     // observer three does not get anything!
-  //     [SmartWeave.contract.id]: 10_000_000 - totalRewardsDistributed,
-  //   });
-  //   expect(distributions).toEqual({
-  //     ...initialState.distributions,
-  //     lastCompletedEpochEndHeight: DEFAULT_EPOCH_BLOCK_LENGTH - 1,
-  //     lastCompletedEpochStartHeight: 0,
-  //     gateways: {
-  //       'a-gateway': {
-  //         passedEpochCount: 1,
-  //         totalEpochParticipationCount: 1,
-  //         failedConsecutiveEpochs: 0,
-  //       },
-  //       'a-gateway-2': {
-  //         passedEpochCount: 1,
-  //         totalEpochParticipationCount: 1,
-  //         failedConsecutiveEpochs: 0,
-  //       },
-  //       'a-gateway-3': {
-  //         passedEpochCount: 0,
-  //         totalEpochParticipationCount: 1,
-  //         failedConsecutiveEpochs: 1,
-  //       },
-  //     },
-  //     observers: {
-  //       'an-observing-gateway': {
-  //         totalEpochsPrescribedCount: 1,
-  //         submittedEpochCount: 1,
-  //       },
-  //       'an-observing-gateway-2': {
-  //         totalEpochsPrescribedCount: 1,
-  //         submittedEpochCount: 1,
-  //       },
-  //       'an-observing-gateway-3': {
-  //         totalEpochsPrescribedCount: 1,
-  //         submittedEpochCount: 0,
-  //       },
-  //     },
-  //   });
-  // });
+  it('should distribute rewards to observers who submitted reports and gateways who passed', async () => {
+    const initialState: IOState = {
+      ...getBaselineState(),
+      balances: {
+        [SmartWeave.contract.id]: 10_000_000,
+      },
+      gateways: {
+        'a-gateway': {
+          ...baselineGatewayData,
+          observerWallet: 'an-observing-gateway',
+        },
+        'a-gateway-2': {
+          ...baselineGatewayData,
+          observerWallet: 'an-observing-gateway-2',
+        },
+        'a-gateway-3': {
+          ...baselineGatewayData,
+          observerWallet: 'an-observing-gateway-3',
+        },
+      },
+      observations: {
+        0: {
+          failureSummaries: {
+            // one failure, but not more than half so still gets the reward
+            'a-gateway-2': ['an-observing-gateway'],
+            // observer 3 is failing more according to more than half the gateways
+            'a-gateway-3': ['an-observing-gateway', 'an-observing-gateway-2'],
+          },
+          // all will get observer reward
+          reports: {
+            'an-observing-gateway': stubbedArweaveTxId,
+            'an-observing-gateway-2': stubbedArweaveTxId,
+            // observer 3 did not submit a report
+          },
+        },
+      },
+    };
+    const epochDistributionHeight =
+      initialState.distributions.epochZeroBlockHeight +
+      DEFAULT_EPOCH_BLOCK_LENGTH +
+      TALLY_PERIOD_BLOCKS -
+      1;
+    const { balances, distributions } = await tickRewardDistribution({
+      currentBlockHeight: new BlockHeight(epochDistributionHeight),
+      gateways: initialState.gateways,
+      balances: initialState.balances,
+      distributions: initialState.distributions,
+      observations: initialState.observations,
+      settings: initialState.settings,
+    });
+    const totalRewardsEligible = 10_000_000 * 0.0025;
+    const totalObserverReward = totalRewardsEligible * 0.05; // 5% of the total distributions
+    const perObserverReward = Math.floor(totalObserverReward / 3); // 3 observers
+    const totalGatewayReward = totalRewardsEligible - totalObserverReward; // 95% of total distribution
+    const perGatewayReward = Math.floor(totalGatewayReward / 3); // 3 gateways
+    const totalRewardsDistributed =
+      perObserverReward * 2 + perGatewayReward * 2; // only two get both
+    expect(balances).toEqual({
+      ...initialState.balances,
+      'a-gateway': perObserverReward + perGatewayReward,
+      'a-gateway-2': perObserverReward + perGatewayReward,
+      // observer three does not get anything!
+      [SmartWeave.contract.id]: 10_000_000 - totalRewardsDistributed,
+    });
+    expect(distributions).toEqual({
+      ...initialState.distributions,
+      lastCompletedEpochEndHeight: DEFAULT_EPOCH_BLOCK_LENGTH - 1,
+      lastCompletedEpochStartHeight: 0,
+      gateways: {
+        'a-gateway': {
+          passedEpochCount: 1,
+          totalEpochParticipationCount: 1,
+          failedConsecutiveEpochs: 0,
+        },
+        'a-gateway-2': {
+          passedEpochCount: 1,
+          totalEpochParticipationCount: 1,
+          failedConsecutiveEpochs: 0,
+        },
+        'a-gateway-3': {
+          passedEpochCount: 0,
+          totalEpochParticipationCount: 1,
+          failedConsecutiveEpochs: 1,
+        },
+      },
+      observers: {
+        'an-observing-gateway': {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 1,
+        },
+        'an-observing-gateway-2': {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 1,
+        },
+        'an-observing-gateway-3': {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 0,
+        },
+      },
+    });
+  });
 });
