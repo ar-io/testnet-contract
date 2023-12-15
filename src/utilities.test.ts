@@ -16,7 +16,6 @@ import {
   incrementBalance,
   isGatewayEligibleToBeRemoved,
   isGatewayEligibleToLeave,
-  isGatewayHidden,
   isGatewayJoined,
   isLeaseRecord,
   resetProtocolBalance,
@@ -67,23 +66,22 @@ describe('isGatewayJoined function', () => {
   });
 
   it.each([
-    [0, 0, 'joined', false],
-    [0, 0, 'hidden', false],
+    [0, 0, 'joined', true],
     [0, 0, 'leaving', false],
-    [0, 1, 'joined', true],
-    [0, 1, 'hidden', false],
+    [0, 1, 'joined', false],
     [0, 1, 'leaving', false],
   ])(
-    'should, given current block height %d and gateway end height %d and status %s, return %s',
-    (currentBlockHeight, gatewayEndHeight, status, expectedValue) => {
+    'should, given current block height %d and gateway start height %d and status %s, return %s',
+    (currentBlockHeight, gatewayStartHeight, status, expectedValue) => {
       expect(
         isGatewayJoined({
+          currentBlockHeight: new BlockHeight(currentBlockHeight),
           gateway: {
-            start: Number.NEGATIVE_INFINITY,
-            end: gatewayEndHeight,
+            start: gatewayStartHeight,
+            end: 0,
             status: status as GatewayStatus,
             vaults: {},
-            operatorStake: Number.NEGATIVE_INFINITY,
+            operatorStake: 10_000,
             observerWallet: '',
             settings: {
               // None of these values should be relevant to this test
@@ -93,47 +91,10 @@ describe('isGatewayJoined function', () => {
               protocol: 'https',
             },
           },
-          currentBlockHeight: new BlockHeight(currentBlockHeight),
         }),
       ).toEqual(expectedValue);
     },
   );
-});
-
-describe('isGatewayHidden function', () => {
-  it('should return false if gateway is undefined', () => {
-    expect(
-      isGatewayHidden({
-        gateway: undefined,
-      }),
-    ).toEqual(false);
-  });
-
-  it.each([
-    ['joined', false],
-    ['hidden', true],
-    ['leaving', false],
-  ])('should return %s if gateway status is %s', (status, expectedValue) => {
-    expect(
-      isGatewayHidden({
-        gateway: {
-          start: Number.NEGATIVE_INFINITY,
-          end: Number.MAX_SAFE_INTEGER,
-          status: status as GatewayStatus,
-          vaults: {},
-          operatorStake: Number.NEGATIVE_INFINITY,
-          observerWallet: '',
-          settings: {
-            // None of these values should be relevant to this test
-            label: '',
-            fqdn: '',
-            port: Number.NEGATIVE_INFINITY,
-            protocol: 'https',
-          },
-        },
-      }),
-    ).toEqual(expectedValue);
-  });
 });
 
 describe('isGatewayEligibleToBeRemoved function', () => {
@@ -148,16 +109,13 @@ describe('isGatewayEligibleToBeRemoved function', () => {
 
   it.each([
     [0, 1, 'joined', false],
-    [0, 1, 'hidden', false],
     [0, 1, 'leaving', false],
     [1, 1, 'joined', false],
-    [1, 1, 'hidden', false],
     [1, 1, 'leaving', true],
     [2, 1, 'joined', false],
-    [2, 1, 'hidden', false],
     [2, 1, 'leaving', true],
   ])(
-    `should, given current block height %d, gateway end block %d and status %s, return %s`,
+    `should, given current block height %d, gateway start height of %d and status %s, return %s`,
     (currentBlockHeight, gatewayEndBlock, status, expectedValue) => {
       expect(
         isGatewayEligibleToBeRemoved({
@@ -189,34 +147,21 @@ describe('isGatewayEligibleToLeave function', () => {
       isGatewayEligibleToLeave({
         gateway: undefined,
         currentBlockHeight: new BlockHeight(0),
-        registrySettings: {
-          // None of these values should be relevant to this test
-          minLockLength: Number.NEGATIVE_INFINITY,
-          maxLockLength: Number.NEGATIVE_INFINITY,
-          minNetworkJoinStakeAmount: Number.NEGATIVE_INFINITY,
-          minGatewayJoinLength: Number.NEGATIVE_INFINITY,
-          gatewayLeaveLength: Number.NEGATIVE_INFINITY,
-          operatorStakeWithdrawLength: Number.NEGATIVE_INFINITY,
-        },
+        minimumGatewayJoinLength: new BlockHeight(Number.MAX_SAFE_INTEGER),
       }),
     ).toEqual(false);
   });
 
   it.each([
     [0, 0, Number.MAX_SAFE_INTEGER, 'joined', false],
-    [0, 0, Number.MAX_SAFE_INTEGER, 'hidden', false],
     [0, 0, Number.MAX_SAFE_INTEGER, 'leaving', false],
     [1, 0, Number.MAX_SAFE_INTEGER, 'joined', false],
-    [1, 0, Number.MAX_SAFE_INTEGER, 'hidden', false],
     [1, 0, Number.MAX_SAFE_INTEGER, 'leaving', false],
     [2, 0, Number.MAX_SAFE_INTEGER, 'joined', true],
-    [2, 0, Number.MAX_SAFE_INTEGER, 'hidden', true], // TODO: SURPRISING?
     [2, 0, Number.MAX_SAFE_INTEGER, 'leaving', false],
-    [2, 0, 2, 'joined', false],
-    [2, 0, 2, 'hidden', true], // TODO: SURPRISING?
+    [2, 2, Number.MAX_SAFE_INTEGER, 'joined', false],
     [2, 0, 2, 'leaving', false],
     [2, 0, 3, 'joined', true],
-    [2, 0, 3, 'hidden', true],
     [2, 0, 3, 'leaving', false],
   ])(
     `should, given current block height %d, gateway start/end blocks (%d, %d) and status %s, return %s`,
@@ -245,14 +190,7 @@ describe('isGatewayEligibleToLeave function', () => {
             },
           },
           currentBlockHeight: new BlockHeight(currentBlockHeight),
-          registrySettings: {
-            minLockLength: Number.NEGATIVE_INFINITY,
-            maxLockLength: Number.NEGATIVE_INFINITY,
-            minNetworkJoinStakeAmount: Number.NEGATIVE_INFINITY,
-            minGatewayJoinLength: 2, // The only value relevant to this test
-            gatewayLeaveLength: Number.NEGATIVE_INFINITY,
-            operatorStakeWithdrawLength: Number.NEGATIVE_INFINITY,
-          },
+          minimumGatewayJoinLength: new BlockHeight(2),
         }),
       ).toEqual(expectedValue);
     },

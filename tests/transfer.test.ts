@@ -44,7 +44,7 @@ describe('Transfers', () => {
       const { cachedValue: newCachedValue } = await contract.readState();
       const newState = newCachedValue.state as IOState;
       expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
-        writeInteraction!.originalTxId,
+        writeInteraction?.originalTxId,
       );
       expect(newState.balances[ownerAddress]).toEqual(
         prevOwnerBalance - TRANSFER_QTY,
@@ -70,7 +70,7 @@ describe('Transfers', () => {
       const { cachedValue: newCachedValue } = await contract.readState();
       const newState = newCachedValue.state as IOState;
       expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
-        writeInteraction!.originalTxId,
+        writeInteraction?.originalTxId,
       );
       expect(newState.balances[ownerAddress]).toEqual(
         prevOwnerBalance - TRANSFER_QTY,
@@ -93,10 +93,10 @@ describe('Transfers', () => {
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
       expect(Object.keys(newCachedValue.errorMessages)).toContain(
-        writeInteraction!.originalTxId,
+        writeInteraction?.originalTxId,
       );
       expect(
-        newCachedValue.errorMessages[writeInteraction!.originalTxId],
+        newCachedValue.errorMessages[writeInteraction?.originalTxId],
       ).toEqual(INSUFFICIENT_FUNDS_MESSAGE);
       expect(newCachedValue.state).toEqual(prevCachedValue.state);
     });
@@ -113,10 +113,10 @@ describe('Transfers', () => {
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
       expect(Object.keys(newCachedValue.errorMessages)).toContain(
-        writeInteraction!.originalTxId,
+        writeInteraction?.originalTxId,
       );
       expect(
-        newCachedValue.errorMessages[writeInteraction!.originalTxId],
+        newCachedValue.errorMessages[writeInteraction?.originalTxId],
       ).toEqual(INVALID_TARGET_MESSAGE);
       expect(newCachedValue.state).toEqual(prevCachedValue.state);
     });
@@ -134,10 +134,10 @@ describe('Transfers', () => {
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
-          writeInteraction!.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(
-          newCachedValue.errorMessages[writeInteraction!.originalTxId],
+          newCachedValue.errorMessages[writeInteraction?.originalTxId],
         ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       },
@@ -170,7 +170,7 @@ describe('Transfers', () => {
       const { cachedValue: newCachedValue } = await contract.readState();
       const newState = newCachedValue.state as IOState;
       expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
-        writeInteraction!.originalTxId,
+        writeInteraction?.originalTxId,
       );
       expect(newState.balances[callerAddress]).toEqual(
         prevOwnerBalance - TRANSFER_QTY,
@@ -192,10 +192,10 @@ describe('Transfers', () => {
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
       expect(Object.keys(newCachedValue.errorMessages)).toContain(
-        writeInteraction!.originalTxId,
+        writeInteraction?.originalTxId,
       );
       expect(
-        newCachedValue.errorMessages[writeInteraction!.originalTxId],
+        newCachedValue.errorMessages[writeInteraction?.originalTxId],
       ).toEqual(INVALID_TARGET_MESSAGE);
       expect(newCachedValue.state).toEqual(prevCachedValue.state);
     });
@@ -213,10 +213,10 @@ describe('Transfers', () => {
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
-          writeInteraction!.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(
-          newCachedValue.errorMessages[writeInteraction!.originalTxId],
+          newCachedValue.errorMessages[writeInteraction?.originalTxId],
         ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       },

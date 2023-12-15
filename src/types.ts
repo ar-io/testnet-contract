@@ -1,6 +1,5 @@
 import {
   MAX_ALLOWED_DECIMALS,
-  NETWORK_HIDDEN_STATUS,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
 } from './constants';
@@ -42,19 +41,49 @@ export type IOState = {
   reserved: ReservedNames; // list of all reserved names that are not allowed to be purchased at this time
   auctions: Auctions;
   lastTickedHeight: number; // periodicity management
-  // TODO: epoch tracking - relevant to GAR observers
   demandFactoring: DemandFactoringData;
   observations: Observations;
+  distributions: RewardDistributions;
   vaults: RegistryVaults;
 };
 
+export type GatewayDistributionSummary = {
+  totalEpochParticipationCount: number; // the total number of epochs this gateway has participated in
+  passedEpochCount: number; // the number of epochs this gateway has passed
+  failedConsecutiveEpochs: number; // the number of consecutive epochs this gateway has failed
+};
+
+export type ObserverDistributionSummary = {
+  submittedEpochCount: number; // the number of epochs this observer has submitted reports for
+  totalEpochsPrescribedCount: number; // the total number of epochs this observer was prescribed to submit reports for
+};
+
+export type GatewayDistributions = Record<
+  WalletAddress,
+  GatewayDistributionSummary
+>;
+export type ObserverDistributions = Record<
+  ObserverAddress,
+  ObserverDistributionSummary
+>;
+// The distributions made at the end of each epoch
+export type RewardDistributions = {
+  epochZeroStartHeight: number;
+  lastCompletedEpochStartHeight: number;
+  gateways: GatewayDistributions;
+  observers: ObserverDistributions;
+};
+
+export type ObserverAddress = WalletAddress;
+export type FailedGatewayAddress = WalletAddress;
 export type EpochObservations = {
-  failureSummaries: Record<WalletAddress, WalletAddress[]>; // the gateway that has been marked as down and the gateways that marked it down
-  reports: Record<WalletAddress, TransactionId>;
+  failureSummaries: Record<ObserverAddress, FailedGatewayAddress[]>; // an observers summary of all failed gateways in the epoch
+  reports: Record<ObserverAddress, TransactionId>; // a reference point for the report submitted by this observer
 };
 
 // The health reports and failure failureSummaries submitted by observers for an epoch
-export type Observations = Record<number, EpochObservations>;
+export type Epoch = number;
+export type Observations = Record<Epoch, EpochObservations>;
 
 export type WeightedObserver = {
   gatewayAddress: string;
@@ -113,13 +142,14 @@ export type ContractSettings = {
   // these settings control the various capabilities in the contract
   registry: GatewayRegistrySettings;
   auctions: AuctionSettings;
+  // TODO: should we put distribution settings here or leave as constants
+  // distributions: {
+  //   epochBlockLength: number;
+  //   observerGatewayPenalty: number (% of reward to deduce from gateways that did not observe)
+  // };
 };
 
-const gatewayStatus = [
-  NETWORK_JOIN_STATUS,
-  NETWORK_HIDDEN_STATUS,
-  NETWORK_LEAVING_STATUS,
-] as const;
+const gatewayStatus = [NETWORK_JOIN_STATUS, NETWORK_LEAVING_STATUS] as const;
 export type GatewayStatus = (typeof gatewayStatus)[number];
 
 export type Gateway = {
@@ -196,7 +226,7 @@ export type ArNSNameResult = {
   endTimestamp: number; // At what unix time (seconds since epoch) the lease ends
 };
 
-export type PstFunctions = 'balance' | 'transfer' | 'evolve';
+export type BaseFunctions = 'balance' | 'transfer' | 'evolve';
 
 export type VaultFunctions =
   | 'vaultedTransfer'
@@ -211,16 +241,14 @@ export type ArNSFunctions =
   | 'record'
   | 'submitAuctionBid';
 
-export type GARFunctions =
+export type RegistryFunctions =
   | 'joinNetwork'
   | 'gatewayRegistry'
   | 'gatewayTotalStake'
-  | 'initiateLeave'
-  | 'finalizeLeave'
+  | 'leaveNetwork'
   | 'increaseOperatorStake'
   | 'rankedGatewayRegistry'
   | 'initiateOperatorStakeDecrease'
-  | 'finalizeOperatorStakeDecrease'
   | 'updateGatewaySettings';
 
 export type ObservationFunctions =
@@ -228,10 +256,11 @@ export type ObservationFunctions =
   | 'prescribedObserver'
   | 'prescribedObservers';
 
-export type IOContractFunctions = ObservationFunctions &
-  GARFunctions &
+export type IOContractFunctions = BaseFunctions &
+  ObservationFunctions &
+  RegistryFunctions &
   ArNSFunctions &
-  PstFunctions &
+  BaseFunctions &
   VaultFunctions;
 
 export type ContractWriteResult = { state: IOState };

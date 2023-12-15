@@ -1,7 +1,6 @@
-import { IOState } from 'src/types';
-
 import { INVALID_INPUT_MESSAGE, MIN_TOKEN_LOCK_LENGTH } from '../../constants';
 import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
+import { IOState } from '../../types';
 import { extendVault } from './extendVault';
 
 describe('extendVault', () => {

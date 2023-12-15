@@ -1,20 +1,13 @@
 import {
   ARNS_NAME_RESERVED_MESSAGE,
-  BLOCKS_PER_DAY,
-  DEFAULT_NUM_SAMPLED_BLOCKS,
-  DEFAULT_SAMPLED_BLOCKS_OFFSET,
   INVALID_INPUT_MESSAGE,
   INVALID_SHORT_NAME,
-  MAX_TENURE_WEIGHT,
   MAX_YEARS,
   MINIMUM_ALLOWED_NAME_LENGTH,
-  NAMESPACE_LENGTH,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
-  NUM_OBSERVERS_PER_EPOCH,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
-  TENURE_WEIGHT_DAYS,
   TOTAL_IO_SUPPLY,
 } from './constants';
 import {
@@ -27,7 +20,6 @@ import {
   BlockTimestamp,
   DeepReadonly,
   Gateway,
-  GatewayRegistrySettings,
   Gateways,
   IOState,
   IOToken,
@@ -39,20 +31,7 @@ import {
   VaultData,
   Vaults,
   WalletAddress,
-  WeightedObserver,
 } from './types';
-
-// check if a string is a valid fully qualified domain name
-export function isValidFQDN(fqdn: string): boolean {
-  const fqdnRegex = /^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{1,63}$/;
-  return fqdnRegex.test(fqdn);
-}
-
-// check if it is a valid arweave base64url for a wallet public address, transaction index or smartweave contract
-export function isValidArweaveBase64URL(base64URL: string): boolean {
-  const base64URLRegex = new RegExp('^[a-zA-Z0-9_-]{43}$');
-  return base64URLRegex.test(base64URL);
-}
 
 export function walletHasSufficientBalance(
   balances: DeepReadonly<Balances>,
@@ -60,28 +39,6 @@ export function walletHasSufficientBalance(
   qty: number, // TODO: change to IOToken
 ): boolean {
   return !!balances[wallet] && balances[wallet] >= qty;
-}
-
-export function calculateUndernamePermutations(domain: string): number {
-  const numberOfPossibleCharacters = 38; // 26 letters + 10 numbers + - (dash) + _ (underscore)
-  const numberOfAllowedStartingAndEndingCharacters = 36; // 26 letters + 10 numbers
-  const nameSpaceLength = NAMESPACE_LENGTH - domain.length; // should be between 11 and 61
-  let numberOfPossibleUndernames = 0;
-
-  for (
-    let undernameLength = 1;
-    undernameLength <= nameSpaceLength;
-    undernameLength++
-  ) {
-    if (undernameLength === 1 || undernameLength === nameSpaceLength) {
-      numberOfPossibleUndernames +=
-        numberOfAllowedStartingAndEndingCharacters ** undernameLength;
-    } else {
-      numberOfPossibleUndernames +=
-        numberOfPossibleCharacters ** undernameLength;
-    }
-  }
-  return numberOfPossibleUndernames;
 }
 
 export function resetProtocolBalance({
@@ -219,160 +176,6 @@ export function getInvalidAjvMessage(
       return `${key} ('${value}') ${e.message}`;
     })
     .join(', ')}`;
-}
-
-export function getEpochStart({
-  startHeight,
-  epochBlockLength,
-  height,
-}: {
-  startHeight: number;
-  epochBlockLength: number;
-  height: number;
-}): number {
-  return (
-    getEpochEnd({ startHeight, epochBlockLength, height }) +
-    1 -
-    epochBlockLength
-  );
-}
-
-export function getEpochEnd({
-  startHeight,
-  epochBlockLength,
-  height,
-}: {
-  startHeight: number;
-  epochBlockLength: number;
-  height: number;
-}): number {
-  return (
-    startHeight +
-    epochBlockLength *
-      (Math.floor((height - startHeight) / epochBlockLength) + 1) -
-    1
-  );
-}
-
-export async function getEntropy(height: number): Promise<Buffer> {
-  let entropyBuffer: Buffer = Buffer.alloc(0);
-  // We hash multiples block hashes to reduce the chance that someone will
-  // influence the value produced by grinding with excessive hash power.
-  for (let i = 0; i < DEFAULT_NUM_SAMPLED_BLOCKS; i++) {
-    const offsetHeight =
-      height - DEFAULT_SAMPLED_BLOCKS_OFFSET - i < 0
-        ? 0
-        : height - DEFAULT_SAMPLED_BLOCKS_OFFSET - i;
-    const path = `/block/height/${offsetHeight}`;
-    const data = await SmartWeave.safeArweaveGet(path);
-    const indep_hash = data.indep_hash;
-    if (!indep_hash || typeof indep_hash !== 'string') {
-      throw new ContractError(`Block ${height - i} has no indep_hash`);
-    }
-    entropyBuffer = Buffer.concat([
-      entropyBuffer,
-      Buffer.from(indep_hash, 'base64url'),
-    ]);
-  }
-  const hash = await SmartWeave.arweave.crypto.hash(entropyBuffer, 'SHA-256');
-  return hash;
-}
-
-export async function getPrescribedObservers(
-  gateways: {
-    [address: string]: Gateway;
-  },
-  minNetworkJoinStakeAmount: number,
-  gatewayLeaveLength: number,
-  height: number,
-): Promise<WeightedObserver[]> {
-  const prescribedObservers: WeightedObserver[] = [];
-  const weightedObservers: WeightedObserver[] = [];
-  let totalCompositeWeight = 0;
-
-  // Get all eligible observers and assign weights
-  for (const address in gateways) {
-    const gateway = gateways[address];
-
-    // Check the conditions
-    const isWithinStartRange = gateway.start <= height;
-    const isWithinEndRange =
-      gateway.end === 0 || gateway.end - gatewayLeaveLength < height;
-
-    // Keep the gateway if it meets the conditions
-    if (isWithinStartRange && isWithinEndRange) {
-      const stake = gateways[address].operatorStake;
-      const stakeWeight = stake / minNetworkJoinStakeAmount;
-      let tenureWeight =
-        (+SmartWeave.block.height - gateways[address].start) /
-        (TENURE_WEIGHT_DAYS * BLOCKS_PER_DAY);
-
-      if (tenureWeight > MAX_TENURE_WEIGHT) {
-        tenureWeight = MAX_TENURE_WEIGHT;
-      }
-
-      // set reward ratio weights
-      // TO DO AFTER REWARDS ARE IN!
-      const gatewayRewardRatioWeight = 1;
-      const observerRewardRatioWeight = 1;
-
-      // calculate composite weight based on sub weights
-      const compositeWeight =
-        stakeWeight *
-        tenureWeight *
-        gatewayRewardRatioWeight *
-        observerRewardRatioWeight;
-
-      weightedObservers.push({
-        gatewayAddress: address,
-        observerAddress: gateway.observerWallet,
-        stake,
-        start: gateway.start,
-        stakeWeight,
-        tenureWeight,
-        gatewayRewardRatioWeight,
-        observerRewardRatioWeight,
-        compositeWeight,
-        normalizedCompositeWeight: compositeWeight,
-      });
-      totalCompositeWeight += compositeWeight;
-    }
-  }
-
-  // calculate the normalized composite weight for each observer
-  for (const weightedObserver of weightedObservers) {
-    weightedObserver.normalizedCompositeWeight =
-      weightedObserver.compositeWeight / totalCompositeWeight;
-  }
-
-  // If we want to source more observers than exist in the list, just return all eligible observers
-  if (NUM_OBSERVERS_PER_EPOCH >= Object.keys(weightedObservers).length) {
-    return weightedObservers;
-  }
-
-  const entropy = await getEntropy(height);
-  const usedIndexes = new Set<number>();
-  let hash = await SmartWeave.arweave.crypto.hash(entropy, 'SHA-256');
-  for (let i = 0; i < NUM_OBSERVERS_PER_EPOCH; i++) {
-    const random = hash.readUInt32BE(0) / 0xffffffff; // Convert hash to a value between 0 and 1
-    let cumulativeNormalizedCompositeWeight = 0;
-    for (let index = 0; index < weightedObservers.length; index++) {
-      {
-        cumulativeNormalizedCompositeWeight +=
-          weightedObservers[index].normalizedCompositeWeight;
-        if (random <= cumulativeNormalizedCompositeWeight) {
-          if (!usedIndexes.has(index)) {
-            prescribedObservers.push(weightedObservers[index]);
-            usedIndexes.add(index);
-            break;
-          }
-        }
-      }
-      // Compute the next hash for the next iteration
-      hash = await SmartWeave.arweave.crypto.hash(hash, 'SHA-256');
-    }
-  }
-  return prescribedObservers;
 }
 
 export function isExistingActiveRecord({
@@ -536,16 +339,9 @@ export function isGatewayJoined({
   currentBlockHeight: BlockHeight;
 }): boolean {
   return (
-    gateway?.status === 'joined' && gateway?.end > currentBlockHeight.valueOf()
+    gateway?.status === 'joined' &&
+    gateway?.start <= currentBlockHeight.valueOf()
   );
-}
-
-export function isGatewayHidden({
-  gateway,
-}: {
-  gateway: DeepReadonly<Gateway> | undefined;
-}): boolean {
-  return gateway?.status === 'hidden';
 }
 
 export function isGatewayEligibleToBeRemoved({
@@ -564,20 +360,18 @@ export function isGatewayEligibleToBeRemoved({
 export function isGatewayEligibleToLeave({
   gateway,
   currentBlockHeight,
-  registrySettings,
+  minimumGatewayJoinLength,
 }: {
   gateway: DeepReadonly<Gateway> | undefined;
   currentBlockHeight: BlockHeight;
-  registrySettings: GatewayRegistrySettings;
+  minimumGatewayJoinLength: BlockHeight;
 }): boolean {
   if (!gateway) return false;
   const joinedForMinimum =
     currentBlockHeight.valueOf() >=
-    gateway.start + registrySettings.minGatewayJoinLength;
-  const isActiveOrHidden =
-    isGatewayJoined({ gateway, currentBlockHeight }) ||
-    isGatewayHidden({ gateway });
-  return joinedForMinimum && isActiveOrHidden;
+    gateway.start + minimumGatewayJoinLength.valueOf();
+  const isActive = isGatewayJoined({ gateway, currentBlockHeight });
+  return joinedForMinimum && isActive;
 }
 
 export function calculateYearsBetweenTimestamps({

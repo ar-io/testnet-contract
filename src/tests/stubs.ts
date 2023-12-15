@@ -1,5 +1,10 @@
 import { FEE_STRUCTURE } from '../constants';
-import { ArNSLeaseAuctionData, DemandFactoringData, IOState } from '../types';
+import {
+  ArNSLeaseAuctionData,
+  DemandFactoringData,
+  Gateway,
+  IOState,
+} from '../types';
 
 export const stubbedArweaveTxId = 'thevalidtransactionidthatis43characterslong';
 export const baselineDemandFactorData: DemandFactoringData = {
@@ -21,7 +26,7 @@ export const baselineAuctionSettings = {
   floorPriceMultiplier: 1,
 };
 
-export const getBaselineState = (): IOState => ({
+export const getBaselineState: () => IOState = (): IOState => ({
   ticker: 'ARNS-TEST',
   name: 'Arweave Name System Test',
   canEvolve: true,
@@ -30,6 +35,12 @@ export const getBaselineState = (): IOState => ({
   records: {},
   balances: {},
   vaults: {},
+  distributions: {
+    epochZeroStartHeight: 0,
+    lastCompletedEpochStartHeight: 0,
+    gateways: {},
+    observers: {},
+  },
   reserved: {},
   fees: {
     ...FEE_STRUCTURE,
@@ -76,4 +87,19 @@ export const baselineAuctionState: Partial<IOState> = {
       ...baselineAuctionData,
     },
   },
+};
+
+export const baselineGatewayData: Gateway = {
+  observerWallet: 'test-observer-wallet',
+  start: 0,
+  end: 0,
+  vaults: {},
+  operatorStake: 100,
+  settings: {
+    label: 'test-gateway',
+    fqdn: 'test.com',
+    port: 443,
+    protocol: 'https',
+  },
+  status: 'joined',
 };

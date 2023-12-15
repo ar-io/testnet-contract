@@ -14,6 +14,12 @@
   "settings": {},
   "gateways": {},
   "observations": {},
+  "distributions": {
+    "epochZeroStartHeight": 0,
+    "lastCompletedEpochStartHeight": 0,
+    "gateways": {},
+    "observers": {}
+  },
   "demandFactoring": {
     "periodZeroBlockHeight": 0,
     "currentPeriod": 0,

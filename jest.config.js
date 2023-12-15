@@ -1,6 +1,5 @@
 module.exports = {
   clearMocks: true,
-  setupFilesAfterEnv: ['./tests/mocks.jest.ts'],
   moduleFileExtensions: ['ts', 'js', 'mjs'],
   collectCoverageFrom: [
     'src/**/*.ts',

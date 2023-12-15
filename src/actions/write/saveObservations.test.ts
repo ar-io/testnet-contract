@@ -1,16 +1,18 @@
 import {
-  CALLER_NOT_VALID_OBSERVER_MESSAGE,
   INVALID_INPUT_MESSAGE,
+  INVALID_OBSERVATION_CALLER_MESSAGE,
+  INVALID_OBSERVATION_FOR_GATEWAY_MESSAGE,
+  INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE,
   NETWORK_LEAVING_STATUS,
 } from '../../constants';
+import { getPrescribedObserversForEpoch } from '../../observers';
 import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
 import { Gateway, IOState, Observations, WeightedObserver } from '../../types';
-import { getPrescribedObservers } from '../../utilities';
 import { saveObservations } from './saveObservations';
 
-jest.mock('../../utilities', () => ({
-  ...jest.requireActual('../../utilities'),
-  getPrescribedObservers: jest.fn(),
+jest.mock('../../observers', () => ({
+  ...jest.requireActual('../../observers'),
+  getPrescribedObserversForEpoch: jest.fn(),
 }));
 
 export const baselineGatewayData: Gateway = {
@@ -22,7 +24,7 @@ export const baselineGatewayData: Gateway = {
   end: 0,
   settings: {
     label: 'test',
-    fqdn: 'fqdn.com',
+    fqdn: 'test.com',
     port: 443,
     protocol: 'https',
   },
@@ -52,6 +54,7 @@ describe('saveObservations', () => {
         {
           caller: 'fake-caller',
           input: {
+            gatewayAddress: stubbedArweaveTxId,
             observerReportTxId: 'invalid-tx-id',
             failedGateways: [],
           },
@@ -66,22 +69,39 @@ describe('saveObservations', () => {
         {
           caller: 'fake-caller',
           input: {
-            observerReportTxId: 'invalid-tx-id',
+            gatewayAddress: stubbedArweaveTxId,
+            observerReportTxId: stubbedArweaveTxId,
             failedGateways: {},
           },
         },
         INVALID_INPUT_MESSAGE,
       ],
       [
-        'should throw an error if the failedGateways is not an array of tx ids',
+        'should throw an error if the failedGateways is not an array of fqdns',
         {
           ...getBaselineState(),
         },
         {
           caller: 'fake-caller',
           input: {
-            observerReportTxId: 'invalid-tx-id',
-            failedGateways: ['invalid-tx-id'],
+            gatewayAddress: stubbedArweaveTxId,
+            observerReportTxId: stubbedArweaveTxId,
+            failedGateways: ['invalid-fqdn'],
+          },
+        },
+        INVALID_INPUT_MESSAGE,
+      ],
+      [
+        'should throw an error if the gatewayAddress is not a valid tx id',
+        {
+          ...getBaselineState(),
+        },
+        {
+          caller: 'fake-caller',
+          input: {
+            gatewayAddress: 'invalid-tx-id',
+            observerReportTxId: stubbedArweaveTxId,
+            failedGateways: [],
           },
         },
         INVALID_INPUT_MESSAGE,
@@ -98,7 +118,7 @@ describe('saveObservations', () => {
   describe('valid input', () => {
     beforeAll(() => {
       // adds two prescribed observers to the mock
-      (getPrescribedObservers as jest.Mock).mockResolvedValue([
+      (getPrescribedObserversForEpoch as jest.Mock).mockResolvedValue([
         stubbedWeightedObservers,
         {
           ...stubbedWeightedObservers,
@@ -108,6 +128,38 @@ describe('saveObservations', () => {
       ]);
     });
 
+    afterAll(() => {
+      jest.resetAllMocks();
+    });
+
+    describe('invalid epoch', () => {
+      it('should throw an error if epoch zero has not started', async () => {
+        const epochZeroStartHeight = 10;
+        const error = await saveObservations(
+          {
+            ...getBaselineState(),
+            distributions: {
+              ...getBaselineState().distributions,
+              epochZeroStartHeight: 10,
+            },
+          },
+          {
+            caller: 'observer-address',
+            input: {
+              observerReportTxId: stubbedArweaveTxId,
+              failedGateways: [],
+            },
+          },
+        ).catch((e) => e);
+        expect(error).toBeInstanceOf(Error);
+        expect(error.message).toEqual(
+          expect.stringContaining(
+            `Observations cannot be submitted before block height: ${epochZeroStartHeight}`,
+          ),
+        );
+      });
+    });
+
     describe('invalid caller', () => {
       it.each([
         [
@@ -115,7 +167,7 @@ describe('saveObservations', () => {
           {
             ...getBaselineState(),
             gateways: {
-              stubbedArweaveTxId: baselineGatewayData,
+              [stubbedArweaveTxId]: baselineGatewayData,
             },
           },
           {
@@ -125,27 +177,28 @@ describe('saveObservations', () => {
               failedGateways: [],
             },
           },
-          CALLER_NOT_VALID_OBSERVER_MESSAGE,
+          INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE,
         ],
         [
           'should throw an error if the caller is a registered gateway that has not started observing yet',
           {
             ...getBaselineState(),
             gateways: {
-              stubbedArweaveTxId: {
+              ['observer-address']: {
                 ...baselineGatewayData,
                 start: 10,
+                observerWallet: 'observer-address',
               },
             },
           },
           {
-            caller: 'fake-observer-wallet',
+            caller: 'observer-address',
             input: {
               observerReportTxId: stubbedArweaveTxId,
               failedGateways: [],
             },
           },
-          CALLER_NOT_VALID_OBSERVER_MESSAGE,
+          INVALID_OBSERVATION_CALLER_MESSAGE,
         ],
         [
           'should throw an error if the caller is not a prescribed observer for the epoch',
@@ -165,7 +218,57 @@ describe('saveObservations', () => {
               failedGateways: [],
             },
           },
-          CALLER_NOT_VALID_OBSERVER_MESSAGE,
+          INVALID_OBSERVATION_CALLER_MESSAGE,
+        ],
+        [
+          'should throw an error if the gatewayAddress is not provided and the caller does not exist in the registry',
+          {
+            ...getBaselineState(),
+          },
+          {
+            caller: 'fake-caller',
+            input: {
+              // it should use the caller as the default for gateway address
+              observerReportTxId: stubbedArweaveTxId,
+              failedGateways: [],
+            },
+          },
+          INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE,
+        ],
+        [
+          'should throw an error if the gatewayAddress provided is not in the registry',
+          {
+            ...getBaselineState(),
+          },
+          {
+            caller: 'observer-address',
+            input: {
+              gatewayAddress: stubbedArweaveTxId,
+              observerReportTxId: stubbedArweaveTxId,
+              failedGateways: [],
+            },
+          },
+          INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE,
+        ],
+        [
+          'should throw an error if the gatewayAddress is not provided by the caller does not match the gateway observer address',
+          {
+            ...getBaselineState(),
+            gateways: {
+              'observer-address': {
+                ...baselineGatewayData,
+                observerWallet: 'a-different-address',
+              },
+            },
+          },
+          {
+            caller: 'observer-address', // this does not match the observer address
+            input: {
+              observerReportTxId: stubbedArweaveTxId,
+              failedGateways: [],
+            },
+          },
+          INVALID_OBSERVATION_FOR_GATEWAY_MESSAGE,
         ],
       ])('%s', async (_, initialState: IOState, inputData, errorMessage) => {
         const error = await saveObservations(initialState, inputData).catch(
@@ -189,7 +292,10 @@ describe('saveObservations', () => {
         const initialState = {
           ...getBaselineState(),
           gateways: {
-            'observer-address': baselineGatewayData,
+            'observer-address': {
+              ...baselineGatewayData,
+              observerWallet: 'observer-address',
+            },
             [stubbedArweaveTxId]: {
               ...baselineGatewayData,
               observerAddress: stubbedArweaveTxId,
@@ -225,7 +331,10 @@ describe('saveObservations', () => {
       const initialState = {
         ...getBaselineState(),
         gateways: {
-          'observer-address': baselineGatewayData,
+          'observer-address': {
+            ...baselineGatewayData,
+            observerWallet: 'observer-address',
+          },
         },
       };
       const { state } = await saveObservations(initialState, {
@@ -253,10 +362,14 @@ describe('saveObservations', () => {
       const initialState = {
         ...getBaselineState(),
         gateways: {
-          'observer-address': baselineGatewayData,
+          'observer-address': {
+            ...baselineGatewayData,
+            observerWallet: 'observer-address',
+          },
           [stubbedArweaveTxId]: {
             ...baselineGatewayData,
             start: 10,
+            observerWallet: stubbedArweaveTxId,
           },
         },
       };
@@ -285,7 +398,10 @@ describe('saveObservations', () => {
       const initialState: IOState = {
         ...getBaselineState(),
         gateways: {
-          'observer-address': baselineGatewayData,
+          'observer-address': {
+            ...baselineGatewayData,
+            observerWallet: 'observer-address',
+          },
           [stubbedArweaveTxId]: {
             ...baselineGatewayData,
             status: NETWORK_LEAVING_STATUS,
@@ -317,7 +433,10 @@ describe('saveObservations', () => {
       const initialState = {
         ...getBaselineState(),
         gateways: {
-          'observer-address': baselineGatewayData,
+          'observer-address': {
+            ...baselineGatewayData,
+            observerWallet: 'observer-address',
+          },
           [stubbedArweaveTxId]: {
             ...baselineGatewayData,
             observerAddress: stubbedArweaveTxId,
@@ -363,14 +482,17 @@ describe('saveObservations', () => {
       const initialState = {
         ...getBaselineState(),
         gateways: {
-          'observer-address': baselineGatewayData,
+          'observer-address': {
+            ...baselineGatewayData,
+            observerWallet: 'observer-address',
+          },
           'a-second-observer-address': {
             ...baselineGatewayData,
-            observerAddress: 'a-second-observer-address',
+            observerWallet: 'a-second-observer-address',
           },
           [stubbedArweaveTxId]: {
             ...baselineGatewayData,
-            observerAddress: stubbedArweaveTxId,
+            observerWallet: stubbedArweaveTxId,
           },
         },
         observations: initialObservationsForEpoch,

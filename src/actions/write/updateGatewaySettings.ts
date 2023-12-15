@@ -1,12 +1,43 @@
 import {
-  MAX_GATEWAY_LABEL_LENGTH,
-  MAX_NOTE_LENGTH,
-  MAX_PORT_NUMBER,
-  NETWORK_HIDDEN_STATUS,
-  NETWORK_JOIN_STATUS,
+  INVALID_GATEWAY_REGISTERED_MESSAGE,
+  INVALID_OBSERVER_WALLET,
 } from '../../constants';
 import { ContractWriteResult, IOState, PstAction } from '../../types';
-import { isValidArweaveBase64URL, isValidFQDN } from '../../utilities';
+import { getInvalidAjvMessage } from '../../utilities';
+import { validateUpdateGateway } from '../../validations';
+
+export class GatewaySettings {
+  observerWallet: string;
+  settings: {
+    fqdn?: string;
+    label?: string;
+    note?: string;
+    properties?: string;
+    protocol?: 'http' | 'https';
+    port?: number;
+  };
+
+  constructor(input: any) {
+    // validate using ajv validator
+    if (!validateUpdateGateway(input)) {
+      throw new ContractError(
+        getInvalidAjvMessage(validateUpdateGateway, input, 'updateGateway'),
+      );
+    }
+
+    const { label, port, fqdn, note, protocol, properties, observerWallet } =
+      input;
+    this.settings = {
+      ...(fqdn !== undefined && { fqdn }),
+      ...(label !== undefined && { label }),
+      ...(note !== undefined && { note }),
+      ...(properties !== undefined && { properties }),
+      ...(protocol !== undefined && { protocol }),
+      ...(port !== undefined && { port }),
+    };
+    this.observerWallet = observerWallet;
+  }
+}
 
 // Updates any of the settings of an existing gateway
 export const updateGatewaySettings = async (
@@ -14,106 +45,32 @@ export const updateGatewaySettings = async (
   { caller, input }: PstAction,
 ): Promise<ContractWriteResult> => {
   const { gateways = {} } = state;
-
-  // TODO: add object parsing validation
-  const {
-    label,
-    fqdn,
-    port,
-    protocol,
-    properties,
-    note,
-    status,
-    observerWallet,
-  } = input as any;
-
-  // TODO: consistent checks
-  if (!(caller in gateways)) {
-    throw new ContractError('This caller does not have a registered gateway.');
+  const { observerWallet: updatedObserverWallet, settings: updatedSettings } =
+    new GatewaySettings(input);
+  const gateway = gateways[caller];
+  if (!gateway) {
+    throw new ContractError(INVALID_GATEWAY_REGISTERED_MESSAGE);
   }
 
-  if (label) {
-    if (typeof label !== 'string' || label.length > MAX_GATEWAY_LABEL_LENGTH) {
-      throw new ContractError('Label format not recognized.');
-    } else {
-      gateways[caller].settings.label = label;
-    }
+  if (
+    Object.values(gateways).some(
+      (gateway) => gateway.observerWallet === updatedObserverWallet,
+    )
+  ) {
+    throw new ContractError(INVALID_OBSERVER_WALLET);
   }
-
-  if (port) {
-    if (!Number.isInteger(port) || port > MAX_PORT_NUMBER) {
-      throw new ContractError('Invalid port number.');
-    } else {
-      gateways[caller].settings.port = port;
-    }
-  }
-
-  if (protocol) {
-    // Gateway status check
-    if (!(protocol === 'http' || protocol === 'https')) {
-      throw new ContractError('Invalid protocol, must be http or https.');
-    } else {
-      gateways[caller].settings.protocol = protocol;
-    }
-  }
-
-  // check if it is a valid fully qualified domain name
-  if (fqdn) {
-    const isFQDN = isValidFQDN(fqdn);
-    if (typeof fqdn !== 'string' || !isFQDN) {
-      throw new ContractError(
-        'Please provide a fully qualified domain name to access this gateway',
-      );
-    } else {
-      gateways[caller].settings.fqdn = fqdn;
-    }
-  }
-
-  if (properties) {
-    if (!isValidArweaveBase64URL(properties)) {
-      throw new ContractError(
-        'Invalid property.  Must be a valid Arweave transaction ID.',
-      );
-    } else {
-      gateways[caller].settings.properties = properties;
-    }
-  } else if (properties === '') {
-    gateways[caller].settings.properties = properties;
-  }
-
-  if (note || note === '') {
-    if (typeof note !== 'string') {
-      throw new ContractError('Note format not recognized.');
-    }
-    if (note.length > MAX_NOTE_LENGTH) {
-      throw new ContractError('Note is too long.');
-    } else {
-      gateways[caller].settings.note = note;
-    }
-  }
-
-  if (status) {
-    if (!(status === NETWORK_HIDDEN_STATUS || status === NETWORK_JOIN_STATUS)) {
-      throw new ContractError(
-        `Invalid gateway status, must be set to ${NETWORK_HIDDEN_STATUS} or ${NETWORK_JOIN_STATUS}`,
-      );
-    } else {
-      gateways[caller].status = status;
-    }
-  }
-
-  if (observerWallet) {
-    if (!isValidArweaveBase64URL(observerWallet)) {
-      throw new ContractError(
-        'Invalid observer wallet address.  Must be a valid Arweave Wallet Address.',
-      );
-    } else {
-      gateways[caller].observerWallet = observerWallet;
-    }
-  }
+  // update observer wallet, and any settings provided
+  const updatedGateway = {
+    ...gateway,
+    observerWallet: updatedObserverWallet || gateways[caller].observerWallet,
+    settings: {
+      ...gateway.settings,
+      ...updatedSettings,
+    },
+  };
 
   // update the contract state
-  state.gateways[caller] = gateways[caller];
+  state.gateways[caller] = updatedGateway;
 
   return { state };
 };

@@ -1,22 +1,42 @@
-import { DEFAULT_UNDERNAME_COUNT, SECONDS_IN_A_YEAR } from '../../constants';
+import {
+  BAD_OBSERVER_GATEWAY_PENALTY,
+  DEFAULT_EPOCH_BLOCK_LENGTH,
+  DEFAULT_UNDERNAME_COUNT,
+  EPOCH_REWARD_PERCENTAGE,
+  GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
+  OBSERVATION_FAILURE_THRESHOLD,
+  SECONDS_IN_A_YEAR,
+  TALLY_PERIOD_BLOCKS,
+} from '../../constants';
+import {
+  getEligibleGatewaysForEpoch,
+  getEpochBoundariesForHeight,
+  getPrescribedObserversForEpoch,
+} from '../../observers';
 import {
   cloneDemandFactoringData,
   tallyNamePurchase,
   updateDemandFactor,
 } from '../../pricing';
+import { safeTransfer } from '../../transfer';
 import {
   Auctions,
   Balances,
   BlockHeight,
   BlockTimestamp,
+  ContractSettings,
   ContractWriteResult,
   DeepReadonly,
   DemandFactoringData,
+  GatewayDistributions,
   Gateways,
   IOState,
+  Observations,
+  ObserverDistributions,
   Records,
   RegistryVaults,
   ReservedNames,
+  RewardDistributions,
   VaultData,
   Vaults,
   WalletAddress,
@@ -94,6 +114,19 @@ function tickInternal({
     tickReservedNames({
       currentBlockTimestamp,
       reservedNames: updatedState.reserved,
+    }),
+  );
+
+  // tick reward distribution
+  Object.assign(
+    updatedState,
+    tickRewardDistribution({
+      currentBlockHeight,
+      gateways: updatedState.gateways,
+      distributions: updatedState.distributions,
+      observations: updatedState.observations,
+      balances: updatedState.balances,
+      settings: updatedState.settings,
     }),
   );
 
@@ -323,7 +356,7 @@ export function tickAuctions({
           // TODO: Block timestamps is broken here - user could be getting bonus time here when the next write interaction occurs
           // update the records field but do not decrement balance from the initiator as that happens on auction initiation
           endTimestamp:
-            +auction.years! * SECONDS_IN_A_YEAR + // TODO: Avoid force unwrapping years
+            +auction.years * SECONDS_IN_A_YEAR +
             currentBlockTimestamp.valueOf(),
           purchasePrice: auction.floorPrice,
         };
@@ -373,6 +406,263 @@ export function tickAuctions({
     balances: newBalances,
     records: newRecords,
     demandFactoring: updatedDemandFactoring,
+  };
+}
+
+export async function tickRewardDistribution({
+  currentBlockHeight,
+  gateways,
+  distributions,
+  observations,
+  balances,
+  settings,
+}: {
+  currentBlockHeight: BlockHeight;
+  gateways: DeepReadonly<Gateways>;
+  distributions: DeepReadonly<RewardDistributions>;
+  observations: DeepReadonly<Observations>;
+  balances: DeepReadonly<Balances>;
+  settings: DeepReadonly<ContractSettings>;
+}): Promise<Pick<IOState, 'distributions' | 'balances'>> {
+  const updatedBalances: Balances = {};
+  const currentProtocolBalance = balances[SmartWeave.contract.id] || 0;
+  const updatedGatewayDistributions: GatewayDistributions = {};
+  const updatedObserverDistributions: ObserverDistributions = {};
+
+  // do nothing if there are no protocol balance
+  // if there is not enough mIO to give each participant one mIO
+  if (currentProtocolBalance === 0) {
+    return {
+      distributions: distributions as RewardDistributions,
+      balances,
+    };
+  }
+
+  const lastCompletedEpochEndHeight = new BlockHeight(
+    distributions.lastCompletedEpochStartHeight +
+      DEFAULT_EPOCH_BLOCK_LENGTH -
+      1, // the first epoch end height
+  );
+
+  // distribution should only happen ONCE on block that is TALLY_PERIOD_BLOCKS after the last completed epoch
+  if (
+    currentBlockHeight.valueOf() !==
+    lastCompletedEpochEndHeight.valueOf() + TALLY_PERIOD_BLOCKS
+  ) {
+    return {
+      // remove the readonly and avoid slicing/copying arrays if not necessary
+      distributions: distributions as RewardDistributions,
+      balances,
+    };
+  }
+
+  // get the boundaries of the epoch we care about
+  const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
+    currentBlockHeight: lastCompletedEpochEndHeight,
+    epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
+    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+  });
+
+  // get all the reports submitted for the epoch based on its start height
+  const totalReportsSubmitted = Object.keys(
+    observations[epochStartHeight.valueOf()]?.reports || [],
+  ).length;
+
+  // this should be consistently 50 observers * 51% - if you have more than 26 failed reports - you are not eligible for a reward
+  const failureReportCountThreshold = Math.floor(
+    totalReportsSubmitted * OBSERVATION_FAILURE_THRESHOLD,
+  );
+
+  // filter out gateways eligible for epoch distribution
+  const eligibleGateways = getEligibleGatewaysForEpoch({
+    epochStartHeight,
+    epochEndHeight,
+    gateways,
+  });
+
+  // get the observers for the epoch
+  const prescribedObservers = await getPrescribedObserversForEpoch({
+    eligibleGateways,
+    epochStartHeight,
+    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
+    distributions,
+  });
+
+  // TODO: consider having this be a set, gateways can not run on the same wallet
+  const gatewaysToReward: WalletAddress[] = [];
+  // note this should not be a set, you can run multiple gateways with one wallet
+  const observerGatewaysToReward: WalletAddress[] = [];
+
+  // identify observers who reported the above gateways as eligible for rewards
+  for (const gatewayAddress in eligibleGateways) {
+    const existingGatewaySummary = distributions.gateways[gatewayAddress];
+
+    // add our gateway to the updated distributions
+    updatedGatewayDistributions[gatewayAddress] = {
+      passedEpochCount: existingGatewaySummary?.passedEpochCount || 0,
+      failedConsecutiveEpochs:
+        existingGatewaySummary?.failedConsecutiveEpochs || 0,
+      totalEpochParticipationCount:
+        (existingGatewaySummary?.totalEpochParticipationCount || 0) + 1, // increment the total right away
+    };
+
+    // iterate through all the failure summaries for the gateway
+    const totalNumberOfFailuresReported = (
+      observations[epochStartHeight.valueOf()]?.failureSummaries[
+        gatewayAddress
+      ] || []
+    ).length;
+
+    // no reward given, go to the next eligible gateway
+    if (totalNumberOfFailuresReported > failureReportCountThreshold) {
+      // increment the failed epoch count of the gateway - if three we will kick out the gateway
+      updatedGatewayDistributions[gatewayAddress].failedConsecutiveEpochs += 1;
+      // TODO: check if over count and remove from GAR!
+      continue;
+    }
+
+    // update the passed epoch count
+    updatedGatewayDistributions[gatewayAddress].passedEpochCount += 1;
+    // reset its failed epoch count
+    updatedGatewayDistributions[gatewayAddress].failedConsecutiveEpochs = 0;
+    // assign it for a reward
+    gatewaysToReward.push(gatewayAddress);
+  }
+
+  // identify observers who reported the above gateways as eligible for rewards
+  for (const observer of prescribedObservers) {
+    const existingObserverSummary =
+      distributions.observers[observer.observerAddress];
+
+    // add our observer to the updated distributions
+    updatedObserverDistributions[observer.observerAddress] = {
+      submittedEpochCount: existingObserverSummary?.submittedEpochCount || 0,
+      totalEpochsPrescribedCount:
+        (existingObserverSummary?.totalEpochsPrescribedCount || 0) + 1,
+    };
+
+    const observerSubmittedReportForEpoch =
+      observations[epochStartHeight.valueOf()]?.reports[
+        observer.observerAddress
+      ];
+    if (!observerSubmittedReportForEpoch) {
+      continue;
+    }
+
+    // update the number of epochs this observer has passed
+    updatedObserverDistributions[
+      observer.observerAddress
+    ].submittedEpochCount += 1;
+
+    // make it eligible for observer rewards, use the gateway address and not the observer address
+    observerGatewaysToReward.push(observer.gatewayAddress);
+  }
+
+  // prepare for distributions
+  // calculate epoch rewards X% of current protocol balance split amongst gateways and observers
+  const totalPotentialReward = Math.floor(
+    currentProtocolBalance * EPOCH_REWARD_PERCENTAGE,
+  );
+
+  const totalPotentialGatewayReward = Math.floor(
+    totalPotentialReward * GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
+  );
+
+  // there may be a delta depending on the number of failures - it calculates this reward based on the number of distributions that should have passed
+  const perGatewayReward = Object.keys(eligibleGateways).length
+    ? Math.floor(
+        totalPotentialGatewayReward / Object.keys(eligibleGateways).length,
+      )
+    : 0;
+
+  // the remaining (i.e. 5%)
+  const totalPotentialObserverReward =
+    totalPotentialReward - totalPotentialGatewayReward;
+
+  const perObserverReward = Object.keys(prescribedObservers).length
+    ? Math.floor(
+        totalPotentialObserverReward / Object.keys(prescribedObservers).length,
+      )
+    : 0;
+
+  // TODO: set thresholds for the perGatewayReward and perObserverReward to be greater than at least 1 mIO
+
+  // // distribute observer tokens
+  for (const gatewayAddress of gatewaysToReward) {
+    // add protocol balance if we do not have it
+    if (!updatedBalances[SmartWeave.contract.id]) {
+      updatedBalances[SmartWeave.contract.id] =
+        balances[SmartWeave.contract.id] || 0;
+    }
+
+    // add the address if we do not have it
+    if (!updatedBalances[gatewayAddress]) {
+      updatedBalances[gatewayAddress] = balances[gatewayAddress] || 0;
+    }
+
+    let totalGatewayReward = perGatewayReward;
+    // if you were prescribed observer but didn't submit a report, you get gateway reward penalized
+    if (
+      Object.keys(prescribedObservers).includes(gatewayAddress) &&
+      !Object.keys(observerGatewaysToReward).includes(gatewayAddress)
+    ) {
+      // you don't get the full gateway reward if you didn't submit a report
+      totalGatewayReward = Math.floor(
+        totalGatewayReward * BAD_OBSERVER_GATEWAY_PENALTY,
+      );
+    }
+
+    safeTransfer({
+      balances: updatedBalances,
+      fromAddress: SmartWeave.contract.id,
+      toAddress: gatewayAddress,
+      qty: totalGatewayReward,
+    });
+  }
+
+  // distribute observer tokens
+  for (const gatewayObservedAndPassed of observerGatewaysToReward) {
+    // add protocol balance if we do not have it
+    if (!updatedBalances[SmartWeave.contract.id]) {
+      updatedBalances[SmartWeave.contract.id] =
+        balances[SmartWeave.contract.id] || 0;
+    }
+
+    // add the address if we do not have it
+    if (!updatedBalances[gatewayObservedAndPassed]) {
+      updatedBalances[gatewayObservedAndPassed] =
+        balances[gatewayObservedAndPassed] || 0;
+    }
+
+    safeTransfer({
+      balances: updatedBalances,
+      fromAddress: SmartWeave.contract.id,
+      toAddress: gatewayObservedAndPassed,
+      qty: perObserverReward,
+    });
+  }
+
+  // avoids copying balances if not necessary
+  const newBalances: Balances = Object.keys(updatedBalances).length
+    ? { ...balances, ...updatedBalances }
+    : balances;
+
+  const updatedDistributions = {
+    ...distributions,
+    gateways: {
+      ...distributions.gateways,
+      ...updatedGatewayDistributions,
+    },
+    observers: {
+      ...distributions.observers,
+      ...updatedObserverDistributions,
+    },
+    lastCompletedEpochStartHeight: epochStartHeight.valueOf(),
+  };
+
+  return {
+    distributions: updatedDistributions,
+    balances: newBalances,
   };
 }
 

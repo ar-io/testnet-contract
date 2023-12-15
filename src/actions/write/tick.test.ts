@@ -3,9 +3,24 @@ import {
   tickGatewayRegistry,
   tickRecords,
   tickReservedNames,
+  tickRewardDistribution,
   tickVaults,
 } from '../../actions/write/tick';
-import { SECONDS_IN_A_YEAR, SECONDS_IN_GRACE_PERIOD } from '../../constants';
+import {
+  DEFAULT_EPOCH_BLOCK_LENGTH,
+  SECONDS_IN_A_YEAR,
+  SECONDS_IN_GRACE_PERIOD,
+  TALLY_PERIOD_BLOCKS,
+} from '../../constants';
+import {
+  getEligibleGatewaysForEpoch,
+  getPrescribedObserversForEpoch,
+} from '../../observers';
+import {
+  baselineGatewayData,
+  getBaselineState,
+  stubbedArweaveTxId, // stubbedArweaveTxId,
+} from '../../tests/stubs';
 import {
   ArNSPermabuyAuctionData,
   Auctions,
@@ -21,6 +36,12 @@ import {
   RegistryVaults,
   ReservedNames,
 } from '../../types';
+
+jest.mock('../../observers', () => ({
+  ...jest.requireActual('../../observers'),
+  getPrescribedObserversForEpoch: jest.fn(),
+  getEligibleGatewaysForEpoch: jest.fn(),
+}));
 
 const defaultAuctionSettings = {
   auctionDuration: 2,
@@ -728,5 +749,272 @@ describe('tickVaults', () => {
     expect(updatedVaults['foo']).toEqual(undefined);
     expect(updatedVaults['bar']).toEqual(undefined);
     expect(updatedVaults['baz']).toEqual(undefined);
+  });
+});
+
+describe('tickRewardDistribution', () => {
+  beforeEach(() => {
+    (getPrescribedObserversForEpoch as jest.Mock).mockResolvedValue([
+      {
+        gatewayAddress: 'a-gateway',
+        observerAddress: 'an-observing-gateway',
+        stake: 100,
+        start: 0,
+        stakeWeight: 10,
+        tenureWeight: 1,
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        compositeWeight: 1,
+        normalizedCompositeWeight: 1,
+      },
+      {
+        gatewayAddress: 'a-gateway-2',
+        observerAddress: 'an-observing-gateway-2',
+        stake: 100,
+        start: 0,
+        stakeWeight: 10,
+        tenureWeight: 1,
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        compositeWeight: 1,
+        normalizedCompositeWeight: 1,
+      },
+      {
+        gatewayAddress: 'a-gateway-3',
+        observerAddress: 'an-observing-gateway-3',
+        stake: 100,
+        start: 0,
+        stakeWeight: 10,
+        tenureWeight: 1,
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        compositeWeight: 1,
+        normalizedCompositeWeight: 1,
+      },
+    ]);
+    (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({
+      'a-gateway': {
+        ...baselineGatewayData,
+        observerWallet: 'an-observing-gateway',
+      },
+      'a-gateway-2': {
+        ...baselineGatewayData,
+        observerWallet: 'an-observing-gateway-2',
+      },
+      'a-gateway-3': {
+        ...baselineGatewayData,
+        observerWallet: 'an-observing-gateway-3',
+      },
+    });
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it('should not distribute rewards when protocol balance is 0', async () => {
+    const initialState: IOState = {
+      ...getBaselineState(),
+      balances: {
+        [SmartWeave.contract.id]: 0,
+      },
+    };
+    const { balances, distributions } = await tickRewardDistribution({
+      currentBlockHeight: new BlockHeight(10),
+      gateways: initialState.gateways,
+      balances: initialState.balances,
+      distributions: initialState.distributions,
+      observations: initialState.observations,
+      settings: initialState.settings,
+    });
+    expect(balances).toEqual(initialState.balances);
+    expect(distributions).toEqual(initialState.distributions);
+  });
+
+  it('should not distribute rewards if the first epoch has not completed yet and current block height is less than', async () => {
+    const initialState: IOState = {
+      ...getBaselineState(),
+      balances: {
+        [SmartWeave.contract.id]: 10_000_000,
+      },
+    };
+    const { balances, distributions } = await tickRewardDistribution({
+      currentBlockHeight: new BlockHeight(
+        initialState.distributions.epochZeroStartHeight +
+          DEFAULT_EPOCH_BLOCK_LENGTH -
+          1,
+      ),
+      gateways: initialState.gateways,
+      balances: initialState.balances,
+      distributions: initialState.distributions,
+      observations: initialState.observations,
+      settings: initialState.settings,
+    });
+    expect(balances).toEqual(initialState.balances);
+    expect(distributions).toEqual(initialState.distributions);
+  });
+
+  it.each([
+    0,
+    1,
+    TALLY_PERIOD_BLOCKS - 1,
+    TALLY_PERIOD_BLOCKS + 1,
+    Number.MAX_SAFE_INTEGER,
+  ])(
+    'should not distribute rewards if the current block height is equal to the last epoch end height + the required tallying period',
+    async (blockHeight) => {
+      const initialState: IOState = {
+        ...getBaselineState(),
+        balances: {
+          [SmartWeave.contract.id]: 10_000_000,
+        },
+      };
+      const firstEpochEndHeight =
+        initialState.distributions.epochZeroStartHeight +
+        DEFAULT_EPOCH_BLOCK_LENGTH -
+        1;
+      const invalidBlockHeight = firstEpochEndHeight + blockHeight;
+      const { balances, distributions } = await tickRewardDistribution({
+        currentBlockHeight: new BlockHeight(invalidBlockHeight),
+        gateways: initialState.gateways,
+        balances: initialState.balances,
+        distributions: initialState.distributions,
+        observations: initialState.observations,
+        settings: initialState.settings,
+      });
+      expect(balances).toEqual(initialState.balances);
+      expect(distributions).toEqual(initialState.distributions);
+    },
+  );
+
+  it('should not distribute rewards if there are no gateways or observers in the GAR, but increment distributions for observers and epoch heights', async () => {
+    // both of these return empty objects
+    (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({});
+    (getPrescribedObserversForEpoch as jest.Mock).mockResolvedValue([]);
+    const initialState: IOState = {
+      ...getBaselineState(),
+      balances: {
+        [SmartWeave.contract.id]: 10_000_000,
+      },
+    };
+    const firstEpochEndHeight =
+      initialState.distributions.epochZeroStartHeight +
+      DEFAULT_EPOCH_BLOCK_LENGTH -
+      1;
+    const firstEpochTickHeight = firstEpochEndHeight + TALLY_PERIOD_BLOCKS;
+    const { balances, distributions } = await tickRewardDistribution({
+      currentBlockHeight: new BlockHeight(firstEpochTickHeight),
+      gateways: initialState.gateways,
+      balances: initialState.balances,
+      distributions: initialState.distributions,
+      observations: initialState.observations,
+      settings: initialState.settings,
+    });
+    expect(balances).toEqual(initialState.balances);
+    expect(distributions).toEqual({
+      ...initialState.distributions,
+      lastCompletedEpochStartHeight: 0,
+    });
+  });
+
+  it('should distribute rewards to observers who submitted reports and gateways who passed', async () => {
+    const initialState: IOState = {
+      ...getBaselineState(),
+      balances: {
+        [SmartWeave.contract.id]: 10_000_000,
+      },
+      gateways: {
+        'a-gateway': {
+          ...baselineGatewayData,
+          observerWallet: 'an-observing-gateway',
+        },
+        'a-gateway-2': {
+          ...baselineGatewayData,
+          observerWallet: 'an-observing-gateway-2',
+        },
+        'a-gateway-3': {
+          ...baselineGatewayData,
+          observerWallet: 'an-observing-gateway-3',
+        },
+      },
+      observations: {
+        0: {
+          failureSummaries: {
+            // one failure, but not more than half so still gets the reward
+            'a-gateway-2': ['an-observing-gateway'],
+            // observer 3 is failing more according to more than half the gateways
+            'a-gateway-3': ['an-observing-gateway', 'an-observing-gateway-2'],
+          },
+          // all will get observer reward
+          reports: {
+            'an-observing-gateway': stubbedArweaveTxId,
+            'an-observing-gateway-2': stubbedArweaveTxId,
+            // observer 3 did not submit a report
+          },
+        },
+      },
+    };
+    const epochDistributionHeight =
+      initialState.distributions.epochZeroStartHeight +
+      DEFAULT_EPOCH_BLOCK_LENGTH +
+      TALLY_PERIOD_BLOCKS -
+      1;
+    const { balances, distributions } = await tickRewardDistribution({
+      currentBlockHeight: new BlockHeight(epochDistributionHeight),
+      gateways: initialState.gateways,
+      balances: initialState.balances,
+      distributions: initialState.distributions,
+      observations: initialState.observations,
+      settings: initialState.settings,
+    });
+    const totalRewardsEligible = 10_000_000 * 0.0025;
+    const totalObserverReward = totalRewardsEligible * 0.05; // 5% of the total distributions
+    const perObserverReward = Math.floor(totalObserverReward / 3); // 3 observers
+    const totalGatewayReward = totalRewardsEligible - totalObserverReward; // 95% of total distribution
+    const perGatewayReward = Math.floor(totalGatewayReward / 3); // 3 gateways
+    const totalRewardsDistributed =
+      perObserverReward * 2 + perGatewayReward * 2; // only two get both
+    expect(balances).toEqual({
+      ...initialState.balances,
+      'a-gateway': perObserverReward + perGatewayReward,
+      'a-gateway-2': perObserverReward + perGatewayReward,
+      // observer three does not get anything!
+      [SmartWeave.contract.id]: 10_000_000 - totalRewardsDistributed,
+    });
+    expect(distributions).toEqual({
+      ...initialState.distributions,
+      lastCompletedEpochStartHeight: 0,
+      gateways: {
+        'a-gateway': {
+          passedEpochCount: 1,
+          totalEpochParticipationCount: 1,
+          failedConsecutiveEpochs: 0,
+        },
+        'a-gateway-2': {
+          passedEpochCount: 1,
+          totalEpochParticipationCount: 1,
+          failedConsecutiveEpochs: 0,
+        },
+        'a-gateway-3': {
+          passedEpochCount: 0,
+          totalEpochParticipationCount: 1,
+          failedConsecutiveEpochs: 1,
+        },
+      },
+      observers: {
+        'an-observing-gateway': {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 1,
+        },
+        'an-observing-gateway-2': {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 1,
+        },
+        'an-observing-gateway-3': {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 0,
+        },
+      },
+    });
   });
 });

@@ -1,66 +1,93 @@
+import { DEFAULT_EPOCH_BLOCK_LENGTH } from '../../constants';
 import {
-  DEFAULT_EPOCH_BLOCK_LENGTH,
-  DEFAULT_START_HEIGHT,
-} from '../../constants';
-import { ContractReadResult, IOState, PstAction } from '../../types';
-import { getEpochStart, getPrescribedObservers } from '../../utilities';
+  getEligibleGatewaysForEpoch,
+  getEpochBoundariesForHeight,
+  getPrescribedObserversForEpoch,
+} from '../../observers';
+import {
+  BlockHeight,
+  ContractReadResult,
+  IOState,
+  PstAction,
+} from '../../types';
 
 export const prescribedObserver = async (
   state: IOState,
   { input: { target, height } }: PstAction,
 ): Promise<ContractReadResult> => {
-  const { settings, gateways } = state;
-  if (!height) {
-    height = +SmartWeave.block.height;
-  }
+  const { settings, gateways, distributions } = state;
 
-  const currentEpochStartHeight = getEpochStart({
-    startHeight: DEFAULT_START_HEIGHT,
-    epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
-    height: height,
-  });
+  // TODO: validate input with AJV
+  const requestedHeight = height || +SmartWeave.block.height;
 
-  const prescribedObservers = await getPrescribedObservers(
-    gateways,
-    settings.registry.minNetworkJoinStakeAmount,
-    settings.registry.gatewayLeaveLength,
-    currentEpochStartHeight,
-  );
-
-  if (
-    prescribedObservers.some(
-      (observer) =>
-        observer.gatewayAddress === target ||
-        observer.observerAddress === target,
-    )
-  ) {
-    // The target with the specified address is found in the prescribedObservers list
-    return { result: true };
-  } else {
+  // nobody is prescribed until after the first epoch starts
+  if (requestedHeight < distributions.epochZeroStartHeight) {
     return { result: false };
   }
+
+  const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
+    currentBlockHeight: new BlockHeight(requestedHeight),
+    epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
+    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+  });
+
+  // TODO: add a read interaction to get the current height epoch boundaries
+  const eligibleGateways = getEligibleGatewaysForEpoch({
+    epochStartHeight,
+    epochEndHeight,
+    gateways,
+  });
+
+  const prescribedObservers = await getPrescribedObserversForEpoch({
+    eligibleGateways,
+    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
+    epochStartHeight: epochStartHeight,
+    distributions,
+  });
+
+  // The target with the specified address is found in the prescribedObservers list
+  return {
+    result: prescribedObservers.some(
+      (observer) =>
+        observer.observerAddress === target ||
+        observer.gatewayAddress === target,
+    ),
+  };
 };
 
 export const prescribedObservers = async (
   state: IOState,
   { input: { height } }: PstAction,
 ): Promise<ContractReadResult> => {
-  const { settings, gateways } = state;
-  if (!height) {
-    height = +SmartWeave.block.height;
+  const { settings, gateways, distributions } = state;
+
+  // TODO: validate input with AJV
+  const requestedHeight = height || +SmartWeave.block.height;
+
+  // nobody is prescribed until after the first epoch starts
+  if (requestedHeight < distributions.epochZeroStartHeight) {
+    return { result: false };
   }
-  const currentEpochStartHeight = getEpochStart({
-    startHeight: DEFAULT_START_HEIGHT,
-    epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
-    height: height,
+
+  const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
+    currentBlockHeight: new BlockHeight(requestedHeight),
+    epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
+    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
   });
 
-  const prescribedObservers = await getPrescribedObservers(
+  // TODO: add a read interaction to get the current height epoch boundaries
+  const eligibleGateways = getEligibleGatewaysForEpoch({
+    epochStartHeight,
+    epochEndHeight,
     gateways,
-    settings.registry.minNetworkJoinStakeAmount,
-    settings.registry.gatewayLeaveLength,
-    currentEpochStartHeight,
-  );
+  });
+
+  const prescribedObservers = await getPrescribedObserversForEpoch({
+    eligibleGateways,
+    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
+    epochStartHeight: epochStartHeight,
+    distributions,
+  });
 
   return { result: prescribedObservers };
 };

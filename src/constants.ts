@@ -15,8 +15,8 @@ export const SECONDS_IN_GRACE_PERIOD = 1_814_400; // Three weeks, 7 days per wee
 export const RESERVED_ATOMIC_TX_ID = 'atomic';
 export const NETWORK_JOIN_STATUS = 'joined';
 export const NETWORK_LEAVING_STATUS = 'leaving';
-export const NETWORK_HIDDEN_STATUS = 'hidden';
 export const SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP = 1725080400000; // August 31st, 2024
+export const GATEWAY_LEAVE_LENGTH = 3600; // 1 month
 export const BLOCKS_PER_DAY = 720;
 export const MAX_ALLOWED_EVOLUTION_DELAY = BLOCKS_PER_DAY * 30;
 export const MAX_TOKEN_LOCK_LENGTH = 12 * 365 * BLOCKS_PER_DAY; // The maximum amount of blocks tokens can be locked in a vault (12 years of blocks)
@@ -24,6 +24,8 @@ export const MIN_TOKEN_LOCK_LENGTH = 14 * BLOCKS_PER_DAY; // The minimum amount 
 export const MINIMUM_ALLOWED_EVOLUTION_DELAY = 3; // 3 blocks for testing purposes, but should be 720 * 7; // 720 blocks per day times 7 days
 export const MINIMUM_ALLOWED_NAME_LENGTH = 5; // names less than 5 characters are reserved for auction
 export const TENURE_WEIGHT_DAYS = 180; // the amount of days in a single tenure weight period used to calculate composite weights for observation
+export const TENURE_WEIGHT_TOTAL_BLOCK_COUNT =
+  TENURE_WEIGHT_DAYS * BLOCKS_PER_DAY; // the # of blocks in a single tenure weight period (6-months) used to calculate composite weights for observation
 export const PERMABUY_LEASE_FEE_LENGTH = 10;
 export const ANNUAL_PERCENTAGE_FEE = 0.2; // 20% of cost of name
 export const DEFAULT_UNDERNAME_COUNT = 10;
@@ -39,15 +41,29 @@ export const ARNS_NAME_IN_AUCTION_MESSAGE = 'Name is currently in auction.';
 export const ARNS_NAME_AUCTION_EXPIRED_MESSAGE = 'Auction has expired.';
 export const INVALID_INPUT_MESSAGE = 'Invalid input for interaction';
 export const INVALID_VAULT_LOCK_LENGTH_MESSAGE = `Invalid lock length. Must be between ${MIN_TOKEN_LOCK_LENGTH} - ${MAX_TOKEN_LOCK_LENGTH}.`;
-export const CALLER_NOT_VALID_OBSERVER_MESSAGE =
-  'Cannot submit observation report because caller is not eligible to observe';
-export const TARGET_GATEWAY_NOT_REGISTERED =
+export const INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE =
+  'Invalid caller. Observer does not exist as an observer address in the gateway registry.';
+export const INVALID_OBSERVATION_CALLER_MESSAGE =
+  'Invalid caller. Caller is not eligible to submit observation reports for this epoch.';
+export const INVALID_OBSERVATION_FOR_GATEWAY_MESSAGE =
+  'Invalid CALLER. Caller is not the observer wallet for this gateway.';
+export const INVALID_GATEWAY_STAKE_AMOUNT_MESSAGE = `Quantity must be greater than or equal to the minimum network join stake amount.`;
+export const INVALID_OBSERVER_WALLET =
+  'Invalid observer wallet. The provided observer wallet is correlated with another gateway.';
+export const INVALID_GATEWAY_REGISTERED_MESSAGE =
   'Target gateway is not currently registered';
-export const INVALID_OBSERVATION_TARGET =
+export const INVALID_OBSERVATION_TARGET_MESSAGE =
   'Target gateway is leaving the network and must not be observed';
+export const INVALID_GATEWAY_EXISTS_MESSAGE =
+  'A gateway with this address already exists.';
 export const DEFAULT_NUM_SAMPLED_BLOCKS = 3;
 export const DEFAULT_SAMPLED_BLOCKS_OFFSET = 50;
-export const NUM_OBSERVERS_PER_EPOCH = 4;
+export const TALLY_PERIOD_BLOCKS = 100;
+export const EPOCH_REWARD_PERCENTAGE = 0.0025; // 0.25% of total available protocol balance
+export const GATEWAY_PERCENTAGE_OF_EPOCH_REWARD = 0.95;
+export const OBSERVATION_FAILURE_THRESHOLD = 0.51;
+export const BAD_OBSERVER_GATEWAY_PENALTY = 0.25;
+export const MAXIMUM_OBSERVERS_PER_EPOCH = 4; // TODO: CHANGE THIS TO 50 for testnet
 export const NON_EXPIRED_ARNS_NAME_MESSAGE =
   'This name already exists in an active lease';
 export const ARNS_NAME_DOES_NOT_EXIST_MESSAGE =
@@ -140,9 +156,9 @@ export const AUCTION_SETTINGS: AuctionSettings = {
   scalingExponent: 190,
   auctionDuration: 10_080, // approx 14 days long
 };
-export const DEFAULT_EPOCH_BLOCK_LENGTH = 50; // 5000 for mainnet
-export const DEFAULT_START_HEIGHT = 0;
-export const MAX_TENURE_WEIGHT = 2;
+export const DEFAULT_EPOCH_BLOCK_LENGTH = 50; // TODO: make this 5000 for testnet
+export const DEFAULT_START_HEIGHT = 0; // TODO: this should be coordinated with the genesis block height
+export const MAX_TENURE_WEIGHT = 4; // 4 - 6 month periods mark you as a mature gateway
 export type DemandFactoringCriteria = 'purchases' | 'revenue';
 type DemandFactoringSettings = {
   movingAvgPeriodCount: number;
