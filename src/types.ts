@@ -69,7 +69,9 @@ export type ObserverDistributions = Record<
 // The distributions made at the end of each epoch
 export type RewardDistributions = {
   epochZeroStartHeight: number;
-  lastCompletedEpochStartHeight: number;
+  epochStartHeight: number; // the current epoch start height
+  epochEndHeight: number; // the current epoch end height
+  nextDistributionHeight: number; // the distribution height for the last epoch
   gateways: GatewayDistributions;
   observers: ObserverDistributions;
 };
@@ -146,6 +148,7 @@ export type ContractSettings = {
   // distributions: {
   //   epochBlockLength: number;
   //   observerGatewayPenalty: number (% of reward to deduce from gateways that did not observe)
+  //   tallyPeriod: number; // the number of blocks to wait before tallying the results of an epoch
   // };
 };
 

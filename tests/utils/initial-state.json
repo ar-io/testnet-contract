@@ -16,7 +16,9 @@
   "observations": {},
   "distributions": {
     "epochZeroStartHeight": 0,
-    "lastCompletedEpochStartHeight": 0,
+    "epochStartHeight": 0,
+    "epochEndHeight": 49,
+    "nextDistributionHeight": 149,
     "gateways": {},
     "observers": {}
   },

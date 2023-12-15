@@ -897,23 +897,25 @@ describe('tickRewardDistribution', () => {
         [SmartWeave.contract.id]: 10_000_000,
       },
     };
-    const firstEpochEndHeight =
-      initialState.distributions.epochZeroStartHeight +
-      DEFAULT_EPOCH_BLOCK_LENGTH -
-      1;
-    const firstEpochTickHeight = firstEpochEndHeight + TALLY_PERIOD_BLOCKS;
     const { balances, distributions } = await tickRewardDistribution({
-      currentBlockHeight: new BlockHeight(firstEpochTickHeight),
+      currentBlockHeight: new BlockHeight(
+        initialState.distributions.nextDistributionHeight,
+      ),
       gateways: initialState.gateways,
       balances: initialState.balances,
       distributions: initialState.distributions,
       observations: initialState.observations,
       settings: initialState.settings,
     });
+    const expectedNewEpochStartHeight = DEFAULT_EPOCH_BLOCK_LENGTH;
+    const expectedNewEpochEndHeight =
+      expectedNewEpochStartHeight + DEFAULT_EPOCH_BLOCK_LENGTH - 1;
     expect(balances).toEqual(initialState.balances);
     expect(distributions).toEqual({
       ...initialState.distributions,
-      lastCompletedEpochStartHeight: 0,
+      epochStartHeight: expectedNewEpochStartHeight,
+      epochEndHeight: expectedNewEpochEndHeight,
+      nextDistributionHeight: expectedNewEpochEndHeight + TALLY_PERIOD_BLOCKS,
     });
   });
 
@@ -981,9 +983,14 @@ describe('tickRewardDistribution', () => {
       // observer three does not get anything!
       [SmartWeave.contract.id]: 10_000_000 - totalRewardsDistributed,
     });
+    const expectedNewEpochStartHeight = DEFAULT_EPOCH_BLOCK_LENGTH;
+    const expectedNewEpochEndHeight =
+      expectedNewEpochStartHeight + DEFAULT_EPOCH_BLOCK_LENGTH - 1;
     expect(distributions).toEqual({
       ...initialState.distributions,
-      lastCompletedEpochStartHeight: 0,
+      epochStartHeight: expectedNewEpochStartHeight,
+      epochEndHeight: expectedNewEpochEndHeight,
+      nextDistributionHeight: expectedNewEpochEndHeight + TALLY_PERIOD_BLOCKS,
       gateways: {
         'a-gateway': {
           passedEpochCount: 1,

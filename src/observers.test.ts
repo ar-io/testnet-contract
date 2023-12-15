@@ -4,6 +4,7 @@ import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
   GATEWAY_LEAVE_LENGTH,
   MAXIMUM_OBSERVERS_PER_EPOCH,
+  TALLY_PERIOD_BLOCKS,
   TENURE_WEIGHT_TOTAL_BLOCK_COUNT,
 } from './constants';
 import {
@@ -35,7 +36,9 @@ const gateways = {
 
 const distributions = {
   epochZeroStartHeight: 0,
-  lastCompletedEpochStartHeight: 0,
+  epochStartHeight: 0,
+  epochEndHeight: DEFAULT_EPOCH_BLOCK_LENGTH - 1,
+  nextDistributionHeight: TALLY_PERIOD_BLOCKS + 1,
   gateways: {},
   observers: {},
 };

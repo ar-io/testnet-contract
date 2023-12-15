@@ -87,7 +87,7 @@ describe('Observation', () => {
           result: refreshPrescribedObservers,
         }: { result: WeightedObserver[] } = await contract.viewState({
           function: 'prescribedObservers',
-          height,
+          height: currentEpochStartHeight.valueOf(),
         });
         expect(refreshPrescribedObservers).toEqual(prescribedObservers);
       });
@@ -130,7 +130,6 @@ describe('Observation', () => {
         expect(
           writeInteractions.every((interaction) => interaction?.originalTxId),
         ).toEqual(true);
-
         expect(
           writeInteractions.every((interaction) => {
             return !newCachedValue.errorMessages[interaction?.originalTxId];
