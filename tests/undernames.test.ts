@@ -6,11 +6,7 @@ import {
   MAX_ALLOWED_UNDERNAMES,
 } from '../src/constants';
 import { IOState } from '../src/types';
-import {
-  calculateUndernamePermutations,
-  getLocalArNSContractKey,
-  getLocalWallet,
-} from './utils/helper';
+import { getLocalArNSContractKey, getLocalWallet } from './utils/helper';
 import { warp } from './utils/services';
 
 describe('undernames', () => {
@@ -123,11 +119,9 @@ describe('undernames', () => {
       );
 
       it.each([
-        calculateUndernamePermutations(arnsName) + 1,
-        calculateUndernamePermutations(arnsName) + DEFAULT_UNDERNAME_COUNT + 1,
-        calculateUndernamePermutations(arnsName) + 100,
         MAX_ALLOWED_UNDERNAMES,
         MAX_ALLOWED_UNDERNAMES + 1,
+        Number.MAX_SAFE_INTEGER,
       ])(
         'should throw an error when a quantity over the max allowed undernames is provided: %s',
         async (badQty) => {

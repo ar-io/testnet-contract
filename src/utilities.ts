@@ -4,7 +4,6 @@ import {
   INVALID_SHORT_NAME,
   MAX_YEARS,
   MINIMUM_ALLOWED_NAME_LENGTH,
-  NAMESPACE_LENGTH,
   NON_EXPIRED_ARNS_NAME_MESSAGE,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
@@ -34,46 +33,12 @@ import {
   WalletAddress,
 } from './types';
 
-// check if a string is a valid fully qualified domain name
-export function isValidFQDN(fqdn: string): boolean {
-  const fqdnRegex = /^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{1,63}$/;
-  return fqdnRegex.test(fqdn);
-}
-
-// check if it is a valid arweave base64url for a wallet public address, transaction index or smartweave contract
-export function isValidArweaveBase64URL(base64URL: string): boolean {
-  const base64URLRegex = new RegExp('^[a-zA-Z0-9_-]{43}$');
-  return base64URLRegex.test(base64URL);
-}
-
 export function walletHasSufficientBalance(
   balances: DeepReadonly<Balances>,
   wallet: string,
   qty: number, // TODO: change to IOToken
 ): boolean {
   return !!balances[wallet] && balances[wallet] >= qty;
-}
-
-export function calculateUndernamePermutations(domain: string): number {
-  const numberOfPossibleCharacters = 38; // 26 letters + 10 numbers + - (dash) + _ (underscore)
-  const numberOfAllowedStartingAndEndingCharacters = 36; // 26 letters + 10 numbers
-  const nameSpaceLength = NAMESPACE_LENGTH - domain.length; // should be between 11 and 61
-  let numberOfPossibleUndernames = 0;
-
-  for (
-    let undernameLength = 1;
-    undernameLength <= nameSpaceLength;
-    undernameLength++
-  ) {
-    if (undernameLength === 1 || undernameLength === nameSpaceLength) {
-      numberOfPossibleUndernames +=
-        numberOfAllowedStartingAndEndingCharacters ** undernameLength;
-    } else {
-      numberOfPossibleUndernames +=
-        numberOfPossibleCharacters ** undernameLength;
-    }
-  }
-  return numberOfPossibleUndernames;
 }
 
 export function resetProtocolBalance({
