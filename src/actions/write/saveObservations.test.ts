@@ -134,13 +134,13 @@ describe('saveObservations', () => {
 
     describe('invalid epoch', () => {
       it('should throw an error if epoch zero has not started', async () => {
-        const epochZeroBlockHeight = 10;
+        const epochZeroStartHeight = 10;
         const error = await saveObservations(
           {
             ...getBaselineState(),
             distributions: {
               ...getBaselineState().distributions,
-              epochZeroBlockHeight: 10,
+              epochZeroStartHeight: 10,
             },
           },
           {
@@ -154,7 +154,7 @@ describe('saveObservations', () => {
         expect(error).toBeInstanceOf(Error);
         expect(error.message).toEqual(
           expect.stringContaining(
-            `Observations cannot be submitted before block height: ${epochZeroBlockHeight}`,
+            `Observations cannot be submitted before block height: ${epochZeroStartHeight}`,
           ),
         );
       });

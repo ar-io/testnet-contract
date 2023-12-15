@@ -331,7 +331,7 @@ export async function setupInitialContractState(
   // distributions
   state.distributions = {
     ...state.distributions,
-    epochZeroBlockHeight: (await getCurrentBlock(arweave)).valueOf(),
+    epochZeroStartHeight: (await getCurrentBlock(arweave)).valueOf(),
   };
 
   // add some reserved names

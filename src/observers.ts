@@ -18,11 +18,11 @@ import {
 export function getEpochBoundariesForHeight({
   currentBlockHeight,
   epochBlockLength = new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
-  epochZeroBlockHeight,
+  epochZeroStartHeight,
 }: {
   currentBlockHeight: BlockHeight;
   epochBlockLength?: BlockHeight;
-  epochZeroBlockHeight: BlockHeight;
+  epochZeroStartHeight: BlockHeight;
 }): {
   epochStartHeight: BlockHeight;
   epochEndHeight: BlockHeight;
@@ -31,7 +31,7 @@ export function getEpochBoundariesForHeight({
     currentBlockHeight.valueOf() / epochBlockLength.valueOf(),
   );
   const epochStartHeight =
-    epochZeroBlockHeight.valueOf() +
+    epochZeroStartHeight.valueOf() +
     epochBlockLength.valueOf() * epochIndexForCurrentBlockHeight;
   return {
     epochStartHeight: new BlockHeight(epochStartHeight),

@@ -68,9 +68,8 @@ export type ObserverDistributions = Record<
 >;
 // The distributions made at the end of each epoch
 export type RewardDistributions = {
-  epochZeroBlockHeight: number;
+  epochZeroStartHeight: number;
   lastCompletedEpochStartHeight: number;
-  lastCompletedEpochEndHeight: number; // the height of the last epoch of which rewards were distributed
   gateways: GatewayDistributions;
   observers: ObserverDistributions;
 };
@@ -143,6 +142,11 @@ export type ContractSettings = {
   // these settings control the various capabilities in the contract
   registry: GatewayRegistrySettings;
   auctions: AuctionSettings;
+  // TODO: should we put distribution settings here or leave as constants
+  // distributions: {
+  //   epochBlockLength: number;
+  //   observerGatewayPenalty: number (% of reward to deduce from gateways that did not observe)
+  // };
 };
 
 const gatewayStatus = [NETWORK_JOIN_STATUS, NETWORK_LEAVING_STATUS] as const;

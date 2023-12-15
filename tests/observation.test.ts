@@ -76,7 +76,7 @@ describe('Observation', () => {
       );
       currentEpochStartHeight = getEpochBoundariesForHeight({
         currentBlockHeight: new BlockHeight(height),
-        epochZeroBlockHeight: new BlockHeight(DEFAULT_START_HEIGHT),
+        epochZeroStartHeight: new BlockHeight(DEFAULT_START_HEIGHT),
         epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
       }).epochStartHeight;
     });
@@ -200,7 +200,7 @@ describe('Observation', () => {
         // set our start height to the current height
         currentEpochStartHeight = getEpochBoundariesForHeight({
           currentBlockHeight: new BlockHeight(height),
-          epochZeroBlockHeight: new BlockHeight(DEFAULT_START_HEIGHT),
+          epochZeroStartHeight: new BlockHeight(DEFAULT_START_HEIGHT),
           epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
         }).epochStartHeight;
         // get the prescribed observers

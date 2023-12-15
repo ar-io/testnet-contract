@@ -840,7 +840,7 @@ describe('tickRewardDistribution', () => {
     };
     const { balances, distributions } = await tickRewardDistribution({
       currentBlockHeight: new BlockHeight(
-        initialState.distributions.epochZeroBlockHeight +
+        initialState.distributions.epochZeroStartHeight +
           DEFAULT_EPOCH_BLOCK_LENGTH -
           1,
       ),
@@ -870,7 +870,7 @@ describe('tickRewardDistribution', () => {
         },
       };
       const firstEpochEndHeight =
-        initialState.distributions.epochZeroBlockHeight +
+        initialState.distributions.epochZeroStartHeight +
         DEFAULT_EPOCH_BLOCK_LENGTH -
         1;
       const invalidBlockHeight = firstEpochEndHeight + blockHeight;
@@ -898,7 +898,7 @@ describe('tickRewardDistribution', () => {
       },
     };
     const firstEpochEndHeight =
-      initialState.distributions.epochZeroBlockHeight +
+      initialState.distributions.epochZeroStartHeight +
       DEFAULT_EPOCH_BLOCK_LENGTH -
       1;
     const firstEpochTickHeight = firstEpochEndHeight + TALLY_PERIOD_BLOCKS;
@@ -913,7 +913,6 @@ describe('tickRewardDistribution', () => {
     expect(balances).toEqual(initialState.balances);
     expect(distributions).toEqual({
       ...initialState.distributions,
-      lastCompletedEpochEndHeight: DEFAULT_EPOCH_BLOCK_LENGTH - 1,
       lastCompletedEpochStartHeight: 0,
     });
   });
@@ -956,7 +955,7 @@ describe('tickRewardDistribution', () => {
       },
     };
     const epochDistributionHeight =
-      initialState.distributions.epochZeroBlockHeight +
+      initialState.distributions.epochZeroStartHeight +
       DEFAULT_EPOCH_BLOCK_LENGTH +
       TALLY_PERIOD_BLOCKS -
       1;
@@ -984,7 +983,6 @@ describe('tickRewardDistribution', () => {
     });
     expect(distributions).toEqual({
       ...initialState.distributions,
-      lastCompletedEpochEndHeight: DEFAULT_EPOCH_BLOCK_LENGTH - 1,
       lastCompletedEpochStartHeight: 0,
       gateways: {
         'a-gateway': {

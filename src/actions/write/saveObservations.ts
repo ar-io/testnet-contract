@@ -60,16 +60,16 @@ export const saveObservations = async (
   const { gatewayAddress, observerReportTxId, failedGateways } =
     new SaveObservations(input, caller);
 
-  // TODO: check if current height is less than epochZeroBlockHeight
-  if (+SmartWeave.block.height < distributions.epochZeroBlockHeight) {
+  // TODO: check if current height is less than epochZeroStartHeight
+  if (+SmartWeave.block.height < distributions.epochZeroStartHeight) {
     throw new ContractError(
-      `Observations cannot be submitted before block height: ${distributions.epochZeroBlockHeight}`,
+      `Observations cannot be submitted before block height: ${distributions.epochZeroStartHeight}`,
     );
   }
 
   const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height), // observations must be submitted within the epoch
-    epochZeroBlockHeight: new BlockHeight(distributions.epochZeroBlockHeight),
+    epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
     epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
   });
 

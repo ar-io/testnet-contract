@@ -34,9 +34,8 @@ const gateways = {
 };
 
 const distributions = {
-  epochZeroBlockHeight: 0,
+  epochZeroStartHeight: 0,
   lastCompletedEpochStartHeight: 0,
-  lastCompletedEpochEndHeight: 0,
   gateways: {},
   observers: {},
 };
@@ -297,7 +296,7 @@ describe('getEpochBoundariesForHeight', () => {
         epochEndHeight: returnedEndHeight,
       } = getEpochBoundariesForHeight({
         currentBlockHeight: new BlockHeight(currentHeight),
-        epochZeroBlockHeight: new BlockHeight(zeroHeight),
+        epochZeroStartHeight: new BlockHeight(zeroHeight),
         epochBlockLength: new BlockHeight(epochLength),
       });
       expect(returnedStartHeight.valueOf()).toBe(expectedStart);
@@ -308,7 +307,7 @@ describe('getEpochBoundariesForHeight', () => {
   it('should default the epoch block length if not provided', () => {
     const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
       currentBlockHeight: new BlockHeight(5),
-      epochZeroBlockHeight: new BlockHeight(0),
+      epochZeroStartHeight: new BlockHeight(0),
     });
     expect(epochStartHeight.valueOf()).toBe(0);
     expect(epochEndHeight.valueOf()).toBe(DEFAULT_EPOCH_BLOCK_LENGTH - 1);

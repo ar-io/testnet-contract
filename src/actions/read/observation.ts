@@ -21,13 +21,13 @@ export const prescribedObserver = async (
   const requestedHeight = height || +SmartWeave.block.height;
 
   // nobody is prescribed until after the first epoch starts
-  if (requestedHeight < distributions.epochZeroBlockHeight) {
+  if (requestedHeight < distributions.epochZeroStartHeight) {
     return { result: false };
   }
 
   const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
     currentBlockHeight: new BlockHeight(requestedHeight),
-    epochZeroBlockHeight: new BlockHeight(distributions.epochZeroBlockHeight),
+    epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
     epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
   });
 
@@ -65,13 +65,13 @@ export const prescribedObservers = async (
   const requestedHeight = height || +SmartWeave.block.height;
 
   // nobody is prescribed until after the first epoch starts
-  if (requestedHeight < distributions.epochZeroBlockHeight) {
+  if (requestedHeight < distributions.epochZeroStartHeight) {
     return { result: false };
   }
 
   const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
     currentBlockHeight: new BlockHeight(requestedHeight),
-    epochZeroBlockHeight: new BlockHeight(distributions.epochZeroBlockHeight),
+    epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
     epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
   });
 

@@ -13,9 +13,8 @@ export const evolveState = async (
   }
 
   state.distributions = {
-    epochZeroBlockHeight: +SmartWeave.block.height,
-    lastCompletedEpochStartHeight: 0,
-    lastCompletedEpochEndHeight: 0,
+    epochZeroStartHeight: +SmartWeave.block.height,
+    lastCompletedEpochStartHeight: +SmartWeave.block.height,
     gateways: {},
     observers: {},
   };
