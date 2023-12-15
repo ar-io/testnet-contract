@@ -1,7 +1,6 @@
 import { Contract, JWKInterface } from 'warp-contracts';
 
 import {
-  DEFAULT_UNDERNAME_COUNT,
   INVALID_INPUT_MESSAGE,
   MAX_ALLOWED_UNDERNAMES,
 } from '../src/constants';

@@ -328,7 +328,6 @@ describe('Observation', () => {
       });
 
       it('should not save observation report if the gateway is not in the registry and not observer', async () => {
-        // const notJoinedGateway = await arweave.wallets.generate();
         const notJoinedGateway = await createLocalWallet(arweave);
         const { cachedValue: prevCachedValue } = await contract.readState();
         contract = warp.pst(srcContractId).connect(notJoinedGateway.wallet);
