@@ -1,4 +1,8 @@
-import { FEE_STRUCTURE } from '../constants';
+import {
+  DEFAULT_EPOCH_BLOCK_LENGTH,
+  FEE_STRUCTURE,
+  TALLY_PERIOD_BLOCKS,
+} from '../constants';
 import {
   ArNSLeaseAuctionData,
   DemandFactoringData,
@@ -37,7 +41,10 @@ export const getBaselineState: () => IOState = (): IOState => ({
   vaults: {},
   distributions: {
     epochZeroStartHeight: 0,
-    lastCompletedEpochStartHeight: 0,
+    epochStartHeight: 0,
+    epochEndHeight: DEFAULT_EPOCH_BLOCK_LENGTH - 1,
+    nextDistributionHeight:
+      DEFAULT_EPOCH_BLOCK_LENGTH + TALLY_PERIOD_BLOCKS - 1,
     gateways: {},
     observers: {},
   },

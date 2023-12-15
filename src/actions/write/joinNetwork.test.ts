@@ -21,7 +21,7 @@ const validInput = {
   qty: 10,
 };
 
-describe.only('joinNetwork', () => {
+describe('joinNetwork', () => {
   it.each([
     ['should throw an error an empty object', {}],
     [

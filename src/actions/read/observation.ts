@@ -17,19 +17,27 @@ export const prescribedObserver = async (
 ): Promise<ContractReadResult> => {
   const { settings, gateways, distributions } = state;
 
-  // TODO: validate input with AJV
-  const requestedHeight = height || +SmartWeave.block.height;
+  let epochStartHeight = new BlockHeight(distributions.epochStartHeight);
+  let epochEndHeight = new BlockHeight(distributions.epochEndHeight);
 
-  // nobody is prescribed until after the first epoch starts
-  if (requestedHeight < distributions.epochZeroStartHeight) {
-    return { result: false };
+  if (height) {
+    // nobody is prescribed until after the first epoch starts
+    if (height < distributions.epochZeroStartHeight) {
+      return { result: false };
+    }
+
+    const {
+      epochStartHeight: previousEpochStartHeight,
+      epochEndHeight: previousEpochEndHeight,
+    } = getEpochBoundariesForHeight({
+      currentBlockHeight: new BlockHeight(height),
+      epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
+      epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+    });
+
+    epochStartHeight = previousEpochStartHeight;
+    epochEndHeight = previousEpochEndHeight;
   }
-
-  const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
-    currentBlockHeight: new BlockHeight(requestedHeight),
-    epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
-    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
-  });
 
   // TODO: add a read interaction to get the current height epoch boundaries
   const eligibleGateways = getEligibleGatewaysForEpoch({
@@ -61,19 +69,27 @@ export const prescribedObservers = async (
 ): Promise<ContractReadResult> => {
   const { settings, gateways, distributions } = state;
 
-  // TODO: validate input with AJV
-  const requestedHeight = height || +SmartWeave.block.height;
+  let epochStartHeight = new BlockHeight(distributions.epochStartHeight);
+  let epochEndHeight = new BlockHeight(distributions.epochEndHeight);
 
-  // nobody is prescribed until after the first epoch starts
-  if (requestedHeight < distributions.epochZeroStartHeight) {
-    return { result: false };
+  if (height) {
+    // nobody is prescribed until after the first epoch starts
+    if (height < distributions.epochZeroStartHeight) {
+      return { result: false };
+    }
+
+    const {
+      epochStartHeight: previousEpochStartHeight,
+      epochEndHeight: previousEpochEndHeight,
+    } = getEpochBoundariesForHeight({
+      currentBlockHeight: new BlockHeight(height),
+      epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
+      epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+    });
+
+    epochStartHeight = previousEpochStartHeight;
+    epochEndHeight = previousEpochEndHeight;
   }
-
-  const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
-    currentBlockHeight: new BlockHeight(requestedHeight),
-    epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
-    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
-  });
 
   // TODO: add a read interaction to get the current height epoch boundaries
   const eligibleGateways = getEligibleGatewaysForEpoch({

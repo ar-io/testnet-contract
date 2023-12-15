@@ -438,17 +438,12 @@ export async function tickRewardDistribution({
     };
   }
 
-  const lastCompletedEpochEndHeight = new BlockHeight(
-    distributions.lastCompletedEpochStartHeight +
-      DEFAULT_EPOCH_BLOCK_LENGTH -
-      1, // the first epoch end height
+  const distributionHeightForEpoch = new BlockHeight(
+    distributions.nextDistributionHeight,
   );
 
   // distribution should only happen ONCE on block that is TALLY_PERIOD_BLOCKS after the last completed epoch
-  if (
-    currentBlockHeight.valueOf() !==
-    lastCompletedEpochEndHeight.valueOf() + TALLY_PERIOD_BLOCKS
-  ) {
+  if (currentBlockHeight.valueOf() !== distributionHeightForEpoch.valueOf()) {
     return {
       // remove the readonly and avoid slicing/copying arrays if not necessary
       distributions: distributions as RewardDistributions,
@@ -458,7 +453,7 @@ export async function tickRewardDistribution({
 
   // get the boundaries of the epoch we care about
   const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
-    currentBlockHeight: lastCompletedEpochEndHeight,
+    currentBlockHeight: new BlockHeight(distributions.epochEndHeight),
     epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
     epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
   });
@@ -647,8 +642,13 @@ export async function tickRewardDistribution({
     ? { ...balances, ...updatedBalances }
     : balances;
 
+  const nextEpochStartHeight = epochEndHeight.valueOf() + 1;
+  const nextEpochEndHeight =
+    epochEndHeight.valueOf() + DEFAULT_EPOCH_BLOCK_LENGTH;
+  const nextDistributionHeight =
+    epochEndHeight.valueOf() + DEFAULT_EPOCH_BLOCK_LENGTH + TALLY_PERIOD_BLOCKS;
+
   const updatedDistributions = {
-    ...distributions,
     gateways: {
       ...distributions.gateways,
       ...updatedGatewayDistributions,
@@ -657,7 +657,11 @@ export async function tickRewardDistribution({
       ...distributions.observers,
       ...updatedObserverDistributions,
     },
-    lastCompletedEpochStartHeight: epochStartHeight.valueOf(),
+    // increment epoch variables to the next one
+    epochStartHeight: nextEpochStartHeight,
+    epochZeroStartHeight: distributions.epochZeroStartHeight,
+    epochEndHeight: nextEpochEndHeight,
+    nextDistributionHeight,
   };
 
   return {
