@@ -107,6 +107,7 @@ describe('Observation', () => {
           await contract.viewState({
             function: 'prescribedObserver',
             target: notJoinedGateway.address,
+            height: currentEpochStartHeight.valueOf(),
           });
         expect(notPrescribedWallet).toBe(false);
       });

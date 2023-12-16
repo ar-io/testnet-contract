@@ -9,6 +9,7 @@ import {
   ContractReadResult,
   IOState,
   PstAction,
+  WeightedObserver,
 } from '../../types';
 
 export const prescribedObserver = async (
@@ -17,29 +18,25 @@ export const prescribedObserver = async (
 ): Promise<ContractReadResult> => {
   const { settings, gateways, distributions } = state;
 
-  let epochStartHeight = new BlockHeight(distributions.epochStartHeight);
-  let epochEndHeight = new BlockHeight(distributions.epochEndHeight);
+  const requestedHeight = height || +SmartWeave.block.height;
 
-  if (height) {
-    // nobody is prescribed until after the first epoch starts
-    if (height < distributions.epochZeroStartHeight) {
-      return { result: false };
-    }
+  if (
+    isNaN(requestedHeight) ||
+    height < distributions.epochZeroStartHeight ||
+    height > +SmartWeave.block.height
+  ) {
+    throw new ContractError(
+      'Invalid height. Must be a number less than or equal to the current block height',
+    );
+  }
 
-    const {
-      epochStartHeight: previousEpochStartHeight,
-      epochEndHeight: previousEpochEndHeight,
-    } = getEpochBoundariesForHeight({
+  const { epochStartHeight: epochStartHeight, epochEndHeight: epochEndHeight } =
+    getEpochBoundariesForHeight({
       currentBlockHeight: new BlockHeight(height),
       epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
       epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
     });
 
-    epochStartHeight = previousEpochStartHeight;
-    epochEndHeight = previousEpochEndHeight;
-  }
-
-  // TODO: add a read interaction to get the current height epoch boundaries
   const eligibleGateways = getEligibleGatewaysForEpoch({
     epochStartHeight,
     epochEndHeight,
@@ -56,7 +53,7 @@ export const prescribedObserver = async (
   // The target with the specified address is found in the prescribedObservers list
   return {
     result: prescribedObservers.some(
-      (observer) =>
+      (observer: WeightedObserver) =>
         observer.observerAddress === target ||
         observer.gatewayAddress === target,
     ),
@@ -69,27 +66,24 @@ export const prescribedObservers = async (
 ): Promise<ContractReadResult> => {
   const { settings, gateways, distributions } = state;
 
-  let epochStartHeight = new BlockHeight(distributions.epochStartHeight);
-  let epochEndHeight = new BlockHeight(distributions.epochEndHeight);
+  const requestedHeight = height || +SmartWeave.block.height;
 
-  if (height) {
-    // nobody is prescribed until after the first epoch starts
-    if (height < distributions.epochZeroStartHeight) {
-      return { result: false };
-    }
+  if (
+    isNaN(requestedHeight) ||
+    height < distributions.epochZeroStartHeight ||
+    height > +SmartWeave.block.height
+  ) {
+    throw new ContractError(
+      'Invalid height. Must be a number less than or equal to the current block height',
+    );
+  }
 
-    const {
-      epochStartHeight: previousEpochStartHeight,
-      epochEndHeight: previousEpochEndHeight,
-    } = getEpochBoundariesForHeight({
+  const { epochStartHeight: epochStartHeight, epochEndHeight: epochEndHeight } =
+    getEpochBoundariesForHeight({
       currentBlockHeight: new BlockHeight(height),
       epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
       epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
     });
-
-    epochStartHeight = previousEpochStartHeight;
-    epochEndHeight = previousEpochEndHeight;
-  }
 
   // TODO: add a read interaction to get the current height epoch boundaries
   const eligibleGateways = getEligibleGatewaysForEpoch({
@@ -114,32 +108,24 @@ export async function getEpoch(
 ): Promise<ContractReadResult> {
   const { distributions } = state;
 
-  let epochStartHeight = new BlockHeight(distributions.epochStartHeight);
-  let epochEndHeight = new BlockHeight(distributions.epochEndHeight);
+  const requestedHeight = height || +SmartWeave.block.height;
 
-  if (height) {
-    if (
-      isNaN(height) ||
-      height < distributions.epochZeroStartHeight ||
-      height > +SmartWeave.block.height
-    ) {
-      throw new ContractError(
-        'Invalid height. Must be a number less than or equal to the current block height',
-      );
-    }
+  if (
+    isNaN(requestedHeight) ||
+    height < distributions.epochZeroStartHeight ||
+    height > +SmartWeave.block.height
+  ) {
+    throw new ContractError(
+      'Invalid height. Must be a number less than or equal to the current block height',
+    );
+  }
 
-    const {
-      epochStartHeight: previousEpochStartHeight,
-      epochEndHeight: previousEpochEndHeight,
-    } = getEpochBoundariesForHeight({
+  const { epochStartHeight: epochStartHeight, epochEndHeight: epochEndHeight } =
+    getEpochBoundariesForHeight({
       currentBlockHeight: new BlockHeight(height),
       epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
       epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
     });
-
-    epochStartHeight = previousEpochStartHeight;
-    epochEndHeight = previousEpochEndHeight;
-  }
 
   return {
     result: {
