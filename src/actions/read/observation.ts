@@ -32,7 +32,7 @@ export const prescribedObserver = async (
 
   const { epochStartHeight: epochStartHeight, epochEndHeight: epochEndHeight } =
     getEpochBoundariesForHeight({
-      currentBlockHeight: new BlockHeight(height),
+      currentBlockHeight: new BlockHeight(requestedHeight),
       epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
       epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
     });
@@ -80,7 +80,7 @@ export const prescribedObservers = async (
 
   const { epochStartHeight: epochStartHeight, epochEndHeight: epochEndHeight } =
     getEpochBoundariesForHeight({
-      currentBlockHeight: new BlockHeight(height),
+      currentBlockHeight: new BlockHeight(requestedHeight),
       epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
       epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
     });
@@ -122,7 +122,7 @@ export async function getEpoch(
 
   const { epochStartHeight: epochStartHeight, epochEndHeight: epochEndHeight } =
     getEpochBoundariesForHeight({
-      currentBlockHeight: new BlockHeight(height),
+      currentBlockHeight: new BlockHeight(requestedHeight),
       epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
       epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
     });
