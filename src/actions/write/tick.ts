@@ -10,7 +10,6 @@ import {
 } from '../../constants';
 import {
   getEligibleGatewaysForEpoch,
-  getEpochBoundariesForHeight,
   getPrescribedObserversForEpoch,
 } from '../../observers';
 import {
@@ -439,7 +438,7 @@ export async function tickRewardDistribution({
   }
 
   const distributionHeightForEpoch = new BlockHeight(
-    distributions.nextDistributionHeight,
+    distributions.epochEndHeight + TALLY_PERIOD_BLOCKS,
   );
 
   // distribution should only happen ONCE on block that is TALLY_PERIOD_BLOCKS after the last completed epoch
@@ -451,12 +450,9 @@ export async function tickRewardDistribution({
     };
   }
 
-  // get the boundaries of the epoch we care about
-  const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
-    currentBlockHeight: new BlockHeight(distributions.epochEndHeight),
-    epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
-    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
-  });
+  // get our epoch heights
+  const epochStartHeight = new BlockHeight(distributions.epochStartHeight);
+  const epochEndHeight = new BlockHeight(distributions.epochEndHeight);
 
   // get all the reports submitted for the epoch based on its start height
   const totalReportsSubmitted = Object.keys(
@@ -645,8 +641,6 @@ export async function tickRewardDistribution({
   const nextEpochStartHeight = epochEndHeight.valueOf() + 1;
   const nextEpochEndHeight =
     epochEndHeight.valueOf() + DEFAULT_EPOCH_BLOCK_LENGTH;
-  const nextDistributionHeight =
-    epochEndHeight.valueOf() + DEFAULT_EPOCH_BLOCK_LENGTH + TALLY_PERIOD_BLOCKS;
 
   const updatedDistributions = {
     gateways: {
@@ -659,9 +653,8 @@ export async function tickRewardDistribution({
     },
     // increment epoch variables to the next one
     epochStartHeight: nextEpochStartHeight,
-    epochZeroStartHeight: distributions.epochZeroStartHeight,
     epochEndHeight: nextEpochEndHeight,
-    nextDistributionHeight,
+    epochZeroStartHeight: distributions.epochZeroStartHeight,
   };
 
   return {
