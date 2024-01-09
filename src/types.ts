@@ -71,7 +71,6 @@ export type RewardDistributions = {
   epochZeroStartHeight: number;
   epochStartHeight: number; // the current epoch start height
   epochEndHeight: number; // the current epoch end height
-  nextDistributionHeight: number; // the distribution height for the last epoch
   gateways: GatewayDistributions;
   observers: ObserverDistributions;
 };

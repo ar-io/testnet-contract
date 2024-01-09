@@ -899,7 +899,7 @@ describe('tickRewardDistribution', () => {
     };
     const { balances, distributions } = await tickRewardDistribution({
       currentBlockHeight: new BlockHeight(
-        initialState.distributions.nextDistributionHeight,
+        initialState.distributions.epochEndHeight + TALLY_PERIOD_BLOCKS,
       ),
       gateways: initialState.gateways,
       balances: initialState.balances,
@@ -915,7 +915,6 @@ describe('tickRewardDistribution', () => {
       ...initialState.distributions,
       epochStartHeight: expectedNewEpochStartHeight,
       epochEndHeight: expectedNewEpochEndHeight,
-      nextDistributionHeight: expectedNewEpochEndHeight + TALLY_PERIOD_BLOCKS,
     });
   });
 
@@ -990,7 +989,6 @@ describe('tickRewardDistribution', () => {
       ...initialState.distributions,
       epochStartHeight: expectedNewEpochStartHeight,
       epochEndHeight: expectedNewEpochEndHeight,
-      nextDistributionHeight: expectedNewEpochEndHeight + TALLY_PERIOD_BLOCKS,
       gateways: {
         'a-gateway': {
           passedEpochCount: 1,
