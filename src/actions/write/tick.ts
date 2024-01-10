@@ -428,21 +428,12 @@ export async function tickRewardDistribution({
   const updatedGatewayDistributions: GatewayDistributions = {};
   const updatedObserverDistributions: ObserverDistributions = {};
 
-  // do nothing if there are no protocol balance
-  // if there is not enough mIO to give each participant one mIO
-  if (currentProtocolBalance === 0) {
-    return {
-      distributions: distributions as RewardDistributions,
-      balances,
-    };
-  }
-
   const distributionHeightForEpoch = new BlockHeight(
     distributions.epochEndHeight + TALLY_PERIOD_BLOCKS,
   );
 
   // distribution should only happen ONCE on block that is TALLY_PERIOD_BLOCKS after the last completed epoch
-  if (currentBlockHeight.valueOf() !== distributionHeightForEpoch.valueOf()) {
+  if (currentBlockHeight.valueOf() < distributionHeightForEpoch.valueOf()) {
     return {
       // remove the readonly and avoid slicing/copying arrays if not necessary
       distributions: distributions as RewardDistributions,
@@ -496,6 +487,11 @@ export async function tickRewardDistribution({
       totalEpochParticipationCount:
         (existingGatewaySummary?.totalEpochParticipationCount || 0) + 1, // increment the total right away
     };
+
+    // handle the case of no observations for the epoch by not rewarding the gateway
+    if (!observations[epochStartHeight.valueOf()]?.reports) {
+      continue;
+    }
 
     // iterate through all the failure summaries for the gateway
     const totalNumberOfFailuresReported = (

@@ -854,13 +854,7 @@ describe('tickRewardDistribution', () => {
     expect(distributions).toEqual(initialState.distributions);
   });
 
-  it.each([
-    0,
-    1,
-    TALLY_PERIOD_BLOCKS - 1,
-    TALLY_PERIOD_BLOCKS + 1,
-    Number.MAX_SAFE_INTEGER,
-  ])(
+  it.each([0, 1, TALLY_PERIOD_BLOCKS - 1])(
     'should not distribute rewards if the current block height is equal to the last epoch end height + %s blocks',
     async (blockHeight) => {
       const initialState: IOState = {
@@ -915,6 +909,85 @@ describe('tickRewardDistribution', () => {
       ...initialState.distributions,
       epochStartHeight: expectedNewEpochStartHeight,
       epochEndHeight: expectedNewEpochEndHeight,
+    });
+  });
+
+  it('should not distribute rewards if no reports, but update epoch counts for gateways and the distribution epoch values', async () => {
+    const initialState: IOState = {
+      ...getBaselineState(),
+      balances: {
+        [SmartWeave.contract.id]: 10_000_000,
+      },
+      gateways: {
+        'a-gateway': {
+          ...baselineGatewayData,
+          observerWallet: 'an-observing-gateway',
+        },
+        'a-gateway-2': {
+          ...baselineGatewayData,
+          observerWallet: 'an-observing-gateway-2',
+        },
+        'a-gateway-3': {
+          ...baselineGatewayData,
+          observerWallet: 'an-observing-gateway-3',
+        },
+      },
+      observations: {},
+    };
+    const epochDistributionHeight =
+      initialState.distributions.epochZeroStartHeight +
+      DEFAULT_EPOCH_BLOCK_LENGTH +
+      TALLY_PERIOD_BLOCKS -
+      1;
+    const { balances, distributions } = await tickRewardDistribution({
+      currentBlockHeight: new BlockHeight(epochDistributionHeight),
+      gateways: initialState.gateways,
+      balances: initialState.balances,
+      distributions: initialState.distributions,
+      observations: initialState.observations,
+      settings: initialState.settings,
+    });
+    expect(balances).toEqual({
+      ...initialState.balances,
+    });
+    const expectedNewEpochStartHeight = DEFAULT_EPOCH_BLOCK_LENGTH;
+    const expectedNewEpochEndHeight =
+      expectedNewEpochStartHeight + DEFAULT_EPOCH_BLOCK_LENGTH - 1;
+    expect(distributions).toEqual({
+      ...initialState.distributions,
+      epochStartHeight: expectedNewEpochStartHeight,
+      epochEndHeight: expectedNewEpochEndHeight,
+      gateways: {
+        'a-gateway': {
+          passedEpochCount: 0,
+          totalEpochParticipationCount: 1,
+          failedConsecutiveEpochs: 0,
+        },
+        'a-gateway-2': {
+          passedEpochCount: 0,
+          totalEpochParticipationCount: 1,
+          failedConsecutiveEpochs: 0,
+        },
+        'a-gateway-3': {
+          passedEpochCount: 0,
+          totalEpochParticipationCount: 1,
+          failedConsecutiveEpochs: 0,
+        },
+      },
+      observers: {
+        'an-observing-gateway': {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 0,
+        },
+        'an-observing-gateway-2': {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 0,
+        },
+        'an-observing-gateway-3': {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 0,
+        },
+      },
     });
   });
 
