@@ -1,4 +1,5 @@
 import {
+  tick,
   tickAuctions,
   tickGatewayRegistry,
   tickRecords,
@@ -39,8 +40,8 @@ import {
 
 jest.mock('../../observers', () => ({
   ...jest.requireActual('../../observers'),
-  getPrescribedObserversForEpoch: jest.fn(),
-  getEligibleGatewaysForEpoch: jest.fn(),
+  getPrescribedObserversForEpoch: jest.fn().mockResolvedValue([]),
+  getEligibleGatewaysForEpoch: jest.fn().mockResolvedValue({}),
 }));
 
 const defaultAuctionSettings = {
@@ -812,7 +813,7 @@ describe('tickRewardDistribution', () => {
     jest.resetAllMocks();
   });
 
-  it('should not distribute rewards when protocol balance is 0', async () => {
+  it('should not distribute rewards when protocol balance is 0, but should update epoch distribution values', async () => {
     const initialState: IOState = {
       ...getBaselineState(),
       balances: {
@@ -820,7 +821,9 @@ describe('tickRewardDistribution', () => {
       },
     };
     const { balances, distributions } = await tickRewardDistribution({
-      currentBlockHeight: new BlockHeight(10),
+      currentBlockHeight: new BlockHeight(
+        initialState.distributions.epochDistributionHeight,
+      ),
       gateways: initialState.gateways,
       balances: initialState.balances,
       distributions: initialState.distributions,
@@ -828,10 +831,49 @@ describe('tickRewardDistribution', () => {
       settings: initialState.settings,
     });
     expect(balances).toEqual(initialState.balances);
-    expect(distributions).toEqual(initialState.distributions);
+    expect(distributions).toEqual({
+      epochZeroStartHeight: initialState.distributions.epochZeroStartHeight,
+      epochStartHeight: initialState.distributions.epochEndHeight + 1,
+      epochEndHeight:
+        initialState.distributions.epochEndHeight + DEFAULT_EPOCH_BLOCK_LENGTH,
+      epochDistributionHeight:
+        initialState.distributions.epochDistributionHeight +
+        DEFAULT_EPOCH_BLOCK_LENGTH,
+      gateways: {
+        'a-gateway': {
+          failedConsecutiveEpochs: 0,
+          passedEpochCount: 0,
+          totalEpochParticipationCount: 1,
+        },
+        'a-gateway-2': {
+          failedConsecutiveEpochs: 0,
+          passedEpochCount: 0,
+          totalEpochParticipationCount: 1,
+        },
+        'a-gateway-3': {
+          failedConsecutiveEpochs: 0,
+          passedEpochCount: 0,
+          totalEpochParticipationCount: 1,
+        },
+      },
+      observers: {
+        'an-observing-gateway': {
+          submittedEpochCount: 0,
+          totalEpochsPrescribedCount: 1,
+        },
+        'an-observing-gateway-2': {
+          submittedEpochCount: 0,
+          totalEpochsPrescribedCount: 1,
+        },
+        'an-observing-gateway-3': {
+          submittedEpochCount: 0,
+          totalEpochsPrescribedCount: 1,
+        },
+      },
+    });
   });
 
-  it('should not distribute rewards if the first epoch has not completed yet and current block height is less than', async () => {
+  it('should not distribute rewards or update distribution values if the current block height is not greater than or equal to the distribution height', async () => {
     const initialState: IOState = {
       ...getBaselineState(),
       balances: {
@@ -840,9 +882,7 @@ describe('tickRewardDistribution', () => {
     };
     const { balances, distributions } = await tickRewardDistribution({
       currentBlockHeight: new BlockHeight(
-        initialState.distributions.epochZeroStartHeight +
-          DEFAULT_EPOCH_BLOCK_LENGTH -
-          1,
+        initialState.distributions.epochDistributionHeight - 1,
       ),
       gateways: initialState.gateways,
       balances: initialState.balances,
@@ -854,7 +894,7 @@ describe('tickRewardDistribution', () => {
     expect(distributions).toEqual(initialState.distributions);
   });
 
-  it.each([0, 1, TALLY_PERIOD_BLOCKS - 1])(
+  it.each([0, TALLY_PERIOD_BLOCKS - 1])(
     'should not distribute rewards if the current block height is equal to the last epoch end height + %s blocks',
     async (blockHeight) => {
       const initialState: IOState = {
@@ -881,7 +921,7 @@ describe('tickRewardDistribution', () => {
     },
   );
 
-  it('should not distribute rewards if there are no gateways or observers in the GAR, but increment distributions for observers and epoch heights', async () => {
+  it('should not distribute rewards if there are no gateways or observers in the GAR, but update distributions values for the epoch', async () => {
     // both of these return empty objects
     (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({});
     (getPrescribedObserversForEpoch as jest.Mock).mockResolvedValue([]);
@@ -909,10 +949,11 @@ describe('tickRewardDistribution', () => {
       ...initialState.distributions,
       epochStartHeight: expectedNewEpochStartHeight,
       epochEndHeight: expectedNewEpochEndHeight,
+      epochDistributionHeight: expectedNewEpochEndHeight + TALLY_PERIOD_BLOCKS,
     });
   });
 
-  it('should not distribute rewards if no reports, but update epoch counts for gateways and the distribution epoch values', async () => {
+  it('should not distribute rewards if no reports were submitted, but should update epoch counts for gateways and the distribution epoch values', async () => {
     const initialState: IOState = {
       ...getBaselineState(),
       balances: {
@@ -935,10 +976,7 @@ describe('tickRewardDistribution', () => {
       observations: {},
     };
     const epochDistributionHeight =
-      initialState.distributions.epochZeroStartHeight +
-      DEFAULT_EPOCH_BLOCK_LENGTH +
-      TALLY_PERIOD_BLOCKS -
-      1;
+      initialState.distributions.epochDistributionHeight;
     const { balances, distributions } = await tickRewardDistribution({
       currentBlockHeight: new BlockHeight(epochDistributionHeight),
       gateways: initialState.gateways,
@@ -957,6 +995,7 @@ describe('tickRewardDistribution', () => {
       ...initialState.distributions,
       epochStartHeight: expectedNewEpochStartHeight,
       epochEndHeight: expectedNewEpochEndHeight,
+      epochDistributionHeight: expectedNewEpochEndHeight + TALLY_PERIOD_BLOCKS,
       gateways: {
         'a-gateway': {
           passedEpochCount: 0,
@@ -991,7 +1030,7 @@ describe('tickRewardDistribution', () => {
     });
   });
 
-  it('should distribute rewards to observers who submitted reports and gateways who passed', async () => {
+  it('should distribute rewards to observers who submitted reports and gateways who passed and update distribution epoch values', async () => {
     const initialState: IOState = {
       ...getBaselineState(),
       balances: {
@@ -1029,10 +1068,7 @@ describe('tickRewardDistribution', () => {
       },
     };
     const epochDistributionHeight =
-      initialState.distributions.epochZeroStartHeight +
-      DEFAULT_EPOCH_BLOCK_LENGTH +
-      TALLY_PERIOD_BLOCKS -
-      1;
+      initialState.distributions.epochDistributionHeight;
     const { balances, distributions } = await tickRewardDistribution({
       currentBlockHeight: new BlockHeight(epochDistributionHeight),
       gateways: initialState.gateways,
@@ -1062,6 +1098,7 @@ describe('tickRewardDistribution', () => {
       ...initialState.distributions,
       epochStartHeight: expectedNewEpochStartHeight,
       epochEndHeight: expectedNewEpochEndHeight,
+      epochDistributionHeight: expectedNewEpochEndHeight + TALLY_PERIOD_BLOCKS,
       gateways: {
         'a-gateway': {
           passedEpochCount: 1,
@@ -1091,6 +1128,124 @@ describe('tickRewardDistribution', () => {
         'an-observing-gateway-3': {
           totalEpochsPrescribedCount: 1,
           submittedEpochCount: 0,
+        },
+      },
+    });
+  });
+});
+
+describe('top level tick', () => {
+  beforeAll(() => {
+    (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({
+      'a-gateway': {
+        ...baselineGatewayData,
+        observerWallet: 'an-observing-gateway',
+      },
+      'a-gateway-2': {
+        ...baselineGatewayData,
+        observerWallet: 'an-observing-gateway-2',
+      },
+      'a-gateway-3': {
+        ...baselineGatewayData,
+        observerWallet: 'an-observing-gateway-3',
+      },
+    });
+    (getPrescribedObserversForEpoch as jest.Mock).mockResolvedValue([
+      {
+        gatewayAddress: 'a-gateway',
+        observerAddress: 'an-observing-gateway',
+        stake: 100,
+        start: 0,
+        stakeWeight: 10,
+        tenureWeight: 1,
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        compositeWeight: 1,
+        normalizedCompositeWeight: 1,
+      },
+      {
+        gatewayAddress: 'a-gateway-2',
+        observerAddress: 'an-observing-gateway-2',
+        stake: 100,
+        start: 0,
+        stakeWeight: 10,
+        tenureWeight: 1,
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        compositeWeight: 1,
+        normalizedCompositeWeight: 1,
+      },
+      {
+        gatewayAddress: 'a-gateway-3',
+        observerAddress: 'an-observing-gateway-3',
+        stake: 100,
+        start: 0,
+        stakeWeight: 10,
+        tenureWeight: 1,
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        compositeWeight: 1,
+        normalizedCompositeWeight: 1,
+      },
+    ]);
+  });
+
+  it('should tick distributions if a the interaction height is equal to the epochDistributionHeight', async () => {
+    const initialState: IOState = {
+      ...getBaselineState(),
+    };
+
+    // update our state
+    SmartWeave.block.height =
+      initialState.distributions.epochDistributionHeight;
+
+    const { state } = await tick(initialState);
+
+    expect(state).toEqual({
+      ...initialState,
+      lastTickedHeight: initialState.distributions.epochDistributionHeight,
+      distributions: {
+        ...initialState.distributions,
+        epochStartHeight:
+          initialState.distributions.epochStartHeight +
+          DEFAULT_EPOCH_BLOCK_LENGTH,
+        epochEndHeight:
+          initialState.distributions.epochEndHeight +
+          DEFAULT_EPOCH_BLOCK_LENGTH,
+        epochDistributionHeight:
+          initialState.distributions.epochEndHeight +
+          DEFAULT_EPOCH_BLOCK_LENGTH +
+          TALLY_PERIOD_BLOCKS,
+        gateways: {
+          'a-gateway': {
+            passedEpochCount: 0,
+            failedConsecutiveEpochs: 0,
+            totalEpochParticipationCount: 1,
+          },
+          'a-gateway-2': {
+            passedEpochCount: 0,
+            failedConsecutiveEpochs: 0,
+            totalEpochParticipationCount: 1,
+          },
+          'a-gateway-3': {
+            passedEpochCount: 0,
+            failedConsecutiveEpochs: 0,
+            totalEpochParticipationCount: 1,
+          },
+        },
+        observers: {
+          'an-observing-gateway': {
+            totalEpochsPrescribedCount: 1,
+            submittedEpochCount: 0,
+          },
+          'an-observing-gateway-2': {
+            totalEpochsPrescribedCount: 1,
+            submittedEpochCount: 0,
+          },
+          'an-observing-gateway-3': {
+            totalEpochsPrescribedCount: 1,
+            submittedEpochCount: 0,
+          },
         },
       },
     });

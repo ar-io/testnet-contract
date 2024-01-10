@@ -38,7 +38,7 @@ const distributions = {
   epochZeroStartHeight: 0,
   epochStartHeight: 0,
   epochEndHeight: DEFAULT_EPOCH_BLOCK_LENGTH - 1,
-  nextDistributionHeight: TALLY_PERIOD_BLOCKS + 1,
+  epochDistributionHeight: DEFAULT_EPOCH_BLOCK_LENGTH - 1 + TALLY_PERIOD_BLOCKS,
   gateways: {},
   observers: {},
 };

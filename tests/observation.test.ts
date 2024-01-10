@@ -194,7 +194,7 @@ describe('Observation', () => {
 
     describe('fast forwarding to the next epoch', () => {
       beforeAll(async () => {
-        await mineBlocks(arweave, DEFAULT_EPOCH_BLOCK_LENGTH);
+        await mineBlocks(arweave, DEFAULT_EPOCH_BLOCK_LENGTH + 1);
         const height = (await getCurrentBlock(arweave)).valueOf();
         // set our start height to the current height
         currentEpochStartHeight = getEpochBoundariesForHeight({
@@ -262,7 +262,7 @@ describe('Observation', () => {
         });
       });
 
-      it('save persist previous observations again if prescribed observer with new gateways', async () => {
+      it('should update gateways observerReportTxId tx id if gateway is a prescribed observer saves observation again within the same epoch', async () => {
         const previousObservation = await contract.readState();
         const prevState = previousObservation.cachedValue.state as IOState;
         const previousReportsAndSummary =
@@ -284,12 +284,11 @@ describe('Observation', () => {
         ).toEqual(true);
 
         expect(
-          writeInteractions.every(
-            (interaction) =>
-              !Object.keys(newCachedValue.errorMessages).includes(
-                interaction?.originalTxId,
-              ),
-          ),
+          writeInteractions.every((interaction) => {
+            return !Object.keys(newCachedValue.errorMessages).includes(
+              interaction?.originalTxId,
+            );
+          }),
         ).toEqual(true);
         expect(
           newState.observations[currentEpochStartHeight.valueOf()],

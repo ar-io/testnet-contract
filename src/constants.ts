@@ -58,9 +58,9 @@ export const INVALID_GATEWAY_EXISTS_MESSAGE =
   'A gateway with this address already exists.';
 export const DEFAULT_NUM_SAMPLED_BLOCKS = 3;
 export const DEFAULT_SAMPLED_BLOCKS_OFFSET = 50;
-export const DEFAULT_EPOCH_BLOCK_LENGTH = 50; // TODO: make this 5000 for testnet
+export const DEFAULT_EPOCH_BLOCK_LENGTH = 10; // TODO: make this 5000 for testnet
 export const DEFAULT_START_HEIGHT = 0; // TODO: this should be coordinated with the genesis block height
-export const TALLY_PERIOD_BLOCKS = DEFAULT_EPOCH_BLOCK_LENGTH / 2; // TODO: set this to 100 for testnet
+export const TALLY_PERIOD_BLOCKS = DEFAULT_EPOCH_BLOCK_LENGTH / 5; // TODO: set this to 100 for testnet
 export const EPOCH_REWARD_PERCENTAGE = 0.0025; // 0.25% of total available protocol balance
 export const GATEWAY_PERCENTAGE_OF_EPOCH_REWARD = 0.95;
 export const OBSERVATION_FAILURE_THRESHOLD = 0.51;
