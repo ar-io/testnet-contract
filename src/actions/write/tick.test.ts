@@ -861,7 +861,7 @@ describe('tickRewardDistribution', () => {
     TALLY_PERIOD_BLOCKS + 1,
     Number.MAX_SAFE_INTEGER,
   ])(
-    'should not distribute rewards if the current block height is equal to the last epoch end height + the required tallying period',
+    'should not distribute rewards if the current block height is equal to the last epoch end height + %s blocks',
     async (blockHeight) => {
       const initialState: IOState = {
         ...getBaselineState(),
