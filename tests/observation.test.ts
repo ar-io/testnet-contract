@@ -194,7 +194,7 @@ describe('Observation', () => {
 
     describe('fast forwarding to the next epoch', () => {
       beforeAll(async () => {
-        await mineBlocks(arweave, DEFAULT_EPOCH_BLOCK_LENGTH);
+        await mineBlocks(arweave, DEFAULT_EPOCH_BLOCK_LENGTH + 1);
         const height = (await getCurrentBlock(arweave)).valueOf();
         // set our start height to the current height
         currentEpochStartHeight = getEpochBoundariesForHeight({
