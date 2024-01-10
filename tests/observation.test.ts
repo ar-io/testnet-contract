@@ -262,7 +262,7 @@ describe('Observation', () => {
         });
       });
 
-      it('save persist previous observations again if prescribed observer with new gateways', async () => {
+      it('should update gateways observerReportTxId tx id if gateway is a prescribed observer saves observation again within the same epoch', async () => {
         const previousObservation = await contract.readState();
         const prevState = previousObservation.cachedValue.state as IOState;
         const previousReportsAndSummary =
@@ -284,12 +284,11 @@ describe('Observation', () => {
         ).toEqual(true);
 
         expect(
-          writeInteractions.every(
-            (interaction) =>
-              !Object.keys(newCachedValue.errorMessages).includes(
-                interaction?.originalTxId,
-              ),
-          ),
+          writeInteractions.every((interaction) => {
+            return !Object.keys(newCachedValue.errorMessages).includes(
+              interaction?.originalTxId,
+            );
+          }),
         ).toEqual(true);
         expect(
           newState.observations[currentEpochStartHeight.valueOf()],

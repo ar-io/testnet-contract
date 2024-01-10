@@ -217,6 +217,8 @@ export function tickGatewayRegistry({
           updatedBalances[key] = balances[key] || 0;
         }
 
+        // TODO: remove gateways that have observation fail count > threshold
+
         // gateway is leaving, make sure we return all the vaults to it
         for (const vault of Object.values(gateway.vaults)) {
           incrementBalance(updatedBalances, key, vault.balance);
@@ -429,7 +431,7 @@ export async function tickRewardDistribution({
   const updatedObserverDistributions: ObserverDistributions = {};
 
   const distributionHeightForEpoch = new BlockHeight(
-    distributions.epochEndHeight + TALLY_PERIOD_BLOCKS,
+    distributions.epochDistributionHeight,
   );
 
   // distribution should only happen ONCE on block that is TALLY_PERIOD_BLOCKS after the last completed epoch
@@ -651,6 +653,7 @@ export async function tickRewardDistribution({
     epochStartHeight: nextEpochStartHeight,
     epochEndHeight: nextEpochEndHeight,
     epochZeroStartHeight: distributions.epochZeroStartHeight,
+    epochDistributionHeight: nextEpochEndHeight + TALLY_PERIOD_BLOCKS,
   };
 
   return {
