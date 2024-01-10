@@ -15,13 +15,11 @@ export const evolveState = async (
     throw new ContractError(NON_CONTRACT_OWNER_MESSAGE);
   }
 
-  const epochEndHeight =
-    +SmartWeave.block.height + DEFAULT_EPOCH_BLOCK_LENGTH - 1;
-
+  const epochStartHeight = +SmartWeave.block.height;
   state.distributions = {
-    epochZeroStartHeight: +SmartWeave.block.height,
-    epochStartHeight: +SmartWeave.block.height,
-    epochEndHeight,
+    epochZeroStartHeight: epochStartHeight,
+    epochStartHeight: epochStartHeight,
+    epochEndHeight: epochStartHeight + DEFAULT_EPOCH_BLOCK_LENGTH - 1,
     gateways: {},
     observers: {},
   };

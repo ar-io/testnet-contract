@@ -281,12 +281,12 @@ describe('isGatewayEligibleForDistribution', () => {
 
 describe('getEpochBoundariesForHeight', () => {
   it.each([
-    [1, 1, 1, 2, 2], // --> this is a weird case
+    [1, 1, 1, 1, 1],
     [19, 2, 100, 2, 101],
     [34, 0, Number.MAX_SAFE_INTEGER, 0, Number.MAX_SAFE_INTEGER - 1],
-    // [5, 0, undefined, 0, DEFAULT_EPOCH_BLOCK_LENGTH],
+    [1340134, 1339961, 50, 1340111, 1340160],
   ])(
-    'should, given current height of %d, zero block height of %d and epoch length of %d return the epoch start of %d and epoch end %d for block height %d',
+    'should for current height of %d, zero block height of %d and epoch length of %d return the epoch start of %d and epoch end %d',
     (
       currentHeight,
       zeroHeight,
