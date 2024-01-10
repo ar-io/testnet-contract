@@ -47,7 +47,7 @@ import {
   isGatewayEligibleToBeRemoved,
 } from '../../utilities';
 
-function tickInternal({
+async function tickInternal({
   currentBlockHeight,
   currentBlockTimestamp,
   state,
@@ -55,7 +55,7 @@ function tickInternal({
   currentBlockHeight: BlockHeight;
   currentBlockTimestamp: BlockTimestamp;
   state: IOState;
-}): IOState {
+}): Promise<IOState> {
   const updatedState = state;
   const { demandFactoring: prevDemandFactoring, fees: prevFees } = state;
 
@@ -119,7 +119,7 @@ function tickInternal({
   // tick reward distribution
   Object.assign(
     updatedState,
-    tickRewardDistribution({
+    await tickRewardDistribution({
       currentBlockHeight,
       gateways: updatedState.gateways,
       distributions: updatedState.distributions,
@@ -435,7 +435,7 @@ export async function tickRewardDistribution({
   );
 
   // distribution should only happen ONCE on block that is TALLY_PERIOD_BLOCKS after the last completed epoch
-  if (currentBlockHeight.valueOf() < distributionHeightForEpoch.valueOf()) {
+  if (currentBlockHeight.valueOf() !== distributionHeightForEpoch.valueOf()) {
     return {
       // remove the readonly and avoid slicing/copying arrays if not necessary
       distributions: distributions as RewardDistributions,
@@ -640,7 +640,7 @@ export async function tickRewardDistribution({
   const nextEpochEndHeight =
     epochEndHeight.valueOf() + DEFAULT_EPOCH_BLOCK_LENGTH;
 
-  const updatedDistributions = {
+  const updatedDistributions: RewardDistributions = {
     gateways: {
       ...distributions.gateways,
       ...updatedGatewayDistributions,
@@ -689,7 +689,7 @@ export const tick = async (state: IOState): Promise<ContractWriteResult> => {
     /**
      * TODO: once safeArweaveGet is more reliable, we can get the timestamp from the block between ticks to provide the timestamp. We are currently experiencing 'timeout' errors on evaluations for large gaps between interactions so we cannot reliably trust it with the current implementation.
      * */
-    updatedState = tickInternal({
+    updatedState = await tickInternal({
       currentBlockHeight,
       currentBlockTimestamp: interactionTimestamp,
       state: updatedState,

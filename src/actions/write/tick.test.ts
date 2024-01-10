@@ -1,4 +1,5 @@
 import {
+  tick,
   tickAuctions,
   tickGatewayRegistry,
   tickRecords,
@@ -39,8 +40,8 @@ import {
 
 jest.mock('../../observers', () => ({
   ...jest.requireActual('../../observers'),
-  getPrescribedObserversForEpoch: jest.fn(),
-  getEligibleGatewaysForEpoch: jest.fn(),
+  getPrescribedObserversForEpoch: jest.fn().mockResolvedValue([]),
+  getEligibleGatewaysForEpoch: jest.fn().mockResolvedValue({}),
 }));
 
 const defaultAuctionSettings = {
@@ -1127,6 +1128,124 @@ describe('tickRewardDistribution', () => {
         'an-observing-gateway-3': {
           totalEpochsPrescribedCount: 1,
           submittedEpochCount: 0,
+        },
+      },
+    });
+  });
+});
+
+describe('top level tick', () => {
+  beforeAll(() => {
+    (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({
+      'a-gateway': {
+        ...baselineGatewayData,
+        observerWallet: 'an-observing-gateway',
+      },
+      'a-gateway-2': {
+        ...baselineGatewayData,
+        observerWallet: 'an-observing-gateway-2',
+      },
+      'a-gateway-3': {
+        ...baselineGatewayData,
+        observerWallet: 'an-observing-gateway-3',
+      },
+    });
+    (getPrescribedObserversForEpoch as jest.Mock).mockResolvedValue([
+      {
+        gatewayAddress: 'a-gateway',
+        observerAddress: 'an-observing-gateway',
+        stake: 100,
+        start: 0,
+        stakeWeight: 10,
+        tenureWeight: 1,
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        compositeWeight: 1,
+        normalizedCompositeWeight: 1,
+      },
+      {
+        gatewayAddress: 'a-gateway-2',
+        observerAddress: 'an-observing-gateway-2',
+        stake: 100,
+        start: 0,
+        stakeWeight: 10,
+        tenureWeight: 1,
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        compositeWeight: 1,
+        normalizedCompositeWeight: 1,
+      },
+      {
+        gatewayAddress: 'a-gateway-3',
+        observerAddress: 'an-observing-gateway-3',
+        stake: 100,
+        start: 0,
+        stakeWeight: 10,
+        tenureWeight: 1,
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        compositeWeight: 1,
+        normalizedCompositeWeight: 1,
+      },
+    ]);
+  });
+
+  it('should tick distributions if a the interaction height is equal to the epochDistributionHeight', async () => {
+    const initialState: IOState = {
+      ...getBaselineState(),
+    };
+
+    // update our state
+    SmartWeave.block.height =
+      initialState.distributions.epochDistributionHeight;
+
+    const { state } = await tick(initialState);
+
+    expect(state).toEqual({
+      ...initialState,
+      lastTickedHeight: initialState.distributions.epochDistributionHeight,
+      distributions: {
+        ...initialState.distributions,
+        epochStartHeight:
+          initialState.distributions.epochStartHeight +
+          DEFAULT_EPOCH_BLOCK_LENGTH,
+        epochEndHeight:
+          initialState.distributions.epochEndHeight +
+          DEFAULT_EPOCH_BLOCK_LENGTH,
+        epochDistributionHeight:
+          initialState.distributions.epochEndHeight +
+          DEFAULT_EPOCH_BLOCK_LENGTH +
+          TALLY_PERIOD_BLOCKS,
+        gateways: {
+          'a-gateway': {
+            passedEpochCount: 0,
+            failedConsecutiveEpochs: 0,
+            totalEpochParticipationCount: 1,
+          },
+          'a-gateway-2': {
+            passedEpochCount: 0,
+            failedConsecutiveEpochs: 0,
+            totalEpochParticipationCount: 1,
+          },
+          'a-gateway-3': {
+            passedEpochCount: 0,
+            failedConsecutiveEpochs: 0,
+            totalEpochParticipationCount: 1,
+          },
+        },
+        observers: {
+          'an-observing-gateway': {
+            totalEpochsPrescribedCount: 1,
+            submittedEpochCount: 0,
+          },
+          'an-observing-gateway-2': {
+            totalEpochsPrescribedCount: 1,
+            submittedEpochCount: 0,
+          },
+          'an-observing-gateway-3': {
+            totalEpochsPrescribedCount: 1,
+            submittedEpochCount: 0,
+          },
         },
       },
     });
