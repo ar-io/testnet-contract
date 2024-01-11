@@ -1,4 +1,7 @@
-import { DEFAULT_EPOCH_BLOCK_LENGTH } from '../../constants';
+import {
+  DEFAULT_EPOCH_BLOCK_LENGTH,
+  TALLY_PERIOD_BLOCKS,
+} from '../../constants';
 import {
   getEligibleGatewaysForEpoch,
   getEpochBoundariesForHeight,
@@ -132,6 +135,7 @@ export async function getEpoch(
       epochStartHeight: epochStartHeight.valueOf(),
       epochEndHeight: epochEndHeight.valueOf(),
       epochZeroStartHeight: distributions.epochZeroStartHeight,
+      epochDistributionHeight: epochEndHeight.valueOf() + TALLY_PERIOD_BLOCKS,
       epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
     },
   };
