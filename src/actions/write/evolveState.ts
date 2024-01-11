@@ -28,5 +28,7 @@ export const evolveState = async (
     observers: {},
   };
 
+  state.observations = {};
+
   return { state };
 };
