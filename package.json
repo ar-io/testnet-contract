@@ -7,8 +7,8 @@
     "clean": "rimraf [ dist cache ]",
     "format:check": "prettier . --check --cache",
     "format:fix": "prettier . --write",
-    "lint:check": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint:check": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
     "test:unit": "yarn build && jest --testPathPattern=src --setupFilesAfterEnv=./tests/mocks.jest.ts --coverage",
     "test:integration": "yarn build && jest --testPathPattern=tests --globalSetup=./tests/setup.jest.ts --globalTeardown=./tests/teardown.jest.ts --runInBand",
     "test": "yarn build && yarn test:unit ; yarn test:integration",
@@ -24,7 +24,7 @@
     "@types/jest": "^27.4.0",
     "@types/node": "^18.15.7",
     "@typescript-eslint/eslint-plugin": "^4.18.0",
-    "@typescript-eslint/parser": "^4.18.0",
+    "@typescript-eslint/parser": "^6.18.1",
     "ajv": "^8.12.0",
     "arlocal": "^1.1.62",
     "arweave": "1.13.7",
@@ -53,7 +53,7 @@
   },
   "lint-staged": {
     "**/*.{ts,js,json}": [
-      "eslint --fix .",
+      "eslint --fix . --ext .ts",
       "prettier --write ."
     ]
   },
