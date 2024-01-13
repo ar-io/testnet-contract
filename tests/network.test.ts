@@ -3,6 +3,8 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts';
 import { IOState } from '../src/types';
 import {
   CONTRACT_SETTINGS,
+  GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
+  MIN_DELEGATED_STAKE,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
   WALLET_FUND_AMOUNT,
@@ -90,7 +92,7 @@ describe('Network', () => {
           });
           const { cachedValue: newCachedValue } = await contract.readState();
           expect(Object.keys(newCachedValue.errorMessages)).toContain(
-            writeInteraction.originalTxId,
+            writeInteraction?.originalTxId,
           );
           expect(newCachedValue.state).toEqual(prevCachedValue.state);
         },
@@ -115,7 +117,7 @@ describe('Network', () => {
           });
           const { cachedValue: newCachedValue } = await contract.readState();
           expect(Object.keys(newCachedValue.errorMessages)).toContain(
-            writeInteraction.originalTxId,
+            writeInteraction?.originalTxId,
           );
           expect(newCachedValue.state).toEqual(prevCachedValue.state);
         },
@@ -302,11 +304,13 @@ describe('Network', () => {
         );
         expect(newState.gateways[newGatewayOperatorAddress]).toEqual({
           operatorStake: joinGatewayPayload.qty,
+          delegatedStake: 0,
           status: NETWORK_JOIN_STATUS,
           start: (await getCurrentBlock(arweave)).valueOf(),
           end: 0,
           observerWallet: newGatewayOperatorAddress,
           vaults: {},
+          delegates: {},
           settings: {
             label: joinGatewayPayload.label,
             fqdn: joinGatewayPayload.fqdn,
@@ -314,6 +318,10 @@ describe('Network', () => {
             protocol: joinGatewayPayload.protocol,
             properties: joinGatewayPayload.properties,
             note: joinGatewayPayload.note,
+            allowDelegatedStaking: false,
+            delegateRewardRatio: 0,
+            minDelegatedStake: MIN_DELEGATED_STAKE,
+            reservedDelegates: [],
           },
         });
       });
@@ -334,7 +342,7 @@ describe('Network', () => {
         const { cachedValue: newCachedValue } = await contract.readState();
         const newState = newCachedValue.state as IOState;
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
-          writeInteraction.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(newState.balances[newGatewayOperatorAddress]).toEqual(
           prevBalance - CONTRACT_SETTINGS.minNetworkJoinStakeAmount,
@@ -362,7 +370,7 @@ describe('Network', () => {
         const { cachedValue: newCachedValue } = await contract.readState();
         const newState = newCachedValue.state as IOState;
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
-          writeInteraction.originalTxId,
+          writeInteraction?.originalTxId,
         ); // this interaction should return an error since its not valid
         expect(newState.balances[newGatewayOperatorAddress]).toEqual(
           prevBalance,
@@ -388,7 +396,7 @@ describe('Network', () => {
         const { cachedValue: newCachedValue } = await contract.readState();
         const newState = newCachedValue.state as IOState;
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
-          writeInteraction.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(
           newState.gateways[newGatewayOperatorAddress].operatorStake,
@@ -397,7 +405,7 @@ describe('Network', () => {
         );
         expect(
           newState.gateways[newGatewayOperatorAddress].vaults[
-            writeInteraction?.originalTxId
+            writeInteraction.originalTxId
           ],
         ).toEqual({
           balance: qty,
@@ -415,7 +423,7 @@ describe('Network', () => {
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
-          writeInteraction.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
@@ -424,6 +432,7 @@ describe('Network', () => {
     describe('gateway settings', () => {
       it('should modify gateway settings with correct parameters', async () => {
         const observerWallet = 'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA';
+        const reservedDelegates: string[] = [];
         const updatedGatewaySettings = {
           label: 'Updated Label', // friendly label
           port: 80,
@@ -431,6 +440,12 @@ describe('Network', () => {
           fqdn: 'back-to-port-80.com',
           properties: 'WRONg6rQ9Py7L8j4CkS8jn818gdXW25Oofg0q2E58ro',
           note: 'a new note',
+          allowDelegatedStaking: true,
+          delegateRewardRatio: Math.floor(
+            (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
+          ),
+          reservedDelegates,
+          minDelegatedStake: MIN_DELEGATED_STAKE + 1,
         };
         const writeInteraction = await contract.writeInteraction({
           function: 'updateGatewaySettings',
@@ -441,7 +456,7 @@ describe('Network', () => {
         const { cachedValue: newCachedValue } = await contract.readState();
         const newState = newCachedValue.state as IOState;
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
-          writeInteraction.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(newState.gateways[newGatewayOperatorAddress].settings).toEqual(
           updatedGatewaySettings,
@@ -516,7 +531,7 @@ describe('Network', () => {
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
-          writeInteraction.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
@@ -592,6 +607,76 @@ describe('Network', () => {
         },
       );
 
+      it.each(['false', 0])(
+        'should not modify gateway settings with invalid allowDelegatedStaking',
+        async (badProperties) => {
+          const { cachedValue: prevCachedValue } = await contract.readState();
+          const writeInteraction = await contract.writeInteraction({
+            function: 'updateGatewaySettings',
+            allowDelegatedStaking: badProperties,
+          });
+          expect(writeInteraction?.originalTxId).not.toBe(undefined);
+          const { cachedValue: newCachedValue } = await contract.readState();
+          expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        },
+      );
+
+      it.each([-1, 1.5, 101, '50'])(
+        'should not modify gateway settings with invalid delegateRewardRatio',
+        async (badProperties) => {
+          const { cachedValue: prevCachedValue } = await contract.readState();
+          const writeInteraction = await contract.writeInteraction({
+            function: 'updateGatewaySettings',
+            delegateRewardRatio: badProperties,
+          });
+          expect(writeInteraction?.originalTxId).not.toBe(undefined);
+          const { cachedValue: newCachedValue } = await contract.readState();
+          expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        },
+      );
+
+      it.each([
+        1,
+        'string',
+        'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA',
+        ['%KryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA'],
+        [
+          'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA',
+          'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA',
+        ],
+        [
+          'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA',
+          '%KryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA',
+        ],
+        ['iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA', 1],
+      ])(
+        'should not modify gateway settings with invalid reservedDelegates',
+        async (badProperties) => {
+          const { cachedValue: prevCachedValue } = await contract.readState();
+          const writeInteraction = await contract.writeInteraction({
+            function: 'updateGatewaySettings',
+            reservedDelegates: badProperties,
+          });
+          expect(writeInteraction?.originalTxId).not.toBe(undefined);
+          const { cachedValue: newCachedValue } = await contract.readState();
+          expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        },
+      );
+
+      it.each([MIN_DELEGATED_STAKE - 1, '1000', MIN_DELEGATED_STAKE + 0.1])(
+        'should not modify gateway settings with invalid minDelegatedStake',
+        async (badProperties) => {
+          const { cachedValue: prevCachedValue } = await contract.readState();
+          const writeInteraction = await contract.writeInteraction({
+            function: 'updateGatewaySettings',
+            minDelegatedStake: badProperties,
+          });
+          expect(writeInteraction?.originalTxId).not.toBe(undefined);
+          const { cachedValue: newCachedValue } = await contract.readState();
+          expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        },
+      );
+
       it('should not modify gateway settings with invalid parameters', async () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const status = 'leavingNetwork';
@@ -602,7 +687,7 @@ describe('Network', () => {
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
-          writeInteraction.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
@@ -625,7 +710,7 @@ describe('Network', () => {
           (await getCurrentBlock(arweave)).valueOf() +
           CONTRACT_SETTINGS.gatewayLeaveLength;
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
-          writeInteraction.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(newState.gateways[newGatewayOperatorAddress].status).toEqual(
           NETWORK_LEAVING_STATUS,
@@ -733,7 +818,7 @@ describe('Network', () => {
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
-          writeInteraction.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
@@ -747,7 +832,7 @@ describe('Network', () => {
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
-          writeInteraction.originalTxId,
+          writeInteraction?.originalTxId,
         );
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });

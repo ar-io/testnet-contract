@@ -15,7 +15,7 @@ const joinNetworkSchema = {
       pattern: '^(?:(?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{1,63}$', // eslint-disable-line no-useless-escape
     },
     port: {
-      type: 'number',
+      type: 'integer',
       minimum: 0,
       maximum: 65535,
     },
@@ -38,6 +38,30 @@ const joinNetworkSchema = {
     observerWallet: {
       type: 'string',
       pattern: '^[a-zA-Z0-9_-]{43}$',
+    },
+    allowDelegatedStaking: {
+      type: 'boolean',
+    },
+    delegateRewardRatio: {
+      type: 'integer',
+      minimum: 0,
+      maximum: 100,
+    },
+    reservedDelegates: {
+      type: 'array',
+      items: {
+        type: 'string',
+        pattern: '^[a-zA-Z0-9-_]{43}$',
+        description:
+          'The unique list of delegate addresses the that can stake on this gateway',
+      },
+      uniqueItems: true,
+      minItems: 0,
+      maxItems: 10_000,
+    },
+    minDelegatedStake: {
+      type: 'integer',
+      minimum: 500,
     },
   },
   required: ['qty', 'fqdn', 'port', 'protocol', 'properties', 'note', 'label'],

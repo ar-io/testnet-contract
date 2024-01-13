@@ -313,6 +313,7 @@ describe('tickGatewayRegistry', () => {
         gateways: {
           'leaving-operator': {
             operatorStake: 100,
+            delegatedStake: 0,
             observerWallet: 'existing-operator',
             start: 0,
             end: 5,
@@ -323,6 +324,7 @@ describe('tickGatewayRegistry', () => {
                 end: 10,
               },
             },
+            delegates: {},
             status: 'leaving',
             settings: defaultGatewaySettings,
           },
@@ -344,6 +346,7 @@ describe('tickGatewayRegistry', () => {
         gateways: {
           'existing-operator': {
             operatorStake: 100,
+            delegatedStake: 0,
             observerWallet: 'existing-operator',
             start: 0,
             end: 10,
@@ -354,6 +357,7 @@ describe('tickGatewayRegistry', () => {
                 end: 2,
               },
             },
+            delegates: {},
             status: 'joined',
             settings: defaultGatewaySettings,
           },
@@ -366,10 +370,12 @@ describe('tickGatewayRegistry', () => {
         gateways: {
           'existing-operator': {
             operatorStake: 100,
+            delegatedStake: 0,
             observerWallet: 'existing-operator',
             start: 0,
             end: 10,
             vaults: {},
+            delegates: {},
             status: 'joined',
             settings: defaultGatewaySettings,
           },
@@ -385,6 +391,7 @@ describe('tickGatewayRegistry', () => {
         gateways: {
           'existing-operator': {
             operatorStake: 100,
+            delegatedStake: 0,
             observerWallet: 'existing-operator',
             start: 0,
             end: 10,
@@ -395,6 +402,7 @@ describe('tickGatewayRegistry', () => {
                 end: 10,
               },
             },
+            delegates: {},
             status: 'joined',
             settings: defaultGatewaySettings,
           },
@@ -407,6 +415,7 @@ describe('tickGatewayRegistry', () => {
         gateways: {
           'existing-operator': {
             operatorStake: 100,
+            delegatedStake: 0,
             observerWallet: 'existing-operator',
             start: 0,
             end: 10,
@@ -417,6 +426,7 @@ describe('tickGatewayRegistry', () => {
                 end: 10,
               },
             },
+            delegates: {},
             status: 'joined',
             settings: defaultGatewaySettings,
           },

@@ -15,6 +15,10 @@ export class GatewaySettings {
     properties?: string;
     protocol?: 'http' | 'https';
     port?: number;
+    allowDelegatedStaking: boolean;
+    delegateRewardRatio: number;
+    reservedDelegates: string[];
+    minDelegatedStake: number;
   };
 
   constructor(input: any) {
@@ -25,8 +29,19 @@ export class GatewaySettings {
       );
     }
 
-    const { label, port, fqdn, note, protocol, properties, observerWallet } =
-      input;
+    const {
+      label,
+      port,
+      fqdn,
+      note,
+      protocol,
+      properties,
+      observerWallet,
+      allowDelegatedStaking,
+      delegateRewardRatio,
+      reservedDelegates,
+      minDelegatedStake,
+    } = input;
     this.settings = {
       ...(fqdn !== undefined && { fqdn }),
       ...(label !== undefined && { label }),
@@ -34,6 +49,10 @@ export class GatewaySettings {
       ...(properties !== undefined && { properties }),
       ...(protocol !== undefined && { protocol }),
       ...(port !== undefined && { port }),
+      ...(allowDelegatedStaking !== undefined && { allowDelegatedStaking }),
+      ...(delegateRewardRatio !== undefined && { delegateRewardRatio }),
+      ...(reservedDelegates !== undefined && { reservedDelegates }),
+      ...(minDelegatedStake !== undefined && { minDelegatedStake }),
     };
     this.observerWallet = observerWallet;
   }

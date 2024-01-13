@@ -101,7 +101,9 @@ export const baselineGatewayData: Gateway = {
   start: 0,
   end: 0,
   vaults: {},
+  delegates: {},
   operatorStake: 100,
+  delegatedStake: 0,
   settings: {
     label: 'test-gateway',
     fqdn: 'test.com',

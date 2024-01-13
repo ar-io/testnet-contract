@@ -33,7 +33,7 @@ export const leaveNetwork = async (
     );
   }
 
-  const endHeight = +SmartWeave.block.height + settings.gatewayLeaveLength;
+  const endHeight = +SmartWeave.block.height + settings.gatewayLeaveLength; // how can this be split?
 
   // Add tokens to a vault that unlocks after the withdrawal period ends
   gateways[caller].vaults[SmartWeave.transaction.id] = {
@@ -42,10 +42,13 @@ export const leaveNetwork = async (
     end: endHeight,
   };
 
-  // set all the vaults to unlock at the end of the withdrawal period
+  // set all the gateway operator vaults to unlock at the end of the withdrawal period
+  // TODO: Fix the below issue.  If a gateway operator already has vaults that will expire before the withdrawal period, they should not be reset below
   for (const vault of Object.values(gateway.vaults)) {
     vault.end = endHeight;
   }
+
+  // TO DO: mark all delegate vaults to leave
 
   // Remove all tokens from the operator's stake
   gateways[caller].operatorStake = 0;

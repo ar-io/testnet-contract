@@ -17,7 +17,9 @@ jest.mock('../../observers', () => ({
 
 export const baselineGatewayData: Gateway = {
   operatorStake: 10_000,
+  delegatedStake: 0,
   vaults: {},
+  delegates: {},
   observerWallet: 'fake-observer-wallet',
   start: 0,
   status: 'joined',
