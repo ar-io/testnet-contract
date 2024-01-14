@@ -8,6 +8,7 @@ import {
   DelegateData,
   DemandFactoringData,
   Gateway,
+  Gateways,
   IOState,
 } from '../types';
 
@@ -119,4 +120,10 @@ export const baselineDelegateData: DelegateData = {
   start: 0,
   end: 0,
   vaults: {},
+};
+
+export const baselineGatewaysData: Gateways = {
+  [stubbedArweaveTxId]: {
+    ...baselineGatewayData,
+  },
 };
