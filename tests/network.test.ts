@@ -3,7 +3,9 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts';
 import { IOState } from '../src/types';
 import {
   CONTRACT_SETTINGS,
+  GATEWAY_LEAVE_LENGTH,
   GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
+  MINIMUM_GATEWAY_JOIN_LENGTH,
   MIN_DELEGATED_STAKE,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
@@ -696,19 +698,19 @@ describe('Network', () => {
     describe('leaveNetwork', () => {
       it('should set the gateway status as leaving and create a new vault when the gateway has been joined for the minimum join length', async () => {
         // mine the required number of blocks
-        await mineBlocks(arweave, CONTRACT_SETTINGS.minGatewayJoinLength);
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const prevState = prevCachedValue.state as IOState;
+        const prevOperatorStake =
+          prevState.gateways[newGatewayOperatorAddress].operatorStake;
+        await mineBlocks(arweave, MINIMUM_GATEWAY_JOIN_LENGTH);
         const writeInteraction = await contract.writeInteraction({
           function: 'leaveNetwork',
         });
-
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
         const newState = newCachedValue.state as IOState;
-        const vaultsForOperator =
-          newState.gateways[newGatewayOperatorAddress].vaults;
         const expectedEndBlock =
-          (await getCurrentBlock(arweave)).valueOf() +
-          CONTRACT_SETTINGS.gatewayLeaveLength;
+          (await getCurrentBlock(arweave)).valueOf() + GATEWAY_LEAVE_LENGTH;
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
           writeInteraction?.originalTxId,
         );
@@ -718,14 +720,16 @@ describe('Network', () => {
         expect(newState.gateways[newGatewayOperatorAddress].end).toEqual(
           expectedEndBlock,
         );
-        // confirm all vaults get updated
-        for (const vault of Object.values(vaultsForOperator)) {
-          expect(vault).toEqual({
-            balance: expect.any(Number),
-            start: expect.any(Number),
-            end: expectedEndBlock,
-          });
-        }
+        // confirm the vault with the operator balance was created
+        expect(
+          newState.gateways[newGatewayOperatorAddress].vaults[
+            writeInteraction.originalTxId
+          ],
+        ).toEqual({
+          balance: prevOperatorStake,
+          start: expect.any(Number),
+          end: expectedEndBlock,
+        });
       });
     });
   });

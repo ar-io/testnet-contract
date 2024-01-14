@@ -5,6 +5,7 @@ import {
 } from '../constants';
 import {
   ArNSLeaseAuctionData,
+  DelegateData,
   DemandFactoringData,
   Gateway,
   IOState,
@@ -111,4 +112,11 @@ export const baselineGatewayData: Gateway = {
     protocol: 'https',
   },
   status: 'joined',
+};
+
+export const baselineDelegateData: DelegateData = {
+  delegatedStake: 100,
+  start: 0,
+  end: 0,
+  vaults: {},
 };
