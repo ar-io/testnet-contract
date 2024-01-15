@@ -337,7 +337,7 @@ describe('getEntropyForEpoch', () => {
     };
   });
 
-  afterEach(() => {
+  afterAll(() => {
     // reset stubs
     jest.resetAllMocks();
   });
