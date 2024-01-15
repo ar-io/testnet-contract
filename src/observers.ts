@@ -223,7 +223,7 @@ export async function getPrescribedObserversForEpoch({
   // note: this should always result to MAXIMUM_OBSERVERS_PER_EPOCH
   const prescribedObservers: Set<WeightedObserver> = new Set();
   let hash = blockHeightEntropyHash; // our starting hash
-  for (let i = 0; i < MAXIMUM_OBSERVERS_PER_EPOCH; i++) {
+  while (prescribedObservers.size < MAXIMUM_OBSERVERS_PER_EPOCH) {
     const random = hash.readUInt32BE(0) / 0xffffffff; // Convert hash to a value between 0 and 1
     let cumulativeNormalizedCompositeWeight = 0;
     for (const observer of weightedObservers) {

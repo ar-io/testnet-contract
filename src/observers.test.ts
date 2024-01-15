@@ -68,7 +68,7 @@ describe('getPrescribedObserversForEpoch', () => {
     jest.resetAllMocks();
   });
 
-  it('should return the correct all observers with proper weights if less than the number required', async () => {
+  it('should return the all eligible observers with proper weights if less than the number required', async () => {
     const epochStartHeight = 10;
     const totalStake = 100;
     const minNetworkJoinStakeAmount = 10;
@@ -107,7 +107,7 @@ describe('getPrescribedObserversForEpoch', () => {
     ]);
   });
 
-  it('should return the correct all observers with proper weights if more than the number required', async () => {
+  it('should return the correct number observers with proper weights if more than the number required', async () => {
     const epochStartHeight = 10;
     const observers = await getPrescribedObserversForEpoch({
       eligibleGateways: {
@@ -318,7 +318,7 @@ describe('getEpochBoundariesForHeight', () => {
 });
 
 describe('getEntropyForEpoch', () => {
-  beforeEach(() => {
+  beforeAll(() => {
     // stub arweave crypto hash function
     SmartWeave.arweave.crypto.hash = (
       buffer: Buffer,
