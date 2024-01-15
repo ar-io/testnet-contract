@@ -146,8 +146,9 @@ export async function getPrescribedObserversForEpoch({
 
   // Get all eligible observers and assign weights
   for (const [address, eligibleGateway] of Object.entries(eligibleGateways)) {
-    const stake = eligibleGateway.operatorStake; // e.g. 100 - no cap to this
-    const stakeWeight = stake / minNetworkJoinStakeAmount; // this is always greater than 1 as the minNetworkJoinStakeAmount is always less than the stake
+    const stake =
+      eligibleGateway.operatorStake + eligibleGateway.delegatedStake; // e.g. 100 - no cap to this
+    const stakeWeight = stake / minNetworkJoinStakeAmount; // this is always greater than or equal to 1 as the minNetworkJoinStakeAmount is always less than the stake
 
     // the percentage of the epoch the gateway was joined for before this epoch
     const totalBlocksForGateway =
