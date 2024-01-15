@@ -11,6 +11,7 @@ const { increaseVaultSchema } = require('./increaseVault');
 const { saveObservationsSchema } = require('./saveObservations');
 const { updateGatewaySchema } = require('./updateGateway');
 const { delegateStakeSchema } = require('./delegateStake');
+const { decreaseDelegateStakeSchema } = require('./decreaseDelegateStake');
 
 module.exports = {
   auctionBidSchema,
@@ -26,4 +27,5 @@ module.exports = {
   saveObservationsSchema,
   updateGatewaySchema,
   delegateStakeSchema,
+  decreaseDelegateStakeSchema,
 };

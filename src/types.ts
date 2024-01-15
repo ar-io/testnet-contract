@@ -266,7 +266,9 @@ export type RegistryFunctions =
   | 'increaseOperatorStake'
   | 'rankedGatewayRegistry'
   | 'initiateOperatorStakeDecrease'
-  | 'updateGatewaySettings';
+  | 'updateGatewaySettings'
+  | 'delegateStake'
+  | 'decreaseDelegateStake';
 
 export type ObservationFunctions =
   | 'saveObservations'
