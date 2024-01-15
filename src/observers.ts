@@ -240,5 +240,7 @@ export async function getPrescribedObserversForEpoch({
       hash = await SmartWeave.arweave.crypto.hash(hash, 'SHA-256');
     }
   }
-  return [...prescribedObservers];
+  return [...prescribedObservers].sort(
+    (a, b) => a.normalizedCompositeWeight - b.normalizedCompositeWeight,
+  );
 }

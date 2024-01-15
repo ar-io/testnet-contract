@@ -14,7 +14,7 @@ import {
   isGatewayEligibleForDistribution,
 } from './observers';
 import { baselineGatewayData } from './tests/stubs';
-import { BlockHeight, Gateway } from './types';
+import { BlockHeight, DeepReadonly, Gateway, Gateways } from './types';
 
 const gateways = {
   'test-observer-wallet-1': {
@@ -109,78 +109,76 @@ describe('getPrescribedObserversForEpoch', () => {
 
   it('should return the correct number observers with proper weights if more than the number required', async () => {
     const epochStartHeight = 10;
-    const observers = await getPrescribedObserversForEpoch({
-      eligibleGateways: {
-        ...gateways,
-        'test-observer-wallet-4': {
-          ...baselineGatewayData,
-          operatorStake: 400,
-          start: 5,
-          observerWallet: 'test-observer-wallet-4',
-        },
-        'test-observer-wallet-5': {
-          ...baselineGatewayData,
-          operatorStake: 500,
-          start: epochStartHeight - 1,
-          observerWallet: 'test-observer-wallet-5',
-        },
+    const eligibleGateways: DeepReadonly<Gateways> = {
+      ...gateways,
+      'test-observer-wallet-4': {
+        ...baselineGatewayData,
+        operatorStake: 400,
+        start: 4,
+        observerWallet: 'test-observer-wallet-4',
       },
+      'test-observer-wallet-5': {
+        ...baselineGatewayData,
+        operatorStake: 500,
+        start: 5,
+        observerWallet: 'test-observer-wallet-5',
+      },
+      'test-observer-wallet-6': {
+        ...baselineGatewayData,
+        operatorStake: 600,
+        start: 6,
+        observerWallet: 'test-observer-wallet-6',
+      },
+    };
+    const minNetworkJoinStakeAmount = 10;
+    const observers = await getPrescribedObserversForEpoch({
+      eligibleGateways,
       distributions,
       minNetworkJoinStakeAmount: 10,
       epochStartHeight: new BlockHeight(epochStartHeight),
     });
     expect(observers).toBeDefined();
     expect(observers.length).toBe(MAXIMUM_OBSERVERS_PER_EPOCH);
-    expect(observers).toEqual([
-      {
-        compositeWeight: 0.0023148148148148147,
-        gatewayAddress: 'test-observer-wallet-3',
-        gatewayRewardRatioWeight: 1,
-        normalizedCompositeWeight: 0.35294117647058826,
-        observerAddress: 'test-observer-wallet-3',
-        observerRewardRatioWeight: 1,
-        stake: 300,
-        stakeWeight: 30,
-        start: 0,
-        tenureWeight: epochStartHeight / TENURE_WEIGHT_TOTAL_BLOCK_COUNT,
-      },
-      {
-        gatewayAddress: 'test-observer-wallet-1',
-        observerAddress: 'test-observer-wallet-1',
-        stake: 100,
-        start: 0,
-        stakeWeight: 10,
-        tenureWeight: epochStartHeight / TENURE_WEIGHT_TOTAL_BLOCK_COUNT, // epochEnd - gateway start
-        gatewayRewardRatioWeight: 1,
-        observerRewardRatioWeight: 1,
-        compositeWeight: 0.0007716049382716049,
-        normalizedCompositeWeight: 0.11764705882352941,
-      },
-      {
-        gatewayAddress: 'test-observer-wallet-2',
-        observerAddress: 'test-observer-wallet-2',
-        stake: 200,
-        start: 0,
-        stakeWeight: 20,
-        tenureWeight: epochStartHeight / TENURE_WEIGHT_TOTAL_BLOCK_COUNT, // epochEnd - gateway start
-        gatewayRewardRatioWeight: 1,
-        observerRewardRatioWeight: 1,
-        compositeWeight: 0.0015432098765432098,
-        normalizedCompositeWeight: 0.23529411764705882,
-      },
-      {
-        gatewayAddress: 'test-observer-wallet-4',
-        observerAddress: 'test-observer-wallet-4',
-        stake: 400,
-        start: 5,
-        stakeWeight: 40,
-        tenureWeight: (epochStartHeight - 5) / TENURE_WEIGHT_TOTAL_BLOCK_COUNT, // epochEnd - gateway start
-        gatewayRewardRatioWeight: 1,
-        observerRewardRatioWeight: 1,
-        compositeWeight: 0.0015432098765432098,
-        normalizedCompositeWeight: 0.23529411764705882,
-      },
-    ]);
+    const expectedObserverWeights = [];
+    for (const gateway of Object.keys(eligibleGateways)) {
+      const expectedGatewayRewardRatioWeight = 1;
+      const expectedObserverRewardRatioWeight = 1;
+      const expectedStakeWeight =
+        eligibleGateways[gateway].operatorStake / minNetworkJoinStakeAmount;
+      const expectedTenureWeight =
+        (epochStartHeight - eligibleGateways[gateway].start) /
+        TENURE_WEIGHT_TOTAL_BLOCK_COUNT;
+      const expectedCompositeWeight =
+        expectedTenureWeight * expectedStakeWeight;
+      expectedObserverWeights.push({
+        gatewayAddress: gateway,
+        observerAddress: eligibleGateways[gateway].observerWallet,
+        stake: eligibleGateways[gateway].operatorStake,
+        start: eligibleGateways[gateway].start,
+        stakeWeight: expectedStakeWeight,
+        tenureWeight: expectedTenureWeight,
+        gatewayRewardRatioWeight: expectedGatewayRewardRatioWeight,
+        observerRewardRatioWeight: expectedObserverRewardRatioWeight,
+        compositeWeight: expectedCompositeWeight,
+        normalizedCompositeWeight: 0, // set this after gateways have been selected
+      });
+    }
+    const totalCompositeWeight = expectedObserverWeights.reduce(
+      (acc, current) => (acc += current.compositeWeight),
+      0,
+    );
+    for (const observer of expectedObserverWeights) {
+      observer.normalizedCompositeWeight =
+        observer.compositeWeight / totalCompositeWeight;
+    }
+    // now we select the observers from the expected weights
+    const expectedObservers = [
+      expectedObserverWeights[0], // 'test-observer-wallet-1',
+      expectedObserverWeights[2], // 'test-observer-wallet-3',
+      expectedObserverWeights[3], // 'test-observer-wallet-4',
+      expectedObserverWeights[5], // 'test-observer-wallet-5',
+    ].sort((a, b) => a.normalizedCompositeWeight - b.normalizedCompositeWeight);
+    expect(observers).toEqual(expectedObservers);
   });
 });
 
