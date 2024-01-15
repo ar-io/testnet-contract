@@ -1,4 +1,5 @@
 import {
+  DELEGATED_STAKE_UNLOCK_LENGTH,
   INVALID_GATEWAY_REGISTERED_MESSAGE,
   INVALID_OBSERVER_WALLET,
 } from '../../constants';
@@ -87,6 +88,29 @@ export const updateGatewaySettings = async (
       ...updatedSettings,
     },
   };
+
+  // remove all delegated stakes if it is disabled
+  if (
+    updatedSettings.allowDelegatedStaking === false &&
+    Object.keys(gateway.delegates).length
+  ) {
+    // Add tokens from each delegate to a vault that unlocks after the delegate withdrawal period ends
+    const delegateEndHeight =
+      +SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH;
+    for (const address in updatedGateway.delegates) {
+      updatedGateway.delegates[address].vaults[SmartWeave.transaction.id] = {
+        balance: updatedGateway.delegates[address].delegatedStake,
+        start: +SmartWeave.block.height,
+        end: delegateEndHeight,
+      };
+      updatedGateway.delegates[address].end = delegateEndHeight;
+
+      // reduce gateway stake and set this delegate stake to 0
+      updatedGateway.delegatedStake -=
+        updatedGateway.delegates[address].delegatedStake;
+      updatedGateway.delegates[address].delegatedStake = 0;
+    }
+  }
 
   // update the contract state
   state.gateways[caller] = updatedGateway;
