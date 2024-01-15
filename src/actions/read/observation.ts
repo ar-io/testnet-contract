@@ -88,7 +88,6 @@ export const prescribedObservers = async (
       epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
     });
 
-  // TODO: add a read interaction to get the current height epoch boundaries
   const eligibleGateways = getEligibleGatewaysForEpoch({
     epochStartHeight,
     epochEndHeight,
