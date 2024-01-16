@@ -231,7 +231,6 @@ describe('updateGatewaySettings', () => {
           [stubbedArweaveTxId]: {
             delegatedStake: 0,
             start: 0,
-            end: SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH,
             vaults: {
               ['delegate-vault-1']: {
                 balance: 1000,
@@ -248,7 +247,6 @@ describe('updateGatewaySettings', () => {
           ['another one']: {
             delegatedStake: 0,
             start: 0,
-            end: SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH,
             vaults: {
               ['delegate-vault-1']: {
                 balance: 1000,

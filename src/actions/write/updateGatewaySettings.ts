@@ -103,7 +103,6 @@ export const updateGatewaySettings = async (
         start: +SmartWeave.block.height,
         end: delegateEndHeight,
       };
-      updatedGateway.delegates[address].end = delegateEndHeight;
 
       // reduce gateway stake and set this delegate stake to 0
       updatedGateway.delegatedStake -=

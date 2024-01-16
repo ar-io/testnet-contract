@@ -118,7 +118,6 @@ export const baselineGatewayData: Gateway = {
 export const baselineDelegateData: DelegateData = {
   delegatedStake: 100,
   start: 0,
-  end: 0,
   vaults: {},
 };
 

@@ -62,7 +62,6 @@ export const leaveNetwork = async (
       start: +SmartWeave.block.height,
       end: delegateEndHeight,
     };
-    gateways[caller].delegates[address].end = delegateEndHeight;
 
     // reduce gateway stake and set this delegate stake to 0
     gateways[caller].delegatedStake -=

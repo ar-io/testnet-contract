@@ -84,7 +84,6 @@ describe('safeDelegateStake function', () => {
               ['foo']: {
                 delegatedStake: 0,
                 start: 0,
-                end: 0,
                 vaults: {
                   ['vault']: {
                     balance: MIN_DELEGATED_STAKE,
@@ -181,7 +180,6 @@ describe('safeDelegateStake function', () => {
     const expectedNewDelegateData: DelegateData = {
       delegatedStake: qty.valueOf(),
       start: 0,
-      end: 0,
       vaults: {},
     };
     safeDelegateStake({
@@ -212,7 +210,6 @@ describe('safeDelegateStake function', () => {
           [fromAddress]: {
             delegatedStake: 0,
             start: 0,
-            end: 0,
             vaults: {},
           },
         },
@@ -228,7 +225,6 @@ describe('safeDelegateStake function', () => {
     const expectedNewDelegateData: DelegateData = {
       delegatedStake: qty.valueOf(),
       start: 0,
-      end: 0,
       vaults: {},
     };
     safeDelegateStake({
@@ -263,7 +259,6 @@ describe('safeDelegateStake function', () => {
           [fromAddress]: {
             delegatedStake: MIN_DELEGATED_STAKE,
             start: 0,
-            end: 0,
             vaults: {},
           },
         },
@@ -275,7 +270,6 @@ describe('safeDelegateStake function', () => {
     const expectedNewDelegateData: DelegateData = {
       delegatedStake: MIN_DELEGATED_STAKE + qty.valueOf(),
       start: 0,
-      end: 0,
       vaults: {},
     };
     safeDelegateStake({
@@ -342,7 +336,6 @@ describe('safeDecreaseDelegateStake function', () => {
               ['bar']: {
                 delegatedStake: MIN_DELEGATED_STAKE * 2,
                 start: 0,
-                end: 0,
                 vaults: {},
               },
             },
@@ -369,7 +362,6 @@ describe('safeDecreaseDelegateStake function', () => {
               ['bar']: {
                 delegatedStake: MIN_DELEGATED_STAKE,
                 start: 0,
-                end: 0,
                 vaults: {},
               },
             },
@@ -399,7 +391,6 @@ describe('safeDecreaseDelegateStake function', () => {
           [fromAddress]: {
             delegatedStake: MIN_DELEGATED_STAKE * 2,
             start: 0,
-            end: 0,
             vaults: {},
           },
         },
@@ -412,7 +403,6 @@ describe('safeDecreaseDelegateStake function', () => {
     const expectedNewDelegateData: DelegateData = {
       delegatedStake: MIN_DELEGATED_STAKE,
       start: 0,
-      end: 0,
       vaults: {
         [id]: {
           balance: qty.valueOf(),
@@ -452,7 +442,6 @@ describe('safeDecreaseDelegateStake function', () => {
           [fromAddress]: {
             delegatedStake: MIN_DELEGATED_STAKE * 2,
             start: 0,
-            end: 0,
             vaults: {},
           },
         },
@@ -465,7 +454,6 @@ describe('safeDecreaseDelegateStake function', () => {
     const expectedNewDelegateData: DelegateData = {
       delegatedStake: 0,
       start: 0,
-      end: 0,
       vaults: {
         [id]: {
           balance: qty.valueOf(),

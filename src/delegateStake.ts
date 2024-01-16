@@ -66,7 +66,6 @@ export function safeDelegateStake({
     gateways[gatewayAddress].delegates[fromAddress] = {
       delegatedStake: qty.valueOf(),
       start: startHeight.valueOf(),
-      end: 0,
       vaults: {},
     };
   } else if (

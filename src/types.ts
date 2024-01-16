@@ -171,7 +171,6 @@ export type Gateway = {
 export type DelegateData = {
   delegatedStake: number;
   start: number; // At what block this delegate began their stake
-  end: number; // At what block the delegate is completely unstaked from this gateway
   vaults: Vaults; // the locked tokens staked by this gateway operator
 };
 
