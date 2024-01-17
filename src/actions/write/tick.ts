@@ -39,6 +39,7 @@ import {
   VaultData,
   Vaults,
   WalletAddress,
+  WeightedObserver,
 } from '../../types';
 import {
   incrementBalance,
@@ -592,12 +593,15 @@ export async function tickRewardDistribution({
     let totalGatewayReward = perGatewayReward;
     // if you were prescribed observer but didn't submit a report, you get gateway reward penalized
     if (
-      Object.keys(prescribedObservers).includes(gatewayAddress) &&
-      !Object.keys(observerGatewaysToReward).includes(gatewayAddress)
+      prescribedObservers.some(
+        (prescribed: WeightedObserver) =>
+          prescribed.gatewayAddress === gatewayAddress,
+      ) &&
+      !observerGatewaysToReward.includes(gatewayAddress)
     ) {
       // you don't get the full gateway reward if you didn't submit a report
       totalGatewayReward = Math.floor(
-        totalGatewayReward * BAD_OBSERVER_GATEWAY_PENALTY,
+        totalGatewayReward * (1 - BAD_OBSERVER_GATEWAY_PENALTY),
       );
     }
 
