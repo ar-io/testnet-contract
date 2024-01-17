@@ -211,7 +211,7 @@ export async function getPrescribedObserversForEpoch({
   }
 
   // return all the observers if there are fewer than the number of observers per epoch
-  if (MAXIMUM_OBSERVERS_PER_EPOCH >= Object.keys(weightedObservers).length) {
+  if (MAXIMUM_OBSERVERS_PER_EPOCH >= weightedObservers.length) {
     return weightedObservers;
   }
 
