@@ -8,6 +8,7 @@ import {
   tickVaults,
 } from '../../actions/write/tick';
 import {
+  BAD_OBSERVER_GATEWAY_PENALTY,
   DEFAULT_EPOCH_BLOCK_LENGTH,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
@@ -18,6 +19,8 @@ import {
   getPrescribedObserversForEpoch,
 } from '../../observers';
 import {
+  baselineDelegateData,
+  baselineDelegatedGatewayData,
   baselineGatewayData,
   getBaselineState,
   stubbedArweaveTxId, // stubbedArweaveTxId,
@@ -1136,6 +1139,313 @@ describe('tickRewardDistribution', () => {
           submittedEpochCount: 1,
         },
         'an-observing-gateway-3': {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 0,
+        },
+      },
+    });
+  });
+});
+
+describe('tickRewardDistributionWithDelegates', () => {
+  beforeEach(() => {
+    (getPrescribedObserversForEpoch as jest.Mock).mockResolvedValue([
+      {
+        gatewayAddress: 'a-gateway',
+        observerAddress: 'an-observing-gateway',
+        stake: 200,
+        start: 0,
+        stakeWeight: 20,
+        tenureWeight: 1,
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        compositeWeight: 1,
+        normalizedCompositeWeight: 1,
+      },
+      {
+        gatewayAddress: 'a-gateway-2',
+        observerAddress: 'an-observing-gateway-2',
+        stake: 300,
+        start: 0,
+        stakeWeight: 30,
+        tenureWeight: 1,
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        compositeWeight: 1,
+        normalizedCompositeWeight: 1,
+      },
+      {
+        gatewayAddress: 'a-gateway-3',
+        observerAddress: 'an-observing-gateway-3',
+        stake: 100,
+        start: 0,
+        stakeWeight: 10,
+        tenureWeight: 1,
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        compositeWeight: 1,
+        normalizedCompositeWeight: 1,
+      },
+      {
+        gatewayAddress: 'a-gateway-4',
+        observerAddress: 'an-observing-gateway-4',
+        stake: 100,
+        start: 0,
+        stakeWeight: 10,
+        tenureWeight: 1,
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        compositeWeight: 1,
+        normalizedCompositeWeight: 1,
+      },
+      {
+        gatewayAddress: 'a-gateway-5',
+        observerAddress: 'an-observing-gateway-5',
+        stake: 200,
+        start: 0,
+        stakeWeight: 20,
+        tenureWeight: 1,
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        compositeWeight: 1,
+        normalizedCompositeWeight: 1,
+      },
+    ]);
+    (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({
+      'a-gateway': {
+        ...baselineGatewayData,
+        delegatedStake: 100,
+        settings: {
+          ...baselineGatewayData.settings,
+          allowDelegatedStaking: true,
+          delegateRewardRatio: 50,
+        },
+        delegates: {
+          ['delegate-1']: {
+            ...baselineDelegateData,
+          },
+        },
+        observerWallet: 'an-observing-gateway',
+      },
+      'a-gateway-2': {
+        ...baselineGatewayData,
+        delegatedStake: 200,
+        settings: {
+          ...baselineGatewayData.settings,
+          allowDelegatedStaking: true,
+          delegateRewardRatio: 50,
+        },
+        delegates: {
+          ['delegate-2']: {
+            ...baselineDelegateData,
+          },
+          ['delegate-3']: {
+            ...baselineDelegateData,
+          },
+        },
+        observerWallet: 'an-observing-gateway-2',
+      },
+      'a-gateway-3': {
+        ...baselineDelegatedGatewayData,
+        observerWallet: 'an-observing-gateway-3',
+      },
+      'a-gateway-4': {
+        ...baselineGatewayData,
+        observerWallet: 'an-observing-gateway-4',
+      },
+      'a-gateway-5': {
+        ...baselineDelegatedGatewayData,
+        observerWallet: 'an-observing-gateway-5',
+      },
+    });
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it('should distribute rewards to observers and gateways, along with their delegates', async () => {
+    const initialState: IOState = {
+      ...getBaselineState(),
+      balances: {
+        [SmartWeave.contract.id]: 10_000_000,
+      },
+      gateways: {
+        'a-gateway': {
+          ...baselineGatewayData,
+          delegatedStake: 100,
+          settings: {
+            ...baselineGatewayData.settings,
+            allowDelegatedStaking: true,
+            delegateRewardRatio: 50,
+          },
+          delegates: {
+            ['delegate-1']: {
+              ...baselineDelegateData,
+            },
+          },
+          observerWallet: 'an-observing-gateway',
+        },
+        'a-gateway-2': {
+          ...baselineGatewayData,
+          delegatedStake: 200,
+          settings: {
+            ...baselineGatewayData.settings,
+            allowDelegatedStaking: true,
+            delegateRewardRatio: 50,
+          },
+          delegates: {
+            ['delegate-2']: {
+              ...baselineDelegateData,
+            },
+            ['delegate-3']: {
+              ...baselineDelegateData,
+            },
+          },
+          observerWallet: 'an-observing-gateway-2',
+        },
+        'a-gateway-3': {
+          ...baselineDelegatedGatewayData,
+          settings: {
+            ...baselineGatewayData.settings,
+            allowDelegatedStaking: true,
+            delegateRewardRatio: 50,
+          },
+          observerWallet: 'an-observing-gateway-3',
+        },
+        'a-gateway-4': {
+          ...baselineGatewayData,
+          observerWallet: 'an-observing-gateway-4',
+        },
+        'a-gateway-5': {
+          ...baselineDelegatedGatewayData,
+          settings: {
+            ...baselineGatewayData.settings,
+            allowDelegatedStaking: true,
+            delegateRewardRatio: 50,
+          },
+          delegates: {
+            ['delegate-4']: {
+              ...baselineDelegateData,
+            },
+          },
+          observerWallet: 'an-observing-gateway-5',
+        },
+      },
+      observations: {
+        0: {
+          failureSummaries: {
+            // nobody failed a-gateway-1
+            'a-gateway-2': ['an-observing-gateway'],
+            'a-gateway-3': [
+              'an-observing-gateway',
+              'an-observing-gateway-2',
+              'an-observing-gateway-4',
+            ],
+            'a-gateway-4': ['an-observing-gateway-2'],
+            'a-gateway-5': ['an-observing-gateway'],
+          },
+          // all will get observer reward
+          reports: {
+            'an-observing-gateway': stubbedArweaveTxId,
+            'an-observing-gateway-2': stubbedArweaveTxId,
+            // observer 3 did not submit a report
+            'an-observing-gateway-4': stubbedArweaveTxId,
+            // observer 5 did not submit a report
+          },
+        },
+      },
+    };
+    const epochDistributionHeight =
+      initialState.distributions.epochDistributionHeight;
+    const { balances, distributions } = await tickRewardDistribution({
+      currentBlockHeight: new BlockHeight(epochDistributionHeight),
+      gateways: initialState.gateways,
+      balances: initialState.balances,
+      distributions: initialState.distributions,
+      observations: initialState.observations,
+      settings: initialState.settings,
+    });
+    const totalRewardsEligible = 10_000_000 * 0.0025;
+    const totalObserverReward = Math.floor(totalRewardsEligible * 0.05); // 5% of the total distributions
+    const perObserverReward = Math.floor(totalObserverReward / 5); // 4 observers
+    const totalGatewayReward = totalRewardsEligible - totalObserverReward; // 95% of total distribution
+    const perGatewayReward = Math.floor(totalGatewayReward / 5); // 4 gateways
+    const penalizedGatewayReward = Math.floor(
+      perGatewayReward * (1 - BAD_OBSERVER_GATEWAY_PENALTY),
+    );
+    const delegate1Reward = 2500;
+    const delegate2Reward = 1251;
+    const delegate3Reward = 1249;
+    const delegate4Reward = 1781;
+    const totalRewardsDistributed =
+      perObserverReward * 3 + perGatewayReward * 3 + penalizedGatewayReward; // 3 rewards for 3 observers, 3 gateway rewards, 1 penalized gateway reward
+    expect(balances).toEqual({
+      ...initialState.balances,
+      'a-gateway': Math.floor((perObserverReward + perGatewayReward) * 0.5), // gives 5% of reward to delegate 1
+      'a-gateway-2': Math.floor((perObserverReward + perGatewayReward) * 0.5), // splits reward with delegate 2 and 3
+      'a-gateway-4': perObserverReward + perGatewayReward, // gets full reward (no delegates)
+      'a-gateway-5': Math.floor(penalizedGatewayReward * 0.5), // split reward with delegate 4
+      'delegate-1': delegate1Reward,
+      'delegate-2': delegate2Reward,
+      'delegate-3': delegate3Reward,
+      'delegate-4': delegate4Reward,
+      // observer three does not get anything!
+      [SmartWeave.contract.id]: 10_000_000 - totalRewardsDistributed,
+    });
+    const expectedNewEpochStartHeight = DEFAULT_EPOCH_BLOCK_LENGTH;
+    const expectedNewEpochEndHeight =
+      expectedNewEpochStartHeight + DEFAULT_EPOCH_BLOCK_LENGTH - 1;
+    expect(distributions).toEqual({
+      ...initialState.distributions,
+      epochStartHeight: expectedNewEpochStartHeight,
+      epochEndHeight: expectedNewEpochEndHeight,
+      epochDistributionHeight: expectedNewEpochEndHeight + TALLY_PERIOD_BLOCKS,
+      gateways: {
+        'a-gateway': {
+          passedEpochCount: 1,
+          totalEpochParticipationCount: 1,
+          failedConsecutiveEpochs: 0,
+        },
+        'a-gateway-2': {
+          passedEpochCount: 1,
+          totalEpochParticipationCount: 1,
+          failedConsecutiveEpochs: 0,
+        },
+        'a-gateway-3': {
+          passedEpochCount: 0,
+          totalEpochParticipationCount: 1,
+          failedConsecutiveEpochs: 1,
+        },
+        'a-gateway-4': {
+          passedEpochCount: 1,
+          totalEpochParticipationCount: 1,
+          failedConsecutiveEpochs: 0,
+        },
+        'a-gateway-5': {
+          passedEpochCount: 1,
+          totalEpochParticipationCount: 1,
+          failedConsecutiveEpochs: 0,
+        },
+      },
+      observers: {
+        'an-observing-gateway': {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 1,
+        },
+        'an-observing-gateway-2': {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 1,
+        },
+        'an-observing-gateway-3': {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 0,
+        },
+        'an-observing-gateway-4': {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 1,
+        },
+        'an-observing-gateway-5': {
           totalEpochsPrescribedCount: 1,
           submittedEpochCount: 0,
         },

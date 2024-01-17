@@ -121,6 +121,32 @@ export const baselineDelegateData: DelegateData = {
   vaults: {},
 };
 
+export const baselineDelegatedGatewayData: Gateway = {
+  observerWallet: 'test-observer-wallet',
+  start: 0,
+  end: 0,
+  vaults: {},
+  delegates: {
+    ['delegate-1']: {
+      ...baselineDelegateData,
+    },
+    ['delegate-2']: {
+      ...baselineDelegateData,
+    },
+  },
+  operatorStake: 100,
+  delegatedStake: 200,
+  settings: {
+    label: 'test-gateway',
+    fqdn: 'test.com',
+    port: 443,
+    protocol: 'https',
+    allowDelegatedStaking: true,
+    delegateRewardRatio: 5,
+  },
+  status: 'joined',
+};
+
 export const baselineGatewaysData: Gateways = {
   [stubbedArweaveTxId]: {
     ...baselineGatewayData,
