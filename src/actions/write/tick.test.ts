@@ -8,6 +8,7 @@ import {
   tickVaults,
 } from '../../actions/write/tick';
 import {
+  BAD_OBSERVER_GATEWAY_PENALTY,
   DEFAULT_EPOCH_BLOCK_LENGTH,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
@@ -1053,16 +1054,16 @@ describe('tickRewardDistribution', () => {
       observations: {
         0: {
           failureSummaries: {
-            // one failure, but not more than half so still gets the reward
+            // one failure, but not more than half so still gets the reward, is penalized for not submitting a report
             'a-gateway-2': ['an-observing-gateway'],
-            // observer 3 is failing more according to more than half the gateways
+            // observer 3 is failing more according to more than half the gateways, no gateway reward
             'a-gateway-3': ['an-observing-gateway', 'an-observing-gateway-2'],
           },
-          // all will get observer reward
           reports: {
+            // bot gateway-1 and gateway-3 get a full observer reward
             'an-observing-gateway': stubbedArweaveTxId,
-            'an-observing-gateway-2': stubbedArweaveTxId,
-            // observer 3 did not submit a report
+            'an-observing-gateway-3': stubbedArweaveTxId,
+            // observer 2 did not submit a report
           },
         },
       },
@@ -1079,16 +1080,22 @@ describe('tickRewardDistribution', () => {
     });
     const totalRewardsEligible = 10_000_000 * 0.0025;
     const totalObserverReward = totalRewardsEligible * 0.05; // 5% of the total distributions
-    const perObserverReward = Math.floor(totalObserverReward / 3); // 3 observers
     const totalGatewayReward = totalRewardsEligible - totalObserverReward; // 95% of total distribution
+    const perObserverReward = Math.floor(totalObserverReward / 3); // 3 observers
     const perGatewayReward = Math.floor(totalGatewayReward / 3); // 3 gateways
+    const goodObserverAndGatewayReward = perObserverReward + perGatewayReward;
+    const goodObserverBadGatewayReward = perObserverReward;
+    const badObserverGoodGatewayReward =
+      perGatewayReward * (1 - BAD_OBSERVER_GATEWAY_PENALTY);
     const totalRewardsDistributed =
-      perObserverReward * 2 + perGatewayReward * 2; // only two get both
+      goodObserverAndGatewayReward +
+      goodObserverBadGatewayReward +
+      badObserverGoodGatewayReward;
     expect(balances).toEqual({
       ...initialState.balances,
-      'a-gateway': perObserverReward + perGatewayReward,
-      'a-gateway-2': perObserverReward + perGatewayReward,
-      // observer three does not get anything!
+      'a-gateway': goodObserverAndGatewayReward, // gets observer and gateway reward
+      'a-gateway-2': badObserverGoodGatewayReward, // gets gateway reward, but penalized for not submitting a report
+      'a-gateway-3': goodObserverBadGatewayReward, // gets observer reward, but no gateway reward
       [SmartWeave.contract.id]: 10_000_000 - totalRewardsDistributed,
     });
     const expectedNewEpochStartHeight = DEFAULT_EPOCH_BLOCK_LENGTH;
@@ -1123,11 +1130,11 @@ describe('tickRewardDistribution', () => {
         },
         'an-observing-gateway-2': {
           totalEpochsPrescribedCount: 1,
-          submittedEpochCount: 1,
+          submittedEpochCount: 0,
         },
         'an-observing-gateway-3': {
           totalEpochsPrescribedCount: 1,
-          submittedEpochCount: 0,
+          submittedEpochCount: 1,
         },
       },
     });
