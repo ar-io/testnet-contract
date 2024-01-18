@@ -194,7 +194,7 @@ export async function getPrescribedObserversForEpoch({
       gatewayRewardRatioWeight *
       observerRewardRatioWeight;
 
-    // remove any observers that have a 0 composite weight - they will cause an infinite loop when selecting observers, this may result in fewer observers than the maximum
+    // this should never happen - but necessary to avoid any potential infinite loops when prescribing gateways below
     if (compositeWeight === 0) continue;
 
     weightedObservers.push({
