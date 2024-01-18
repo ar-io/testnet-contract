@@ -174,22 +174,18 @@ export async function getPrescribedObserversForEpoch({
       distributions.gateways[address]?.passedEpochCount || 0;
     const totalEpochsParticipatedIn =
       distributions.gateways[address]?.totalEpochParticipationCount || 0;
-    // TODO: should we default to 1 here even if they have never passed an epoch to avoid a 0 composite score?
     // default to 1 for gateways that have not participated in a full epoch
-    const gatewayRewardRatioWeight = totalEpochsParticipatedIn
-      ? totalEpochsGatewayPassed / totalEpochsParticipatedIn
-      : 1; // NOTE: this could be reduced
+    const gatewayRewardRatioWeight =
+      (1 + totalEpochsGatewayPassed) / (1 + totalEpochsParticipatedIn);
 
     // the percentage of epochs the observer was prescribed and submitted reports for
     const totalEpochsPrescribed =
       distributions.observers[address]?.totalEpochsPrescribedCount || 0;
     const totalEpochsSubmitted =
       distributions.observers[address]?.submittedEpochCount || 0;
-    // TODO: should we default to 1 here even if they have never submitted a report to avoid a 0 composite score?
     // defaults to one again if either are 0, encouraging new gateways to join and observe
-    const observerRewardRatioWeight = totalEpochsPrescribed
-      ? totalEpochsSubmitted / totalEpochsPrescribed
-      : 1;
+    const observerRewardRatioWeight =
+      (1 + totalEpochsSubmitted) / (1 + totalEpochsPrescribed);
 
     // calculate composite weight based on sub weights
     const compositeWeight =

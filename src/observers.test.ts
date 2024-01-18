@@ -183,7 +183,7 @@ describe('getPrescribedObserversForEpoch', () => {
     expect(observers).toEqual(expectedObservers);
   });
 
-  it('should filter out gateways that have not passed any epochs', async () => {
+  it('should still include gateways that have not passed any epochs, with adjusted composite weights', async () => {
     const epochStartHeight = 10;
     const appendedGateways: DeepReadonly<Gateways> = {
       ...gateways,
@@ -275,11 +275,15 @@ describe('getPrescribedObserversForEpoch', () => {
       epochEndHeight: new BlockHeight(epochStartHeight + 10),
     });
 
-    expect(observers.length).toEqual(2);
-    expect(observers.map((o) => o.gatewayAddress)).toEqual([
-      'test-observer-wallet-1',
-      'test-observer-wallet-2',
-    ]);
+    expect(observers.length).toEqual(MAXIMUM_OBSERVERS_PER_EPOCH);
+    expect(observers.map((o) => o.gatewayAddress)).toEqual(
+      expect.arrayContaining([
+        'test-observer-wallet-1',
+        'test-observer-wallet-2',
+        'test-observer-wallet-3',
+        'test-observer-wallet-4',
+      ]),
+    );
   });
 });
 
