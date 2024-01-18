@@ -68,7 +68,7 @@ describe('getPrescribedObserversForEpoch', () => {
     jest.resetAllMocks();
   });
 
-  it('should return the all eligible observers with proper weights if less than the number required', async () => {
+  it(`should return the all eligible observers with proper weights if the total number is less than ${MAXIMUM_OBSERVERS_PER_EPOCH}`, async () => {
     const epochStartHeight = 10;
     const totalStake = 100;
     const minNetworkJoinStakeAmount = 10;
@@ -108,7 +108,7 @@ describe('getPrescribedObserversForEpoch', () => {
     ]);
   });
 
-  it('should return the correct number observers with proper weights if there are more gateways with composite scores greater than 0', async () => {
+  it(`should return the correct number observers with proper weights if there are more than ${MAXIMUM_OBSERVERS_PER_EPOCH} gateways with composite scores greater than 0`, async () => {
     const epochStartHeight = 10;
     const eligibleGateways: DeepReadonly<Gateways> = {
       ...gateways,
@@ -133,7 +133,7 @@ describe('getPrescribedObserversForEpoch', () => {
     };
     const minNetworkJoinStakeAmount = 10;
     const observers = await getPrescribedObserversForEpoch({
-      gateways,
+      gateways: eligibleGateways,
       distributions,
       minNetworkJoinStakeAmount: 10,
       epochStartHeight: new BlockHeight(epochStartHeight),

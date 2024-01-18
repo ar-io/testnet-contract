@@ -174,6 +174,7 @@ export async function getPrescribedObserversForEpoch({
       distributions.gateways[address]?.passedEpochCount || 0;
     const totalEpochsParticipatedIn =
       distributions.gateways[address]?.totalEpochParticipationCount || 0;
+    // TODO: should we default to 1 here even if they have never passed an epoch to avoid a 0 composite score?
     // default to 1 for gateways that have not participated in a full epoch
     const gatewayRewardRatioWeight = totalEpochsParticipatedIn
       ? totalEpochsGatewayPassed / totalEpochsParticipatedIn
@@ -184,7 +185,8 @@ export async function getPrescribedObserversForEpoch({
       distributions.observers[address]?.totalEpochsPrescribedCount || 0;
     const totalEpochsSubmitted =
       distributions.observers[address]?.submittedEpochCount || 0;
-    // defaults to one again, encouraging new gateways to join
+    // TODO: should we default to 1 here even if they have never submitted a report to avoid a 0 composite score?
+    // defaults to one again if either are 0, encouraging new gateways to join and observe
     const observerRewardRatioWeight = totalEpochsPrescribed
       ? totalEpochsSubmitted / totalEpochsPrescribed
       : 1;
@@ -214,6 +216,8 @@ export async function getPrescribedObserversForEpoch({
     // total weight for all eligible gateways
     totalCompositeWeight += compositeWeight;
   }
+
+  // TODO: should we bail if totalCompositeWeight is 0?
 
   // calculate the normalized composite weight for each observer - do not default to one as these are dependent on the total weights of all observers
   for (const weightedObserver of weightedObservers) {
@@ -252,8 +256,9 @@ export async function getPrescribedObserversForEpoch({
       hash = await SmartWeave.arweave.crypto.hash(hash, 'SHA-256');
     }
   }
+
   const prescribedObservers: WeightedObserver[] = weightedObservers.filter(
-    (observer) => observer.gatewayAddress in prescribedObserversAddresses,
+    (observer) => prescribedObserversAddresses.has(observer.gatewayAddress),
   );
   return prescribedObservers.sort(
     (a, b) => a.normalizedCompositeWeight - b.normalizedCompositeWeight,
