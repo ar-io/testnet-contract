@@ -6,7 +6,6 @@ import {
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import {
-  getEligibleGatewaysForEpoch,
   getEpochBoundariesForHeight,
   getPrescribedObserversForEpoch,
 } from '../../observers';
@@ -94,17 +93,11 @@ export const saveObservations = async (
     throw new ContractError(INVALID_OBSERVATION_CALLER_MESSAGE);
   }
 
-  // filter out gateways eligible for epoch distribution
-  const eligibleGateways = getEligibleGatewaysForEpoch({
-    epochStartHeight,
-    epochEndHeight,
-    gateways,
-  });
-
   const prescribedObservers = await getPrescribedObserversForEpoch({
-    eligibleGateways,
+    gateways,
     minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
     epochStartHeight,
+    epochEndHeight,
     distributions,
   });
 

@@ -13,7 +13,7 @@ import {
   getPrescribedObserversForEpoch,
   isGatewayEligibleForDistribution,
 } from './observers';
-import { baselineGatewayData } from './tests/stubs';
+import { baselineGatewayData, getBaselineState } from './tests/stubs';
 import { BlockHeight, DeepReadonly, Gateway, Gateways } from './types';
 
 const gateways = {
@@ -73,7 +73,7 @@ describe('getPrescribedObserversForEpoch', () => {
     const totalStake = 100;
     const minNetworkJoinStakeAmount = 10;
     const observers = await getPrescribedObserversForEpoch({
-      eligibleGateways: {
+      gateways: {
         'test-observer-wallet-1': {
           ...baselineGatewayData,
           operatorStake: totalStake,
@@ -84,6 +84,7 @@ describe('getPrescribedObserversForEpoch', () => {
       distributions,
       minNetworkJoinStakeAmount: 10,
       epochStartHeight: new BlockHeight(epochStartHeight),
+      epochEndHeight: new BlockHeight(epochStartHeight + 10),
     });
 
     expect(observers).toBeDefined();
@@ -107,7 +108,7 @@ describe('getPrescribedObserversForEpoch', () => {
     ]);
   });
 
-  it('should return the correct number observers with proper weights if more than the number required', async () => {
+  it('should return the correct number observers with proper weights if there are more gateways with composite scores greater than 0', async () => {
     const epochStartHeight = 10;
     const eligibleGateways: DeepReadonly<Gateways> = {
       ...gateways,
@@ -132,10 +133,11 @@ describe('getPrescribedObserversForEpoch', () => {
     };
     const minNetworkJoinStakeAmount = 10;
     const observers = await getPrescribedObserversForEpoch({
-      eligibleGateways,
+      gateways,
       distributions,
       minNetworkJoinStakeAmount: 10,
       epochStartHeight: new BlockHeight(epochStartHeight),
+      epochEndHeight: new BlockHeight(epochStartHeight + 10),
     });
     expect(observers).toBeDefined();
     expect(observers.length).toBe(MAXIMUM_OBSERVERS_PER_EPOCH);
@@ -179,6 +181,105 @@ describe('getPrescribedObserversForEpoch', () => {
       expectedObserverWeights[5], // 'test-observer-wallet-5',
     ].sort((a, b) => a.normalizedCompositeWeight - b.normalizedCompositeWeight);
     expect(observers).toEqual(expectedObservers);
+  });
+
+  it('should filter out gateways that have not passed any epochs', async () => {
+    const epochStartHeight = 10;
+    const appendedGateways: DeepReadonly<Gateways> = {
+      ...gateways,
+      'test-observer-wallet-4': {
+        ...baselineGatewayData,
+        operatorStake: 400,
+        start: 4,
+        observerWallet: 'test-observer-wallet-4',
+      },
+      'test-observer-wallet-5': {
+        ...baselineGatewayData,
+        operatorStake: 500,
+        start: 5,
+        observerWallet: 'test-observer-wallet-5',
+      },
+      'test-observer-wallet-6': {
+        ...baselineGatewayData,
+        operatorStake: 600,
+        start: 6,
+        observerWallet: 'test-observer-wallet-6',
+      },
+    };
+    const distributions = {
+      ...getBaselineState().distributions,
+      gateways: {
+        'test-observer-wallet-1': {
+          failedConsecutiveEpochs: 0,
+          passedEpochCount: 1,
+          totalEpochParticipationCount: 1,
+        },
+        'test-observer-wallet-2': {
+          failedConsecutiveEpochs: 0,
+          passedEpochCount: 2,
+          totalEpochParticipationCount: 2,
+        },
+        'test-observer-wallet-3': {
+          failedConsecutiveEpochs: 0,
+          passedEpochCount: 0,
+          totalEpochParticipationCount: 3,
+        },
+        'test-observer-wallet-4': {
+          failedConsecutiveEpochs: 0,
+          passedEpochCount: 0,
+          totalEpochParticipationCount: 4,
+        },
+        'test-observer-wallet-5': {
+          failedConsecutiveEpochs: 0,
+          passedEpochCount: 0,
+          totalEpochParticipationCount: 5,
+        },
+        'test-observer-wallet-6': {
+          failedConsecutiveEpochs: 0,
+          passedEpochCount: 0,
+          totalEpochParticipationCount: 6,
+        },
+      },
+      observers: {
+        'test-observer-wallet-1': {
+          submittedEpochCount: 1,
+          totalEpochsPrescribedCount: 1,
+        },
+        'test-observer-wallet-2': {
+          submittedEpochCount: 1,
+          totalEpochsPrescribedCount: 1,
+        },
+        'test-observer-wallet-3': {
+          submittedEpochCount: 1,
+          totalEpochsPrescribedCount: 1,
+        },
+        'test-observer-wallet-4': {
+          submittedEpochCount: 1,
+          totalEpochsPrescribedCount: 1,
+        },
+        'test-observer-wallet-5': {
+          submittedEpochCount: 1,
+          totalEpochsPrescribedCount: 1,
+        },
+        'test-observer-wallet-6': {
+          submittedEpochCount: 1,
+          totalEpochsPrescribedCount: 1,
+        },
+      },
+    };
+    const observers = await getPrescribedObserversForEpoch({
+      gateways: appendedGateways,
+      distributions,
+      minNetworkJoinStakeAmount: 10,
+      epochStartHeight: new BlockHeight(epochStartHeight),
+      epochEndHeight: new BlockHeight(epochStartHeight + 10),
+    });
+
+    expect(observers.length).toEqual(2);
+    expect(observers.map((o) => o.gatewayAddress)).toEqual([
+      'test-observer-wallet-1',
+      'test-observer-wallet-2',
+    ]);
   });
 });
 

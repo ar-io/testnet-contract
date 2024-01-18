@@ -458,7 +458,6 @@ export async function tickRewardDistribution({
     totalReportsSubmitted * OBSERVATION_FAILURE_THRESHOLD,
   );
 
-  // filter out gateways eligible for epoch distribution
   const eligibleGateways = getEligibleGatewaysForEpoch({
     epochStartHeight,
     epochEndHeight,
@@ -467,8 +466,9 @@ export async function tickRewardDistribution({
 
   // get the observers for the epoch
   const prescribedObservers = await getPrescribedObserversForEpoch({
-    eligibleGateways,
+    gateways,
     epochStartHeight,
+    epochEndHeight,
     minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
     distributions,
   });

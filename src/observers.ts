@@ -12,6 +12,7 @@ import {
   Gateway,
   Gateways,
   RewardDistributions,
+  WalletAddress,
   WeightedObserver,
 } from './types';
 
@@ -131,18 +132,26 @@ export function getEligibleGatewaysForEpoch({
 }
 
 export async function getPrescribedObserversForEpoch({
-  eligibleGateways,
+  gateways,
   distributions,
   minNetworkJoinStakeAmount,
   epochStartHeight,
+  epochEndHeight,
 }: {
-  eligibleGateways: DeepReadonly<Gateways>;
+  gateways: DeepReadonly<Gateways>;
   distributions: DeepReadonly<RewardDistributions>;
   minNetworkJoinStakeAmount: number;
   epochStartHeight: BlockHeight;
+  epochEndHeight: BlockHeight;
 }): Promise<WeightedObserver[]> {
   const weightedObservers: WeightedObserver[] = [];
   let totalCompositeWeight = 0;
+
+  const eligibleGateways = getEligibleGatewaysForEpoch({
+    epochStartHeight,
+    epochEndHeight,
+    gateways,
+  });
 
   // Get all eligible observers and assign weights
   for (const [address, eligibleGateway] of Object.entries(eligibleGateways)) {
@@ -187,6 +196,9 @@ export async function getPrescribedObserversForEpoch({
       gatewayRewardRatioWeight *
       observerRewardRatioWeight;
 
+    // remove any observers that have a 0 composite weight - they will cause an infinite loop when selecting observers, this may result in fewer observers than the maximum
+    if (compositeWeight === 0) continue;
+
     weightedObservers.push({
       gatewayAddress: address,
       observerAddress: eligibleGateway.observerWallet,
@@ -221,26 +233,29 @@ export async function getPrescribedObserversForEpoch({
   });
 
   // note: this should always result to MAXIMUM_OBSERVERS_PER_EPOCH
-  const prescribedObservers: Set<WeightedObserver> = new Set();
+  const prescribedObserversAddresses: Set<WalletAddress> = new Set();
   let hash = blockHeightEntropyHash; // our starting hash
-  while (prescribedObservers.size < MAXIMUM_OBSERVERS_PER_EPOCH) {
+  while (prescribedObserversAddresses.size < MAXIMUM_OBSERVERS_PER_EPOCH) {
     const random = hash.readUInt32BE(0) / 0xffffffff; // Convert hash to a value between 0 and 1
     let cumulativeNormalizedCompositeWeight = 0;
     for (const observer of weightedObservers) {
       // skip observers that have already been prescribed
-      if (prescribedObservers.has(observer)) continue;
+      if (prescribedObserversAddresses.has(observer.gatewayAddress)) continue;
       // add the observers normalized composite weight to the cumulative weight
       cumulativeNormalizedCompositeWeight += observer.normalizedCompositeWeight;
       // if the random value is less than the cumulative weight, we have found our observer
       if (random <= cumulativeNormalizedCompositeWeight) {
-        prescribedObservers.add(observer);
+        prescribedObserversAddresses.add(observer.gatewayAddress);
         break;
       }
       // Compute the next hash for the next iteration
       hash = await SmartWeave.arweave.crypto.hash(hash, 'SHA-256');
     }
   }
-  return [...prescribedObservers].sort(
+  const prescribedObservers: WeightedObserver[] = weightedObservers.filter(
+    (observer) => observer.gatewayAddress in prescribedObserversAddresses,
+  );
+  return prescribedObservers.sort(
     (a, b) => a.normalizedCompositeWeight - b.normalizedCompositeWeight,
   );
 }
