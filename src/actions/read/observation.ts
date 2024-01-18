@@ -3,7 +3,6 @@ import {
   TALLY_PERIOD_BLOCKS,
 } from '../../constants';
 import {
-  getEligibleGatewaysForEpoch,
   getEpochBoundariesForHeight,
   getPrescribedObserversForEpoch,
 } from '../../observers';
@@ -40,16 +39,11 @@ export const prescribedObserver = async (
       epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
     });
 
-  const eligibleGateways = getEligibleGatewaysForEpoch({
+  const prescribedObservers = await getPrescribedObserversForEpoch({
+    gateways,
+    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
     epochStartHeight,
     epochEndHeight,
-    gateways,
-  });
-
-  const prescribedObservers = await getPrescribedObserversForEpoch({
-    eligibleGateways,
-    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
-    epochStartHeight: epochStartHeight,
     distributions,
   });
 
@@ -88,16 +82,11 @@ export const prescribedObservers = async (
       epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
     });
 
-  const eligibleGateways = getEligibleGatewaysForEpoch({
+  const prescribedObservers = await getPrescribedObserversForEpoch({
+    gateways,
+    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
     epochStartHeight,
     epochEndHeight,
-    gateways,
-  });
-
-  const prescribedObservers = await getPrescribedObserversForEpoch({
-    eligibleGateways,
-    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
-    epochStartHeight: epochStartHeight,
     distributions,
   });
 
