@@ -1,5 +1,5 @@
 import { SECONDS_IN_A_YEAR } from '../../constants';
-import { getBaselineState } from '../../tests/stubs';
+import { baselineSettings, getBaselineState } from '../../tests/stubs';
 import { IOState } from '../../types';
 import { InteractionsWithFee, getPriceForInteraction } from './price';
 
@@ -132,7 +132,7 @@ describe('getPriceForInteraction', () => {
       {
         ...state,
         settings: {
-          ...state.settings,
+          ...baselineSettings,
           auctions: {
             scalingExponent: 10,
             exponentialDecayRate: 0.01,

@@ -6,10 +6,7 @@ import path from 'path';
 import { BlockHeight, Gateways, IOState } from '../../src/types';
 import {
   ANT_CONTRACT_IDS,
-  AUCTION_SETTINGS,
-  CONTRACT_SETTINGS,
   DEFAULT_UNDERNAME_COUNT,
-  FEE_STRUCTURE,
   INITIAL_STATE,
   MAX_YEARS,
   NETWORK_JOIN_STATUS,
@@ -290,9 +287,6 @@ export async function setupInitialContractState(
 ): Promise<IOState> {
   const state: IOState = INITIAL_STATE as unknown as IOState;
 
-  // set the fees
-  state.fees = FEE_STRUCTURE;
-
   // create wallets and set balances
   state.balances = wallets.reduce((current: any, wallet) => {
     current[wallet] = WALLET_FUND_AMOUNT;
@@ -318,12 +312,6 @@ export async function setupInitialContractState(
 
   // set the owner to the first wallet
   state.owner = owner;
-
-  // configure the necessary contract settings
-  state.settings = {
-    registry: CONTRACT_SETTINGS,
-    auctions: AUCTION_SETTINGS,
-  };
 
   // configure some basic gateways
   state.gateways = createGateways(wallets);

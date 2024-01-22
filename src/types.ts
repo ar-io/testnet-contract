@@ -36,8 +36,6 @@ export type IOState = {
   evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
   records: Records; // The list of all ArNS names and their associated data
   gateways: Gateways; // each gateway uses its public arweave wallet address to identify it in the gateway registry
-  fees: Fees; // starting list of all fees for purchasing ArNS names
-  settings: ContractSettings; // protocol settings and parameters
   reserved: ReservedNames; // list of all reserved names that are not allowed to be purchased at this time
   auctions: Auctions;
   lastTickedHeight: number; // periodicity management

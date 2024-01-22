@@ -1,4 +1,4 @@
-import { NETWORK_LEAVING_STATUS } from '../../constants';
+import { NETWORK_LEAVING_STATUS, REGISTRY_SETTINGS } from '../../constants';
 import { ContractWriteResult, IOState, PstAction } from '../../types';
 
 // Begins the process to unlocks the vault of a gateway operator
@@ -6,10 +6,12 @@ export const decreaseOperatorStake = async (
   state: IOState,
   { caller, input }: PstAction,
 ): Promise<ContractWriteResult> => {
-  const { settings, gateways = {} } = state;
-  const { registry: registrySettings } = settings;
+  const { gateways = {} } = state;
   // TODO: object parse validation
-  const { qty } = input as any;
+  const { qty } = input;
+
+  const { minNetworkJoinStakeAmount, operatorStakeWithdrawLength } =
+    REGISTRY_SETTINGS;
 
   if (!(caller in gateways)) {
     throw new ContractError("This Gateway's wallet is not registered");
@@ -21,12 +23,9 @@ export const decreaseOperatorStake = async (
     );
   }
 
-  if (
-    gateways[caller].operatorStake - qty <
-    registrySettings.minNetworkJoinStakeAmount
-  ) {
+  if (gateways[caller].operatorStake - qty < minNetworkJoinStakeAmount) {
     throw new ContractError(
-      `${qty} is not enough operator stake to maintain the minimum of ${registrySettings.minNetworkJoinStakeAmount}`,
+      `${qty} is not enough operator stake to maintain the minimum of ${minNetworkJoinStakeAmount}`,
     );
   }
 
@@ -37,8 +36,7 @@ export const decreaseOperatorStake = async (
   gateways[caller].vaults[SmartWeave.transaction.id] = {
     balance: qty,
     start: +SmartWeave.block.height,
-    end:
-      +SmartWeave.block.height + registrySettings.operatorStakeWithdrawLength,
+    end: +SmartWeave.block.height + operatorStakeWithdrawLength,
   };
 
   // update state

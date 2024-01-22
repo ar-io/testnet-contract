@@ -4,6 +4,7 @@ import {
   INVALID_GATEWAY_STAKE_AMOUNT_MESSAGE,
   INVALID_OBSERVER_WALLET,
   NETWORK_JOIN_STATUS,
+  REGISTRY_SETTINGS,
 } from '../../constants';
 import {
   ContractWriteResult,
@@ -28,6 +29,7 @@ export class JoinNetwork {
   port: number;
   observerWallet: string;
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   constructor(input: any, caller: TransactionId) {
     // validate using ajv validator
     if (!validateJoinNetwork(input)) {
@@ -62,8 +64,7 @@ export const joinNetwork = async (
   state: IOState,
   { caller, input }: PstAction,
 ): Promise<ContractWriteResult> => {
-  const { balances, gateways = {}, settings } = state;
-  const { registry: registrySettings } = settings;
+  const { balances, gateways = {} } = state;
 
   const { qty, observerWallet, ...gatewaySettings } = new JoinNetwork(
     input,
@@ -74,7 +75,7 @@ export const joinNetwork = async (
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  if (qty < registrySettings.minNetworkJoinStakeAmount) {
+  if (qty < REGISTRY_SETTINGS.minNetworkJoinStakeAmount) {
     throw new ContractError(INVALID_GATEWAY_STAKE_AMOUNT_MESSAGE);
   }
 

@@ -5,7 +5,11 @@ import {
   INVALID_INPUT_MESSAGE,
   INVALID_OBSERVER_WALLET,
 } from '../../constants';
-import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
+import {
+  baselineSettings,
+  getBaselineState,
+  stubbedArweaveTxId,
+} from '../../tests/stubs';
 import { IOState } from '../../types';
 import { joinNetwork } from './joinNetwork';
 import { baselineGatewayData } from './saveObservations.test';
@@ -38,7 +42,7 @@ describe('joinNetwork', () => {
         port: 'bad-port',
       },
     ],
-  ])('%s', async (_: string, badInput: any) => {
+  ])('%s', async (_: string, badInput: unknown) => {
     const initialState: IOState = {
       ...getBaselineState(),
     };
@@ -73,9 +77,9 @@ describe('joinNetwork', () => {
         'a-gateway-with-balance': 100,
       },
       settings: {
-        ...getBaselineState().settings,
+        ...baselineSettings,
         registry: {
-          ...getBaselineState().settings.registry,
+          ...baselineSettings.registry,
           minNetworkJoinStakeAmount: 100,
         },
       },
@@ -102,9 +106,9 @@ describe('joinNetwork', () => {
         },
       },
       settings: {
-        ...getBaselineState().settings,
+        ...baselineSettings,
         registry: {
-          ...getBaselineState().settings.registry,
+          ...baselineSettings.registry,
           minNetworkJoinStakeAmount: 10,
         },
       },
@@ -133,9 +137,9 @@ describe('joinNetwork', () => {
         },
       },
       settings: {
-        ...getBaselineState().settings,
+        ...baselineSettings,
         registry: {
-          ...getBaselineState().settings.registry,
+          ...baselineSettings.registry,
           minNetworkJoinStakeAmount: 10,
         },
       },
@@ -157,9 +161,9 @@ describe('joinNetwork', () => {
         [stubbedArweaveTxId]: 10,
       },
       settings: {
-        ...getBaselineState().settings,
+        ...baselineSettings,
         registry: {
-          ...getBaselineState().settings.registry,
+          ...baselineSettings.registry,
           minNetworkJoinStakeAmount: 10,
         },
       },

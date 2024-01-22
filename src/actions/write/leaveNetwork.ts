@@ -1,4 +1,4 @@
-import { NETWORK_LEAVING_STATUS } from '../../constants';
+import { NETWORK_LEAVING_STATUS, REGISTRY_SETTINGS } from '../../constants';
 import {
   BlockHeight,
   ContractWriteResult,
@@ -12,8 +12,8 @@ export const leaveNetwork = async (
   state: IOState,
   { caller }: PstAction,
 ): Promise<ContractWriteResult> => {
-  const settings = state.settings.registry;
   const gateways = state.gateways;
+  const { gatewayLeaveLength, minGatewayJoinLength } = REGISTRY_SETTINGS;
   const gateway = gateways[caller];
   const currentBlockHeight = new BlockHeight(+SmartWeave.block.height);
 
@@ -25,15 +25,15 @@ export const leaveNetwork = async (
     !isGatewayEligibleToLeave({
       gateway,
       currentBlockHeight,
-      minimumGatewayJoinLength: new BlockHeight(settings.minGatewayJoinLength),
+      minimumGatewayJoinLength: new BlockHeight(minGatewayJoinLength),
     })
   ) {
     throw new ContractError(
-      `The gateway is not eligible to leave the network. It must be joined for a minimum of ${settings.minGatewayJoinLength} blocks and can not already be leaving the network. Current status: ${gateways[caller].status}`,
+      `The gateway is not eligible to leave the network. It must be joined for a minimum of ${minGatewayJoinLength} blocks and can not already be leaving the network. Current status: ${gateways[caller].status}`,
     );
   }
 
-  const endHeight = +SmartWeave.block.height + settings.gatewayLeaveLength;
+  const endHeight = +SmartWeave.block.height + gatewayLeaveLength;
 
   // Add tokens to a vault that unlocks after the withdrawal period ends
   gateways[caller].vaults[SmartWeave.transaction.id] = {
@@ -51,7 +51,7 @@ export const leaveNetwork = async (
   gateways[caller].operatorStake = 0;
 
   // Begin leave process by setting end dates to all vaults and the gateway status to leaving network
-  gateways[caller].end = +SmartWeave.block.height + settings.gatewayLeaveLength;
+  gateways[caller].end = +SmartWeave.block.height + gatewayLeaveLength;
   gateways[caller].status = NETWORK_LEAVING_STATUS;
 
   // set state

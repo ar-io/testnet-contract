@@ -1,10 +1,10 @@
-import { AuctionSettings } from './types';
+import { AuctionSettings, Fees, GatewayRegistrySettings } from './types';
 
 export const TOTAL_IO_SUPPLY = 1_000_000_000; // 1 billion IO tokens
 export const SECONDS_IN_A_YEAR = 31_536_000; // 52 weeks, 7 days per week, 24 hours per day, sixty minutes per hour, sixty seconds per minute
 export const MAX_YEARS = 5; // the maximum amount of years an arns name could be leased for
 export const MIN_YEARS = 1; // the minimum amount of years an arns name could be leased for
-export const NAMESPACE_LENGTH = 62; // browser domains are max 63 characters between periods, but we need to leave 1 character for the underscore seperator between the undernames and arns name
+export const NAMESPACE_LENGTH = 62; // browser domains are max 63 characters between periods, but we need to leave 1 character for the underscore separator between the undernames and arns name
 export const MAX_ALLOWED_DECIMALS = 6; // the maximum allowed decimals for the IO Token
 export const MAX_NAME_LENGTH = 51; // the maximum length of an arns name - gateway sandbox domains are 52 characters, so to prevent overlap we stop 1 character short, where the 52nd character would be an underscore (which sandbox domains do not use) to prevent overlap
 export const MAX_NOTE_LENGTH = 256; // the maximum size of a note field
@@ -151,6 +151,7 @@ export const RESERVED_NAMES = [
   'docs',
   'admin',
 ];
+
 export const AUCTION_SETTINGS: AuctionSettings = {
   floorPriceMultiplier: 1,
   startPriceMultiplier: 50,
@@ -158,6 +159,15 @@ export const AUCTION_SETTINGS: AuctionSettings = {
   scalingExponent: 190,
   auctionDuration: 10_080, // approx 14 days long
 };
+export const REGISTRY_SETTINGS: GatewayRegistrySettings = {
+  gatewayLeaveLength: 3600,
+  maxLockLength: 788400,
+  minGatewayJoinLength: 3600,
+  minLockLength: 720,
+  minNetworkJoinStakeAmount: 10000,
+  operatorStakeWithdrawLength: 3600,
+};
+
 export const MAX_TENURE_WEIGHT = 4; // 4 - 6 month periods mark you as a mature gateway
 export type DemandFactoringCriteria = 'purchases' | 'revenue';
 type DemandFactoringSettings = {
@@ -183,3 +193,57 @@ export const DEMAND_FACTORING_SETTINGS: DemandFactoringSettings = {
 
 export const MIO_PER_IO = 1_000_000;
 export const ONE_MIO = 1 / MIO_PER_IO;
+
+export const FEES: Fees = {
+  '1': 5000000,
+  '2': 500000,
+  '3': 100000,
+  '4': 25000,
+  '5': 10000,
+  '6': 5000,
+  '7': 2500,
+  '8': 1500,
+  '9': 1250,
+  '10': 1250,
+  '11': 1250,
+  '12': 1250,
+  '13': 1000,
+  '14': 1000,
+  '15': 1000,
+  '16': 1000,
+  '17': 1000,
+  '18': 1000,
+  '19': 1000,
+  '20': 1000,
+  '21': 1000,
+  '22': 1000,
+  '23': 1000,
+  '24': 1000,
+  '25': 1000,
+  '26': 1000,
+  '27': 1000,
+  '28': 1000,
+  '29': 1000,
+  '30': 1000,
+  '31': 1000,
+  '32': 1000,
+  '33': 1000,
+  '34': 1000,
+  '35': 1000,
+  '36': 1000,
+  '37': 1000,
+  '38': 1000,
+  '39': 1000,
+  '40': 1000,
+  '41': 1000,
+  '42': 1000,
+  '43': 1000,
+  '44': 1000,
+  '45': 1000,
+  '46': 1000,
+  '47': 1000,
+  '48': 1000,
+  '49': 1000,
+  '50': 1000,
+  '51': 1000,
+};

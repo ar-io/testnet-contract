@@ -1,4 +1,4 @@
-import { SECONDS_IN_A_YEAR } from './constants';
+import { AUCTION_SETTINGS, FEES, SECONDS_IN_A_YEAR } from './constants';
 import { calculateRegistrationFee } from './pricing';
 import {
   ArNSAuctionData,
@@ -8,7 +8,6 @@ import {
   BlockTimestamp,
   DeepReadonly,
   DemandFactoringData,
-  Fees,
   IOToken,
   RegistrationType,
 } from './types';
@@ -74,8 +73,6 @@ export function getAuctionPricesForInterval({
 }
 
 export function createAuctionObject({
-  auctionSettings,
-  fees,
   contractTxId,
   currentBlockHeight,
   currentBlockTimestamp,
@@ -85,8 +82,6 @@ export function createAuctionObject({
   name,
 }: {
   name: string;
-  fees: Fees;
-  auctionSettings: AuctionSettings;
   contractTxId: string;
   currentBlockHeight: BlockHeight;
   currentBlockTimestamp: BlockTimestamp;
@@ -96,18 +91,18 @@ export function createAuctionObject({
 }): ArNSAuctionData {
   const initialRegistrationFee = calculateRegistrationFee({
     name,
-    fees,
+    fees: FEES,
     type,
     years: 1,
     currentBlockTimestamp,
     demandFactoring,
   });
-  const calculatedFloorPrice =
-    initialRegistrationFee * auctionSettings.floorPriceMultiplier;
-  const startPrice =
-    calculatedFloorPrice * auctionSettings.startPriceMultiplier;
-  const endHeight =
-    currentBlockHeight.valueOf() + auctionSettings.auctionDuration;
+  const { floorPriceMultiplier, startPriceMultiplier, auctionDuration } =
+    AUCTION_SETTINGS;
+
+  const calculatedFloorPrice = initialRegistrationFee * floorPriceMultiplier;
+  const startPrice = calculatedFloorPrice * startPriceMultiplier;
+  const endHeight = currentBlockHeight.valueOf() + auctionDuration;
 
   const baseAuctionData: ArNSBaseAuctionData = {
     initiator, // the balance that the floor price is decremented from
@@ -117,7 +112,7 @@ export function createAuctionObject({
     startHeight: currentBlockHeight.valueOf(), // auction starts right away
     endHeight, // auction ends after the set duration
     type,
-    settings: auctionSettings,
+    settings: AUCTION_SETTINGS,
   };
   switch (type) {
     case 'permabuy':

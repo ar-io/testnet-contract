@@ -1,5 +1,6 @@
 import {
   ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
+  FEES,
   INSUFFICIENT_FUNDS_MESSAGE,
   MAX_ALLOWED_UNDERNAMES,
   MAX_UNDERNAME_MESSAGE,
@@ -28,6 +29,7 @@ export class IncreaseUndernameCount {
   name: string;
   qty: number;
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   constructor(input: any) {
     // validate using ajv validator
     if (!validateIncreaseUndernameCount(input)) {
@@ -75,7 +77,7 @@ export const increaseUndernameCount = async (
 
   const additionalUndernameCost = calculateUndernameCost({
     name,
-    fees: state.fees,
+    fees: FEES,
     increaseQty: qty,
     type,
     demandFactoring: state.demandFactoring,

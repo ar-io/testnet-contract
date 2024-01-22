@@ -2,7 +2,7 @@ import {
   calculateAuctionPriceForBlock,
   createAuctionObject,
 } from '../../auctions';
-import { PERMABUY_LEASE_FEE_LENGTH } from '../../constants';
+import { FEES, PERMABUY_LEASE_FEE_LENGTH } from '../../constants';
 import {
   calculateAnnualRenewalFee,
   calculateRegistrationFee,
@@ -73,7 +73,7 @@ export function getPriceForInteraction(
       });
       fee = calculateRegistrationFee({
         name,
-        fees: state.fees,
+        fees: FEES,
         type,
         years,
         currentBlockTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),
@@ -99,8 +99,6 @@ export function getPriceForInteraction(
             +SmartWeave.block.timestamp,
           ),
           currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
-          fees: state.fees,
-          auctionSettings: state.settings.auctions,
           demandFactoring: state.demandFactoring,
           type: 'lease',
           initiator: caller,
@@ -128,7 +126,7 @@ export function getPriceForInteraction(
         currentBlockTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),
         years,
       });
-      fee = calculateAnnualRenewalFee({ name, years, fees: state.fees });
+      fee = calculateAnnualRenewalFee({ name, years, fees: FEES });
       break;
     }
     case 'increaseUndernameCount': {
@@ -152,7 +150,7 @@ export function getPriceForInteraction(
 
       fee = calculateUndernameCost({
         name,
-        fees: state.fees,
+        fees: FEES,
         type,
         years: yearsRemaining,
         increaseQty: qty,

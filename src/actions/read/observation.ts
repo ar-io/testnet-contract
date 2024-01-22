@@ -1,5 +1,6 @@
 import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
+  REGISTRY_SETTINGS,
   TALLY_PERIOD_BLOCKS,
 } from '../../constants';
 import {
@@ -18,7 +19,7 @@ export const prescribedObserver = async (
   state: IOState,
   { input: { target, height } }: PstAction,
 ): Promise<ContractReadResult> => {
-  const { settings, gateways, distributions } = state;
+  const { gateways, distributions } = state;
 
   const requestedHeight = height || +SmartWeave.block.height;
 
@@ -41,7 +42,7 @@ export const prescribedObserver = async (
 
   const prescribedObservers = await getPrescribedObserversForEpoch({
     gateways,
-    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
+    minNetworkJoinStakeAmount: REGISTRY_SETTINGS.minNetworkJoinStakeAmount,
     epochStartHeight,
     epochEndHeight,
     distributions,
@@ -61,7 +62,7 @@ export const prescribedObservers = async (
   state: IOState,
   { input: { height } }: PstAction,
 ): Promise<ContractReadResult> => {
-  const { settings, gateways, distributions } = state;
+  const { gateways, distributions } = state;
 
   const requestedHeight = height || +SmartWeave.block.height;
 
@@ -84,7 +85,7 @@ export const prescribedObservers = async (
 
   const prescribedObservers = await getPrescribedObserversForEpoch({
     gateways,
-    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
+    minNetworkJoinStakeAmount: REGISTRY_SETTINGS.minNetworkJoinStakeAmount,
     epochStartHeight,
     epochEndHeight,
     distributions,

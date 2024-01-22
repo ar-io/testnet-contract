@@ -829,7 +829,6 @@ describe('tickRewardDistribution', () => {
       balances: initialState.balances,
       distributions: initialState.distributions,
       observations: initialState.observations,
-      settings: initialState.settings,
     });
     expect(balances).toEqual(initialState.balances);
     expect(distributions).toEqual({
@@ -889,7 +888,6 @@ describe('tickRewardDistribution', () => {
       balances: initialState.balances,
       distributions: initialState.distributions,
       observations: initialState.observations,
-      settings: initialState.settings,
     });
     expect(balances).toEqual(initialState.balances);
     expect(distributions).toEqual(initialState.distributions);
@@ -915,7 +913,6 @@ describe('tickRewardDistribution', () => {
         balances: initialState.balances,
         distributions: initialState.distributions,
         observations: initialState.observations,
-        settings: initialState.settings,
       });
       expect(balances).toEqual(initialState.balances);
       expect(distributions).toEqual(initialState.distributions);
@@ -940,7 +937,6 @@ describe('tickRewardDistribution', () => {
       balances: initialState.balances,
       distributions: initialState.distributions,
       observations: initialState.observations,
-      settings: initialState.settings,
     });
     const expectedNewEpochStartHeight = DEFAULT_EPOCH_BLOCK_LENGTH;
     const expectedNewEpochEndHeight =
@@ -984,7 +980,6 @@ describe('tickRewardDistribution', () => {
       balances: initialState.balances,
       distributions: initialState.distributions,
       observations: initialState.observations,
-      settings: initialState.settings,
     });
     expect(balances).toEqual({
       ...initialState.balances,
@@ -1076,7 +1071,6 @@ describe('tickRewardDistribution', () => {
       balances: initialState.balances,
       distributions: initialState.distributions,
       observations: initialState.observations,
-      settings: initialState.settings,
     });
     const totalRewardsEligible = 10_000_000 * 0.0025;
     const totalObserverReward = totalRewardsEligible * 0.05; // 5% of the total distributions

@@ -4,6 +4,7 @@ import {
   INVALID_OBSERVATION_FOR_GATEWAY_MESSAGE,
   INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE,
   NETWORK_JOIN_STATUS,
+  REGISTRY_SETTINGS,
 } from '../../constants';
 import {
   getEpochBoundariesForHeight,
@@ -28,6 +29,7 @@ export class SaveObservations {
   failedGateways: TransactionId[];
   gatewayAddress: WalletAddress;
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   constructor(input: any, caller: TransactionId) {
     // validate using ajv validator
     if (!validateSaveObservations(input)) {
@@ -55,7 +57,7 @@ export const saveObservations = async (
   { caller, input }: PstAction,
 ): Promise<ContractWriteResult> => {
   // get all other relevant state data
-  const { observations, gateways, settings, distributions } = state;
+  const { observations, gateways, distributions } = state;
   const { gatewayAddress, observerReportTxId, failedGateways } =
     new SaveObservations(input, caller);
 
@@ -95,7 +97,7 @@ export const saveObservations = async (
 
   const prescribedObservers = await getPrescribedObserversForEpoch({
     gateways,
-    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
+    minNetworkJoinStakeAmount: REGISTRY_SETTINGS.minNetworkJoinStakeAmount,
     epochStartHeight,
     epochEndHeight,
     distributions,

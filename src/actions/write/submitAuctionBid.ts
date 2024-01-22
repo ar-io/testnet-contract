@@ -12,7 +12,6 @@ import {
 import { tallyNamePurchase } from '../../pricing';
 import {
   ArNSAuctionData,
-  AuctionSettings,
   Balances,
   BlockHeight,
   BlockTimestamp,
@@ -40,6 +39,7 @@ export class AuctionBid {
   type: RegistrationType;
   contractTxId: string;
   years?: number;
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
   constructor(input: any) {
     // validate using ajv validator
     if (!validateAuctionBid(input)) {
@@ -275,14 +275,11 @@ function handleBidForNewAuction({
   // no current auction, create one and vault the balance (floor price) from the user in the auction
   // calculate the registration fee taking into account demand factoring
   // get the current auction settings, create one if it doesn't exist yet
-  const currentAuctionSettings: AuctionSettings = state.settings.auctions;
 
   // create the initial auction bid
   const initialAuctionBid = createAuctionObject({
     name,
     type,
-    fees: state.fees,
-    auctionSettings: currentAuctionSettings,
     currentBlockTimestamp,
     demandFactoring: state.demandFactoring,
     currentBlockHeight,

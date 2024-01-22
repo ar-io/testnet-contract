@@ -3,6 +3,7 @@ import {
   createAuctionObject,
   getAuctionPricesForInterval,
 } from '../../auctions';
+import { AUCTION_SETTINGS } from '../../constants';
 import {
   BlockHeight,
   BlockTimestamp,
@@ -20,12 +21,12 @@ export const getAuction = (
   state: DeepReadonly<IOState>,
   { caller, input: { name, type = 'lease' } }: PstAction,
 ): ContractReadResult => {
-  const { records, auctions, settings, fees, reserved } = state;
+  const { records, auctions, reserved } = state;
   const formattedName = name.toLowerCase().trim();
   const auction = auctions[formattedName];
 
   if (!auction) {
-    const auctionSettings = settings.auctions;
+    const auctionSettings = AUCTION_SETTINGS;
     const currentBlockTimestamp = new BlockTimestamp(
       +SmartWeave.block.timestamp,
     );
@@ -33,10 +34,8 @@ export const getAuction = (
 
     // a stubbed auction object
     const auctionObject = createAuctionObject({
-      auctionSettings,
       type,
       name,
-      fees,
       currentBlockTimestamp,
       demandFactoring: state.demandFactoring,
       currentBlockHeight,

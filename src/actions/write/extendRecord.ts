@@ -1,5 +1,6 @@
 import {
   ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
+  FEES,
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_NAME_EXTENSION_TYPE_MESSAGE,
   INVALID_YEARS_MESSAGE,
@@ -28,13 +29,13 @@ export class ExtendRecord {
   name: string;
   years: number;
 
-  constructor(input: any) {
+  constructor(input: unknown) {
     if (!validateExtendRecord(input)) {
       throw new ContractError(
         getInvalidAjvMessage(validateExtendRecord, input, 'extendRecord'),
       );
     }
-    const { name, years } = input;
+    const { name, years } = input as ExtendRecord;
     this.name = name.trim().toLowerCase();
     this.years = years;
   }
@@ -52,7 +53,7 @@ export const extendRecord = async (
   state: IOState,
   { caller, input }: PstAction,
 ): Promise<ContractWriteResult> => {
-  const { balances, records, fees } = state;
+  const { balances, records } = state;
   const currentBlockTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
   const { name, years } = new ExtendRecord(input);
   const record = records[name];
@@ -84,7 +85,7 @@ export const extendRecord = async (
     demandFactor *
     calculateAnnualRenewalFee({
       name,
-      fees,
+      fees: FEES,
       years,
     });
 

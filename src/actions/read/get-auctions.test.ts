@@ -1,4 +1,8 @@
-import { baselineAuctionData, getBaselineState } from '../../tests/stubs';
+import {
+  baselineAuctionData,
+  baselineSettings,
+  getBaselineState,
+} from '../../tests/stubs';
 import { IOState } from '../../types';
 import { getAuction } from './auction';
 
@@ -60,22 +64,24 @@ describe('getAuction', () => {
         type: 'lease',
         startHeight: stubbedBlockHeight,
         endHeight:
-          stubbedBlockHeight +
-          getBaselineState().settings.auctions.auctionDuration,
+          stubbedBlockHeight + baselineSettings.auctions.auctionDuration,
         startPrice: 54000000,
         floorPrice: 540000,
         initiator: '',
         contractTxId: '',
-        settings: getBaselineState().settings.auctions,
+        settings: baselineSettings.auctions,
       },
     ],
-  ])(`%s`, (_: string, inputState: IOState, expectedReadResult: any) => {
-    const { result } = getAuction(inputState, {
-      caller: 'test-caller',
-      input: {
-        name: expectedReadResult.name,
-      },
-    });
-    expect(result).toEqual(expectedReadResult);
-  });
+  ])(
+    `%s`,
+    (_: string, inputState: IOState, expectedReadResult: { name: string }) => {
+      const { result } = getAuction(inputState, {
+        caller: 'test-caller',
+        input: {
+          name: expectedReadResult.name,
+        },
+      });
+      expect(result).toEqual(expectedReadResult);
+    },
+  );
 });

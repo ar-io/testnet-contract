@@ -538,10 +538,6 @@ describe('Pricing functions:', () => {
           ...baselineDFData,
           ...testData.inputDfData,
         };
-        const inputFees: Fees = {
-          ...baselineFees,
-          ...(testData.inputFees || {}),
-        };
         const expectedDfData: DemandFactoringData = {
           ...baselineDFData,
           ...expectedDFOverrides,
@@ -555,7 +551,6 @@ describe('Pricing functions:', () => {
           updateDemandFactor(
             new BlockHeight(testData.currentBlock),
             inputDfData,
-            inputFees,
           ),
         ).toEqual({
           demandFactoring: expectedDfData,

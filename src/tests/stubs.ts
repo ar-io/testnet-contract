@@ -1,8 +1,4 @@
-import {
-  DEFAULT_EPOCH_BLOCK_LENGTH,
-  FEE_STRUCTURE,
-  TALLY_PERIOD_BLOCKS,
-} from '../constants';
+import { DEFAULT_EPOCH_BLOCK_LENGTH, TALLY_PERIOD_BLOCKS } from '../constants';
 import {
   ArNSLeaseAuctionData,
   DemandFactoringData,
@@ -49,21 +45,9 @@ export const getBaselineState: () => IOState = (): IOState => ({
     observers: {},
   },
   reserved: {},
-  fees: {
-    ...FEE_STRUCTURE,
-  },
+
   auctions: {},
-  settings: {
-    registry: {
-      minLockLength: 720,
-      maxLockLength: 788400,
-      minNetworkJoinStakeAmount: 10000,
-      minGatewayJoinLength: 3600,
-      gatewayLeaveLength: 3600,
-      operatorStakeWithdrawLength: 3600,
-    },
-    auctions: baselineAuctionSettings,
-  },
+
   gateways: {},
   lastTickedHeight: 0,
   observations: {},
@@ -75,6 +59,18 @@ export const getBaselineState: () => IOState = (): IOState => ({
       baselineDemandFactorData.trailingPeriodRevenues.slice(),
   },
 });
+
+export const baselineSettings = {
+  registry: {
+    minLockLength: 720,
+    maxLockLength: 788400,
+    minNetworkJoinStakeAmount: 10000,
+    minGatewayJoinLength: 3600,
+    gatewayLeaveLength: 3600,
+    operatorStakeWithdrawLength: 3600,
+  },
+  auctions: baselineAuctionSettings,
+};
 
 export const baselineAuctionData: ArNSLeaseAuctionData = {
   startHeight: 1,

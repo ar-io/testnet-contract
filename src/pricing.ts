@@ -2,6 +2,7 @@ import {
   ANNUAL_PERCENTAGE_FEE,
   DEMAND_FACTORING_SETTINGS,
   DemandFactoringCriteria,
+  FEES,
   ONE_MIO,
   PERMABUY_LEASE_FEE_LENGTH,
   UNDERNAME_LEASE_FEE_PERCENTAGE,
@@ -14,7 +15,6 @@ import {
   DeepReadonly,
   DemandFactoringData,
   Fees,
-  IOState,
   RegistrationType,
 } from './types';
 
@@ -31,12 +31,11 @@ export function tallyNamePurchase(
 export function updateDemandFactor(
   currentHeight: BlockHeight,
   dfData: DeepReadonly<DemandFactoringData>,
-  fees: DeepReadonly<Fees>,
-): Pick<IOState, 'demandFactoring' | 'fees'> {
+): { demandFactoring: DemandFactoringData; fees: Fees } {
   if (!shouldUpdateDemandFactor(currentHeight, dfData)) {
     return {
       demandFactoring: dfData as DemandFactoringData,
-      fees: fees as Fees,
+      fees: FEES,
     };
   }
 
@@ -76,10 +75,10 @@ export function updateDemandFactor(
       newDemandFactoringData.demandFactor =
         DEMAND_FACTORING_SETTINGS.demandFactorBaseValue;
       // Rebase fees on their values at the minimum demand factor
-      updatedFees = Object.keys(fees).reduce(
+      updatedFees = Object.keys(FEES).reduce(
         (acc: Fees, nameLength: string) => {
           acc[nameLength] = Math.max(
-            fees[nameLength] * DEMAND_FACTORING_SETTINGS.demandFactorMin,
+            FEES[nameLength] * DEMAND_FACTORING_SETTINGS.demandFactorMin,
             ONE_MIO,
           );
           return acc;
@@ -107,7 +106,7 @@ export function updateDemandFactor(
 
   return {
     demandFactoring: newDemandFactoringData,
-    fees: updatedFees || fees,
+    fees: updatedFees || FEES,
   };
 }
 
