@@ -10,7 +10,7 @@ import { arweave as arweaveLocal, warp as warpLocal } from './utils/services';
 
 const testnetContractTxId =
   process.env.ARNS_CONTRACT_TX_ID ??
-  'fbU8Y4NMKKzP4rmAYeYj6tDrVDo9XNbdyq5IZPA31WQ';
+  '_NctcA2sRy1-J4OmIQZbYFPM17piNcbdBPH2ncX2RL8';
 
 describe('evolving', () => {
   let localContractOwnerJWK: JWKInterface;

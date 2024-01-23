@@ -131,36 +131,25 @@ export function getEligibleGatewaysForEpoch({
   return eligibleGateways;
 }
 
-export async function getPrescribedObserversForEpoch({
+export function getObserverWeightsForEpoch({
   gateways,
   distributions,
-  minNetworkJoinStakeAmount,
   epochStartHeight,
-  epochEndHeight,
+  minNetworkJoinStakeAmount,
 }: {
   gateways: DeepReadonly<Gateways>;
   distributions: DeepReadonly<RewardDistributions>;
-  minNetworkJoinStakeAmount: number;
   epochStartHeight: BlockHeight;
-  epochEndHeight: BlockHeight;
-}): Promise<WeightedObserver[]> {
+  minNetworkJoinStakeAmount: number; // TODO: replace with constant
+}): WeightedObserver[] {
   const weightedObservers: WeightedObserver[] = [];
   let totalCompositeWeight = 0;
-
-  const eligibleGateways = getEligibleGatewaysForEpoch({
-    epochStartHeight,
-    epochEndHeight,
-    gateways,
-  });
-
   // Get all eligible observers and assign weights
-  for (const [address, eligibleGateway] of Object.entries(eligibleGateways)) {
-    const stake = eligibleGateway.operatorStake; // e.g. 100 - no cap to this
+  for (const [address, gateway] of Object.entries(gateways)) {
+    const stake = gateway.operatorStake; // e.g. 100 - no cap to this
     const stakeWeight = stake / minNetworkJoinStakeAmount; // this is always greater than 1 as the minNetworkJoinStakeAmount is always less than the stake
-
     // the percentage of the epoch the gateway was joined for before this epoch
-    const totalBlocksForGateway =
-      epochStartHeight.valueOf() - eligibleGateway.start;
+    const totalBlocksForGateway = epochStartHeight.valueOf() - gateway.start;
     const calculatedTenureWeightForGateway =
       totalBlocksForGateway / TENURE_WEIGHT_TOTAL_BLOCK_COUNT; // TODO: change this variable name to be period
     // max of 4, which implies after 2 years, you are considered a mature gateway and this number stops increasing
@@ -194,26 +183,21 @@ export async function getPrescribedObserversForEpoch({
       gatewayRewardRatioWeight *
       observerRewardRatioWeight;
 
-    // this should never happen - but necessary to avoid any potential infinite loops when prescribing gateways below
-    if (compositeWeight === 0) continue;
-
     weightedObservers.push({
       gatewayAddress: address,
-      observerAddress: eligibleGateway.observerWallet,
+      observerAddress: gateway.observerWallet,
       stake,
-      start: eligibleGateway.start,
+      start: gateway.start,
       stakeWeight,
       tenureWeight: gatewayTenureWeight,
       gatewayRewardRatioWeight,
       observerRewardRatioWeight,
       compositeWeight,
-      normalizedCompositeWeight: compositeWeight,
+      normalizedCompositeWeight: undefined, // set later once we have the total composite weight
     });
     // total weight for all eligible gateways
     totalCompositeWeight += compositeWeight;
   }
-
-  // TODO: should we bail if totalCompositeWeight is 0?
 
   // calculate the normalized composite weight for each observer - do not default to one as these are dependent on the total weights of all observers
   for (const weightedObserver of weightedObservers) {
@@ -221,6 +205,36 @@ export async function getPrescribedObserversForEpoch({
       ? weightedObserver.compositeWeight / totalCompositeWeight
       : 0;
   }
+
+  return weightedObservers;
+}
+
+export async function getPrescribedObserversForEpoch({
+  gateways,
+  distributions,
+  minNetworkJoinStakeAmount,
+  epochStartHeight,
+  epochEndHeight,
+}: {
+  gateways: DeepReadonly<Gateways>;
+  distributions: DeepReadonly<RewardDistributions>;
+  minNetworkJoinStakeAmount: number;
+  epochStartHeight: BlockHeight;
+  epochEndHeight: BlockHeight;
+}): Promise<WeightedObserver[]> {
+  const eligibleGateways = getEligibleGatewaysForEpoch({
+    epochStartHeight,
+    epochEndHeight,
+    gateways,
+  });
+
+  const weightedObservers = getObserverWeightsForEpoch({
+    gateways: eligibleGateways,
+    distributions,
+    epochStartHeight,
+    minNetworkJoinStakeAmount,
+    // filter out any that could have a normalized composite weight of 0 to avoid infinite loops when randomly selecting prescribed observers below
+  }).filter((observer) => observer.normalizedCompositeWeight > 0); // TODO: this could be some required minimum weight
 
   // return all the observers if there are fewer than the number of observers per epoch
   if (MAXIMUM_OBSERVERS_PER_EPOCH >= weightedObservers.length) {
