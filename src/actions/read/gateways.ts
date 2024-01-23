@@ -1,70 +1,123 @@
-import { NETWORK_JOIN_STATUS } from '../../constants';
-import { ContractReadResult, Gateway, IOState, PstAction } from '../../types';
+import { DEFAULT_EPOCH_BLOCK_LENGTH } from '../../constants';
+import {
+  getEpochBoundariesForHeight,
+  getObserverWeightsForEpoch,
+} from '../../observers';
+import {
+  BlockHeight,
+  ContractReadResult,
+  Gateway,
+  IOState,
+  ObserverWeights,
+  PstAction,
+  WalletAddress,
+  WeightedObserver,
+} from '../../types';
 
 export const getGateway = async (
   state: IOState,
-  { input: { target } }: PstAction,
+  { caller, input: { target = caller } }: PstAction,
 ): Promise<ContractReadResult & any> => {
-  const { gateways = {} } = state;
+  const { gateways = {}, settings, distributions } = state;
   if (!(target in gateways)) {
-    throw new ContractError('This target does not have a registered gateway.');
+    throw new ContractError(`No gateway found with wallet address ${target}.`);
   }
-  const gatewayObj = gateways[target];
-  return {
-    result: gatewayObj,
-  };
-};
 
-export const getGatewayTotalStake = async (
-  state: IOState,
-  { input: { target } }: PstAction,
-): Promise<ContractReadResult & any> => {
-  const { gateways = {} } = state;
-  if (!(target in gateways)) {
-    throw new ContractError('This target does not have a registered gateway.');
-  }
-  const gatewayTotalStake = gateways[target].operatorStake;
-  return {
-    result: gatewayTotalStake,
-  };
-};
+  // TODO: allow getting gateway by observer address
+  const gateway = gateways[target];
 
-export const getGatewayRegistry = async (
-  state: IOState,
-): Promise<ContractReadResult & any> => {
-  const { gateways = {} } = state;
-  return {
-    result: gateways,
-  };
-};
-
-export const getRankedGatewayRegistry = async (
-  state: IOState,
-): Promise<ContractReadResult & any> => {
-  const { gateways = {} } = state;
-  // Filters the gateway registry for active gateways only
-  const filteredGateways: { [address: string]: Gateway } = {};
-  Object.keys(gateways).forEach((address) => {
-    if (gateways[address].status === NETWORK_JOIN_STATUS) {
-      filteredGateways[address] = gateways[address];
-    }
+  const { epochStartHeight } = getEpochBoundariesForHeight({
+    currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
+    epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
+    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
   });
 
-  // Ranks the gateway registry by highest stake first
-  const rankedGateways: { [address: string]: Gateway } = {};
-  Object.keys(filteredGateways)
-    .sort((addressA, addressB) => {
-      const gatewayA = filteredGateways[addressA];
-      const gatewayB = filteredGateways[addressB];
-      const totalStakeA = gatewayA.operatorStake;
-      const totalStakeB = gatewayB.operatorStake;
-      return totalStakeB - totalStakeA;
-    })
-    .forEach((address) => {
-      rankedGateways[address] = filteredGateways[address];
-    });
+  const observerWeights = getObserverWeightsForEpoch({
+    gateways,
+    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
+    epochStartHeight,
+    distributions: state.distributions,
+  }).find(
+    (observer: WeightedObserver) =>
+      observer.gatewayAddress === target || observer.observerAddress === target,
+  );
+
+  const gatewayWithWeights = {
+    ...gateway,
+    weights: {
+      stakeWeight: observerWeights?.stakeWeight || 0,
+      tenureWeight: observerWeights?.tenureWeight || 0,
+      gatewayRewardRatioWeight: observerWeights?.gatewayRewardRatioWeight || 0,
+      observerRewardRatioWeight:
+        observerWeights?.observerRewardRatioWeight || 0,
+      compositeWeight: observerWeights?.compositeWeight || 0,
+      normalizedCompositeWeight:
+        observerWeights?.normalizedCompositeWeight || 0,
+    },
+  };
 
   return {
-    result: rankedGateways,
+    result: gatewayWithWeights,
+  };
+};
+
+export const getGateways = async (
+  state: IOState,
+): Promise<ContractReadResult> => {
+  const { gateways, distributions, settings } = state;
+
+  const { epochStartHeight } = getEpochBoundariesForHeight({
+    currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
+    epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
+    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+  });
+
+  const allObserverWeights = getObserverWeightsForEpoch({
+    gateways,
+    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
+    epochStartHeight,
+    distributions,
+  });
+
+  const gatewaysWithWeights = Object.keys(gateways).reduce(
+    (
+      acc: Record<
+        WalletAddress,
+        Gateway & {
+          weights: ObserverWeights;
+        }
+      >,
+      address,
+    ) => {
+      const observerWeights: WeightedObserver | undefined =
+        allObserverWeights.find(
+          (observer: WeightedObserver) => observer.gatewayAddress === address,
+        );
+
+      const gateway = gateways[address];
+
+      const gatewayWithWeights = {
+        ...gateway,
+        weights: {
+          stakeWeight: observerWeights?.stakeWeight || 0,
+          tenureWeight: observerWeights?.tenureWeight || 0,
+          gatewayRewardRatioWeight:
+            observerWeights?.gatewayRewardRatioWeight || 0,
+          observerRewardRatioWeight:
+            observerWeights?.observerRewardRatioWeight || 0,
+          compositeWeight: observerWeights?.compositeWeight || 0,
+          normalizedCompositeWeight:
+            observerWeights?.normalizedCompositeWeight || 0,
+        },
+      };
+
+      acc[address] = gatewayWithWeights;
+      return acc;
+    },
+    {},
+  );
+
+  return {
+    result: gatewaysWithWeights,
   };
 };
