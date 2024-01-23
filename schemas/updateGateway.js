@@ -38,7 +38,7 @@ const updateGatewaySchema = {
     allowDelegatedStaking: {
       type: 'boolean',
     },
-    delegateRewardRatio: {
+    delegateRewardShareRatio: {
       type: 'integer',
       minimum: 0,
       maximum: 100,

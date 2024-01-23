@@ -321,7 +321,7 @@ describe('Network', () => {
             properties: joinGatewayPayload.properties,
             note: joinGatewayPayload.note,
             allowDelegatedStaking: false,
-            delegateRewardRatio: 0,
+            delegateRewardShareRatio: 0,
             minDelegatedStake: MIN_DELEGATED_STAKE,
             reservedDelegates: [],
           },
@@ -443,7 +443,7 @@ describe('Network', () => {
           properties: 'WRONg6rQ9Py7L8j4CkS8jn818gdXW25Oofg0q2E58ro',
           note: 'a new note',
           allowDelegatedStaking: true,
-          delegateRewardRatio: Math.floor(
+          delegateRewardShareRatio: Math.floor(
             (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
           ),
           reservedDelegates,
@@ -624,12 +624,12 @@ describe('Network', () => {
       );
 
       it.each([-1, 1.5, 101, '50'])(
-        'should not modify gateway settings with invalid delegateRewardRatio',
+        'should not modify gateway settings with invalid delegateRewardShareRatio',
         async (badProperties) => {
           const { cachedValue: prevCachedValue } = await contract.readState();
           const writeInteraction = await contract.writeInteraction({
             function: 'updateGatewaySettings',
-            delegateRewardRatio: badProperties,
+            delegateRewardShareRatio: badProperties,
           });
           expect(writeInteraction?.originalTxId).not.toBe(undefined);
           const { cachedValue: newCachedValue } = await contract.readState();

@@ -12,6 +12,7 @@ import {
   FEE_STRUCTURE,
   INITIAL_STATE,
   MAX_YEARS,
+  MIN_DELEGATED_STAKE,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
   REGISTRATION_TYPES,
@@ -395,6 +396,20 @@ export function getLocalArNSContractKey(key: 'srcTxId' | 'id' = 'id'): string {
     ),
   ) as unknown as IOState & { id: string; srcTxId: string };
   return contract[key];
+}
+
+// Helper function to create mock delegates
+export function createMockDelegates(numDelegates: number) {
+  const delegates = {};
+  for (let i = 0; i < numDelegates; i++) {
+    const delegateAddress = `delegateAddress${i}`; // Mock unique delegate address
+    delegates[delegateAddress] = {
+      delegatedStake: MIN_DELEGATED_STAKE, // or any mock value you need
+      start: 0, // Mock start block
+      vaults: {}, // Mock vaults data or add as needed
+    };
+  }
+  return delegates;
 }
 
 export * from '../../src/utilities';
