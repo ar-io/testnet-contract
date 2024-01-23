@@ -183,9 +183,6 @@ export function getObserverWeightsForEpoch({
       gatewayRewardRatioWeight *
       observerRewardRatioWeight;
 
-    // this should never happen - but necessary to avoid any potential infinite loops when prescribing gateways below
-    if (compositeWeight === 0) continue;
-
     weightedObservers.push({
       gatewayAddress: address,
       observerAddress: gateway.observerWallet,
@@ -202,13 +199,11 @@ export function getObserverWeightsForEpoch({
     totalCompositeWeight += compositeWeight;
   }
 
-  // should also never happen, but protection against any potential infinite loops and protects against dividing by zero when setting normalized weights
-  if (totalCompositeWeight === 0) return [];
-
   // calculate the normalized composite weight for each observer - do not default to one as these are dependent on the total weights of all observers
   for (const weightedObserver of weightedObservers) {
-    weightedObserver.normalizedCompositeWeight =
-      weightedObserver.compositeWeight / totalCompositeWeight;
+    weightedObserver.normalizedCompositeWeight = totalCompositeWeight
+      ? weightedObserver.compositeWeight / totalCompositeWeight
+      : 0;
   }
 
   return weightedObservers;
@@ -238,7 +233,8 @@ export async function getPrescribedObserversForEpoch({
     distributions,
     epochStartHeight,
     minNetworkJoinStakeAmount,
-  });
+    // filter out any that could have a normalized composite weight of 0 to avoid infinite loops when randomly selecting prescribed observers below
+  }).filter((observer) => observer.normalizedCompositeWeight > 0); // TODO: this could be some required minimum weight
 
   // return all the observers if there are fewer than the number of observers per epoch
   if (MAXIMUM_OBSERVERS_PER_EPOCH >= weightedObservers.length) {

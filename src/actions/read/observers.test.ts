@@ -33,6 +33,37 @@ describe('getObserverWeights', () => {
     );
   });
 
+  it('should return the observer and its weights when the caller is a valid gateway address and its composite weight is 0', async () => {
+    const state = {
+      ...getBaselineState(),
+      gateways: {
+        'a-test-gateway': baselineGatewayData,
+      },
+      // no distributions
+    };
+    const observer = await getObserverWeights(state, {
+      caller: 'a-test-gateway',
+      input: {},
+    });
+    // the start is equivalent to the epoch start height so it will have no tenure weight
+    const expectedTenureWeight = 0;
+    const expectedCompositeWeight = 1 * 1 * 1 * expectedTenureWeight;
+    expect(observer).toEqual({
+      result: {
+        start: baselineGatewayData.start,
+        stake: baselineGatewayData.operatorStake,
+        gatewayAddress: 'a-test-gateway',
+        observerAddress: baselineGatewayData.observerWallet,
+        stakeWeight: 1,
+        tenureWeight: expectedTenureWeight,
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        compositeWeight: expectedCompositeWeight,
+        normalizedCompositeWeight: 0,
+      },
+    });
+  });
+
   it('should return the observer and its weights when the caller is a valid gateway address', async () => {
     // the next epoch
     SmartWeave.block.height = 200;
