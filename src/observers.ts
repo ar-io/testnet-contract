@@ -203,11 +203,13 @@ export function getObserverWeightsForEpoch({
     totalCompositeWeight += compositeWeight;
   }
 
+  // should also never happen, but protection against any potential infinite loops and protects against dividing by zero when setting normalized weights
+  if (totalCompositeWeight === 0) return [];
+
   // calculate the normalized composite weight for each observer - do not default to one as these are dependent on the total weights of all observers
   for (const weightedObserver of weightedObservers) {
-    weightedObserver.normalizedCompositeWeight = totalCompositeWeight
-      ? weightedObserver.compositeWeight / totalCompositeWeight
-      : 0;
+    weightedObserver.normalizedCompositeWeight =
+      weightedObserver.compositeWeight / totalCompositeWeight;
   }
 
   return weightedObservers;
