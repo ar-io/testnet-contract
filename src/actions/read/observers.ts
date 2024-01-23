@@ -4,6 +4,7 @@ import {
 } from '../../constants';
 import {
   getEpochBoundariesForHeight,
+  getObserverWeightsForEpoch,
   getPrescribedObserversForEpoch,
 } from '../../observers';
 import {
@@ -14,18 +15,24 @@ import {
   WeightedObserver,
 } from '../../types';
 
-export const getPrescribedObserver = async (
+export const getObserver = async (
   state: IOState,
   { caller, input: { target = caller } }: PstAction,
 ): Promise<ContractReadResult> => {
   const { settings, gateways, distributions } = state;
 
-  const { epochStartHeight: epochStartHeight, epochEndHeight: epochEndHeight } =
-    getEpochBoundariesForHeight({
-      currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
-      epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
-      epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
-    });
+  const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
+    currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
+    epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
+    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+  });
+
+  const observerWeights = getObserverWeightsForEpoch({
+    gateways,
+    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
+    epochStartHeight,
+    distributions,
+  });
 
   const prescribedObservers = await getPrescribedObserversForEpoch({
     gateways,
@@ -35,13 +42,30 @@ export const getPrescribedObserver = async (
     distributions,
   });
 
-  // The target with the specified address is found in the prescribedObservers list
+  const observer = observerWeights.find(
+    (observer: WeightedObserver) =>
+      observer.gatewayAddress === caller || observer.observerAddress === caller,
+  );
+
+  if (!observer) {
+    throw new ContractError(
+      `No gateway or observer found with wallet address ${target}.`,
+    );
+  }
+
+  const isPrescribed = prescribedObservers.find(
+    (prescribedObserver) =>
+      prescribedObserver.gatewayAddress === caller ||
+      prescribedObserver.observerAddress === caller,
+  );
+
   return {
-    result: prescribedObservers.some(
-      (observer: WeightedObserver) =>
-        observer.observerAddress === target ||
-        observer.gatewayAddress === target,
-    ),
+    result: {
+      epochStartHeight,
+      epochEndHeight,
+      isPrescribed,
+      ...observer,
+    },
   };
 };
 
