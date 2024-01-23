@@ -2,14 +2,14 @@ import { TENURE_WEIGHT_TOTAL_BLOCK_COUNT } from '../../constants';
 import { getPrescribedObserversForEpoch } from '../../observers';
 import { getBaselineState } from '../../tests/stubs';
 import { baselineGatewayData } from '../write/saveObservations.test';
-import { getObserver, getPrescribedObservers } from './observers';
+import { getObserverWeights, getPrescribedObservers } from './observers';
 
 jest.mock('../../observers', () => ({
   ...jest.requireActual('../../observers'),
   getPrescribedObserversForEpoch: jest.fn().mockResolvedValue([]),
 }));
 
-describe('getObserver', () => {
+describe('getObserverWeights', () => {
   afterEach(() => {
     SmartWeave.block.height = 1;
   });
@@ -23,9 +23,10 @@ describe('getObserver', () => {
       ...getBaselineState(),
       gateways: {},
     };
-    const error = await getObserver(state, { caller: 'test', input: {} }).catch(
-      (e) => e,
-    );
+    const error = await getObserverWeights(state, {
+      caller: 'test',
+      input: {},
+    }).catch((e) => e);
     expect(error).toBeInstanceOf(ContractError);
     expect(error.message).toEqual(
       'No gateway or observer found with wallet address test.',
@@ -42,7 +43,7 @@ describe('getObserver', () => {
       },
       // no distributions
     };
-    const observer = await getObserver(state, {
+    const observer = await getObserverWeights(state, {
       caller: 'a-test-gateway',
       input: {},
     });
@@ -74,7 +75,7 @@ describe('getObserver', () => {
       },
       // no distributions
     };
-    const observer = await getObserver(state, {
+    const observer = await getObserverWeights(state, {
       caller: 'a-random-caller',
       input: {
         target: baselineGatewayData.observerWallet,

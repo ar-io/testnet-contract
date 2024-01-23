@@ -15,7 +15,7 @@ import {
   WeightedObserver,
 } from '../../types';
 
-export const getObserver = async (
+export const getObserverWeights = async (
   state: IOState,
   { caller, input: { target = caller } }: PstAction,
 ): Promise<ContractReadResult> => {
@@ -45,6 +45,7 @@ export const getObserver = async (
     );
   }
   return {
+    // TODO: append it weight gateway settings
     result: observer,
   };
 };
