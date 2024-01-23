@@ -148,7 +148,6 @@ export function getObserverWeightsForEpoch({
   for (const [address, gateway] of Object.entries(gateways)) {
     const stake = gateway.operatorStake; // e.g. 100 - no cap to this
     const stakeWeight = stake / minNetworkJoinStakeAmount; // this is always greater than 1 as the minNetworkJoinStakeAmount is always less than the stake
-
     // the percentage of the epoch the gateway was joined for before this epoch
     const totalBlocksForGateway = epochStartHeight.valueOf() - gateway.start;
     const calculatedTenureWeightForGateway =
@@ -197,7 +196,7 @@ export function getObserverWeightsForEpoch({
       gatewayRewardRatioWeight,
       observerRewardRatioWeight,
       compositeWeight,
-      normalizedCompositeWeight: compositeWeight,
+      normalizedCompositeWeight: undefined, // set later once we have the total composite weight
     });
     // total weight for all eligible gateways
     totalCompositeWeight += compositeWeight;

@@ -81,35 +81,51 @@ describe('Observation', () => {
     });
 
     describe('read operations', () => {
-      it('should always return the same prescribed observers for the provided block height', async () => {
+      it('should return the same prescribed observers for the current epoch', async () => {
         const {
           result: refreshPrescribedObservers,
         }: { result: WeightedObserver[] } = await contract.viewState({
           function: 'prescribedObservers',
-          height: currentEpochStartHeight.valueOf(),
         });
         expect(refreshPrescribedObservers).toEqual(prescribedObservers);
       });
 
-      it('should be able to check if target gateway wallet is valid observer for a given epoch', async () => {
-        const { result: isPrescribedObserver }: { result: WeightedObserver[] } =
+      it('should return the observer weights if the caller is valid gateway', async () => {
+        const { result }: { result: WeightedObserver } =
           await contract.viewState({
-            function: 'prescribedObserver',
+            function: 'observer',
             target: prescribedObserverWallets[0].addr,
             height: currentEpochStartHeight.valueOf(),
           });
-        expect(isPrescribedObserver).toBe(true);
+        expect(result).toEqual(
+          expect.objectContaining({
+            start: expect.any(Number),
+            stake: expect.any(Number),
+            gatewayAddress: expect.any(String),
+            observerAddress: expect.any(String),
+            stakeWeight: expect.any(Number),
+            tenureWeight: expect.any(Number),
+            gatewayRewardRatioWeight: expect.any(Number),
+            observerRewardRatioWeight: expect.any(Number),
+            compositeWeight: expect.any(Number),
+            normalizedCompositeWeight: expect.any(Number),
+          }),
+        );
       });
 
-      it('should return false if a provided wallet is not an observer for the epoch', async () => {
+      it('should return an error if the gateway is not in the registry', async () => {
         const notJoinedGateway = await createLocalWallet(arweave);
-        const { result: notPrescribedWallet }: { result: WeightedObserver[] } =
-          await contract.viewState({
-            function: 'prescribedObserver',
-            target: notJoinedGateway.address,
-            height: currentEpochStartHeight.valueOf(),
-          });
-        expect(notPrescribedWallet).toBe(false);
+        const error = await contract.viewState({
+          function: 'observer',
+          target: notJoinedGateway.address,
+          height: currentEpochStartHeight.valueOf(),
+        });
+        expect(error.type).toEqual('error');
+        expect(error.errorMessage).toEqual(
+          expect.stringContaining(
+            `No gateway or observer found with wallet address ${notJoinedGateway.address}.`,
+          ),
+        );
       });
     });
 

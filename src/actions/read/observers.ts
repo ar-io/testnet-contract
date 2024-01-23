@@ -21,7 +21,7 @@ export const getObserver = async (
 ): Promise<ContractReadResult> => {
   const { settings, gateways, distributions } = state;
 
-  const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
+  const { epochStartHeight } = getEpochBoundariesForHeight({
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
     epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
     epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
@@ -34,17 +34,9 @@ export const getObserver = async (
     distributions,
   });
 
-  const prescribedObservers = await getPrescribedObserversForEpoch({
-    gateways,
-    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
-    epochStartHeight,
-    epochEndHeight,
-    distributions,
-  });
-
   const observer = observerWeights.find(
     (observer: WeightedObserver) =>
-      observer.gatewayAddress === caller || observer.observerAddress === caller,
+      observer.gatewayAddress === target || observer.observerAddress === target,
   );
 
   if (!observer) {
@@ -52,20 +44,8 @@ export const getObserver = async (
       `No gateway or observer found with wallet address ${target}.`,
     );
   }
-
-  const isPrescribed = prescribedObservers.find(
-    (prescribedObserver) =>
-      prescribedObserver.gatewayAddress === caller ||
-      prescribedObserver.observerAddress === caller,
-  );
-
   return {
-    result: {
-      epochStartHeight,
-      epochEndHeight,
-      isPrescribed,
-      ...observer,
-    },
+    result: observer,
   };
 };
 
@@ -74,14 +54,11 @@ export const getPrescribedObservers = async (
 ): Promise<ContractReadResult> => {
   const { settings, gateways, distributions } = state;
 
-  const requestedHeight = +SmartWeave.block.height;
-
-  const { epochStartHeight: epochStartHeight, epochEndHeight: epochEndHeight } =
-    getEpochBoundariesForHeight({
-      currentBlockHeight: new BlockHeight(requestedHeight),
-      epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
-      epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
-    });
+  const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
+    currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
+    epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
+    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+  });
 
   const prescribedObservers = await getPrescribedObserversForEpoch({
     gateways,
@@ -105,6 +82,7 @@ export async function getEpoch(
   if (
     isNaN(requestedHeight) ||
     height < distributions.epochZeroStartHeight ||
+    // TODO: should we allow users to query future epochs?
     height > +SmartWeave.block.height
   ) {
     throw new ContractError(
