@@ -1,11 +1,13 @@
 import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
   FEE_STRUCTURE,
+  MIN_DELEGATED_STAKE,
   TALLY_PERIOD_BLOCKS,
 } from '../constants';
 import {
   ArNSLeaseAuctionData,
   DelegateData,
+  Delegates,
   DemandFactoringData,
   Gateway,
   Gateways,
@@ -142,7 +144,7 @@ export const baselineDelegatedGatewayData: Gateway = {
     port: 443,
     protocol: 'https',
     allowDelegatedStaking: true,
-    delegateRewardRatio: 5,
+    delegateRewardShareRatio: 5,
   },
   status: 'joined',
 };
@@ -152,3 +154,17 @@ export const baselineGatewaysData: Gateways = {
     ...baselineGatewayData,
   },
 };
+
+// Helper function to create mock delegates
+export function createMockDelegates(numDelegates: number) {
+  const delegates: Delegates = {};
+  for (let i = 0; i < numDelegates; i++) {
+    const delegateAddress = `delegateAddress${i}`; // Mock unique delegate address
+    delegates[delegateAddress] = {
+      delegatedStake: MIN_DELEGATED_STAKE, // or any mock value you need
+      start: 0, // Mock start block
+      vaults: {}, // Mock vaults data or add as needed
+    };
+  }
+  return delegates;
+}

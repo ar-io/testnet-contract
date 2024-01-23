@@ -148,7 +148,7 @@ describe('updateGatewaySettings', () => {
         properties: 'WRONg6rQ9Py7L8j4CkS8jn818gdXW25Oofg0q2E58ro',
         note: 'a new note',
         allowDelegatedStaking: true,
-        delegateRewardRatio: Math.floor(
+        delegateRewardShareRatio: Math.floor(
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
         ),
         reservedDelegates,

@@ -63,24 +63,24 @@ describe('joinNetwork', () => {
       },
     ],
     [
-      'should throw an error for invalid delegateRewardRatio (must be an integer)',
+      'should throw an error for invalid delegateRewardShareRatio (must be an integer)',
       {
         ...validInput,
-        delegateRewardRatio: 10.5,
+        delegateRewardShareRatio: 10.5,
       },
     ],
     [
-      'should throw an error for invalid delegateRewardRatio (too high)',
+      'should throw an error for invalid delegateRewardShareRatio (too high)',
       {
         ...validInput,
-        delegateRewardRatio: 101,
+        delegateRewardShareRatio: 101,
       },
     ],
     [
-      'should throw an error for invalid delegateRewardRatio (cant be a string)',
+      'should throw an error for invalid delegateRewardShareRatio (cant be a string)',
       {
         ...validInput,
-        delegateRewardRatio: 'integer-between-1-and-100',
+        delegateRewardShareRatio: 'integer-between-1-and-100',
       },
     ],
     [
@@ -284,7 +284,7 @@ describe('joinNetwork', () => {
         allowDelegatedStaking: false,
         reservedDelegates: [],
         minDelegatedStake: MIN_DELEGATED_STAKE,
-        delegateRewardRatio: 0,
+        delegateRewardShareRatio: 0,
       },
       start: SmartWeave.block.height,
       observerWallet: stubbedArweaveTxId,
@@ -315,7 +315,7 @@ describe('joinNetwork', () => {
       input: {
         ...validInput,
         allowDelegatedStaking: true,
-        delegateRewardRatio: Math.floor(
+        delegateRewardShareRatio: Math.floor(
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
         ),
       },
@@ -333,7 +333,7 @@ describe('joinNetwork', () => {
         allowDelegatedStaking: true,
         reservedDelegates: [],
         minDelegatedStake: MIN_DELEGATED_STAKE,
-        delegateRewardRatio: Math.floor(
+        delegateRewardShareRatio: Math.floor(
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
         ),
       },
@@ -365,7 +365,7 @@ describe('joinNetwork', () => {
       caller: stubbedArweaveTxId,
       input: {
         ...validInput,
-        delegateRewardRatio: Math.floor(
+        delegateRewardShareRatio: Math.floor(
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
         ),
         reservedDelegates: [stubbedArweaveTxId],
@@ -384,7 +384,7 @@ describe('joinNetwork', () => {
         allowDelegatedStaking: false,
         reservedDelegates: [stubbedArweaveTxId],
         minDelegatedStake: MIN_DELEGATED_STAKE,
-        delegateRewardRatio: Math.floor(
+        delegateRewardShareRatio: Math.floor(
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
         ),
       },

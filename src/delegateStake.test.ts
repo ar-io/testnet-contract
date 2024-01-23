@@ -2,12 +2,14 @@ import {
   DELEGATED_STAKE_UNLOCK_LENGTH,
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_GATEWAY_REGISTERED_MESSAGE,
+  MAX_DELEGATES,
   MIN_DELEGATED_STAKE,
 } from './constants';
 import { safeDecreaseDelegateStake, safeDelegateStake } from './delegateStake';
 import {
   baselineGatewayData,
   baselineGatewaysData,
+  createMockDelegates,
   stubbedArweaveTxId,
 } from './tests/stubs';
 import { BlockHeight, DelegateData, IOToken } from './types';
@@ -160,6 +162,31 @@ describe('safeDelegateStake function', () => {
         startHeight: new BlockHeight(0),
       });
     }).toThrowError('This Gateway does not allow delegated staking.');
+  });
+
+  it('should throw an error if gateway has reached maximum amount of delegated stakers', () => {
+    const mockDelegates = createMockDelegates(MAX_DELEGATES + 1);
+    expect(() => {
+      safeDelegateStake({
+        balances: { foo: MIN_DELEGATED_STAKE },
+        gateways: {
+          [stubbedArweaveTxId]: {
+            ...baselineGatewayData,
+            delegates: mockDelegates, // how do we add 10k delegates here?
+            settings: {
+              ...baselineGatewayData.settings,
+              allowDelegatedStaking: true,
+            },
+          },
+        },
+        qty: new IOToken(MIN_DELEGATED_STAKE),
+        fromAddress: 'foo',
+        gatewayAddress: stubbedArweaveTxId,
+        startHeight: new BlockHeight(0),
+      });
+    }).toThrowError(
+      `This Gateway has reached its maximum amount of delegated stakers.`,
+    );
   });
 
   it('should delegate stake as new delegate', () => {

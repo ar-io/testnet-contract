@@ -1218,7 +1218,7 @@ describe('tickRewardDistributionWithDelegates', () => {
         settings: {
           ...baselineGatewayData.settings,
           allowDelegatedStaking: true,
-          delegateRewardRatio: 50,
+          delegateRewardShareRatio: 50,
         },
         delegates: {
           ['delegate-1']: {
@@ -1233,7 +1233,7 @@ describe('tickRewardDistributionWithDelegates', () => {
         settings: {
           ...baselineGatewayData.settings,
           allowDelegatedStaking: true,
-          delegateRewardRatio: 50,
+          delegateRewardShareRatio: 50,
         },
         delegates: {
           ['delegate-2']: {
@@ -1277,7 +1277,7 @@ describe('tickRewardDistributionWithDelegates', () => {
           settings: {
             ...baselineGatewayData.settings,
             allowDelegatedStaking: true,
-            delegateRewardRatio: 50,
+            delegateRewardShareRatio: 50,
           },
           delegates: {
             ['delegate-1']: {
@@ -1292,7 +1292,7 @@ describe('tickRewardDistributionWithDelegates', () => {
           settings: {
             ...baselineGatewayData.settings,
             allowDelegatedStaking: true,
-            delegateRewardRatio: 50,
+            delegateRewardShareRatio: 50,
           },
           delegates: {
             ['delegate-2']: {
@@ -1309,7 +1309,7 @@ describe('tickRewardDistributionWithDelegates', () => {
           settings: {
             ...baselineGatewayData.settings,
             allowDelegatedStaking: true,
-            delegateRewardRatio: 50,
+            delegateRewardShareRatio: 50,
           },
           observerWallet: 'an-observing-gateway-3',
         },
@@ -1322,7 +1322,7 @@ describe('tickRewardDistributionWithDelegates', () => {
           settings: {
             ...baselineGatewayData.settings,
             allowDelegatedStaking: true,
-            delegateRewardRatio: 50,
+            delegateRewardShareRatio: 50,
           },
           delegates: {
             ['delegate-4']: {

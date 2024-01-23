@@ -606,7 +606,7 @@ export async function tickRewardDistribution({
     if (
       gateways[gatewayAddress].settings.allowDelegatedStaking === true && // Delegated staking disabled
       Object.keys(gateways[gatewayAddress].delegates).length && // No delegates to share with
-      gateways[gatewayAddress].settings.delegateRewardRatio > 0 // Do not split rewards at all
+      gateways[gatewayAddress].settings.delegateRewardShareRatio > 0 // Do not split rewards at all
     ) {
       // Track tokens for each delegated staker
       const tokensForDelegate: Record<WalletAddress, number> = {};
@@ -614,8 +614,8 @@ export async function tickRewardDistribution({
 
       // Calculate the rewards to share between the gateway and delegates
       const gatewayRewardRatio =
-        (100 - gateways[gatewayAddress].settings.delegateRewardRatio) / 100 ||
-        0;
+        (100 - gateways[gatewayAddress].settings.delegateRewardShareRatio) /
+          100 || 0;
       const gatewayRewardShare = Math.floor(
         totalGatewayReward * gatewayRewardRatio,
       );
@@ -691,7 +691,7 @@ export async function tickRewardDistribution({
       gateways[gatewayObservedAndPassed].settings.allowDelegatedStaking ===
         true && // Delegated staking disabled
       Object.keys(gateways[gatewayObservedAndPassed].delegates).length && // No delegates to share with
-      gateways[gatewayObservedAndPassed].settings.delegateRewardRatio > 0 // Do not split rewards at all
+      gateways[gatewayObservedAndPassed].settings.delegateRewardShareRatio > 0 // Do not split rewards at all
     ) {
       // Track tokens for each delegated staker
       const tokensForDelegate: Record<WalletAddress, number> = {};
@@ -700,7 +700,8 @@ export async function tickRewardDistribution({
       // Calculate the rewards to share between the gateway and delegates
       const observerRewardRatio =
         (100 -
-          gateways[gatewayObservedAndPassed].settings.delegateRewardRatio) /
+          gateways[gatewayObservedAndPassed].settings
+            .delegateRewardShareRatio) /
           100 || 0;
       const observerRewardShare = Math.floor(
         perObserverReward * observerRewardRatio,

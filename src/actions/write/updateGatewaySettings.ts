@@ -17,7 +17,7 @@ export class GatewaySettings {
     protocol?: 'http' | 'https';
     port?: number;
     allowDelegatedStaking: boolean;
-    delegateRewardRatio: number;
+    delegateRewardShareRatio: number;
     reservedDelegates: string[];
     minDelegatedStake: number;
   };
@@ -39,7 +39,7 @@ export class GatewaySettings {
       properties,
       observerWallet,
       allowDelegatedStaking,
-      delegateRewardRatio,
+      delegateRewardShareRatio,
       reservedDelegates,
       minDelegatedStake,
     } = input;
@@ -51,7 +51,9 @@ export class GatewaySettings {
       ...(protocol !== undefined && { protocol }),
       ...(port !== undefined && { port }),
       ...(allowDelegatedStaking !== undefined && { allowDelegatedStaking }),
-      ...(delegateRewardRatio !== undefined && { delegateRewardRatio }),
+      ...(delegateRewardShareRatio !== undefined && {
+        delegateRewardShareRatio,
+      }),
       ...(reservedDelegates !== undefined && { reservedDelegates }),
       ...(minDelegatedStake !== undefined && { minDelegatedStake }),
     };

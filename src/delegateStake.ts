@@ -2,6 +2,7 @@ import {
   DELEGATED_STAKE_UNLOCK_LENGTH,
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_GATEWAY_REGISTERED_MESSAGE,
+  MAX_DELEGATES,
   MIN_DELEGATED_STAKE,
   NETWORK_LEAVING_STATUS,
 } from './constants';
@@ -54,6 +55,13 @@ export function safeDelegateStake({
   // TODO: Update the below to allow reservedGateways (once the DeepReadonly is figured out)
   if (!gateways[gatewayAddress].settings.allowDelegatedStaking) {
     throw new ContractError(`This Gateway does not allow delegated staking.`);
+  }
+
+  // TO DO: Ensure does not go above max delegates for this gateway
+  if (Object.keys(gateways[gatewayAddress].delegates).length > MAX_DELEGATES) {
+    throw new ContractError(
+      `This Gateway has reached its maximum amount of delegated stakers.`,
+    );
   }
 
   // If this delegate has staked before, update its amount, if not, create a new delegated staker
