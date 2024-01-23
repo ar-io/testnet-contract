@@ -10,8 +10,8 @@ import {
 } from './actions/read/gateways';
 import {
   getEpoch,
-  prescribedObserver,
-  prescribedObservers,
+  getPrescribedObserver,
+  getPrescribedObservers,
 } from './actions/read/observation';
 import { getPriceForInteraction } from './actions/read/price';
 import { getRecord } from './actions/read/record';
@@ -88,9 +88,9 @@ export async function handle(
     case 'gateway':
       return getGateway(tickedState, action);
     case 'prescribedObserver':
-      return prescribedObserver(tickedState, action);
+      return getPrescribedObserver(tickedState, action);
     case 'prescribedObservers':
-      return prescribedObservers(tickedState, action);
+      return getPrescribedObservers(tickedState);
     case 'epoch':
       return getEpoch(tickedState, action);
     case 'gatewayTotalStake':

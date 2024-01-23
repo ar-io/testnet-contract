@@ -14,27 +14,15 @@ import {
   WeightedObserver,
 } from '../../types';
 
-export const prescribedObserver = async (
+export const getPrescribedObserver = async (
   state: IOState,
-  { input: { target, height } }: PstAction,
+  { caller, input: { target = caller } }: PstAction,
 ): Promise<ContractReadResult> => {
   const { settings, gateways, distributions } = state;
 
-  const requestedHeight = height || +SmartWeave.block.height;
-
-  if (
-    isNaN(requestedHeight) ||
-    height < distributions.epochZeroStartHeight ||
-    height > +SmartWeave.block.height
-  ) {
-    throw new ContractError(
-      'Invalid height. Must be a number less than or equal to the current block height',
-    );
-  }
-
   const { epochStartHeight: epochStartHeight, epochEndHeight: epochEndHeight } =
     getEpochBoundariesForHeight({
-      currentBlockHeight: new BlockHeight(requestedHeight),
+      currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
       epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
       epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
     });
@@ -57,23 +45,12 @@ export const prescribedObserver = async (
   };
 };
 
-export const prescribedObservers = async (
+export const getPrescribedObservers = async (
   state: IOState,
-  { input: { height } }: PstAction,
 ): Promise<ContractReadResult> => {
   const { settings, gateways, distributions } = state;
 
-  const requestedHeight = height || +SmartWeave.block.height;
-
-  if (
-    isNaN(requestedHeight) ||
-    height < distributions.epochZeroStartHeight ||
-    height > +SmartWeave.block.height
-  ) {
-    throw new ContractError(
-      'Invalid height. Must be a number less than or equal to the current block height',
-    );
-  }
+  const requestedHeight = +SmartWeave.block.height;
 
   const { epochStartHeight: epochStartHeight, epochEndHeight: epochEndHeight } =
     getEpochBoundariesForHeight({
