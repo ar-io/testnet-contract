@@ -301,6 +301,17 @@ describe('isGatewayEligibleForDistribution', () => {
       true,
     ],
     [
+      'should be true if the gateway is joined, and started at the same block as the epoch start',
+      {
+        ...baselineGatewayData,
+        status: 'joined',
+        start: 10,
+      },
+      10,
+      Number.MAX_SAFE_INTEGER,
+      true,
+    ],
+    [
       'should be true if the gateway is leaving, but started before the epoch start and leaving after the end of the epoch',
       {
         ...baselineGatewayData,
@@ -353,12 +364,12 @@ describe('isGatewayEligibleForDistribution', () => {
       false,
     ],
     [
-      'should be false if gateway is joined and started the same block as the epoch start',
+      'should be false if gateway is joined and started after the epoch start',
       {
         ...baselineGatewayData,
         start: Number.MAX_SAFE_INTEGER,
       },
-      Number.MAX_SAFE_INTEGER,
+      Number.MAX_SAFE_INTEGER - 10,
       Number.MAX_SAFE_INTEGER,
       false,
     ],

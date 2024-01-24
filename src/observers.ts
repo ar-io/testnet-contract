@@ -98,7 +98,7 @@ export function isGatewayEligibleForDistribution({
 }): boolean {
   if (!gateway) return false;
   // gateway must have joined before the epoch started, as it affects weighting for distributions
-  const didStartBeforeEpoch = gateway.start < epochStartHeight.valueOf();
+  const didStartBeforeEpoch = gateway.start <= epochStartHeight.valueOf();
   // gateway must not be leaving before the end of the epoch - TODO: confirm this
   const didNotLeaveDuringEpoch = !isGatewayLeaving({
     gateway,
@@ -149,13 +149,14 @@ export function getObserverWeightsForEpoch({
     const stake = gateway.operatorStake; // e.g. 100 - no cap to this
     const stakeWeight = stake / minNetworkJoinStakeAmount; // this is always greater than 1 as the minNetworkJoinStakeAmount is always less than the stake
     // the percentage of the epoch the gateway was joined for before this epoch, if the gateway starts in the future this will be 0
-    const totalBlocksForGateway = Math.max(
-      0,
-      epochStartHeight.valueOf() - gateway.start,
-    );
+    const totalBlocksForGateway = epochStartHeight.valueOf() - gateway.start;
     // TODO: should we increment by one here or are observers that join at the epoch start not eligible to be selected as an observer
     const calculatedTenureWeightForGateway =
-      totalBlocksForGateway / TENURE_WEIGHT_TOTAL_BLOCK_COUNT;
+      totalBlocksForGateway < 0
+        ? 0
+        : totalBlocksForGateway
+        ? totalBlocksForGateway / TENURE_WEIGHT_TOTAL_BLOCK_COUNT
+        : 1 / TENURE_WEIGHT_TOTAL_BLOCK_COUNT;
     // max of 4, which implies after 2 years, you are considered a mature gateway and this number stops increasing
     const gatewayTenureWeight = Math.min(
       calculatedTenureWeightForGateway,
@@ -209,7 +210,6 @@ export function getObserverWeightsForEpoch({
       ? weightedObserver.compositeWeight / totalCompositeWeight
       : 0;
   }
-
   return weightedObservers;
 }
 
