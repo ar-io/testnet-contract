@@ -16,5 +16,6 @@
     "**/dist": true,
     "**/coverage": true,
     "**/cache": true
-  }
+  },
+  "jest.jestCommandLine": "yarn test:unit"
 }
