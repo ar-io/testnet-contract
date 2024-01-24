@@ -36,14 +36,21 @@ describe('getGateway', () => {
       },
       // no distributions
     };
-    const observer = await getGateway(state, {
+    const gateway = await getGateway(state, {
       caller: 'a-test-gateway',
       input: {},
     });
-    expect(observer).toEqual({
+    expect(gateway).toEqual({
       result: {
         ...baselineGatewayData,
         start: 10,
+        stats: {
+          passedEpochCount: 0,
+          failedConsecutiveEpochCount: 0,
+          totalEpochParticipationCount: 0,
+          submittedEpochCount: 0,
+          prescribedObserverEpochCount: 0,
+        },
         weights: {
           stakeWeight: 1,
           tenureWeight: 0,
@@ -56,7 +63,7 @@ describe('getGateway', () => {
     });
   });
 
-  it('should return the observer and its weights when the caller is a valid gateway address', async () => {
+  it('should return the gateway and its weights when the caller is a valid gateway address', async () => {
     // the next epoch
     SmartWeave.block.height = 200;
     const state = {
@@ -66,16 +73,23 @@ describe('getGateway', () => {
       },
       // no distributions
     };
-    const observer = await getGateway(state, {
+    const gateway = await getGateway(state, {
       caller: 'a-test-gateway',
       input: {},
     });
     // incremented by 1
     const expectedTenureWeight = 200 / TENURE_WEIGHT_TOTAL_BLOCK_COUNT;
     const expectedCompositeWeight = 1 * 1 * 1 * expectedTenureWeight;
-    expect(observer).toEqual({
+    expect(gateway).toEqual({
       result: {
         ...baselineGatewayData,
+        stats: {
+          passedEpochCount: 0,
+          failedConsecutiveEpochCount: 0,
+          totalEpochParticipationCount: 0,
+          submittedEpochCount: 0,
+          prescribedObserverEpochCount: 0,
+        },
         weights: {
           stakeWeight: 1,
           tenureWeight: expectedTenureWeight,
@@ -98,7 +112,7 @@ describe('getGateway', () => {
       },
       // no distributions
     };
-    const observer = await getGateway(state, {
+    const gateway = await getGateway(state, {
       caller: 'a-random-caller',
       input: {
         target: 'a-test-gateway',
@@ -106,9 +120,16 @@ describe('getGateway', () => {
     });
     const expectedTenureWeight = 200 / TENURE_WEIGHT_TOTAL_BLOCK_COUNT;
     const expectedCompositeWeight = 1 * 1 * 1 * expectedTenureWeight;
-    expect(observer).toEqual({
+    expect(gateway).toEqual({
       result: {
         ...baselineGatewayData,
+        stats: {
+          passedEpochCount: 0,
+          failedConsecutiveEpochCount: 0,
+          totalEpochParticipationCount: 0,
+          submittedEpochCount: 0,
+          prescribedObserverEpochCount: 0,
+        },
         weights: {
           stakeWeight: 1,
           tenureWeight: expectedTenureWeight,
@@ -145,6 +166,13 @@ describe('getGateways', () => {
         'a-test-gateway': {
           ...baselineGatewayData,
           observerWallet: 'a-test-gateway',
+          stats: {
+            passedEpochCount: 0,
+            failedConsecutiveEpochCount: 0,
+            totalEpochParticipationCount: 0,
+            submittedEpochCount: 0,
+            prescribedObserverEpochCount: 0,
+          },
           weights: {
             stakeWeight: 1,
             tenureWeight: 1 / TENURE_WEIGHT_TOTAL_BLOCK_COUNT, // started at the same block height
@@ -158,6 +186,13 @@ describe('getGateways', () => {
           ...baselineGatewayData,
           observerWallet: 'a-test-gateway-2',
           start: 10,
+          stats: {
+            passedEpochCount: 0,
+            failedConsecutiveEpochCount: 0,
+            totalEpochParticipationCount: 0,
+            submittedEpochCount: 0,
+            prescribedObserverEpochCount: 0,
+          },
           weights: {
             stakeWeight: 1,
             tenureWeight: 0,

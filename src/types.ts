@@ -43,6 +43,7 @@ export type IOState = {
   lastTickedHeight: number; // periodicity management
   demandFactoring: DemandFactoringData;
   observations: Observations;
+  // TODO: these stats can be moved to gateways
   distributions: RewardDistributions;
   vaults: RegistryVaults;
 };
@@ -254,11 +255,7 @@ export type RegistryFunctions =
   | 'initiateOperatorStakeDecrease'
   | 'updateGatewaySettings';
 
-export type ObservationFunctions =
-  | 'saveObservations'
-  | 'observer'
-  | 'observers'
-  | 'prescribedObservers';
+export type ObservationFunctions = 'saveObservations' | 'prescribedObservers';
 
 export type IOContractFunctions = BaseFunctions &
   ObservationFunctions &

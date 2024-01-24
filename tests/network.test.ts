@@ -737,6 +737,14 @@ describe('Network', () => {
         for (const address of Object.keys(gateways)) {
           expect(gateways[address]).toEqual({
             ...fullState.gateways[address],
+            stats: {
+              // TODO: these will move to within the gateway state instead of distributions
+              passedEpochCount: 0,
+              failedConsecutiveEpochCount: 0,
+              submittedEpochCount: 0,
+              prescribedObserverEpochCount: 0,
+              totalEpochParticipationCount: 0,
+            },
             weights: expect.objectContaining({
               stakeWeight: expect.any(Number),
               tenureWeight: expect.any(Number),
