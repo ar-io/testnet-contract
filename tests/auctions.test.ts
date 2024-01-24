@@ -9,11 +9,11 @@ import {
 import { calculateAuctionPriceForBlock } from '../src/auctions';
 import {
   ARNS_NAME_RESERVED_MESSAGE,
+  ARNS_NON_EXPIRED_NAME_MESSAGE,
   AUCTION_SETTINGS,
   DEFAULT_UNDERNAME_COUNT,
   INVALID_INPUT_MESSAGE,
   MINIMUM_ALLOWED_NAME_LENGTH,
-  NON_EXPIRED_ARNS_NAME_MESSAGE,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../src/constants';
 import { ArNSAuctionData, BlockHeight, IOState } from '../src/types';
@@ -349,7 +349,7 @@ describe('Auctions', () => {
               );
               expect(
                 cachedValue.errorMessages[writeInteraction.originalTxId],
-              ).toEqual(NON_EXPIRED_ARNS_NAME_MESSAGE);
+              ).toEqual(ARNS_NON_EXPIRED_NAME_MESSAGE);
               expect(auctions[auctionBid.name]).toBeUndefined();
               expect(balances).toEqual(prevState.balances);
             });

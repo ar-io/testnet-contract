@@ -1,6 +1,6 @@
 import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
-  FEE_STRUCTURE,
+  GENESIS_FEES,
   TALLY_PERIOD_BLOCKS,
 } from '../constants';
 import {
@@ -49,9 +49,7 @@ export const getBaselineState: () => IOState = (): IOState => ({
     observers: {},
   },
   reserved: {},
-  fees: {
-    ...FEE_STRUCTURE,
-  },
+  fees: GENESIS_FEES,
   auctions: {},
   settings: {
     registry: {

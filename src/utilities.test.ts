@@ -1,59 +1,15 @@
 import { TOTAL_IO_SUPPLY } from './constants';
 import { getBaselineState } from './tests/stubs';
+import { BlockHeight, BlockTimestamp, GatewayStatus, IOState } from './types';
 import {
-  ArNSBaseNameData,
-  ArNSLeaseAuctionData,
-  ArNSNameData,
-  BlockHeight,
-  BlockTimestamp,
-  GatewayStatus,
-  IOState,
-  IOToken,
-} from './types';
-import {
-  calculateExistingAuctionBidForCaller,
   calculateYearsBetweenTimestamps,
   incrementBalance,
   isGatewayEligibleToBeRemoved,
   isGatewayEligibleToLeave,
   isGatewayJoined,
-  isLeaseRecord,
   resetProtocolBalance,
   unsafeDecrementBalance,
 } from './utilities';
-
-describe('calculateExistingAuctionBidForCaller function', () => {
-  const nihilisticAuction: ArNSLeaseAuctionData = {
-    startPrice: Number.NEGATIVE_INFINITY,
-    floorPrice: Number.NEGATIVE_INFINITY,
-    startHeight: Number.NEGATIVE_INFINITY,
-    endHeight: Number.NEGATIVE_INFINITY,
-    type: 'lease',
-    initiator: '',
-    contractTxId: '',
-    years: 1,
-    settings: {
-      auctionDuration: Number.NEGATIVE_INFINITY,
-      exponentialDecayRate: Number.NEGATIVE_INFINITY,
-      scalingExponent: Number.NEGATIVE_INFINITY,
-      floorPriceMultiplier: Number.NEGATIVE_INFINITY,
-      startPriceMultiplier: Number.NEGATIVE_INFINITY,
-    },
-  };
-
-  it('should throw if submitted bid is less than the required minimum bid', () => {
-    expect(() => {
-      calculateExistingAuctionBidForCaller({
-        caller: '',
-        auction: nihilisticAuction,
-        submittedBid: 1,
-        requiredMinimumBid: new IOToken(2),
-      });
-    }).toThrowError(
-      'The bid (1 IO) is less than the current required minimum bid of 2 IO.',
-    );
-  });
-});
 
 describe('isGatewayJoined function', () => {
   it('should return false if gateway is undefined', () => {
@@ -305,33 +261,6 @@ describe('incrementBalance function', () => {
     incrementBalance(balances, 'foo', 1);
     expect(balances).toEqual({ foo: 2, bar: 2 });
   });
-});
-
-describe('isLeaseRecord function', () => {
-  const stubBaseNameData: ArNSBaseNameData = {
-    contractTxId: '',
-    startTimestamp: 0,
-    type: 'permabuy',
-    undernames: 0,
-    purchasePrice: 0,
-  };
-
-  it.each([
-    [stubBaseNameData, false],
-    [
-      {
-        ...stubBaseNameData,
-        type: 'lease',
-        endTimestamp: 1,
-      },
-      true,
-    ],
-  ])(
-    'should, for record %p, return %s',
-    (record: ArNSNameData, expectedValue: boolean) => {
-      expect(isLeaseRecord(record)).toEqual(expectedValue);
-    },
-  );
 });
 
 describe('resetProtocolBalance function', () => {

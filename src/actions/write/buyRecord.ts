@@ -1,3 +1,4 @@
+import { isNameRequiredToBeAuction } from '../../auctions';
 import {
   ARNS_NAME_IN_AUCTION_MESSAGE,
   ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE,
@@ -6,6 +7,7 @@ import {
   SECONDS_IN_A_YEAR,
 } from '../../constants';
 import { calculateRegistrationFee, tallyNamePurchase } from '../../pricing';
+import { assertAvailableRecord } from '../../records';
 import { safeTransfer } from '../../transfer';
 import {
   BlockTimestamp,
@@ -15,9 +17,7 @@ import {
   RegistrationType,
 } from '../../types';
 import {
-  assertAvailableRecord,
   getInvalidAjvMessage,
-  isNameRequiredToBeAuction,
   walletHasSufficientBalance,
 } from '../../utilities';
 // composed by ajv at build

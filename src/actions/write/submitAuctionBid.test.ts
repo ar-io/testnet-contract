@@ -1,8 +1,8 @@
 import { submitAuctionBid } from '../../actions/write/submitAuctionBid';
 import {
+  ARNS_LEASE_LENGTH_MAX_YEARS,
   ARNS_NAME_AUCTION_EXPIRED_MESSAGE,
   INSUFFICIENT_FUNDS_MESSAGE,
-  MAX_YEARS,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
@@ -51,7 +51,7 @@ describe('submitAuctionBid', () => {
         name: 'valid-name',
         contractTxId: RESERVED_ATOMIC_TX_ID,
         type: 'lease',
-        years: MAX_YEARS + 1,
+        years: ARNS_LEASE_LENGTH_MAX_YEARS + 1,
       },
     ],
     [

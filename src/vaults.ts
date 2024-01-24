@@ -1,8 +1,8 @@
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_VAULT_LOCK_LENGTH_MESSAGE,
-  MAX_TOKEN_LOCK_LENGTH,
-  MIN_TOKEN_LOCK_LENGTH,
+  MAX_TOKEN_LOCK_BLOCK_LENGTH,
+  MIN_TOKEN_LOCK_BLOCK_LENGTH,
 } from './constants';
 import {
   Balances,
@@ -44,8 +44,8 @@ export function safeCreateVault({
   }
 
   if (
-    lockLength.valueOf() < MIN_TOKEN_LOCK_LENGTH ||
-    lockLength.valueOf() > MAX_TOKEN_LOCK_LENGTH
+    lockLength.valueOf() < MIN_TOKEN_LOCK_BLOCK_LENGTH ||
+    lockLength.valueOf() > MAX_TOKEN_LOCK_BLOCK_LENGTH
   ) {
     throw new ContractError(INVALID_VAULT_LOCK_LENGTH_MESSAGE);
   }
@@ -86,9 +86,9 @@ export function safeExtendVault({
   const totalBlocksRemaining = currentEnd - +SmartWeave.block.height;
 
   if (
-    extendLength.valueOf() < MIN_TOKEN_LOCK_LENGTH ||
-    extendLength.valueOf() > MAX_TOKEN_LOCK_LENGTH ||
-    totalBlocksRemaining + extendLength.valueOf() > MAX_TOKEN_LOCK_LENGTH
+    extendLength.valueOf() < MIN_TOKEN_LOCK_BLOCK_LENGTH ||
+    extendLength.valueOf() > MAX_TOKEN_LOCK_BLOCK_LENGTH ||
+    totalBlocksRemaining + extendLength.valueOf() > MAX_TOKEN_LOCK_BLOCK_LENGTH
   ) {
     throw new ContractError(INVALID_VAULT_LOCK_LENGTH_MESSAGE);
   }

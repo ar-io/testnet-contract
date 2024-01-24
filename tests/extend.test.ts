@@ -2,11 +2,11 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
 import { IOState } from '../src/types';
 import {
+  ARNS_INVALID_EXTENSION_MESSAGE,
+  ARNS_LEASE_LENGTH_MAX_YEARS,
   ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
-  INVALID_NAME_EXTENSION_TYPE_MESSAGE,
-  MAX_YEARS,
   REGISTRATION_TYPES,
   SECONDS_IN_A_YEAR,
 } from './utils/constants';
@@ -98,8 +98,8 @@ describe('Extend', () => {
       },
     );
 
-    it(`should not be able to extend a record for more than ${MAX_YEARS} years`, async () => {
-      const extendYears = MAX_YEARS + 1;
+    it(`should not be able to extend a record for more than ${ARNS_LEASE_LENGTH_MAX_YEARS} years`, async () => {
+      const extendYears = ARNS_LEASE_LENGTH_MAX_YEARS + 1;
       const name = 'name1';
       const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
@@ -123,7 +123,7 @@ describe('Extend', () => {
 
     it('should not be able to extend a non-existent name ', async () => {
       // advance current timer
-      const extendYears = MAX_YEARS - 1;
+      const extendYears = ARNS_LEASE_LENGTH_MAX_YEARS - 1;
       const name = 'non-existent-name';
 
       const writeInteraction = await contract.writeInteraction({
@@ -161,7 +161,7 @@ describe('Extend', () => {
         writeInteraction.originalTxId,
       );
       expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toEqual(
-        INVALID_NAME_EXTENSION_TYPE_MESSAGE,
+        ARNS_INVALID_EXTENSION_MESSAGE,
       );
       expect(cachedValue.state).toEqual(prevState);
     });
@@ -216,7 +216,7 @@ describe('Extend', () => {
     it.each([1, 2, 3, 4])(
       'should be able to extend name not in grace period and not expired by %s years ',
       async (years) => {
-        const name = `lease-length-name${MAX_YEARS - years}`; // should select the name correctly based on how the helper function generates names
+        const name = `lease-length-name${ARNS_LEASE_LENGTH_MAX_YEARS - years}`; // should select the name correctly based on how the helper function generates names
         const { cachedValue: prevCachedValue } = await contract.readState();
         const prevState = prevCachedValue.state as IOState;
         const prevBalance = prevState.balances[nonContractOwnerAddress];

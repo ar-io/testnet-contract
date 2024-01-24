@@ -1,11 +1,16 @@
 import {
+  ARNS_INVALID_EXTENSION_MESSAGE,
+  ARNS_INVALID_YEARS_MESSAGE,
   ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
   INSUFFICIENT_FUNDS_MESSAGE,
-  INVALID_NAME_EXTENSION_TYPE_MESSAGE,
-  INVALID_YEARS_MESSAGE,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
 import { calculateAnnualRenewalFee, tallyNamePurchase } from '../../pricing';
+import {
+  getMaxAllowedYearsExtensionForRecord,
+  isExistingActiveRecord,
+  isLeaseRecord,
+} from '../../records';
 import { safeTransfer } from '../../transfer';
 import {
   ArNSNameData,
@@ -16,9 +21,6 @@ import {
 } from '../../types';
 import {
   getInvalidAjvMessage,
-  getMaxAllowedYearsExtensionForRecord,
-  isExistingActiveRecord,
-  isLeaseRecord,
   walletHasSufficientBalance,
 } from '../../utilities';
 import { validateExtendRecord } from '../../validations';
@@ -70,7 +72,7 @@ export const extendRecord = async (
   }
 
   if (!isLeaseRecord(record)) {
-    throw new ContractError(INVALID_NAME_EXTENSION_TYPE_MESSAGE);
+    throw new ContractError(ARNS_INVALID_EXTENSION_MESSAGE);
   }
 
   assertRecordCanBeExtended({
@@ -130,13 +132,13 @@ export function assertRecordCanBeExtended({
   }
 
   if (!isLeaseRecord(record)) {
-    throw new ContractError(INVALID_NAME_EXTENSION_TYPE_MESSAGE);
+    throw new ContractError(ARNS_INVALID_EXTENSION_MESSAGE);
   }
 
   if (
     years >
     getMaxAllowedYearsExtensionForRecord({ currentBlockTimestamp, record })
   ) {
-    throw new ContractError(INVALID_YEARS_MESSAGE);
+    throw new ContractError(ARNS_INVALID_YEARS_MESSAGE);
   }
 }

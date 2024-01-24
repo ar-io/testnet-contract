@@ -1,4 +1,3 @@
-import { DemandFactoringCriteria } from './constants';
 import {
   cloneDemandFactoringData,
   demandFactorPeriodIndex,
@@ -10,7 +9,12 @@ import {
   tallyNamePurchase,
   updateDemandFactor,
 } from './pricing';
-import { BlockHeight, DemandFactoringData, Fees } from './types';
+import {
+  BlockHeight,
+  DemandFactoringCriteria,
+  DemandFactoringData,
+  Fees,
+} from './types';
 
 describe('Pricing functions:', () => {
   describe('periodAtHeight function', () => {
