@@ -1,7 +1,7 @@
 import {
-  DEFAULT_EPOCH_BLOCK_LENGTH,
-  TALLY_PERIOD_BLOCKS,
-  TENURE_WEIGHT_TOTAL_BLOCK_COUNT,
+  EPOCH_BLOCK_LENGTH,
+  EPOCH_DISTRIBUTION_DELAY,
+  TENURE_WEIGHT_PERIOD,
 } from '../../constants';
 import { getBaselineState } from '../../tests/stubs';
 import { baselineGatewayData } from '../write/saveObservations.test';
@@ -19,7 +19,7 @@ describe('getPrescribedObservers', () => {
     const { result } = await getPrescribedObservers(state);
     expect(result).toEqual([
       {
-        compositeWeight: 1 / TENURE_WEIGHT_TOTAL_BLOCK_COUNT, // gateway started at the same block as the epoch, so it gets the default value
+        compositeWeight: 1 / TENURE_WEIGHT_PERIOD, // gateway started at the same block as the epoch, so it gets the default value
         gatewayAddress: 'a-test-gateway',
         gatewayRewardRatioWeight: 1,
         normalizedCompositeWeight: 1,
@@ -28,7 +28,7 @@ describe('getPrescribedObservers', () => {
         stake: 10000,
         stakeWeight: 1,
         start: 0,
-        tenureWeight: 1 / TENURE_WEIGHT_TOTAL_BLOCK_COUNT, // gateway started at the same block as the epoch, so it gets the default value
+        tenureWeight: 1 / TENURE_WEIGHT_PERIOD, // gateway started at the same block as the epoch, so it gets the default value
       },
     ]);
   });
@@ -60,11 +60,11 @@ describe('getEpoch', () => {
     });
     expect(result).toEqual({
       epochStartHeight: 0,
-      epochEndHeight: DEFAULT_EPOCH_BLOCK_LENGTH - 1,
+      epochEndHeight: EPOCH_BLOCK_LENGTH - 1,
       epochDistributionHeight:
-        DEFAULT_EPOCH_BLOCK_LENGTH + TALLY_PERIOD_BLOCKS - 1,
+        EPOCH_BLOCK_LENGTH + EPOCH_DISTRIBUTION_DELAY - 1,
       epochZeroStartHeight: state.distributions.epochZeroStartHeight,
-      epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
+      epochBlockLength: EPOCH_BLOCK_LENGTH,
     });
   });
 
@@ -72,11 +72,11 @@ describe('getEpoch', () => {
     const { result } = await getEpoch(state, { input: { height: undefined } });
     expect(result).toEqual({
       epochStartHeight: 0,
-      epochEndHeight: DEFAULT_EPOCH_BLOCK_LENGTH - 1,
+      epochEndHeight: EPOCH_BLOCK_LENGTH - 1,
       epochDistributionHeight:
-        DEFAULT_EPOCH_BLOCK_LENGTH + TALLY_PERIOD_BLOCKS - 1,
+        EPOCH_BLOCK_LENGTH + EPOCH_DISTRIBUTION_DELAY - 1,
       epochZeroStartHeight: state.distributions.epochZeroStartHeight,
-      epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
+      epochBlockLength: EPOCH_BLOCK_LENGTH,
     });
   });
 });

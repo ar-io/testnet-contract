@@ -1,7 +1,7 @@
 import {
-  DEFAULT_EPOCH_BLOCK_LENGTH,
+  EPOCH_BLOCK_LENGTH,
+  EPOCH_DISTRIBUTION_DELAY,
   NON_CONTRACT_OWNER_MESSAGE,
-  TALLY_PERIOD_BLOCKS,
 } from '../../constants';
 import { ContractWriteResult, IOState, PstAction } from '../../types';
 
@@ -17,8 +17,8 @@ export const evolveState = async (
   }
 
   const epochStartHeight = +SmartWeave.block.height;
-  const epochEndHeight = epochStartHeight + DEFAULT_EPOCH_BLOCK_LENGTH - 1;
-  const epochDistributionHeight = epochEndHeight + TALLY_PERIOD_BLOCKS;
+  const epochEndHeight = epochStartHeight + EPOCH_BLOCK_LENGTH - 1;
+  const epochDistributionHeight = epochEndHeight + EPOCH_DISTRIBUTION_DELAY;
   state.distributions = {
     epochZeroStartHeight: epochStartHeight,
     epochStartHeight,

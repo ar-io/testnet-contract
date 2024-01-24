@@ -1,11 +1,11 @@
 import { createHash } from 'node:crypto';
 
 import {
-  DEFAULT_EPOCH_BLOCK_LENGTH,
+  EPOCH_BLOCK_LENGTH,
+  EPOCH_DISTRIBUTION_DELAY,
   GATEWAY_LEAVE_BLOCK_LENGTH,
   MAXIMUM_OBSERVERS_PER_EPOCH,
-  TALLY_PERIOD_BLOCKS,
-  TENURE_WEIGHT_TOTAL_BLOCK_COUNT,
+  TENURE_WEIGHT_PERIOD,
 } from './constants';
 import {
   getEntropyHashForEpoch,
@@ -37,8 +37,8 @@ const gateways = {
 const distributions = {
   epochZeroStartHeight: 0,
   epochStartHeight: 0,
-  epochEndHeight: DEFAULT_EPOCH_BLOCK_LENGTH - 1,
-  epochDistributionHeight: DEFAULT_EPOCH_BLOCK_LENGTH - 1 + TALLY_PERIOD_BLOCKS,
+  epochEndHeight: EPOCH_BLOCK_LENGTH - 1,
+  epochDistributionHeight: EPOCH_BLOCK_LENGTH - 1 + EPOCH_DISTRIBUTION_DELAY,
   gateways: {},
   observers: {},
 };
@@ -89,8 +89,7 @@ describe('getPrescribedObserversForEpoch', () => {
 
     expect(observers).toBeDefined();
     const expectedStakeWeight = totalStake / minNetworkJoinStakeAmount;
-    const expectedTenureWeight =
-      epochStartHeight / TENURE_WEIGHT_TOTAL_BLOCK_COUNT;
+    const expectedTenureWeight = epochStartHeight / TENURE_WEIGHT_PERIOD;
     const expectedCompositeWeight = expectedTenureWeight * expectedStakeWeight;
     expect(observers).toEqual([
       {
@@ -149,7 +148,7 @@ describe('getPrescribedObserversForEpoch', () => {
         eligibleGateways[gateway].operatorStake / minNetworkJoinStakeAmount;
       const expectedTenureWeight =
         (epochStartHeight - eligibleGateways[gateway].start) /
-        TENURE_WEIGHT_TOTAL_BLOCK_COUNT;
+        TENURE_WEIGHT_PERIOD;
       const expectedCompositeWeight =
         expectedTenureWeight * expectedStakeWeight;
       expectedObserverWeights.push({
@@ -427,7 +426,7 @@ describe('getEpochBoundariesForHeight', () => {
       epochZeroStartHeight: new BlockHeight(0),
     });
     expect(epochStartHeight.valueOf()).toBe(0);
-    expect(epochEndHeight.valueOf()).toBe(DEFAULT_EPOCH_BLOCK_LENGTH - 1);
+    expect(epochEndHeight.valueOf()).toBe(EPOCH_BLOCK_LENGTH - 1);
   });
 });
 

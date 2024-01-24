@@ -1,7 +1,7 @@
 import {
-  DEFAULT_EPOCH_BLOCK_LENGTH,
+  EPOCH_BLOCK_LENGTH,
+  EPOCH_DISTRIBUTION_DELAY,
   GENESIS_FEES,
-  TALLY_PERIOD_BLOCKS,
 } from '../constants';
 import {
   ArNSLeaseAuctionData,
@@ -42,9 +42,8 @@ export const getBaselineState: () => IOState = (): IOState => ({
   distributions: {
     epochZeroStartHeight: 0,
     epochStartHeight: 0,
-    epochEndHeight: DEFAULT_EPOCH_BLOCK_LENGTH - 1,
-    epochDistributionHeight:
-      DEFAULT_EPOCH_BLOCK_LENGTH - 1 + TALLY_PERIOD_BLOCKS,
+    epochEndHeight: EPOCH_BLOCK_LENGTH - 1,
+    epochDistributionHeight: EPOCH_BLOCK_LENGTH - 1 + EPOCH_DISTRIBUTION_DELAY,
     gateways: {},
     observers: {},
   },

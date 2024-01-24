@@ -1,4 +1,4 @@
-import { TENURE_WEIGHT_TOTAL_BLOCK_COUNT } from '../../constants';
+import { TENURE_WEIGHT_PERIOD } from '../../constants';
 import { getBaselineState } from '../../tests/stubs';
 import { baselineGatewayData } from '../write/saveObservations.test';
 import { getGateway, getGateways } from './gateways';
@@ -77,8 +77,7 @@ describe('getGateway', () => {
       caller: 'a-test-gateway',
       input: {},
     });
-    // incremented by 1
-    const expectedTenureWeight = 200 / TENURE_WEIGHT_TOTAL_BLOCK_COUNT;
+    const expectedTenureWeight = 200 / TENURE_WEIGHT_PERIOD;
     const expectedCompositeWeight = 1 * 1 * 1 * expectedTenureWeight;
     expect(gateway).toEqual({
       result: {
@@ -118,7 +117,7 @@ describe('getGateway', () => {
         target: 'a-test-gateway',
       },
     });
-    const expectedTenureWeight = 200 / TENURE_WEIGHT_TOTAL_BLOCK_COUNT;
+    const expectedTenureWeight = 200 / TENURE_WEIGHT_PERIOD;
     const expectedCompositeWeight = 1 * 1 * 1 * expectedTenureWeight;
     expect(gateway).toEqual({
       result: {
@@ -175,10 +174,10 @@ describe('getGateways', () => {
           },
           weights: {
             stakeWeight: 1,
-            tenureWeight: 1 / TENURE_WEIGHT_TOTAL_BLOCK_COUNT, // started at the same block height
+            tenureWeight: 1 / TENURE_WEIGHT_PERIOD, // started at the same block height
             gatewayRewardRatioWeight: 1,
             observerRewardRatioWeight: 1,
-            compositeWeight: 1 / TENURE_WEIGHT_TOTAL_BLOCK_COUNT,
+            compositeWeight: 1 / TENURE_WEIGHT_PERIOD,
             normalizedCompositeWeight: 1,
           },
         },

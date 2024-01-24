@@ -1,10 +1,10 @@
 import {
-  DEFAULT_EPOCH_BLOCK_LENGTH,
-  DEFAULT_SAMPLED_BLOCKS_COUNT,
-  DEFAULT_SAMPLED_BLOCKS_OFFSET,
+  EPOCH_BLOCK_LENGTH,
   MAXIMUM_OBSERVERS_PER_EPOCH,
   MAX_TENURE_WEIGHT,
-  TENURE_WEIGHT_TOTAL_BLOCK_COUNT,
+  OBSERVERS_SAMPLED_BLOCKS_COUNT,
+  OBSERVERS_SAMPLED_BLOCKS_OFFSET,
+  TENURE_WEIGHT_PERIOD,
 } from './constants';
 import {
   BlockHeight,
@@ -18,7 +18,7 @@ import {
 
 export function getEpochBoundariesForHeight({
   currentBlockHeight,
-  epochBlockLength = new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+  epochBlockLength = new BlockHeight(EPOCH_BLOCK_LENGTH),
   epochZeroStartHeight,
 }: {
   currentBlockHeight: BlockHeight;
@@ -53,10 +53,10 @@ export async function getEntropyHashForEpoch({
   let bufferHash: Buffer = Buffer.from('');
   // We hash multiple previous block hashes to reduce the chance that someone will
   // influence the value produced by grinding with excessive hash power.
-  for (let i = 0; i < DEFAULT_SAMPLED_BLOCKS_COUNT; i++) {
+  for (let i = 0; i < OBSERVERS_SAMPLED_BLOCKS_COUNT; i++) {
     const blockHeight = Math.max(
       0,
-      epochStartHeight.valueOf() - DEFAULT_SAMPLED_BLOCKS_OFFSET - i,
+      epochStartHeight.valueOf() - OBSERVERS_SAMPLED_BLOCKS_OFFSET - i,
     );
     const path = `/block/height/${blockHeight}`;
     const data = await SmartWeave.safeArweaveGet(path);
@@ -155,8 +155,8 @@ export function getObserverWeightsForEpoch({
       totalBlocksForGateway < 0
         ? 0
         : totalBlocksForGateway
-        ? totalBlocksForGateway / TENURE_WEIGHT_TOTAL_BLOCK_COUNT
-        : 1 / TENURE_WEIGHT_TOTAL_BLOCK_COUNT;
+        ? totalBlocksForGateway / TENURE_WEIGHT_PERIOD
+        : 1 / TENURE_WEIGHT_PERIOD;
     // max of 4, which implies after 2 years, you are considered a mature gateway and this number stops increasing
     const gatewayTenureWeight = Math.min(
       calculatedTenureWeightForGateway,

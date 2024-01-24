@@ -28,8 +28,7 @@ export const NETWORK_LEAVING_STATUS = 'leaving';
  */
 export const MAX_TENURE_WEIGHT = 4; // 4 - 6 month periods mark you as a mature gateway
 export const TENURE_WEIGHT_DAYS = 180; // the amount of days in a single tenure weight period used to calculate composite weights for observation
-export const TENURE_WEIGHT_TOTAL_BLOCK_COUNT =
-  TENURE_WEIGHT_DAYS * BLOCKS_PER_DAY; // the # of blocks in a single tenure weight period (6-months) used to calculate composite weights for observation
+export const TENURE_WEIGHT_PERIOD = TENURE_WEIGHT_DAYS * BLOCKS_PER_DAY; // the # of blocks in a single tenure weight period (6-months) used to calculate composite weights for observation
 
 /**
  * ARNS CONTROLS
@@ -48,59 +47,6 @@ export const UNDERNAME_REGISTRATION_IO_FEE = 1; // 1 IO token per undername
 export const MAX_NAME_LENGTH = 51; // the maximum length of an arns name - gateway sandbox domains are 52 characters, so to prevent overlap we stop 1 character short, where the 52nd character would be an underscore (which sandbox domains do not use) to prevent overlap
 export const MAX_NOTE_LENGTH = 256; // the maximum size of a note field
 export const SECONDS_IN_GRACE_PERIOD = 1_814_400; // Three weeks, 7 days per week, 24 hours per day, sixty minutes per hour, sixty seconds per minute
-
-/**
- * ERROR MESSAGES
- */
-export const NON_CONTRACT_OWNER_MESSAGE = `Caller is not the owner of the ArNS!`;
-export const ARNS_INVALID_NAME_MESSAGE = 'Invalid ArNS Record Name';
-export const ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE = 'Name must be auctioned.';
-export const ARNS_NAME_RESERVED_MESSAGE = 'Name is reserved.';
-export const ARNS_NAME_IN_AUCTION_MESSAGE = 'Name is currently in auction.';
-export const ARNS_NAME_AUCTION_EXPIRED_MESSAGE = 'Auction has expired.';
-export const ARNS_NON_EXPIRED_NAME_MESSAGE =
-  'This name already exists in an active lease';
-export const ARNS_NAME_DOES_NOT_EXIST_MESSAGE =
-  'Name does not exist in the ArNS Contract!';
-export const ARNS_MAX_UNDERNAME_MESSAGE = `Name has reached undername limit of ${MAX_ALLOWED_UNDERNAMES}`;
-export const ARNS_INVALID_YEARS_MESSAGE = `Invalid number of years. Must be an integer and less than or equal to ${ARNS_LEASE_LENGTH_MAX_YEARS}`;
-export const ARNS_INVALID_SHORT_NAME = `Name is less than ${MINIMUM_ALLOWED_NAME_LENGTH} characters. It will be available for auction after ${SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP}.`;
-export const ARNS_INVALID_EXTENSION_MESSAGE = `This name has been permanently registered and its lease cannot be extended.`;
-
-export const INVALID_VAULT_LOCK_LENGTH_MESSAGE = `Invalid lock length. Must be between ${MIN_TOKEN_LOCK_BLOCK_LENGTH} - ${MAX_TOKEN_LOCK_BLOCK_LENGTH}.`;
-export const INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE =
-  'Invalid caller. Observer does not exist as an observer address in the gateway registry.';
-export const INVALID_OBSERVATION_CALLER_MESSAGE =
-  'Invalid caller. Caller is not eligible to submit observation reports for this epoch.';
-export const INVALID_GATEWAY_STAKE_AMOUNT_MESSAGE = `Quantity must be greater than or equal to the minimum network join stake amount.`;
-export const INVALID_OBSERVER_WALLET =
-  'Invalid observer wallet. The provided observer wallet is correlated with another gateway.';
-export const INVALID_GATEWAY_REGISTERED_MESSAGE =
-  'Target gateway is not currently registered';
-export const INVALID_OBSERVATION_TARGET_MESSAGE =
-  'Target gateway is leaving the network and must not be observed';
-export const INVALID_GATEWAY_EXISTS_MESSAGE =
-  'A gateway with this address already exists.';
-export const INSUFFICIENT_FUNDS_MESSAGE =
-  'Insufficient funds for this transaction.';
-export const INVALID_TARGET_MESSAGE = 'Invalid target specified';
-export const INVALID_QTY_MESSAGE =
-  'Invalid quantity. Must be an integer and greater than 0.';
-export const INVALID_INPUT_MESSAGE = 'Invalid input for interaction';
-
-/**
- * OBSERVATION AND DISTRIBUTIONS
- */
-export const DEFAULT_SAMPLED_BLOCKS_COUNT = 3; // the number of blocks we sample when calculating the base hash for prescribed observers
-export const DEFAULT_SAMPLED_BLOCKS_OFFSET = 50; // the number of blocks offset from the current epoch start height we sample when calculating the base hash for prescribed observers
-export const DEFAULT_EPOCH_BLOCK_LENGTH = 200; // TODO: make this 5000 for mainnet
-export const TALLY_PERIOD_BLOCKS = DEFAULT_EPOCH_BLOCK_LENGTH / 4; // TODO: set this to 100 for testnet
-export const EPOCH_REWARD_PERCENTAGE = 0.0025; // 0.25% of total available protocol balance
-export const GATEWAY_PERCENTAGE_OF_EPOCH_REWARD = 0.95;
-export const OBSERVATION_FAILURE_THRESHOLD = 0.51;
-export const BAD_OBSERVER_GATEWAY_PENALTY = 0.25;
-export const MAXIMUM_OBSERVERS_PER_EPOCH = 4; // TODO: set this to 50 for testnet
-// the initial fee structure for the genesis block of the contract
 export const GENESIS_FEES = {
   '1': 4218750000,
   '2': 1406250000,
@@ -191,3 +137,56 @@ export const DEMAND_FACTORING_SETTINGS: DemandFactoringSettings = {
   stepDownThreshold: 3, // number of times at minimum allowed before resetting genesis fees (ultimately leads to 4 periods at the new fee, including the reset period)
   criteria: 'revenue',
 };
+
+/**
+ * ERROR MESSAGES
+ */
+export const NON_CONTRACT_OWNER_MESSAGE = `Caller is not the owner of the ArNS!`;
+export const ARNS_INVALID_NAME_MESSAGE = 'Invalid ArNS Record Name';
+export const ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE = 'Name must be auctioned.';
+export const ARNS_NAME_RESERVED_MESSAGE = 'Name is reserved.';
+export const ARNS_NAME_IN_AUCTION_MESSAGE = 'Name is currently in auction.';
+export const ARNS_NAME_AUCTION_EXPIRED_MESSAGE = 'Auction has expired.';
+export const ARNS_NON_EXPIRED_NAME_MESSAGE =
+  'This name already exists in an active lease';
+export const ARNS_NAME_DOES_NOT_EXIST_MESSAGE =
+  'Name does not exist in the ArNS Contract!';
+export const ARNS_MAX_UNDERNAME_MESSAGE = `Name has reached undername limit of ${MAX_ALLOWED_UNDERNAMES}`;
+export const ARNS_INVALID_YEARS_MESSAGE = `Invalid number of years. Must be an integer and less than or equal to ${ARNS_LEASE_LENGTH_MAX_YEARS}`;
+export const ARNS_INVALID_SHORT_NAME = `Name is less than ${MINIMUM_ALLOWED_NAME_LENGTH} characters. It will be available for auction after ${SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP}.`;
+export const ARNS_INVALID_EXTENSION_MESSAGE = `This name has been permanently registered and its lease cannot be extended.`;
+
+export const INVALID_VAULT_LOCK_LENGTH_MESSAGE = `Invalid lock length. Must be between ${MIN_TOKEN_LOCK_BLOCK_LENGTH} - ${MAX_TOKEN_LOCK_BLOCK_LENGTH}.`;
+export const INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE =
+  'Invalid caller. Observer does not exist as an observer address in the gateway registry.';
+export const INVALID_OBSERVATION_CALLER_MESSAGE =
+  'Invalid caller. Caller is not eligible to submit observation reports for this epoch.';
+export const INVALID_GATEWAY_STAKE_AMOUNT_MESSAGE = `Quantity must be greater than or equal to the minimum network join stake amount.`;
+export const INVALID_OBSERVER_WALLET =
+  'Invalid observer wallet. The provided observer wallet is correlated with another gateway.';
+export const INVALID_GATEWAY_REGISTERED_MESSAGE =
+  'Target gateway is not currently registered';
+export const INVALID_OBSERVATION_TARGET_MESSAGE =
+  'Target gateway is leaving the network and must not be observed';
+export const INVALID_GATEWAY_EXISTS_MESSAGE =
+  'A gateway with this address already exists.';
+export const INSUFFICIENT_FUNDS_MESSAGE =
+  'Insufficient funds for this transaction.';
+export const INVALID_TARGET_MESSAGE = 'Invalid target specified';
+export const INVALID_QTY_MESSAGE =
+  'Invalid quantity. Must be an integer and greater than 0.';
+export const INVALID_INPUT_MESSAGE = 'Invalid input for interaction';
+
+/**
+ * OBSERVATION AND DISTRIBUTIONS
+ */
+export const OBSERVERS_SAMPLED_BLOCKS_COUNT = 3; // the number of blocks we sample when calculating the base hash for prescribed observers
+export const OBSERVERS_SAMPLED_BLOCKS_OFFSET = 50; // the number of blocks offset from the current epoch start height we sample when calculating the base hash for prescribed observers
+export const EPOCH_BLOCK_LENGTH = 720; // TODO: make this 5000 for mainnet
+export const EPOCH_DISTRIBUTION_DELAY = EPOCH_BLOCK_LENGTH / 4; // TODO: set this to 100 for testnet
+export const EPOCH_REWARD_PERCENTAGE = 0.0025; // 0.25% of total available protocol balance
+export const GATEWAY_PERCENTAGE_OF_EPOCH_REWARD = 0.95; // total percentage of protocol balance that goes to gateways
+export const OBSERVATION_FAILURE_THRESHOLD = 0.51; // 51% of the network must report a gateway as failed for it to not receive rewards
+export const BAD_OBSERVER_GATEWAY_PENALTY = 0.25; // 25% of the gateway's stake is slashed for bad observation reports
+export const MAXIMUM_OBSERVERS_PER_EPOCH = 50; // the maximum number of prescribed observers per epoch
+export const MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT = 21; // the number of consecutive epochs an observer can fail before being removed from the network

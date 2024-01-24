@@ -1,7 +1,4 @@
-import {
-  DEFAULT_EPOCH_BLOCK_LENGTH,
-  TALLY_PERIOD_BLOCKS,
-} from '../../constants';
+import { EPOCH_BLOCK_LENGTH, EPOCH_DISTRIBUTION_DELAY } from '../../constants';
 import {
   getEpochBoundariesForHeight,
   getPrescribedObserversForEpoch,
@@ -16,7 +13,7 @@ export const getPrescribedObservers = async (
   const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
     epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
-    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+    epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
   });
 
   const prescribedObservers = await getPrescribedObserversForEpoch({
@@ -53,7 +50,7 @@ export async function getEpoch(
     getEpochBoundariesForHeight({
       currentBlockHeight: new BlockHeight(requestedHeight),
       epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
-      epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+      epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
     });
 
   return {
@@ -61,8 +58,9 @@ export async function getEpoch(
       epochStartHeight: epochStartHeight.valueOf(),
       epochEndHeight: epochEndHeight.valueOf(),
       epochZeroStartHeight: distributions.epochZeroStartHeight,
-      epochDistributionHeight: epochEndHeight.valueOf() + TALLY_PERIOD_BLOCKS,
-      epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
+      epochDistributionHeight:
+        epochEndHeight.valueOf() + EPOCH_DISTRIBUTION_DELAY,
+      epochBlockLength: EPOCH_BLOCK_LENGTH,
     },
   };
 }

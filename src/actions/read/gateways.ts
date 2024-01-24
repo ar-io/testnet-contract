@@ -1,4 +1,4 @@
-import { DEFAULT_EPOCH_BLOCK_LENGTH } from '../../constants';
+import { EPOCH_BLOCK_LENGTH } from '../../constants';
 import {
   getEpochBoundariesForHeight,
   getObserverWeightsForEpoch,
@@ -29,7 +29,7 @@ export const getGateway = async (
   const { epochStartHeight } = getEpochBoundariesForHeight({
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
     epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
-    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+    epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
   });
 
   const observerWeights = getObserverWeightsForEpoch({
@@ -83,7 +83,7 @@ export const getGateways = async (
   const { epochStartHeight } = getEpochBoundariesForHeight({
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
     epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
-    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+    epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
   });
 
   const allObserverWeights = getObserverWeightsForEpoch({
