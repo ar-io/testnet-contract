@@ -29,7 +29,7 @@ module.exports = {
     'contract_evolve.js',
     'validations.js',
     'schemas',
-    'jest.config.js',
+    'jest*.config.js',
     'coverage',
     'build.js',
     'tests',
