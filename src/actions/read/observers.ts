@@ -45,7 +45,7 @@ export async function getEpoch(
     height > +SmartWeave.block.height
   ) {
     throw new ContractError(
-      'Invalid height. Must be a number less than or equal to the current block height',
+      'Invalid height. Must be a number less than or equal to the current block height and greater than or equal to the epoch zero start height',
     );
   }
 
