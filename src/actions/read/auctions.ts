@@ -2,6 +2,8 @@ import {
   calculateAuctionPriceForBlock,
   createAuctionObject,
   getAuctionPricesForInterval,
+  isNameAvailableForAuction,
+  isNameRequiredToBeAuction,
 } from '../../auctions';
 import {
   BlockHeight,
@@ -11,10 +13,6 @@ import {
   IOState,
   PstAction,
 } from '../../types';
-import {
-  isNameAvailableForAuction,
-  isNameRequiredToBeAuction,
-} from '../../utilities';
 
 export const getAuction = (
   state: DeepReadonly<IOState>,

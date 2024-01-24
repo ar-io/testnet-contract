@@ -1,8 +1,8 @@
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_VAULT_LOCK_LENGTH_MESSAGE,
-  MAX_TOKEN_LOCK_LENGTH,
-  MIN_TOKEN_LOCK_LENGTH,
+  MAX_TOKEN_LOCK_BLOCK_LENGTH,
+  MIN_TOKEN_LOCK_BLOCK_LENGTH,
 } from './constants';
 import { safeTransfer, safeVaultedTransfer } from './transfer';
 import { BlockHeight, IOToken, RegistryVaults, VaultData } from './types';
@@ -104,7 +104,7 @@ describe('safeVaultedTransfer function', () => {
           fromAddress,
           id: 'new-vaulted-transfer',
           toAddress: 'biz',
-          lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+          lockLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
           startHeight: new BlockHeight(0),
         });
       }).toThrowError(INSUFFICIENT_FUNDS_MESSAGE);
@@ -120,13 +120,13 @@ describe('safeVaultedTransfer function', () => {
         fromAddress: 'foo',
         id: 'new-vaulted-transfer',
         toAddress: 'biz',
-        lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+        lockLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
         startHeight: new BlockHeight(0),
       });
     }).toThrowError(INSUFFICIENT_FUNDS_MESSAGE);
   });
 
-  it.each([0, MAX_TOKEN_LOCK_LENGTH + 1])(
+  it.each([0, MAX_TOKEN_LOCK_BLOCK_LENGTH + 1])(
     'should throw an error if lock length is invalid %s',
     (lockLength) => {
       expect(() => {
@@ -154,7 +154,7 @@ describe('safeVaultedTransfer function', () => {
     const expectedNewVaultData: VaultData = {
       balance: qty,
       start: 0,
-      end: MIN_TOKEN_LOCK_LENGTH,
+      end: MIN_TOKEN_LOCK_BLOCK_LENGTH,
     };
     safeVaultedTransfer({
       balances,
@@ -163,7 +163,7 @@ describe('safeVaultedTransfer function', () => {
       fromAddress,
       id: 'new-vaulted-transfer',
       toAddress,
-      lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+      lockLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
       startHeight: new BlockHeight(0),
     });
     expect(balances).toEqual({ foo: 1, bar: 2 });
@@ -189,7 +189,7 @@ describe('safeVaultedTransfer function', () => {
     const expectedNewVaultData: VaultData = {
       balance: qty,
       start: 0,
-      end: MIN_TOKEN_LOCK_LENGTH,
+      end: MIN_TOKEN_LOCK_BLOCK_LENGTH,
     };
     safeVaultedTransfer({
       balances,
@@ -197,7 +197,7 @@ describe('safeVaultedTransfer function', () => {
       fromAddress,
       toAddress,
       vaults,
-      lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+      lockLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
       startHeight: new BlockHeight(0),
       id: 'new-vaulted-transfer',
     });
@@ -219,14 +219,14 @@ describe('safeVaultedTransfer function', () => {
       fromAddress,
       toAddress,
       vaults,
-      lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+      lockLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
       startHeight: new BlockHeight(0),
       id: 'new-vaulted-transfer',
     });
     const expectedNewVaultData: VaultData = {
       balance: qty,
       start: 0,
-      end: MIN_TOKEN_LOCK_LENGTH,
+      end: MIN_TOKEN_LOCK_BLOCK_LENGTH,
     };
     expect(balances).toEqual({ bar: 2 });
     expect(vaults[toAddress]['new-vaulted-transfer']).toEqual(
@@ -246,14 +246,14 @@ describe('safeVaultedTransfer function', () => {
       fromAddress,
       toAddress,
       vaults,
-      lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+      lockLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
       startHeight: new BlockHeight(0),
       id: 'new-vaulted-transfer',
     });
     const expectedNewVaultData: VaultData = {
       balance: qty,
       start: 0,
-      end: MIN_TOKEN_LOCK_LENGTH,
+      end: MIN_TOKEN_LOCK_BLOCK_LENGTH,
     };
     expect(balances).toEqual({ foo: 1, bar: 2 });
     expect(vaults[toAddress]['new-vaulted-transfer']).toEqual(
@@ -281,7 +281,7 @@ describe('safeVaultedTransfer function', () => {
         fromAddress,
         toAddress,
         vaults,
-        lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+        lockLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
         startHeight: new BlockHeight(0),
         id: 'existing-vault-id',
       }),

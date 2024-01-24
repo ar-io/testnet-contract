@@ -1,6 +1,6 @@
 // ~~ Put all the interactions from '../actions/` together to write the final handle function which will be exported
 // from the contract source. ~~
-import { getAuction } from './actions/read/auction';
+import { getAuction } from './actions/read/auctions';
 import { balance } from './actions/read/balance';
 import { getGateway, getGateways } from './actions/read/gateways';
 import { getEpoch, getPrescribedObservers } from './actions/read/observers';

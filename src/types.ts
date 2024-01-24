@@ -177,6 +177,18 @@ export type GatewaySettings = {
   note?: string; // An additional note (256 character max) the gateway operator can set to indicate things like maintenance or other operational updates.
 };
 
+export type DemandFactoringCriteria = 'purchases' | 'revenue';
+export type DemandFactoringSettings = {
+  movingAvgPeriodCount: number;
+  periodBlockCount: number;
+  demandFactorBaseValue: number;
+  demandFactorMin: number;
+  demandFactorUpAdjustment: number;
+  demandFactorDownAdjustment: number;
+  stepDownThreshold: number;
+  criteria: DemandFactoringCriteria;
+};
+
 export type AllowedProtocols = 'http' | 'https';
 export type RegistrationType = 'lease' | 'permabuy';
 

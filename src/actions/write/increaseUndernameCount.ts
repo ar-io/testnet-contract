@@ -1,11 +1,12 @@
 import {
+  ARNS_MAX_UNDERNAME_MESSAGE,
   ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
   INSUFFICIENT_FUNDS_MESSAGE,
   MAX_ALLOWED_UNDERNAMES,
-  MAX_UNDERNAME_MESSAGE,
   PERMABUY_LEASE_FEE_LENGTH,
 } from '../../constants';
 import { calculateUndernameCost } from '../../pricing';
+import { isExistingActiveRecord, isLeaseRecord } from '../../records';
 import { safeTransfer } from '../../transfer';
 import {
   ArNSNameData,
@@ -17,8 +18,6 @@ import {
 import {
   calculateYearsBetweenTimestamps,
   getInvalidAjvMessage,
-  isExistingActiveRecord,
-  isLeaseRecord,
   walletHasSufficientBalance,
 } from '../../utilities';
 import { validateIncreaseUndernameCount } from '../../validations';
@@ -129,6 +128,6 @@ export function assertRecordCanIncreaseUndernameCount({
 
   // the new total qty
   if (record.undernames + qty > MAX_ALLOWED_UNDERNAMES) {
-    throw new ContractError(MAX_UNDERNAME_MESSAGE);
+    throw new ContractError(ARNS_MAX_UNDERNAME_MESSAGE);
   }
 }

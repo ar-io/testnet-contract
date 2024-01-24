@@ -1,8 +1,14 @@
 import { SECONDS_IN_A_YEAR } from './constants';
 import { calculateRegistrationFee } from './pricing';
 import {
+  isActiveReservedName,
+  isExistingActiveRecord,
+  isShortNameRestricted,
+} from './records';
+import {
   ArNSAuctionData,
   ArNSBaseAuctionData,
+  ArNSNameData,
   AuctionSettings,
   BlockHeight,
   BlockTimestamp,
@@ -11,6 +17,7 @@ import {
   Fees,
   IOToken,
   RegistrationType,
+  ReservedNameData,
 } from './types';
 
 export function calculateAuctionPriceForBlock({
@@ -153,4 +160,61 @@ export function getEndTimestampForAuction({
     default:
       throw new ContractError('Invalid auction type');
   }
+}
+
+export function calculateExistingAuctionBidForCaller({
+  caller,
+  auction,
+  submittedBid,
+  requiredMinimumBid,
+}: {
+  caller: string;
+  auction: ArNSAuctionData;
+  submittedBid: number | undefined; // TODO: change to IOToken
+  requiredMinimumBid: IOToken; // TODO: change to IOToken
+}): IOToken {
+  if (submittedBid && submittedBid < requiredMinimumBid.valueOf()) {
+    throw new ContractError(
+      `The bid (${submittedBid} IO) is less than the current required minimum bid of ${requiredMinimumBid.valueOf()} IO.`,
+    );
+  }
+
+  let finalBid = submittedBid
+    ? Math.min(submittedBid, requiredMinimumBid.valueOf())
+    : requiredMinimumBid.valueOf();
+
+  if (caller === auction.initiator) {
+    finalBid -= auction.floorPrice;
+  }
+  return new IOToken(finalBid);
+}
+
+export function isNameAvailableForAuction({
+  name,
+  record,
+  reservedName,
+  caller,
+  currentBlockTimestamp,
+}: {
+  name: string;
+  record: ArNSNameData | undefined;
+  caller: string;
+  reservedName: ReservedNameData | undefined;
+  currentBlockTimestamp: BlockTimestamp;
+}): boolean {
+  return (
+    !isExistingActiveRecord({ record, currentBlockTimestamp }) &&
+    !isActiveReservedName({ reservedName, caller, currentBlockTimestamp }) &&
+    !isShortNameRestricted({ name, currentBlockTimestamp })
+  );
+}
+
+export function isNameRequiredToBeAuction({
+  name,
+  type,
+}: {
+  name: string;
+  type: RegistrationType;
+}): boolean {
+  return type === 'permabuy' && name.length < 12;
 }

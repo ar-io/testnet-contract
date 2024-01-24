@@ -6,12 +6,12 @@ import path from 'path';
 import { BlockHeight, Gateways, IOState } from '../../src/types';
 import {
   ANT_CONTRACT_IDS,
+  ARNS_LEASE_LENGTH_MAX_YEARS,
   AUCTION_SETTINGS,
   CONTRACT_SETTINGS,
   DEFAULT_UNDERNAME_COUNT,
-  FEE_STRUCTURE,
+  GENESIS_FEES,
   INITIAL_STATE,
-  MAX_YEARS,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
   REGISTRATION_TYPES,
@@ -64,7 +64,7 @@ export async function createLocalWallet(
   };
 }
 
-function createRecords(count = MAX_YEARS) {
+function createRecords(count = ARNS_LEASE_LENGTH_MAX_YEARS) {
   const records: any = {};
   for (let i = 0; i < count; i++) {
     const name = `name${i + 1}`;
@@ -291,7 +291,7 @@ export async function setupInitialContractState(
   const state: IOState = INITIAL_STATE as unknown as IOState;
 
   // set the fees
-  state.fees = FEE_STRUCTURE;
+  state.fees = GENESIS_FEES;
 
   // create wallets and set balances
   state.balances = wallets.reduce((current: any, wallet) => {
@@ -380,4 +380,5 @@ export function getLocalArNSContractKey(key: 'srcTxId' | 'id' = 'id'): string {
 export * from '../../src/utilities';
 export * from '../../src/pricing';
 export * from '../../src/auctions';
+export * from '../../src/records';
 export * from '../../tools/utilities';

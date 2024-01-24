@@ -1,6 +1,6 @@
 import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
-  DEFAULT_NUM_SAMPLED_BLOCKS,
+  DEFAULT_SAMPLED_BLOCKS_COUNT,
   DEFAULT_SAMPLED_BLOCKS_OFFSET,
   MAXIMUM_OBSERVERS_PER_EPOCH,
   MAX_TENURE_WEIGHT,
@@ -53,7 +53,7 @@ export async function getEntropyHashForEpoch({
   let bufferHash: Buffer = Buffer.from('');
   // We hash multiple previous block hashes to reduce the chance that someone will
   // influence the value produced by grinding with excessive hash power.
-  for (let i = 0; i < DEFAULT_NUM_SAMPLED_BLOCKS; i++) {
+  for (let i = 0; i < DEFAULT_SAMPLED_BLOCKS_COUNT; i++) {
     const blockHeight = Math.max(
       0,
       epochStartHeight.valueOf() - DEFAULT_SAMPLED_BLOCKS_OFFSET - i,

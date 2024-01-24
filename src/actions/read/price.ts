@@ -8,6 +8,7 @@ import {
   calculateRegistrationFee,
   calculateUndernameCost,
 } from '../../pricing';
+import { assertAvailableRecord, isLeaseRecord } from '../../records';
 import {
   BlockHeight,
   BlockTimestamp,
@@ -15,11 +16,7 @@ import {
   DeepReadonly,
   IOState,
 } from '../../types';
-import {
-  assertAvailableRecord,
-  calculateYearsBetweenTimestamps,
-  isLeaseRecord,
-} from '../../utilities';
+import { calculateYearsBetweenTimestamps } from '../../utilities';
 import { BuyRecord } from '../write/buyRecord';
 import { ExtendRecord, assertRecordCanBeExtended } from '../write/extendRecord';
 import {

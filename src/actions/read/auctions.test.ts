@@ -1,6 +1,6 @@
 import { baselineAuctionData, getBaselineState } from '../../tests/stubs';
 import { IOState } from '../../types';
-import { getAuction } from './auction';
+import { getAuction } from './auctions';
 
 describe('getAuction', () => {
   const stubbedBlockHeight = 50;

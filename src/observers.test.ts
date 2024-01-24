@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 
 import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
-  GATEWAY_LEAVE_LENGTH,
+  GATEWAY_LEAVE_BLOCK_LENGTH,
   MAXIMUM_OBSERVERS_PER_EPOCH,
   TALLY_PERIOD_BLOCKS,
   TENURE_WEIGHT_TOTAL_BLOCK_COUNT,
@@ -316,11 +316,11 @@ describe('isGatewayEligibleForDistribution', () => {
       {
         ...baselineGatewayData,
         status: 'leaving',
-        end: GATEWAY_LEAVE_LENGTH + 1,
+        end: GATEWAY_LEAVE_BLOCK_LENGTH + 1,
         start: 0,
       },
       10,
-      GATEWAY_LEAVE_LENGTH,
+      GATEWAY_LEAVE_BLOCK_LENGTH,
       true,
     ],
     [
@@ -357,10 +357,10 @@ describe('isGatewayEligibleForDistribution', () => {
         ...baselineGatewayData,
         status: 'leaving',
         start: 10,
-        end: GATEWAY_LEAVE_LENGTH - 1,
+        end: GATEWAY_LEAVE_BLOCK_LENGTH - 1,
       },
       10,
-      GATEWAY_LEAVE_LENGTH,
+      GATEWAY_LEAVE_BLOCK_LENGTH,
       false,
     ],
     [

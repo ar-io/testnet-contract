@@ -1,4 +1,7 @@
-import { INVALID_INPUT_MESSAGE, MIN_TOKEN_LOCK_LENGTH } from '../../constants';
+import {
+  INVALID_INPUT_MESSAGE,
+  MIN_TOKEN_LOCK_BLOCK_LENGTH,
+} from '../../constants';
 import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
 import { IOState } from '../../types';
 import { extendVault } from './extendVault';
@@ -16,7 +19,7 @@ describe('extendVault', () => {
             test: {
               [stubbedArweaveTxId]: {
                 balance: 100,
-                end: SmartWeave.block.height + MIN_TOKEN_LOCK_LENGTH,
+                end: SmartWeave.block.height + MIN_TOKEN_LOCK_BLOCK_LENGTH,
                 start: SmartWeave.block.height,
               },
             },
@@ -42,7 +45,7 @@ describe('extendVault', () => {
         caller: 'no-vault',
         input: {
           id: stubbedArweaveTxId,
-          extendLength: MIN_TOKEN_LOCK_LENGTH,
+          extendLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         },
       }).catch((e) => e);
       expect(error).toBeInstanceOf(Error);
@@ -61,7 +64,7 @@ describe('extendVault', () => {
           test: {
             [stubbedArweaveTxId]: {
               balance: 100,
-              end: SmartWeave.block.height + MIN_TOKEN_LOCK_LENGTH,
+              end: SmartWeave.block.height + MIN_TOKEN_LOCK_BLOCK_LENGTH,
               start: SmartWeave.block.height,
             },
           },
@@ -71,7 +74,7 @@ describe('extendVault', () => {
         caller: 'test',
         input: {
           id: stubbedArweaveTxId.replace('a', 'b'),
-          extendLength: MIN_TOKEN_LOCK_LENGTH,
+          extendLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         },
       }).catch((e) => e);
       expect(error).toBeInstanceOf(Error);
@@ -87,14 +90,14 @@ describe('extendVault', () => {
           test: {
             [stubbedArweaveTxId]: {
               balance: 100,
-              end: SmartWeave.block.height + MIN_TOKEN_LOCK_LENGTH,
+              end: SmartWeave.block.height + MIN_TOKEN_LOCK_BLOCK_LENGTH,
               start: SmartWeave.block.height,
             },
           },
         },
       };
       // TODO: should we allow extending a vault by 1 block if it already exists?
-      const extensionLength = MIN_TOKEN_LOCK_LENGTH;
+      const extensionLength = MIN_TOKEN_LOCK_BLOCK_LENGTH;
       const { state } = await extendVault(initialState, {
         caller: 'test',
         input: {
@@ -110,7 +113,7 @@ describe('extendVault', () => {
               balance: 100,
               end:
                 SmartWeave.block.height +
-                MIN_TOKEN_LOCK_LENGTH +
+                MIN_TOKEN_LOCK_BLOCK_LENGTH +
                 extensionLength,
               start: SmartWeave.block.height,
             },

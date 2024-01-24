@@ -17,6 +17,7 @@ import {
   tallyNamePurchase,
   updateDemandFactor,
 } from '../../pricing';
+import { isActiveReservedName, isExistingActiveRecord } from '../../records';
 import { safeTransfer } from '../../transfer';
 import {
   Auctions,
@@ -43,8 +44,6 @@ import {
 } from '../../types';
 import {
   incrementBalance,
-  isActiveReservedName,
-  isExistingActiveRecord,
   isGatewayEligibleToBeRemoved,
 } from '../../utilities';
 

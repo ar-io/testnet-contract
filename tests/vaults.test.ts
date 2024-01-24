@@ -4,8 +4,8 @@ import { IOState } from '../src/types';
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
-  MAX_TOKEN_LOCK_LENGTH,
-  MIN_TOKEN_LOCK_LENGTH,
+  MAX_TOKEN_LOCK_BLOCK_LENGTH,
+  MIN_TOKEN_LOCK_BLOCK_LENGTH,
   TRANSFER_QTY,
 } from './utils/constants';
 import {
@@ -36,14 +36,14 @@ describe('Vaults', () => {
       const writeInteraction = await contract.writeInteraction({
         function: 'createVault',
         qty: TRANSFER_QTY,
-        lockLength: MIN_TOKEN_LOCK_LENGTH,
+        lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
       });
 
       const currentBlock = (await getCurrentBlock(arweave)).valueOf();
       const expectedVault = {
         balance: TRANSFER_QTY,
         start: currentBlock,
-        end: currentBlock + MIN_TOKEN_LOCK_LENGTH,
+        end: currentBlock + MIN_TOKEN_LOCK_BLOCK_LENGTH,
       };
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -68,12 +68,12 @@ describe('Vaults', () => {
       const expectedVault = {
         balance: TRANSFER_QTY,
         start: currentBlock + 1,
-        end: currentBlock + MIN_TOKEN_LOCK_LENGTH + 1,
+        end: currentBlock + MIN_TOKEN_LOCK_BLOCK_LENGTH + 1,
       };
       const writeInteraction = await contract.writeInteraction({
         function: 'createVault',
         qty: TRANSFER_QTY,
-        lockLength: MIN_TOKEN_LOCK_LENGTH,
+        lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
       });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -94,8 +94,8 @@ describe('Vaults', () => {
       undefined,
       -1,
       'bad lock length',
-      MIN_TOKEN_LOCK_LENGTH - 1,
-      MAX_TOKEN_LOCK_LENGTH + 1,
+      MIN_TOKEN_LOCK_BLOCK_LENGTH - 1,
+      MAX_TOKEN_LOCK_BLOCK_LENGTH + 1,
     ])(
       'should not be able to create vault with an invalid lock length',
       async (badLockLength) => {
@@ -125,7 +125,7 @@ describe('Vaults', () => {
         const writeInteraction = await contract.writeInteraction({
           function: 'createVault',
           qty: badQty,
-          lockLength: MIN_TOKEN_LOCK_LENGTH,
+          lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         });
 
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -145,7 +145,7 @@ describe('Vaults', () => {
       const writeInteraction = await contract.writeInteraction({
         function: 'createVault',
         qty: Math.pow(TRANSFER_QTY, 10),
-        lockLength: MIN_TOKEN_LOCK_LENGTH,
+        lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
       });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -172,7 +172,7 @@ describe('Vaults', () => {
       const writeInteraction = await contract.writeInteraction({
         function: 'createVault',
         qty: TRANSFER_QTY,
-        lockLength: MIN_TOKEN_LOCK_LENGTH,
+        lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
       });
       const { cachedValue: prevCachedValue } = await contract.readState();
       const prevState = prevCachedValue.state as IOState;
@@ -181,7 +181,7 @@ describe('Vaults', () => {
       const writeInteraction2 = await contract.writeInteraction({
         function: 'extendVault',
         id: existingVaultId,
-        extendLength: MIN_TOKEN_LOCK_LENGTH,
+        extendLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
       });
       expect(writeInteraction2?.originalTxId).not.toBe(undefined);
       const { cachedValue: newCachedValue } = await contract.readState();
@@ -192,11 +192,11 @@ describe('Vaults', () => {
 
       expect(newState.vaults[ownerAddress][existingVaultId].end).toEqual(
         prevState.vaults[ownerAddress][existingVaultId].end +
-          MIN_TOKEN_LOCK_LENGTH,
+          MIN_TOKEN_LOCK_BLOCK_LENGTH,
       );
     });
 
-    it.each([undefined, -1, 'bad lock length', MAX_TOKEN_LOCK_LENGTH])(
+    it.each([undefined, -1, 'bad lock length', MAX_TOKEN_LOCK_BLOCK_LENGTH])(
       'should not be able to extend vault with an invalid lock length',
       async (badLockLength) => {
         const { cachedValue: prevCachedValue } = await contract.readState();
@@ -224,7 +224,7 @@ describe('Vaults', () => {
         const writeInteraction = await contract.writeInteraction({
           function: 'extendVault',
           id: badId,
-          lockLength: MIN_TOKEN_LOCK_LENGTH,
+          lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         });
 
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -315,7 +315,7 @@ describe('Vaults', () => {
         const writeInteraction = await contract.writeInteraction({
           function: 'increaseVault',
           id: badId,
-          lockLength: MIN_TOKEN_LOCK_LENGTH,
+          lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         });
 
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -344,14 +344,14 @@ describe('Vaults', () => {
         function: 'vaultedTransfer',
         target: targetAddress,
         qty: TRANSFER_QTY,
-        lockLength: MIN_TOKEN_LOCK_LENGTH,
+        lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
       });
 
       const currentBlock = (await getCurrentBlock(arweave)).valueOf();
       const expectedVault = {
         balance: TRANSFER_QTY,
         start: currentBlock,
-        end: currentBlock + MIN_TOKEN_LOCK_LENGTH,
+        end: currentBlock + MIN_TOKEN_LOCK_BLOCK_LENGTH,
       };
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -380,14 +380,14 @@ describe('Vaults', () => {
         function: 'vaultedTransfer',
         target: srcContractId, // The smartweave contract id acts as the protocol balance
         qty: TRANSFER_QTY,
-        lockLength: MIN_TOKEN_LOCK_LENGTH,
+        lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
       });
 
       const currentBlock = (await getCurrentBlock(arweave)).valueOf();
       const expectedVault = {
         balance: TRANSFER_QTY,
         start: currentBlock,
-        end: currentBlock + MIN_TOKEN_LOCK_LENGTH,
+        end: currentBlock + MIN_TOKEN_LOCK_BLOCK_LENGTH,
       };
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -413,7 +413,7 @@ describe('Vaults', () => {
         function: 'vaultedTransfer',
         target: targetAddress,
         qty: Math.pow(TRANSFER_QTY, 10),
-        lockLength: MIN_TOKEN_LOCK_LENGTH,
+        lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
       });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -435,14 +435,14 @@ describe('Vaults', () => {
         function: 'vaultedTransfer',
         target: ownerAddress,
         qty: TRANSFER_QTY,
-        lockLength: MIN_TOKEN_LOCK_LENGTH,
+        lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
       });
 
       const currentBlock = (await getCurrentBlock(arweave)).valueOf();
       const expectedVault = {
         balance: TRANSFER_QTY,
         start: currentBlock,
-        end: currentBlock + MIN_TOKEN_LOCK_LENGTH,
+        end: currentBlock + MIN_TOKEN_LOCK_BLOCK_LENGTH,
       };
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -467,7 +467,7 @@ describe('Vaults', () => {
           function: 'vaultedTransfer',
           target: badWallet,
           qty: TRANSFER_QTY,
-          lockLength: MIN_TOKEN_LOCK_LENGTH,
+          lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         });
 
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -486,8 +486,8 @@ describe('Vaults', () => {
       undefined,
       -1,
       'bad lock length',
-      MIN_TOKEN_LOCK_LENGTH - 1,
-      MAX_TOKEN_LOCK_LENGTH + 1,
+      MIN_TOKEN_LOCK_BLOCK_LENGTH - 1,
+      MAX_TOKEN_LOCK_BLOCK_LENGTH + 1,
     ])(
       'should not be able to transfer tokens locked to an invalid wallet address',
       async (badLockLength) => {

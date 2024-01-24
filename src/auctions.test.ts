@@ -1,10 +1,17 @@
 import {
   calculateAuctionPriceForBlock,
+  calculateExistingAuctionBidForCaller,
   getAuctionPricesForInterval,
   getEndTimestampForAuction,
 } from './auctions';
 import { AUCTION_SETTINGS, SECONDS_IN_A_YEAR } from './constants';
-import { ArNSAuctionData, ArNSBaseAuctionData, BlockTimestamp } from './types';
+import {
+  ArNSAuctionData,
+  ArNSBaseAuctionData,
+  ArNSLeaseAuctionData,
+  BlockTimestamp,
+  IOToken,
+} from './types';
 import { BlockHeight } from './types';
 
 describe('calculateAuctionPriceForBlock', () => {
@@ -162,6 +169,39 @@ describe('calculateAuctionPriceForBlock', () => {
         });
         expect(endTimestamp).toEqual(expectedEndTimestamp);
       },
+    );
+  });
+});
+
+describe('calculateExistingAuctionBidForCaller function', () => {
+  const nihilisticAuction: ArNSLeaseAuctionData = {
+    startPrice: Number.NEGATIVE_INFINITY,
+    floorPrice: Number.NEGATIVE_INFINITY,
+    startHeight: Number.NEGATIVE_INFINITY,
+    endHeight: Number.NEGATIVE_INFINITY,
+    type: 'lease',
+    initiator: '',
+    contractTxId: '',
+    years: 1,
+    settings: {
+      auctionDuration: Number.NEGATIVE_INFINITY,
+      exponentialDecayRate: Number.NEGATIVE_INFINITY,
+      scalingExponent: Number.NEGATIVE_INFINITY,
+      floorPriceMultiplier: Number.NEGATIVE_INFINITY,
+      startPriceMultiplier: Number.NEGATIVE_INFINITY,
+    },
+  };
+
+  it('should throw if submitted bid is less than the required minimum bid', () => {
+    expect(() => {
+      calculateExistingAuctionBidForCaller({
+        caller: '',
+        auction: nihilisticAuction,
+        submittedBid: 1,
+        requiredMinimumBid: new IOToken(2),
+      });
+    }).toThrowError(
+      'The bid (1 IO) is less than the current required minimum bid of 2 IO.',
     );
   });
 });

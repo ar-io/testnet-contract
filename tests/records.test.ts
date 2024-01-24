@@ -3,13 +3,13 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts';
 import { BlockTimestamp, IOState } from '../src/types';
 import {
   ANT_CONTRACT_IDS,
+  ARNS_INVALID_SHORT_NAME,
+  ARNS_LEASE_LENGTH_MAX_YEARS,
   ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE,
   ARNS_NAME_RESERVED_MESSAGE,
+  ARNS_NON_EXPIRED_NAME_MESSAGE,
   DEFAULT_UNDERNAME_COUNT,
   INVALID_INPUT_MESSAGE,
-  INVALID_SHORT_NAME,
-  MAX_YEARS,
-  NON_EXPIRED_ARNS_NAME_MESSAGE,
 } from './utils/constants';
 import {
   calculatePermabuyFee,
@@ -242,7 +242,7 @@ describe('Records', () => {
         writeInteraction.originalTxId,
       );
       expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toEqual(
-        NON_EXPIRED_ARNS_NAME_MESSAGE,
+        ARNS_NON_EXPIRED_NAME_MESSAGE,
       );
       expect(cachedValue.state).toEqual(prevState);
     });
@@ -356,7 +356,11 @@ describe('Records', () => {
       },
     );
 
-    it.each([MAX_YEARS + 1, MAX_YEARS + 10, MAX_YEARS + 100])(
+    it.each([
+      ARNS_LEASE_LENGTH_MAX_YEARS + 1,
+      ARNS_LEASE_LENGTH_MAX_YEARS + 10,
+      ARNS_LEASE_LENGTH_MAX_YEARS + 100,
+    ])(
       'should not be able to purchase a name with years not within allowed range: %s',
       async (badYear) => {
         const namePurchase = {
@@ -429,7 +433,7 @@ describe('Records', () => {
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toEqual(
-        INVALID_SHORT_NAME,
+        ARNS_INVALID_SHORT_NAME,
       );
       expect(cachedValue.state).toEqual(prevState);
     });

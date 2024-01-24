@@ -1,8 +1,8 @@
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
-  MAX_TOKEN_LOCK_LENGTH,
-  MIN_TOKEN_LOCK_LENGTH,
+  MAX_TOKEN_LOCK_BLOCK_LENGTH,
+  MIN_TOKEN_LOCK_BLOCK_LENGTH,
 } from '../../constants';
 import { getBaselineState } from '../../tests/stubs';
 import { createVault } from './createVault';
@@ -33,8 +33,8 @@ describe('createVault', () => {
         '0',
         0,
         -1,
-        MIN_TOKEN_LOCK_LENGTH - 1,
-        MAX_TOKEN_LOCK_LENGTH + 1,
+        MIN_TOKEN_LOCK_BLOCK_LENGTH - 1,
+        MAX_TOKEN_LOCK_BLOCK_LENGTH + 1,
         Number.MAX_SAFE_INTEGER,
       ],
     ])(
@@ -66,7 +66,7 @@ describe('createVault', () => {
         caller: 'test',
         input: {
           qty: 100,
-          lockLength: MIN_TOKEN_LOCK_LENGTH,
+          lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         },
       }).catch((e) => e);
       expect(error).toBeInstanceOf(Error);
@@ -86,7 +86,7 @@ describe('createVault', () => {
         caller: 'test',
         input: {
           qty: 100,
-          lockLength: MIN_TOKEN_LOCK_LENGTH,
+          lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         },
       });
       expect(state).toEqual({
@@ -95,7 +95,7 @@ describe('createVault', () => {
           test: {
             [SmartWeave.transaction.id]: {
               balance: 100,
-              end: SmartWeave.block.height + MIN_TOKEN_LOCK_LENGTH,
+              end: SmartWeave.block.height + MIN_TOKEN_LOCK_BLOCK_LENGTH,
               start: SmartWeave.block.height,
             },
           },

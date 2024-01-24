@@ -1,5 +1,6 @@
 import {
   calculateAuctionPriceForBlock,
+  calculateExistingAuctionBidForCaller,
   createAuctionObject,
   getEndTimestampForAuction,
 } from '../../auctions';
@@ -10,6 +11,7 @@ import {
   RESERVED_ATOMIC_TX_ID,
 } from '../../constants';
 import { tallyNamePurchase } from '../../pricing';
+import { assertAvailableRecord } from '../../records';
 import {
   ArNSAuctionData,
   AuctionSettings,
@@ -24,8 +26,6 @@ import {
   RegistrationType,
 } from '../../types';
 import {
-  assertAvailableRecord,
-  calculateExistingAuctionBidForCaller,
   getInvalidAjvMessage,
   incrementBalance,
   unsafeDecrementBalance,
