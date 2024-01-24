@@ -4,51 +4,9 @@ import {
 } from '../../constants';
 import {
   getEpochBoundariesForHeight,
-  getObserverWeightsForEpoch,
   getPrescribedObserversForEpoch,
 } from '../../observers';
-import {
-  BlockHeight,
-  ContractReadResult,
-  IOState,
-  PstAction,
-  WeightedObserver,
-} from '../../types';
-
-export const getObserverWeights = async (
-  state: IOState,
-  { caller, input: { target = caller } }: PstAction,
-): Promise<ContractReadResult> => {
-  const { settings, gateways, distributions } = state;
-
-  const { epochStartHeight } = getEpochBoundariesForHeight({
-    currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
-    epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
-    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
-  });
-
-  const observerWeights = getObserverWeightsForEpoch({
-    gateways,
-    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
-    epochStartHeight,
-    distributions,
-  });
-
-  const observer = observerWeights.find(
-    (observer: WeightedObserver) =>
-      observer.gatewayAddress === target || observer.observerAddress === target,
-  );
-
-  if (!observer) {
-    throw new ContractError(
-      `No gateway or observer found with wallet address ${target}.`,
-    );
-  }
-  return {
-    // TODO: append it weight gateway settings
-    result: observer,
-  };
-};
+import { BlockHeight, ContractReadResult, IOState } from '../../types';
 
 export const getPrescribedObservers = async (
   state: IOState,

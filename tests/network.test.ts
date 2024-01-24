@@ -1,6 +1,12 @@
 import { Contract, JWKInterface, PstState } from 'warp-contracts';
 
-import { IOState } from '../src/types';
+import {
+  Gateway,
+  IOState,
+  ObserverWeights,
+  WalletAddress,
+  WeightedObserver,
+} from '../src/types';
 import {
   CONTRACT_SETTINGS,
   NETWORK_JOIN_STATUS,
@@ -8,6 +14,7 @@ import {
   WALLET_FUND_AMOUNT,
 } from './utils/constants';
 import {
+  createLocalWallet,
   getCurrentBlock,
   getLocalArNSContractKey,
   getLocalWallet,
@@ -664,6 +671,7 @@ describe('Network', () => {
           status: expect.any(String),
           vaults: expect.any(Object),
           settings: expect.any(Object),
+          weights: expect.any(Object),
         });
         expect(gateway).not.toBe(undefined);
         expect(gateway).toEqual(expectedGatewayObj);
@@ -676,37 +684,69 @@ describe('Network', () => {
         });
         expect(response).not.toBe(undefined);
         expect(response?.errorMessage).toEqual(
-          'This target does not have a registered gateway.',
+          'No gateway found with wallet address non-existent-gateway.',
         );
       });
 
-      it('should be able to fetch gateways total stake', async () => {
-        const { cachedValue } = await contract.readState();
-        const fullState = cachedValue.state as IOState;
-        const { result: gatewayTotalStake } = await contract.viewState({
-          function: 'gatewayTotalStake',
-          target: ownerAddress,
+      it('should return the observer weights if the caller is valid gateway', async () => {
+        const { result }: { result: WeightedObserver } =
+          await contract.viewState({
+            function: 'gateway',
+            target: ownerAddress,
+          });
+        expect(result).toEqual(
+          expect.objectContaining({
+            // other gateway information here
+            weights: {
+              stakeWeight: expect.any(Number),
+              tenureWeight: expect.any(Number),
+              gatewayRewardRatioWeight: expect.any(Number),
+              observerRewardRatioWeight: expect.any(Number),
+              compositeWeight: expect.any(Number),
+              normalizedCompositeWeight: expect.any(Number),
+            },
+          }),
+        );
+      });
+
+      it('should return an error if the gateway is not in the registry', async () => {
+        const notJoinedGateway = await createLocalWallet(arweave);
+        const error = await contract.viewState({
+          function: 'gateway',
+          target: notJoinedGateway.address,
         });
-        expect(gatewayTotalStake).toEqual(
-          fullState.gateways[ownerAddress].operatorStake,
+        expect(error.type).toEqual('error');
+        expect(error.errorMessage).toEqual(
+          expect.stringContaining(
+            `No gateway found with wallet address ${notJoinedGateway.address}.`,
+          ),
         );
       });
 
-      it('should be able to fetch gateway address registry via view state', async () => {
+      it('should be able to fetch gateway address registry with weights via view state', async () => {
         const { cachedValue } = await contract.readState();
         const fullState = cachedValue.state as IOState;
-        const { result: gateways } = await contract.viewState({
-          function: 'gatewayRegistry',
+        const {
+          result: gateways,
+        }: {
+          result: Record<WalletAddress, Gateway & { weights: ObserverWeights }>;
+        } = await contract.viewState({
+          function: 'gateways',
         });
         expect(gateways).not.toBe(undefined);
-        expect(gateways).toEqual(fullState.gateways);
-      });
-
-      it('should be able to fetch stake ranked, active gateway address registry via view state', async () => {
-        const { result: rankedGateways } = await contract.viewState({
-          function: 'rankedGatewayRegistry',
-        });
-        expect(rankedGateways).not.toBe(undefined); // TODO, make this more specific
+        for (const address of Object.keys(gateways)) {
+          expect(gateways[address]).toEqual({
+            ...fullState.gateways[address],
+            weights: expect.objectContaining({
+              stakeWeight: expect.any(Number),
+              tenureWeight: expect.any(Number),
+              gatewayRewardRatioWeight: expect.any(Number),
+              observerRewardRatioWeight: expect.any(Number),
+              compositeWeight: expect.any(Number),
+              normalizedCompositeWeight: expect.any(Number),
+            }),
+          });
+        }
       });
     });
 

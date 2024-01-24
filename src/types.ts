@@ -86,12 +86,7 @@ export type EpochObservations = {
 // The health reports and failure failureSummaries submitted by observers for an epoch
 export type Epoch = number;
 export type Observations = Record<Epoch, EpochObservations>;
-
-export type WeightedObserver = {
-  gatewayAddress: string;
-  observerAddress: string;
-  stake: number;
-  start: number;
+export type ObserverWeights = {
   stakeWeight: number;
   tenureWeight: number;
   gatewayRewardRatioWeight: number;
@@ -99,6 +94,12 @@ export type WeightedObserver = {
   compositeWeight: number;
   normalizedCompositeWeight: number;
 };
+export type WeightedObserver = {
+  gatewayAddress: string;
+  observerAddress: string;
+  stake: number;
+  start: number;
+} & ObserverWeights;
 
 export type ArNSBaseAuctionData = {
   startPrice: number;
@@ -246,17 +247,17 @@ export type ArNSFunctions =
 
 export type RegistryFunctions =
   | 'joinNetwork'
-  | 'gatewayRegistry'
-  | 'gatewayTotalStake'
   | 'leaveNetwork'
+  | 'gateway'
+  | 'gateways'
   | 'increaseOperatorStake'
-  | 'rankedGatewayRegistry'
   | 'initiateOperatorStakeDecrease'
   | 'updateGatewaySettings';
 
 export type ObservationFunctions =
   | 'saveObservations'
-  | 'prescribedObserver'
+  | 'observer'
+  | 'observers'
   | 'prescribedObservers';
 
 export type IOContractFunctions = BaseFunctions &

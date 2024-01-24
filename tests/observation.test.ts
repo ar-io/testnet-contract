@@ -64,7 +64,6 @@ describe('Observation', () => {
       const { result }: { result: WeightedObserver[] } =
         await contract.viewState({
           function: 'prescribedObservers',
-          height,
         });
       prescribedObservers = result;
       prescribedObserverWallets = wallets.filter((wallet) =>
@@ -88,44 +87,6 @@ describe('Observation', () => {
           function: 'prescribedObservers',
         });
         expect(refreshPrescribedObservers).toEqual(prescribedObservers);
-      });
-
-      it('should return the observer weights if the caller is valid gateway', async () => {
-        const { result }: { result: WeightedObserver } =
-          await contract.viewState({
-            function: 'observer',
-            target: prescribedObserverWallets[0].addr,
-            height: currentEpochStartHeight.valueOf(),
-          });
-        expect(result).toEqual(
-          expect.objectContaining({
-            start: expect.any(Number),
-            stake: expect.any(Number),
-            gatewayAddress: expect.any(String),
-            observerAddress: expect.any(String),
-            stakeWeight: expect.any(Number),
-            tenureWeight: expect.any(Number),
-            gatewayRewardRatioWeight: expect.any(Number),
-            observerRewardRatioWeight: expect.any(Number),
-            compositeWeight: expect.any(Number),
-            normalizedCompositeWeight: expect.any(Number),
-          }),
-        );
-      });
-
-      it('should return an error if the gateway is not in the registry', async () => {
-        const notJoinedGateway = await createLocalWallet(arweave);
-        const error = await contract.viewState({
-          function: 'observer',
-          target: notJoinedGateway.address,
-          height: currentEpochStartHeight.valueOf(),
-        });
-        expect(error.type).toEqual('error');
-        expect(error.errorMessage).toEqual(
-          expect.stringContaining(
-            `No gateway or observer found with wallet address ${notJoinedGateway.address}.`,
-          ),
-        );
       });
     });
 
@@ -222,7 +183,6 @@ describe('Observation', () => {
         const { result: prescribedObservers }: { result: WeightedObserver[] } =
           await contract.viewState({
             function: 'prescribedObservers',
-            height,
           });
         // find their wallets
         prescribedObserverWallets = wallets.filter((wallet) =>
