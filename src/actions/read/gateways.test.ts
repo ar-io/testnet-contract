@@ -1,7 +1,7 @@
 import { TENURE_WEIGHT_TOTAL_BLOCK_COUNT } from '../../constants';
 import { getBaselineState } from '../../tests/stubs';
 import { baselineGatewayData } from '../write/saveObservations.test';
-import { getGateway } from './gateways';
+import { getGateway, getGateways } from './gateways';
 
 describe('getGateway', () => {
   afterEach(() => {
@@ -119,5 +119,55 @@ describe('getGateway', () => {
         },
       },
     });
+  });
+});
+
+describe('getGateways', () => {
+  it('should return all the gateways and their weights', async () => {
+    const state = {
+      ...getBaselineState(),
+      gateways: {
+        'a-test-gateway': {
+          ...baselineGatewayData,
+          observerWallet: 'a-test-gateway',
+        },
+        'a-test-gateway-2': {
+          ...baselineGatewayData,
+          observerWallet: 'a-test-gateway-2',
+          start: 10,
+        },
+      },
+      // no distributions
+    };
+    const { result: gateways } = await getGateways(state);
+    expect(gateways).toEqual(
+      expect.objectContaining({
+        'a-test-gateway': {
+          ...baselineGatewayData,
+          observerWallet: 'a-test-gateway',
+          weights: {
+            stakeWeight: 1,
+            tenureWeight: 1 / TENURE_WEIGHT_TOTAL_BLOCK_COUNT, // started at the same block height
+            gatewayRewardRatioWeight: 1,
+            observerRewardRatioWeight: 1,
+            compositeWeight: 1 / TENURE_WEIGHT_TOTAL_BLOCK_COUNT,
+            normalizedCompositeWeight: 1,
+          },
+        },
+        'a-test-gateway-2': {
+          ...baselineGatewayData,
+          observerWallet: 'a-test-gateway-2',
+          start: 10,
+          weights: {
+            stakeWeight: 1,
+            tenureWeight: 0,
+            gatewayRewardRatioWeight: 1,
+            observerRewardRatioWeight: 1,
+            compositeWeight: 0,
+            normalizedCompositeWeight: 0,
+          },
+        },
+      }),
+    );
   });
 });

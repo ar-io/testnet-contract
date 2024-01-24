@@ -7,7 +7,6 @@ import {
   DEFAULT_START_HEIGHT,
   EXAMPLE_OBSERVER_REPORT_TX_IDS,
   INVALID_OBSERVATION_CALLER_MESSAGE,
-  INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE,
   WALLETS_TO_CREATE,
 } from './utils/constants';
 import {
@@ -301,7 +300,7 @@ describe('Observation', () => {
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
 
-      it('should not save observation report if the gateway is not in the registry and not observer', async () => {
+      it('should not save observation report if the caller is not a registered observer', async () => {
         const notJoinedGateway = await createLocalWallet(arweave);
         const { cachedValue: prevCachedValue } = await contract.readState();
         contract = warp.pst(srcContractId).connect(notJoinedGateway.wallet);
@@ -314,7 +313,7 @@ describe('Observation', () => {
         const { cachedValue: newCachedValue } = await contract.readState();
         expect(
           newCachedValue.errorMessages[writeInteraction?.originalTxId],
-        ).toEqual(INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE);
+        ).toEqual(INVALID_OBSERVATION_CALLER_MESSAGE);
         expect(newCachedValue.state).toEqual(prevCachedValue.state);
       });
     });

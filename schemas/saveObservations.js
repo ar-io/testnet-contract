@@ -11,12 +11,6 @@ const saveObservationsSchema = {
       pattern: '^[a-zA-Z0-9-_]{43}$',
       description: 'The transaction ID of the submitted report',
     },
-    gatewayAddress: {
-      type: 'string',
-      pattern: '^[a-zA-Z0-9-_]{43}$',
-      description:
-        'The gateway address that sent the observation. If not provided, the caller address will be used.',
-    },
     failedGateways: {
       type: 'array',
       items: {

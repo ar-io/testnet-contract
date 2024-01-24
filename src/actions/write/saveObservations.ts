@@ -1,8 +1,6 @@
 import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
   INVALID_OBSERVATION_CALLER_MESSAGE,
-  INVALID_OBSERVATION_FOR_GATEWAY_MESSAGE,
-  INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import {
@@ -28,7 +26,7 @@ export class SaveObservations {
   failedGateways: TransactionId[];
   gatewayAddress: WalletAddress;
 
-  constructor(input: any, caller: TransactionId) {
+  constructor(input: any) {
     // validate using ajv validator
     if (!validateSaveObservations(input)) {
       throw new ContractError(
@@ -39,14 +37,9 @@ export class SaveObservations {
         ),
       );
     }
-    const {
-      observerReportTxId,
-      failedGateways,
-      gatewayAddress = caller, // default the gateway address to the caller
-    } = input;
+    const { observerReportTxId, failedGateways } = input;
     this.observerReportTxId = observerReportTxId;
     this.failedGateways = failedGateways;
-    this.gatewayAddress = gatewayAddress;
   }
 }
 
@@ -56,8 +49,7 @@ export const saveObservations = async (
 ): Promise<ContractWriteResult> => {
   // get all other relevant state data
   const { observations, gateways, settings, distributions } = state;
-  const { gatewayAddress, observerReportTxId, failedGateways } =
-    new SaveObservations(input, caller);
+  const { observerReportTxId, failedGateways } = new SaveObservations(input);
 
   // TODO: check if current height is less than epochZeroStartHeight
   if (+SmartWeave.block.height < distributions.epochZeroStartHeight) {
@@ -72,27 +64,6 @@ export const saveObservations = async (
     epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
   });
 
-  // get the gateway that is creating the observation
-  const observingGateway = gateways[gatewayAddress];
-
-  // no gateway found found
-  if (!observingGateway) {
-    throw new ContractError(INVALID_OBSERVER_DOES_NOT_EXIST_MESSAGE);
-  }
-
-  // gateway found but the caller is not the observer wallet
-  if (observingGateway.observerWallet !== caller) {
-    throw new ContractError(INVALID_OBSERVATION_FOR_GATEWAY_MESSAGE);
-  }
-
-  // gateway found but it is not allowed to submit observations for the epoch
-  if (
-    observingGateway.start > epochStartHeight.valueOf() ||
-    observingGateway.status !== NETWORK_JOIN_STATUS
-  ) {
-    throw new ContractError(INVALID_OBSERVATION_CALLER_MESSAGE);
-  }
-
   const prescribedObservers = await getPrescribedObserversForEpoch({
     gateways,
     minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
@@ -101,13 +72,24 @@ export const saveObservations = async (
     distributions,
   });
 
-  if (
-    !prescribedObservers.some(
-      (prescribedObserver: WeightedObserver) =>
-        prescribedObserver.observerAddress === observingGateway.observerWallet,
-    )
-  ) {
+  // find the observer that is submitting the observation
+  const observer: WeightedObserver | undefined = prescribedObservers.find(
+    (prescribedObserver: WeightedObserver) =>
+      prescribedObserver.observerAddress === caller,
+  );
+
+  if (!observer) {
     throw new ContractError(INVALID_OBSERVATION_CALLER_MESSAGE);
+  }
+
+  // get the gateway that of this observer
+  const observingGateway = gateways[observer.gatewayAddress];
+
+  // no gateway found
+  if (!observingGateway) {
+    throw new ContractError(
+      'The associated gateway does not exist in the registry',
+    );
   }
 
   // check if this is the first report filed in this epoch (TODO: use start or end?)
