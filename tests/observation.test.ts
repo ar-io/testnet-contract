@@ -5,6 +5,7 @@ import { BlockHeight, IOState, WeightedObserver } from '../src/types';
 import {
   DEFAULT_EPOCH_START_HEIGHT,
   EPOCH_BLOCK_LENGTH,
+  EPOCH_DISTRIBUTION_DELAY,
   EXAMPLE_OBSERVER_REPORT_TX_IDS,
   INVALID_OBSERVATION_CALLER_MESSAGE,
   WALLETS_TO_CREATE,
@@ -90,7 +91,17 @@ describe('Observation', () => {
     });
 
     describe('write interactions', () => {
-      it('should save observations in epoch if prescribed observer', async () => {
+      it('should save observations in epoch if prescribed observer and the current block height is past the epoch start height + delay period', async () => {
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const previousState = prevCachedValue.state as IOState;
+        const minimumObservationHeight =
+          previousState.distributions.epochStartHeight +
+          EPOCH_DISTRIBUTION_DELAY;
+        const diffInBlocks =
+          minimumObservationHeight - (await getCurrentBlock(arweave)).valueOf();
+        if (diffInBlocks > 0) {
+          await mineBlocks(arweave, diffInBlocks);
+        }
         const writeInteractions = await Promise.all(
           prescribedObserverWallets.map((wallet) => {
             contract = warp.pst(srcContractId).connect(wallet.jwk);
@@ -129,7 +140,7 @@ describe('Observation', () => {
         });
       });
 
-      it('should allow an observer to update their observation with new failures/report if selected as observer', async () => {
+      it('should allow an observer to update their observation with new failures/report if selected as observer and the current block height is past the epoch start height + delay period', async () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const previousState = prevCachedValue.state as IOState;
         const previousSummary =
@@ -141,6 +152,15 @@ describe('Observation', () => {
         contract = warp
           .pst(srcContractId)
           .connect(prescribedObserverWallets[0].jwk);
+        // ensure that we are past the delay period
+        const minimumObservationHeight =
+          previousState.distributions.epochStartHeight +
+          EPOCH_DISTRIBUTION_DELAY;
+        const diffInBlocks =
+          minimumObservationHeight - (await getCurrentBlock(arweave)).valueOf();
+        if (diffInBlocks > 0) {
+          await mineBlocks(arweave, diffInBlocks);
+        }
         const writeInteraction = await contract.writeInteraction({
           function: 'saveObservations',
           observerReportTxId: EXAMPLE_OBSERVER_REPORT_TX_IDS[1],
