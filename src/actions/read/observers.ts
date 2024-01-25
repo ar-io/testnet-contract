@@ -10,6 +10,10 @@ export const getPrescribedObservers = async (
 ): Promise<ContractReadResult> => {
   const { settings, gateways, distributions } = state;
 
+  if (+SmartWeave.block.height < distributions.epochZeroStartHeight) {
+    return { result: [] };
+  }
+
   const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
     epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
@@ -37,9 +41,9 @@ export async function getEpoch(
 
   if (
     isNaN(requestedHeight) ||
-    height < distributions.epochZeroStartHeight ||
+    requestedHeight < distributions.epochZeroStartHeight ||
     // TODO: should we allow users to query future epochs?
-    height > +SmartWeave.block.height
+    requestedHeight > +SmartWeave.block.height
   ) {
     throw new ContractError(
       'Invalid height. Must be a number less than or equal to the current block height and greater than or equal to the epoch zero start height',
