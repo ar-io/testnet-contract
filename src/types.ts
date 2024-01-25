@@ -44,6 +44,7 @@ export type IOState = {
   observations: Observations;
   distributions: EpochDistributionData;
   vaults: RegistryVaults;
+  settings?: unknown; // satisfying integration tests type issues
 };
 
 export type GatewayPerformanceStats = {
