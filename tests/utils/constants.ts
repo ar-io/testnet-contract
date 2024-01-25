@@ -32,7 +32,7 @@ export const EXAMPLE_OBSERVER_REPORT_TX_IDS = [
   'U35xQUnop2Oq1NwhpzRfTeXVSjC0M8H50MVlmo_cTJc',
   'TtXk8kqgGYVqTQeHaJzst3toA2qz9UO0AGX1lUeuxvc',
 ];
-export const DEFAULT_START_HEIGHT = 0;
+export const DEFAULT_EPOCH_START_HEIGHT = 0; // stub our distribution start height
 export const EXAMPLE_LIST_OF_FAILED_GATEWAYS = [
   EXAMPLE_OBSERVER_REPORT_TX_IDS.concat(['fakeone']),
 ];
