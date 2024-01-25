@@ -19,7 +19,10 @@ export const evolveState = async (
   }
 
   // bump the protocol balance to the initial amount
-  if (state.balances[owner] >= INITIAL_PROTOCOL_BALANCE) {
+  if (
+    state.balances[owner] >= INITIAL_PROTOCOL_BALANCE &&
+    state.balances[SmartWeave.contract.id] < INITIAL_PROTOCOL_BALANCE
+  ) {
     const protocolBalance = state.balances[SmartWeave.contract.id] || 0;
     const differenceFromRequiredMinimum =
       INITIAL_PROTOCOL_BALANCE - protocolBalance;
