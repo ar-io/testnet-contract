@@ -5,10 +5,13 @@ import {
   INVALID_INPUT_MESSAGE,
   INVALID_OBSERVER_WALLET,
 } from '../../constants';
-import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
+import {
+  getBaselineState,
+  stubbedArweaveTxId,
+  stubbedGatewayData,
+} from '../../tests/stubs';
 import { IOState } from '../../types';
 import { joinNetwork } from './joinNetwork';
-import { baselineGatewayData } from './saveObservations.test';
 
 const validInput = {
   observerWallet: stubbedArweaveTxId,
@@ -98,7 +101,7 @@ describe('joinNetwork', () => {
       },
       gateways: {
         'existing-gateway': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
         },
       },
       settings: {
@@ -128,7 +131,7 @@ describe('joinNetwork', () => {
       },
       gateways: {
         'existing-gateway': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: stubbedArweaveTxId,
         },
       },

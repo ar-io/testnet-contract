@@ -9,19 +9,20 @@ import {
 } from '../../actions/write/tick';
 import {
   BAD_OBSERVER_GATEWAY_PENALTY,
-  DEFAULT_EPOCH_BLOCK_LENGTH,
+  EPOCH_BLOCK_LENGTH,
+  EPOCH_DISTRIBUTION_DELAY,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
-  TALLY_PERIOD_BLOCKS,
 } from '../../constants';
 import {
   getEligibleGatewaysForEpoch,
   getPrescribedObserversForEpoch,
 } from '../../observers';
+import { updateDemandFactor } from '../../pricing';
 import {
-  baselineGatewayData,
   getBaselineState,
-  stubbedArweaveTxId, // stubbedArweaveTxId,
+  stubbedArweaveTxId,
+  stubbedGatewayData,
 } from '../../tests/stubs';
 import {
   ArNSPermabuyAuctionData,
@@ -43,6 +44,11 @@ jest.mock('../../observers', () => ({
   ...jest.requireActual('../../observers'),
   getPrescribedObserversForEpoch: jest.fn().mockResolvedValue([]),
   getEligibleGatewaysForEpoch: jest.fn().mockResolvedValue({}),
+}));
+
+jest.mock('../../pricing', () => ({
+  ...jest.requireActual('../../pricing'),
+  updateDemandFactor: jest.fn().mockReturnValue({}),
 }));
 
 const defaultAuctionSettings = {
@@ -796,15 +802,15 @@ describe('tickRewardDistribution', () => {
     ]);
     (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({
       'a-gateway': {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         observerWallet: 'an-observing-gateway',
       },
       'a-gateway-2': {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         observerWallet: 'an-observing-gateway-2',
       },
       'a-gateway-3': {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         observerWallet: 'an-observing-gateway-3',
       },
     });
@@ -836,10 +842,9 @@ describe('tickRewardDistribution', () => {
       epochZeroStartHeight: initialState.distributions.epochZeroStartHeight,
       epochStartHeight: initialState.distributions.epochEndHeight + 1,
       epochEndHeight:
-        initialState.distributions.epochEndHeight + DEFAULT_EPOCH_BLOCK_LENGTH,
+        initialState.distributions.epochEndHeight + EPOCH_BLOCK_LENGTH,
       epochDistributionHeight:
-        initialState.distributions.epochDistributionHeight +
-        DEFAULT_EPOCH_BLOCK_LENGTH,
+        initialState.distributions.epochDistributionHeight + EPOCH_BLOCK_LENGTH,
       gateways: {
         'a-gateway': {
           failedConsecutiveEpochs: 0,
@@ -895,7 +900,7 @@ describe('tickRewardDistribution', () => {
     expect(distributions).toEqual(initialState.distributions);
   });
 
-  it.each([0, TALLY_PERIOD_BLOCKS - 1])(
+  it.each([0, EPOCH_DISTRIBUTION_DELAY - 1])(
     'should not distribute rewards if the current block height is equal to the last epoch end height + %s blocks',
     async (blockHeight) => {
       const initialState: IOState = {
@@ -906,7 +911,7 @@ describe('tickRewardDistribution', () => {
       };
       const firstEpochEndHeight =
         initialState.distributions.epochZeroStartHeight +
-        DEFAULT_EPOCH_BLOCK_LENGTH -
+        EPOCH_BLOCK_LENGTH -
         1;
       const invalidBlockHeight = firstEpochEndHeight + blockHeight;
       const { balances, distributions } = await tickRewardDistribution({
@@ -934,7 +939,7 @@ describe('tickRewardDistribution', () => {
     };
     const { balances, distributions } = await tickRewardDistribution({
       currentBlockHeight: new BlockHeight(
-        initialState.distributions.epochEndHeight + TALLY_PERIOD_BLOCKS,
+        initialState.distributions.epochEndHeight + EPOCH_DISTRIBUTION_DELAY,
       ),
       gateways: initialState.gateways,
       balances: initialState.balances,
@@ -942,15 +947,16 @@ describe('tickRewardDistribution', () => {
       observations: initialState.observations,
       settings: initialState.settings,
     });
-    const expectedNewEpochStartHeight = DEFAULT_EPOCH_BLOCK_LENGTH;
+    const expectedNewEpochStartHeight = EPOCH_BLOCK_LENGTH;
     const expectedNewEpochEndHeight =
-      expectedNewEpochStartHeight + DEFAULT_EPOCH_BLOCK_LENGTH - 1;
+      expectedNewEpochStartHeight + EPOCH_BLOCK_LENGTH - 1;
     expect(balances).toEqual(initialState.balances);
     expect(distributions).toEqual({
       ...initialState.distributions,
       epochStartHeight: expectedNewEpochStartHeight,
       epochEndHeight: expectedNewEpochEndHeight,
-      epochDistributionHeight: expectedNewEpochEndHeight + TALLY_PERIOD_BLOCKS,
+      epochDistributionHeight:
+        expectedNewEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
     });
   });
 
@@ -962,15 +968,15 @@ describe('tickRewardDistribution', () => {
       },
       gateways: {
         'a-gateway': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'an-observing-gateway',
         },
         'a-gateway-2': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'an-observing-gateway-2',
         },
         'a-gateway-3': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'an-observing-gateway-3',
         },
       },
@@ -989,14 +995,15 @@ describe('tickRewardDistribution', () => {
     expect(balances).toEqual({
       ...initialState.balances,
     });
-    const expectedNewEpochStartHeight = DEFAULT_EPOCH_BLOCK_LENGTH;
+    const expectedNewEpochStartHeight = EPOCH_BLOCK_LENGTH;
     const expectedNewEpochEndHeight =
-      expectedNewEpochStartHeight + DEFAULT_EPOCH_BLOCK_LENGTH - 1;
+      expectedNewEpochStartHeight + EPOCH_BLOCK_LENGTH - 1;
     expect(distributions).toEqual({
       ...initialState.distributions,
       epochStartHeight: expectedNewEpochStartHeight,
       epochEndHeight: expectedNewEpochEndHeight,
-      epochDistributionHeight: expectedNewEpochEndHeight + TALLY_PERIOD_BLOCKS,
+      epochDistributionHeight:
+        expectedNewEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
       gateways: {
         'a-gateway': {
           passedEpochCount: 0,
@@ -1039,15 +1046,15 @@ describe('tickRewardDistribution', () => {
       },
       gateways: {
         'a-gateway': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'an-observing-gateway',
         },
         'a-gateway-2': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'an-observing-gateway-2',
         },
         'a-gateway-3': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'an-observing-gateway-3',
         },
       },
@@ -1098,14 +1105,15 @@ describe('tickRewardDistribution', () => {
       'a-gateway-3': goodObserverBadGatewayReward, // gets observer reward, but no gateway reward
       [SmartWeave.contract.id]: 10_000_000 - totalRewardsDistributed,
     });
-    const expectedNewEpochStartHeight = DEFAULT_EPOCH_BLOCK_LENGTH;
+    const expectedNewEpochStartHeight = EPOCH_BLOCK_LENGTH;
     const expectedNewEpochEndHeight =
-      expectedNewEpochStartHeight + DEFAULT_EPOCH_BLOCK_LENGTH - 1;
+      expectedNewEpochStartHeight + EPOCH_BLOCK_LENGTH - 1;
     expect(distributions).toEqual({
       ...initialState.distributions,
       epochStartHeight: expectedNewEpochStartHeight,
       epochEndHeight: expectedNewEpochEndHeight,
-      epochDistributionHeight: expectedNewEpochEndHeight + TALLY_PERIOD_BLOCKS,
+      epochDistributionHeight:
+        expectedNewEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
       gateways: {
         'a-gateway': {
           passedEpochCount: 1,
@@ -1145,15 +1153,15 @@ describe('top level tick', () => {
   beforeAll(() => {
     (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({
       'a-gateway': {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         observerWallet: 'an-observing-gateway',
       },
       'a-gateway-2': {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         observerWallet: 'an-observing-gateway-2',
       },
       'a-gateway-3': {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         observerWallet: 'an-observing-gateway-3',
       },
     });
@@ -1202,6 +1210,9 @@ describe('top level tick', () => {
       ...getBaselineState(),
     };
 
+    // stub the demand factor change
+    (updateDemandFactor as jest.Mock).mockReturnValue(initialState);
+
     // update our state
     SmartWeave.block.height =
       initialState.distributions.epochDistributionHeight;
@@ -1214,15 +1225,13 @@ describe('top level tick', () => {
       distributions: {
         ...initialState.distributions,
         epochStartHeight:
-          initialState.distributions.epochStartHeight +
-          DEFAULT_EPOCH_BLOCK_LENGTH,
+          initialState.distributions.epochStartHeight + EPOCH_BLOCK_LENGTH,
         epochEndHeight:
-          initialState.distributions.epochEndHeight +
-          DEFAULT_EPOCH_BLOCK_LENGTH,
+          initialState.distributions.epochEndHeight + EPOCH_BLOCK_LENGTH,
         epochDistributionHeight:
           initialState.distributions.epochEndHeight +
-          DEFAULT_EPOCH_BLOCK_LENGTH +
-          TALLY_PERIOD_BLOCKS,
+          EPOCH_BLOCK_LENGTH +
+          EPOCH_DISTRIBUTION_DELAY,
         gateways: {
           'a-gateway': {
             passedEpochCount: 0,

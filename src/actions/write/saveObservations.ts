@@ -1,5 +1,5 @@
 import {
-  DEFAULT_EPOCH_BLOCK_LENGTH,
+  EPOCH_BLOCK_LENGTH,
   INVALID_OBSERVATION_CALLER_MESSAGE,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
@@ -61,7 +61,7 @@ export const saveObservations = async (
   const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height), // observations must be submitted within the epoch
     epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
-    epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+    epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
   });
 
   const prescribedObservers = await getPrescribedObserversForEpoch({

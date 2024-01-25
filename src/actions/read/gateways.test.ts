@@ -1,6 +1,5 @@
-import { TENURE_WEIGHT_TOTAL_BLOCK_COUNT } from '../../constants';
-import { getBaselineState } from '../../tests/stubs';
-import { baselineGatewayData } from '../write/saveObservations.test';
+import { EPOCH_BLOCK_LENGTH, TENURE_WEIGHT_PERIOD } from '../../constants';
+import { getBaselineState, stubbedGatewayData } from '../../tests/stubs';
 import { getGateway, getGateways } from './gateways';
 
 describe('getGateway', () => {
@@ -30,7 +29,7 @@ describe('getGateway', () => {
       ...getBaselineState(),
       gateways: {
         'a-test-gateway': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           start: 10,
         },
       },
@@ -42,7 +41,7 @@ describe('getGateway', () => {
     });
     expect(gateway).toEqual({
       result: {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         start: 10,
         stats: {
           passedEpochCount: 0,
@@ -65,11 +64,11 @@ describe('getGateway', () => {
 
   it('should return the gateway and its weights when the caller is a valid gateway address', async () => {
     // the next epoch
-    SmartWeave.block.height = 200;
+    SmartWeave.block.height = EPOCH_BLOCK_LENGTH;
     const state = {
       ...getBaselineState(),
       gateways: {
-        'a-test-gateway': baselineGatewayData,
+        'a-test-gateway': stubbedGatewayData,
       },
       // no distributions
     };
@@ -77,12 +76,11 @@ describe('getGateway', () => {
       caller: 'a-test-gateway',
       input: {},
     });
-    // incremented by 1
-    const expectedTenureWeight = 200 / TENURE_WEIGHT_TOTAL_BLOCK_COUNT;
+    const expectedTenureWeight = EPOCH_BLOCK_LENGTH / TENURE_WEIGHT_PERIOD;
     const expectedCompositeWeight = 1 * 1 * 1 * expectedTenureWeight;
     expect(gateway).toEqual({
       result: {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         stats: {
           passedEpochCount: 0,
           failedConsecutiveEpochCount: 0,
@@ -104,11 +102,11 @@ describe('getGateway', () => {
 
   it('should return the observer and its weights when the provided target is a valid observer address', async () => {
     // the next epoch
-    SmartWeave.block.height = 200;
+    SmartWeave.block.height = EPOCH_BLOCK_LENGTH;
     const state = {
       ...getBaselineState(),
       gateways: {
-        'a-test-gateway': baselineGatewayData,
+        'a-test-gateway': stubbedGatewayData,
       },
       // no distributions
     };
@@ -118,11 +116,11 @@ describe('getGateway', () => {
         target: 'a-test-gateway',
       },
     });
-    const expectedTenureWeight = 200 / TENURE_WEIGHT_TOTAL_BLOCK_COUNT;
+    const expectedTenureWeight = EPOCH_BLOCK_LENGTH / TENURE_WEIGHT_PERIOD;
     const expectedCompositeWeight = 1 * 1 * 1 * expectedTenureWeight;
     expect(gateway).toEqual({
       result: {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         stats: {
           passedEpochCount: 0,
           failedConsecutiveEpochCount: 0,
@@ -149,11 +147,11 @@ describe('getGateways', () => {
       ...getBaselineState(),
       gateways: {
         'a-test-gateway': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'a-test-gateway',
         },
         'a-test-gateway-2': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'a-test-gateway-2',
           start: 10,
         },
@@ -164,7 +162,7 @@ describe('getGateways', () => {
     expect(gateways).toEqual(
       expect.objectContaining({
         'a-test-gateway': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'a-test-gateway',
           stats: {
             passedEpochCount: 0,
@@ -175,15 +173,15 @@ describe('getGateways', () => {
           },
           weights: {
             stakeWeight: 1,
-            tenureWeight: 1 / TENURE_WEIGHT_TOTAL_BLOCK_COUNT, // started at the same block height
+            tenureWeight: 1 / TENURE_WEIGHT_PERIOD, // started at the same block height
             gatewayRewardRatioWeight: 1,
             observerRewardRatioWeight: 1,
-            compositeWeight: 1 / TENURE_WEIGHT_TOTAL_BLOCK_COUNT,
+            compositeWeight: 1 / TENURE_WEIGHT_PERIOD,
             normalizedCompositeWeight: 1,
           },
         },
         'a-test-gateway-2': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'a-test-gateway-2',
           start: 10,
           stats: {

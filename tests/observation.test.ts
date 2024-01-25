@@ -3,8 +3,8 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts';
 import { getEpochBoundariesForHeight } from '../src/observers';
 import { BlockHeight, IOState, WeightedObserver } from '../src/types';
 import {
-  DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_START_HEIGHT,
+  EPOCH_BLOCK_LENGTH,
   EXAMPLE_OBSERVER_REPORT_TX_IDS,
   INVALID_OBSERVATION_CALLER_MESSAGE,
   WALLETS_TO_CREATE,
@@ -74,7 +74,7 @@ describe('Observation', () => {
       currentEpochStartHeight = getEpochBoundariesForHeight({
         currentBlockHeight: new BlockHeight(height),
         epochZeroStartHeight: new BlockHeight(DEFAULT_START_HEIGHT),
-        epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+        epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
       }).epochStartHeight;
     });
 
@@ -170,13 +170,13 @@ describe('Observation', () => {
 
     describe('fast forwarding to the next epoch', () => {
       beforeAll(async () => {
-        await mineBlocks(arweave, DEFAULT_EPOCH_BLOCK_LENGTH + 1);
+        await mineBlocks(arweave, EPOCH_BLOCK_LENGTH + 1);
         const height = (await getCurrentBlock(arweave)).valueOf();
         // set our start height to the current height
         currentEpochStartHeight = getEpochBoundariesForHeight({
           currentBlockHeight: new BlockHeight(height),
           epochZeroStartHeight: new BlockHeight(DEFAULT_START_HEIGHT),
-          epochBlockLength: new BlockHeight(DEFAULT_EPOCH_BLOCK_LENGTH),
+          epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
         }).epochStartHeight;
         // get the prescribed observers
         const { result: prescribedObservers }: { result: WeightedObserver[] } =

@@ -1,12 +1,12 @@
 import {
   BAD_OBSERVER_GATEWAY_PENALTY,
-  DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_UNDERNAME_COUNT,
+  EPOCH_BLOCK_LENGTH,
+  EPOCH_DISTRIBUTION_DELAY,
   EPOCH_REWARD_PERCENTAGE,
   GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
   OBSERVATION_FAILURE_THRESHOLD,
   SECONDS_IN_A_YEAR,
-  TALLY_PERIOD_BLOCKS,
 } from '../../constants';
 import {
   getEligibleGatewaysForEpoch,
@@ -434,7 +434,7 @@ export async function tickRewardDistribution({
     distributions.epochDistributionHeight,
   );
 
-  // distribution should only happen ONCE on block that is TALLY_PERIOD_BLOCKS after the last completed epoch
+  // distribution should only happen ONCE on block that is EPOCH_DISTRIBUTION_DELAY after the last completed epoch
   if (currentBlockHeight.valueOf() !== distributionHeightForEpoch.valueOf()) {
     return {
       // remove the readonly and avoid slicing/copying arrays if not necessary
@@ -640,8 +640,7 @@ export async function tickRewardDistribution({
     : balances;
 
   const nextEpochStartHeight = epochEndHeight.valueOf() + 1;
-  const nextEpochEndHeight =
-    epochEndHeight.valueOf() + DEFAULT_EPOCH_BLOCK_LENGTH;
+  const nextEpochEndHeight = epochEndHeight.valueOf() + EPOCH_BLOCK_LENGTH;
 
   const updatedDistributions: RewardDistributions = {
     gateways: {
@@ -656,7 +655,7 @@ export async function tickRewardDistribution({
     epochStartHeight: nextEpochStartHeight,
     epochEndHeight: nextEpochEndHeight,
     epochZeroStartHeight: distributions.epochZeroStartHeight,
-    epochDistributionHeight: nextEpochEndHeight + TALLY_PERIOD_BLOCKS,
+    epochDistributionHeight: nextEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
   };
 
   return {
