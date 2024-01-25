@@ -1,4 +1,4 @@
-import { TENURE_WEIGHT_PERIOD } from '../../constants';
+import { EPOCH_BLOCK_LENGTH, TENURE_WEIGHT_PERIOD } from '../../constants';
 import { getBaselineState } from '../../tests/stubs';
 import { baselineGatewayData } from '../write/saveObservations.test';
 import { getGateway, getGateways } from './gateways';
@@ -65,7 +65,7 @@ describe('getGateway', () => {
 
   it('should return the gateway and its weights when the caller is a valid gateway address', async () => {
     // the next epoch
-    SmartWeave.block.height = 200;
+    SmartWeave.block.height = EPOCH_BLOCK_LENGTH;
     const state = {
       ...getBaselineState(),
       gateways: {
@@ -77,7 +77,7 @@ describe('getGateway', () => {
       caller: 'a-test-gateway',
       input: {},
     });
-    const expectedTenureWeight = 200 / TENURE_WEIGHT_PERIOD;
+    const expectedTenureWeight = EPOCH_BLOCK_LENGTH / TENURE_WEIGHT_PERIOD;
     const expectedCompositeWeight = 1 * 1 * 1 * expectedTenureWeight;
     expect(gateway).toEqual({
       result: {
@@ -103,7 +103,7 @@ describe('getGateway', () => {
 
   it('should return the observer and its weights when the provided target is a valid observer address', async () => {
     // the next epoch
-    SmartWeave.block.height = 200;
+    SmartWeave.block.height = EPOCH_BLOCK_LENGTH;
     const state = {
       ...getBaselineState(),
       gateways: {
@@ -117,7 +117,7 @@ describe('getGateway', () => {
         target: 'a-test-gateway',
       },
     });
-    const expectedTenureWeight = 200 / TENURE_WEIGHT_PERIOD;
+    const expectedTenureWeight = EPOCH_BLOCK_LENGTH / TENURE_WEIGHT_PERIOD;
     const expectedCompositeWeight = 1 * 1 * 1 * expectedTenureWeight;
     expect(gateway).toEqual({
       result: {

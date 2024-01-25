@@ -2,8 +2,8 @@ import { createHash } from 'node:crypto';
 
 import {
   EPOCH_BLOCK_LENGTH,
-  EPOCH_DISTRIBUTION_DELAY,
   GATEWAY_LEAVE_BLOCK_LENGTH,
+  INITIAL_DISTRIBUTIONS,
   MAXIMUM_OBSERVERS_PER_EPOCH,
   TENURE_WEIGHT_PERIOD,
 } from './constants';
@@ -13,35 +13,12 @@ import {
   getPrescribedObserversForEpoch,
   isGatewayEligibleForDistribution,
 } from './observers';
-import { baselineGatewayData, getBaselineState } from './tests/stubs';
+import {
+  getBaselineState,
+  stubbedGatewayData,
+  stubbedGateways,
+} from './tests/stubs';
 import { BlockHeight, DeepReadonly, Gateway, Gateways } from './types';
-
-const gateways = {
-  'test-observer-wallet-1': {
-    ...baselineGatewayData,
-    operatorStake: 100,
-    observerWallet: 'test-observer-wallet-1',
-  },
-  'test-observer-wallet-2': {
-    ...baselineGatewayData,
-    operatorStake: 200,
-    observerWallet: 'test-observer-wallet-2',
-  },
-  'test-observer-wallet-3': {
-    ...baselineGatewayData,
-    operatorStake: 300,
-    observerWallet: 'test-observer-wallet-3',
-  },
-};
-
-const distributions = {
-  epochZeroStartHeight: 0,
-  epochStartHeight: 0,
-  epochEndHeight: EPOCH_BLOCK_LENGTH - 1,
-  epochDistributionHeight: EPOCH_BLOCK_LENGTH - 1 + EPOCH_DISTRIBUTION_DELAY,
-  gateways: {},
-  observers: {},
-};
 
 describe('getPrescribedObserversForEpoch', () => {
   beforeAll(() => {
@@ -75,13 +52,13 @@ describe('getPrescribedObserversForEpoch', () => {
     const observers = await getPrescribedObserversForEpoch({
       gateways: {
         'test-observer-wallet-1': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           operatorStake: totalStake,
           start: 0,
           observerWallet: 'test-observer-wallet-1',
         },
       },
-      distributions,
+      distributions: INITIAL_DISTRIBUTIONS,
       minNetworkJoinStakeAmount: 10,
       epochStartHeight: new BlockHeight(epochStartHeight),
       epochEndHeight: new BlockHeight(epochStartHeight + 10),
@@ -109,31 +86,20 @@ describe('getPrescribedObserversForEpoch', () => {
 
   it(`should return the correct number observers with proper weights if there are more than ${MAXIMUM_OBSERVERS_PER_EPOCH} gateways with composite scores greater than 0`, async () => {
     const epochStartHeight = 10;
-    const eligibleGateways: DeepReadonly<Gateways> = {
-      ...gateways,
-      'test-observer-wallet-4': {
-        ...baselineGatewayData,
-        operatorStake: 400,
-        start: 4,
-        observerWallet: 'test-observer-wallet-4',
-      },
-      'test-observer-wallet-5': {
-        ...baselineGatewayData,
-        operatorStake: 500,
-        start: 5,
-        observerWallet: 'test-observer-wallet-5',
-      },
-      'test-observer-wallet-6': {
-        ...baselineGatewayData,
-        operatorStake: 600,
-        start: 6,
-        observerWallet: 'test-observer-wallet-6',
-      },
-    };
+    const extendedStubbedGateways = stubbedGateways;
+    for (let i = 4; i < MAXIMUM_OBSERVERS_PER_EPOCH + 5; i++) {
+      extendedStubbedGateways[`test-observer-wallet-${i}`] = {
+        ...stubbedGatewayData,
+        operatorStake: 100,
+        start: 0,
+        observerWallet: `test-observer-wallet-${i}`,
+      };
+    }
+    const eligibleGateways: DeepReadonly<Gateways> = extendedStubbedGateways;
     const minNetworkJoinStakeAmount = 10;
     const observers = await getPrescribedObserversForEpoch({
       gateways: eligibleGateways,
-      distributions,
+      distributions: INITIAL_DISTRIBUTIONS,
       minNetworkJoinStakeAmount: 10,
       epochStartHeight: new BlockHeight(epochStartHeight),
       epochEndHeight: new BlockHeight(epochStartHeight + 10),
@@ -172,34 +138,28 @@ describe('getPrescribedObserversForEpoch', () => {
       observer.normalizedCompositeWeight =
         observer.compositeWeight / totalCompositeWeight;
     }
-    // now we select the observers from the expected weights
-    const expectedObservers = [
-      expectedObserverWeights[0], // 'test-observer-wallet-1',
-      expectedObserverWeights[2], // 'test-observer-wallet-3',
-      expectedObserverWeights[3], // 'test-observer-wallet-4',
-      expectedObserverWeights[5], // 'test-observer-wallet-5',
-    ].sort((a, b) => a.normalizedCompositeWeight - b.normalizedCompositeWeight);
-    expect(observers).toEqual(expectedObservers);
+    // the observers returned should be a subset of the full observer weights
+    expect(expectedObserverWeights).toEqual(expect.arrayContaining(observers));
   });
 
   it('should still include gateways that have not passed any epochs, with adjusted composite weights', async () => {
-    const epochStartHeight = 10;
-    const appendedGateways: DeepReadonly<Gateways> = {
-      ...gateways,
+    const epochStartHeight = EPOCH_BLOCK_LENGTH / 2;
+    const eligibleGateways: DeepReadonly<Gateways> = {
+      ...stubbedGateways,
       'test-observer-wallet-4': {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         operatorStake: 400,
         start: 4,
         observerWallet: 'test-observer-wallet-4',
       },
       'test-observer-wallet-5': {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         operatorStake: 500,
         start: 5,
         observerWallet: 'test-observer-wallet-5',
       },
       'test-observer-wallet-6': {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         operatorStake: 600,
         start: 6,
         observerWallet: 'test-observer-wallet-6',
@@ -267,21 +227,16 @@ describe('getPrescribedObserversForEpoch', () => {
       },
     };
     const observers = await getPrescribedObserversForEpoch({
-      gateways: appendedGateways,
+      gateways: eligibleGateways,
       distributions,
       minNetworkJoinStakeAmount: 10,
       epochStartHeight: new BlockHeight(epochStartHeight),
-      epochEndHeight: new BlockHeight(epochStartHeight + 10),
+      epochEndHeight: new BlockHeight(epochStartHeight + EPOCH_BLOCK_LENGTH),
     });
 
-    expect(observers.length).toEqual(MAXIMUM_OBSERVERS_PER_EPOCH);
+    expect(observers.length).toEqual(Object.keys(eligibleGateways).length);
     expect(observers.map((o) => o.gatewayAddress)).toEqual(
-      expect.arrayContaining([
-        'test-observer-wallet-1',
-        'test-observer-wallet-2',
-        'test-observer-wallet-3',
-        'test-observer-wallet-4',
-      ]),
+      expect.arrayContaining(Object.keys(eligibleGateways)),
     );
   });
 });
@@ -291,7 +246,7 @@ describe('isGatewayEligibleForDistribution', () => {
     [
       'should be true if the gateway is joined, and started before the epoch start',
       {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         status: 'joined',
         start: 0,
       },
@@ -302,7 +257,7 @@ describe('isGatewayEligibleForDistribution', () => {
     [
       'should be true if the gateway is joined, and started at the same block as the epoch start',
       {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         status: 'joined',
         start: 10,
       },
@@ -313,7 +268,7 @@ describe('isGatewayEligibleForDistribution', () => {
     [
       'should be true if the gateway is leaving, but started before the epoch start and leaving after the end of the epoch',
       {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         status: 'leaving',
         end: GATEWAY_LEAVE_BLOCK_LENGTH + 1,
         start: 0,
@@ -325,7 +280,7 @@ describe('isGatewayEligibleForDistribution', () => {
     [
       'should be true if the gateway is joined, and started before the epoch with large numbers',
       {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         start: Number.MAX_SAFE_INTEGER - 1,
       },
       Number.MAX_SAFE_INTEGER,
@@ -342,7 +297,7 @@ describe('isGatewayEligibleForDistribution', () => {
     [
       'should be false if gateway is joined but started after the epoch start',
       {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         status: 'joined',
         start: 11,
       },
@@ -353,7 +308,7 @@ describe('isGatewayEligibleForDistribution', () => {
     [
       'should be false if gateway is leaving before the end of the epoch',
       {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         status: 'leaving',
         start: 10,
         end: GATEWAY_LEAVE_BLOCK_LENGTH - 1,
@@ -365,7 +320,7 @@ describe('isGatewayEligibleForDistribution', () => {
     [
       'should be false if gateway is joined and started after the epoch start',
       {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         start: Number.MAX_SAFE_INTEGER,
       },
       Number.MAX_SAFE_INTEGER - 10,

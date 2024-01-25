@@ -1,4 +1,9 @@
-import { AuctionSettings, DemandFactoringSettings } from './types';
+import {
+  AuctionSettings,
+  DemandFactoringData,
+  DemandFactoringSettings,
+  RewardDistributions,
+} from './types';
 
 /**
  * BASE CONTROLS
@@ -138,6 +143,17 @@ export const DEMAND_FACTORING_SETTINGS: DemandFactoringSettings = {
   criteria: 'revenue',
 };
 
+export const INITIAL_DEMAND_FACTOR_DATA: DemandFactoringData = {
+  periodZeroBlockHeight: 0,
+  currentPeriod: 0,
+  trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
+  trailingPeriodRevenues: [0, 0, 0, 0, 0, 0, 0],
+  purchasesThisPeriod: 0,
+  revenueThisPeriod: 0,
+  demandFactor: 1,
+  consecutivePeriodsWithMinDemandFactor: 0,
+};
+
 /**
  * ERROR MESSAGES
  */
@@ -183,10 +199,18 @@ export const INVALID_INPUT_MESSAGE = 'Invalid input for interaction';
 export const OBSERVERS_SAMPLED_BLOCKS_COUNT = 3; // the number of blocks we sample when calculating the base hash for prescribed observers
 export const OBSERVERS_SAMPLED_BLOCKS_OFFSET = 50; // the number of blocks offset from the current epoch start height we sample when calculating the base hash for prescribed observers
 export const EPOCH_BLOCK_LENGTH = 720; // TODO: make this 5000 for mainnet
-export const EPOCH_DISTRIBUTION_DELAY = EPOCH_BLOCK_LENGTH / 4; // TODO: set this to 100 for testnet
+export const EPOCH_DISTRIBUTION_DELAY = 15; // the number of blocks we wait before distributing rewards, protects against potential forks
 export const EPOCH_REWARD_PERCENTAGE = 0.0025; // 0.25% of total available protocol balance
 export const GATEWAY_PERCENTAGE_OF_EPOCH_REWARD = 0.95; // total percentage of protocol balance that goes to gateways
 export const OBSERVATION_FAILURE_THRESHOLD = 0.51; // 51% of the network must report a gateway as failed for it to not receive rewards
 export const BAD_OBSERVER_GATEWAY_PENALTY = 0.25; // 25% of the gateway's stake is slashed for bad observation reports
 export const MAXIMUM_OBSERVERS_PER_EPOCH = 50; // the maximum number of prescribed observers per epoch
 export const MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT = 21; // the number of consecutive epochs an observer can fail before being removed from the network
+export const INITIAL_DISTRIBUTIONS: RewardDistributions = {
+  epochZeroStartHeight: 0,
+  epochStartHeight: 0,
+  epochEndHeight: EPOCH_BLOCK_LENGTH - 1,
+  epochDistributionHeight: EPOCH_BLOCK_LENGTH - 1 + EPOCH_DISTRIBUTION_DELAY,
+  gateways: {},
+  observers: {},
+};

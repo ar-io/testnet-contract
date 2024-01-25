@@ -19,9 +19,9 @@ import {
   getPrescribedObserversForEpoch,
 } from '../../observers';
 import {
-  baselineGatewayData,
   getBaselineState,
   stubbedArweaveTxId, // stubbedArweaveTxId,
+  stubbedGatewayData,
 } from '../../tests/stubs';
 import {
   ArNSPermabuyAuctionData,
@@ -796,15 +796,15 @@ describe('tickRewardDistribution', () => {
     ]);
     (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({
       'a-gateway': {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         observerWallet: 'an-observing-gateway',
       },
       'a-gateway-2': {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         observerWallet: 'an-observing-gateway-2',
       },
       'a-gateway-3': {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         observerWallet: 'an-observing-gateway-3',
       },
     });
@@ -962,15 +962,15 @@ describe('tickRewardDistribution', () => {
       },
       gateways: {
         'a-gateway': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'an-observing-gateway',
         },
         'a-gateway-2': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'an-observing-gateway-2',
         },
         'a-gateway-3': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'an-observing-gateway-3',
         },
       },
@@ -1040,15 +1040,15 @@ describe('tickRewardDistribution', () => {
       },
       gateways: {
         'a-gateway': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'an-observing-gateway',
         },
         'a-gateway-2': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'an-observing-gateway-2',
         },
         'a-gateway-3': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'an-observing-gateway-3',
         },
       },
@@ -1147,15 +1147,15 @@ describe('top level tick', () => {
   beforeAll(() => {
     (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({
       'a-gateway': {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         observerWallet: 'an-observing-gateway',
       },
       'a-gateway-2': {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         observerWallet: 'an-observing-gateway-2',
       },
       'a-gateway-3': {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         observerWallet: 'an-observing-gateway-3',
       },
     });
