@@ -196,6 +196,7 @@ export const INVALID_INPUT_MESSAGE = 'Invalid input for interaction';
 /**
  * OBSERVATION AND DISTRIBUTIONS
  */
+export const INITIAL_PROTOCOL_BALANCE = 5_000_000; // 5 million IO tokens
 export const OBSERVERS_SAMPLED_BLOCKS_COUNT = 3; // the number of blocks we sample when calculating the base hash for prescribed observers
 export const OBSERVERS_SAMPLED_BLOCKS_OFFSET = 50; // the number of blocks offset from the current epoch start height we sample when calculating the base hash for prescribed observers
 export const EPOCH_BLOCK_LENGTH = 720; // TODO: make this 5000 for mainnet
