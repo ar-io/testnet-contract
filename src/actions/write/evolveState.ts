@@ -1,6 +1,9 @@
+import { safeTransfer } from 'src/transfer';
+
 import {
   EPOCH_BLOCK_LENGTH,
   EPOCH_DISTRIBUTION_DELAY,
+  INITIAL_PROTOCOL_BALANCE,
   NON_CONTRACT_OWNER_MESSAGE,
 } from '../../constants';
 import { ContractWriteResult, IOState, PstAction } from '../../types';
@@ -16,6 +19,20 @@ export const evolveState = async (
     throw new ContractError(NON_CONTRACT_OWNER_MESSAGE);
   }
 
+  // bump the protocol balance to the initial amount
+  if (state.balances[owner] >= INITIAL_PROTOCOL_BALANCE) {
+    const protocolBalance = state.balances[SmartWeave.contract.id] || 0;
+    const differenceFromRequiredMinimum =
+      INITIAL_PROTOCOL_BALANCE - protocolBalance;
+    safeTransfer({
+      balances: state.balances,
+      fromAddress: owner,
+      toAddress: SmartWeave.contract.id,
+      qty: differenceFromRequiredMinimum,
+    });
+  }
+
+  // set up the distributions
   const epochStartHeight = +SmartWeave.block.height;
   const epochEndHeight = epochStartHeight + EPOCH_BLOCK_LENGTH - 1;
   const epochDistributionHeight = epochEndHeight + EPOCH_DISTRIBUTION_DELAY;
@@ -28,6 +45,7 @@ export const evolveState = async (
     observers: {},
   };
 
+  // set the observations
   state.observations = {};
 
   return { state };
