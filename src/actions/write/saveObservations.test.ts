@@ -3,24 +3,13 @@ import {
   INVALID_OBSERVATION_CALLER_MESSAGE,
   NETWORK_LEAVING_STATUS,
 } from '../../constants';
-import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
-import { Gateway, IOState, Observations } from '../../types';
+import {
+  getBaselineState,
+  stubbedArweaveTxId,
+  stubbedGatewayData,
+} from '../../tests/stubs';
+import { IOState, Observations } from '../../types';
 import { saveObservations } from './saveObservations';
-
-export const baselineGatewayData: Gateway = {
-  operatorStake: 10_000,
-  vaults: {},
-  observerWallet: 'fake-observer-wallet',
-  start: 0,
-  status: 'joined',
-  end: 0,
-  settings: {
-    label: 'test',
-    fqdn: 'test.com',
-    port: 443,
-    protocol: 'https',
-  },
-};
 
 describe('saveObservations', () => {
   describe('invalid inputs', () => {
@@ -112,7 +101,7 @@ describe('saveObservations', () => {
           {
             ...getBaselineState(),
             gateways: {
-              [stubbedArweaveTxId]: baselineGatewayData,
+              [stubbedArweaveTxId]: stubbedGatewayData,
             },
           },
           {
@@ -130,7 +119,7 @@ describe('saveObservations', () => {
             ...getBaselineState(),
             gateways: {
               ['observer-address']: {
-                ...baselineGatewayData,
+                ...stubbedGatewayData,
                 start: 10,
                 observerWallet: 'observer-address',
               },
@@ -151,7 +140,7 @@ describe('saveObservations', () => {
             ...getBaselineState(),
             gateways: {
               'fake-observer-wallet': {
-                ...baselineGatewayData,
+                ...stubbedGatewayData,
                 observerWallet: 'fake-observer-wallet',
               },
             },
@@ -187,11 +176,11 @@ describe('saveObservations', () => {
           ...getBaselineState(),
           gateways: {
             'observer-address': {
-              ...baselineGatewayData,
+              ...stubbedGatewayData,
               observerWallet: 'observer-address',
             },
             [stubbedArweaveTxId]: {
-              ...baselineGatewayData,
+              ...stubbedGatewayData,
               observerAddress: stubbedArweaveTxId,
             },
           },
@@ -226,7 +215,7 @@ describe('saveObservations', () => {
         ...getBaselineState(),
         gateways: {
           'observer-address': {
-            ...baselineGatewayData,
+            ...stubbedGatewayData,
             observerWallet: 'observer-address',
           },
         },
@@ -257,11 +246,11 @@ describe('saveObservations', () => {
         ...getBaselineState(),
         gateways: {
           'observer-address': {
-            ...baselineGatewayData,
+            ...stubbedGatewayData,
             observerWallet: 'observer-address',
           },
           [stubbedArweaveTxId]: {
-            ...baselineGatewayData,
+            ...stubbedGatewayData,
             start: 10,
             observerWallet: stubbedArweaveTxId,
           },
@@ -293,11 +282,11 @@ describe('saveObservations', () => {
         ...getBaselineState(),
         gateways: {
           'observer-address': {
-            ...baselineGatewayData,
+            ...stubbedGatewayData,
             observerWallet: 'observer-address',
           },
           [stubbedArweaveTxId]: {
-            ...baselineGatewayData,
+            ...stubbedGatewayData,
             status: NETWORK_LEAVING_STATUS,
           },
         },
@@ -328,11 +317,11 @@ describe('saveObservations', () => {
         ...getBaselineState(),
         gateways: {
           'observer-address': {
-            ...baselineGatewayData,
+            ...stubbedGatewayData,
             observerWallet: 'observer-address',
           },
           [stubbedArweaveTxId]: {
-            ...baselineGatewayData,
+            ...stubbedGatewayData,
             observerAddress: stubbedArweaveTxId,
           },
         },
@@ -377,15 +366,15 @@ describe('saveObservations', () => {
         ...getBaselineState(),
         gateways: {
           'observer-address': {
-            ...baselineGatewayData,
+            ...stubbedGatewayData,
             observerWallet: 'observer-address',
           },
           'a-second-observer-address': {
-            ...baselineGatewayData,
+            ...stubbedGatewayData,
             observerWallet: 'a-second-observer-address',
           },
           [stubbedArweaveTxId]: {
-            ...baselineGatewayData,
+            ...stubbedGatewayData,
             observerWallet: stubbedArweaveTxId,
           },
         },

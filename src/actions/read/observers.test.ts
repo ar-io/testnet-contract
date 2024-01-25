@@ -3,8 +3,7 @@ import {
   EPOCH_DISTRIBUTION_DELAY,
   TENURE_WEIGHT_PERIOD,
 } from '../../constants';
-import { getBaselineState } from '../../tests/stubs';
-import { baselineGatewayData } from '../write/saveObservations.test';
+import { getBaselineState, stubbedGatewayData } from '../../tests/stubs';
 import { getEpoch, getPrescribedObservers } from './observers';
 
 describe('getPrescribedObservers', () => {
@@ -12,7 +11,7 @@ describe('getPrescribedObservers', () => {
     const state = {
       ...getBaselineState(),
       gateways: {
-        'a-test-gateway': baselineGatewayData,
+        'a-test-gateway': stubbedGatewayData,
       },
       // no distributions
     };
@@ -23,7 +22,7 @@ describe('getPrescribedObservers', () => {
         gatewayAddress: 'a-test-gateway',
         gatewayRewardRatioWeight: 1,
         normalizedCompositeWeight: 1,
-        observerAddress: 'fake-observer-wallet',
+        observerAddress: 'test-observer-wallet',
         observerRewardRatioWeight: 1,
         stake: 10000,
         stakeWeight: 1,

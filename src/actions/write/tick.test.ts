@@ -18,9 +18,10 @@ import {
   getEligibleGatewaysForEpoch,
   getPrescribedObserversForEpoch,
 } from '../../observers';
+import { updateDemandFactor } from '../../pricing';
 import {
   getBaselineState,
-  stubbedArweaveTxId, // stubbedArweaveTxId,
+  stubbedArweaveTxId,
   stubbedGatewayData,
 } from '../../tests/stubs';
 import {
@@ -43,6 +44,11 @@ jest.mock('../../observers', () => ({
   ...jest.requireActual('../../observers'),
   getPrescribedObserversForEpoch: jest.fn().mockResolvedValue([]),
   getEligibleGatewaysForEpoch: jest.fn().mockResolvedValue({}),
+}));
+
+jest.mock('../../pricing', () => ({
+  ...jest.requireActual('../../pricing'),
+  updateDemandFactor: jest.fn().mockReturnValue({}),
 }));
 
 const defaultAuctionSettings = {
@@ -1203,6 +1209,9 @@ describe('top level tick', () => {
     const initialState: IOState = {
       ...getBaselineState(),
     };
+
+    // stub the demand factor change
+    (updateDemandFactor as jest.Mock).mockReturnValue(initialState);
 
     // update our state
     SmartWeave.block.height =

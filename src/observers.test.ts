@@ -86,7 +86,10 @@ describe('getPrescribedObserversForEpoch', () => {
 
   it(`should return the correct number observers with proper weights if there are more than ${MAXIMUM_OBSERVERS_PER_EPOCH} gateways with composite scores greater than 0`, async () => {
     const epochStartHeight = 10;
-    const extendedStubbedGateways = stubbedGateways;
+    const extendedStubbedGateways = {
+      // initially spread so we clone
+      ...stubbedGateways,
+    };
     for (let i = 4; i < MAXIMUM_OBSERVERS_PER_EPOCH + 5; i++) {
       extendedStubbedGateways[`test-observer-wallet-${i}`] = {
         ...stubbedGatewayData,
@@ -142,9 +145,9 @@ describe('getPrescribedObserversForEpoch', () => {
     expect(expectedObserverWeights).toEqual(expect.arrayContaining(observers));
   });
 
-  it('should still include gateways that have not passed any epochs, with adjusted composite weights', async () => {
-    const epochStartHeight = EPOCH_BLOCK_LENGTH / 2;
-    const eligibleGateways: DeepReadonly<Gateways> = {
+  it('should not include any gateways that have a composite weight of 0', async () => {
+    const epochStartHeight = SmartWeave.block.height;
+    const extendedStubbedGateways: DeepReadonly<Gateways> = {
       ...stubbedGateways,
       'test-observer-wallet-4': {
         ...stubbedGatewayData,
@@ -227,16 +230,19 @@ describe('getPrescribedObserversForEpoch', () => {
       },
     };
     const observers = await getPrescribedObserversForEpoch({
-      gateways: eligibleGateways,
+      gateways: extendedStubbedGateways,
       distributions,
       minNetworkJoinStakeAmount: 10,
       epochStartHeight: new BlockHeight(epochStartHeight),
       epochEndHeight: new BlockHeight(epochStartHeight + EPOCH_BLOCK_LENGTH),
     });
-
-    expect(observers.length).toEqual(Object.keys(eligibleGateways).length);
+    // only include the gateways that do not have a zero composite weight based on their composite weight
     expect(observers.map((o) => o.gatewayAddress)).toEqual(
-      expect.arrayContaining(Object.keys(eligibleGateways)),
+      expect.arrayContaining([
+        'test-observer-wallet-1',
+        'test-observer-wallet-2',
+        'test-observer-wallet-3',
+      ]),
     );
   });
 });

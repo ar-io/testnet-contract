@@ -1,6 +1,5 @@
 import { EPOCH_BLOCK_LENGTH, TENURE_WEIGHT_PERIOD } from '../../constants';
-import { getBaselineState } from '../../tests/stubs';
-import { baselineGatewayData } from '../write/saveObservations.test';
+import { getBaselineState, stubbedGatewayData } from '../../tests/stubs';
 import { getGateway, getGateways } from './gateways';
 
 describe('getGateway', () => {
@@ -30,7 +29,7 @@ describe('getGateway', () => {
       ...getBaselineState(),
       gateways: {
         'a-test-gateway': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           start: 10,
         },
       },
@@ -42,7 +41,7 @@ describe('getGateway', () => {
     });
     expect(gateway).toEqual({
       result: {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         start: 10,
         stats: {
           passedEpochCount: 0,
@@ -69,7 +68,7 @@ describe('getGateway', () => {
     const state = {
       ...getBaselineState(),
       gateways: {
-        'a-test-gateway': baselineGatewayData,
+        'a-test-gateway': stubbedGatewayData,
       },
       // no distributions
     };
@@ -81,7 +80,7 @@ describe('getGateway', () => {
     const expectedCompositeWeight = 1 * 1 * 1 * expectedTenureWeight;
     expect(gateway).toEqual({
       result: {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         stats: {
           passedEpochCount: 0,
           failedConsecutiveEpochCount: 0,
@@ -107,7 +106,7 @@ describe('getGateway', () => {
     const state = {
       ...getBaselineState(),
       gateways: {
-        'a-test-gateway': baselineGatewayData,
+        'a-test-gateway': stubbedGatewayData,
       },
       // no distributions
     };
@@ -121,7 +120,7 @@ describe('getGateway', () => {
     const expectedCompositeWeight = 1 * 1 * 1 * expectedTenureWeight;
     expect(gateway).toEqual({
       result: {
-        ...baselineGatewayData,
+        ...stubbedGatewayData,
         stats: {
           passedEpochCount: 0,
           failedConsecutiveEpochCount: 0,
@@ -148,11 +147,11 @@ describe('getGateways', () => {
       ...getBaselineState(),
       gateways: {
         'a-test-gateway': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'a-test-gateway',
         },
         'a-test-gateway-2': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'a-test-gateway-2',
           start: 10,
         },
@@ -163,7 +162,7 @@ describe('getGateways', () => {
     expect(gateways).toEqual(
       expect.objectContaining({
         'a-test-gateway': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'a-test-gateway',
           stats: {
             passedEpochCount: 0,
@@ -182,7 +181,7 @@ describe('getGateways', () => {
           },
         },
         'a-test-gateway-2': {
-          ...baselineGatewayData,
+          ...stubbedGatewayData,
           observerWallet: 'a-test-gateway-2',
           start: 10,
           stats: {

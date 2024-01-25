@@ -1,12 +1,18 @@
-import { AUCTION_SETTINGS, GENESIS_FEES } from '../../constants';
+import {
+  ANNUAL_PERCENTAGE_FEE,
+  AUCTION_SETTINGS,
+  GENESIS_FEES,
+} from '../../constants';
 import { getBaselineState, stubbedAuctionData } from '../../tests/stubs';
 import { IOState } from '../../types';
 import { getAuction } from './auctions';
 
 describe('getAuction', () => {
+  const stubbedAuctionHeight = AUCTION_SETTINGS.auctionDuration / 2;
+
   beforeAll(() => {
     // stub a height in the middle of the auction
-    SmartWeave.block.height = AUCTION_SETTINGS.auctionDuration / 2;
+    SmartWeave.block.height = stubbedAuctionHeight;
   });
 
   afterAll(() => {
@@ -48,11 +54,17 @@ describe('getAuction', () => {
         prices: expect.any(Object),
         years: 1,
         type: 'lease',
-        startHeight: SmartWeave.block.height,
-        endHeight: SmartWeave.block.height + AUCTION_SETTINGS.auctionDuration,
+        startHeight: stubbedAuctionHeight,
+        endHeight: stubbedAuctionHeight + AUCTION_SETTINGS.auctionDuration,
         // the name is 11 characters long
-        startPrice: GENESIS_FEES['11'] * AUCTION_SETTINGS.startPriceMultiplier,
-        floorPrice: GENESIS_FEES['11'] * AUCTION_SETTINGS.floorPriceMultiplier,
+        startPrice:
+          GENESIS_FEES['11'] *
+          AUCTION_SETTINGS.startPriceMultiplier *
+          (1 + ANNUAL_PERCENTAGE_FEE),
+        floorPrice:
+          GENESIS_FEES['11'] *
+          AUCTION_SETTINGS.floorPriceMultiplier *
+          (1 + ANNUAL_PERCENTAGE_FEE),
         initiator: '',
         contractTxId: '',
         settings: AUCTION_SETTINGS,

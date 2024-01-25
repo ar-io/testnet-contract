@@ -35,7 +35,10 @@ export const getBaselineState: () => IOState = (): IOState => ({
   gateways: {},
   lastTickedHeight: 0,
   observations: {},
-  demandFactoring: INITIAL_DEMAND_FACTOR_DATA,
+  demandFactoring: {
+    // intentionally spread as we don't want to reference the object directly
+    ...INITIAL_DEMAND_FACTOR_DATA,
+  },
 });
 
 export const stubbedAuctionData: ArNSLeaseAuctionData = {
@@ -63,7 +66,7 @@ export const stubbedGatewayData: Gateway = {
   start: 0,
   end: 0,
   vaults: {},
-  operatorStake: 100,
+  operatorStake: 10_000,
   settings: {
     label: 'test-gateway',
     fqdn: 'test.com',
