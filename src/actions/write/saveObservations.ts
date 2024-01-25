@@ -1,28 +1,31 @@
 import {
-  CALLER_NOT_VALID_OBSERVER_MESSAGE,
-  DEFAULT_EPOCH_BLOCK_LENGTH,
-  DEFAULT_START_HEIGHT,
+  EPOCH_BLOCK_LENGTH,
+  EPOCH_DISTRIBUTION_DELAY,
+  INVALID_OBSERVATION_CALLER_MESSAGE,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import {
+  getEpochBoundariesForHeight,
+  getPrescribedObserversForEpoch,
+} from '../../observers';
+import {
+  BlockHeight,
   ContractWriteResult,
   Gateway,
   IOState,
   PstAction,
+  TransactionId,
   WalletAddress,
   WeightedObserver,
 } from '../../types';
-import {
-  getEpochStart,
-  getInvalidAjvMessage,
-  getPrescribedObservers,
-} from '../../utilities';
+import { getInvalidAjvMessage } from '../../utilities';
 // composed by ajv at build
 import { validateSaveObservations } from '../../validations';
 
 export class SaveObservations {
-  observerReportTxId: string;
-  failedGateways: string[];
+  observerReportTxId: TransactionId;
+  failedGateways: TransactionId[];
+  gatewayAddress: WalletAddress;
 
   constructor(input: any) {
     // validate using ajv validator
@@ -46,98 +49,99 @@ export const saveObservations = async (
   { caller, input }: PstAction,
 ): Promise<ContractWriteResult> => {
   // get all other relevant state data
-  const { observations, gateways, settings } = state;
-  const { observerReportTxId, failedGateways } = new SaveObservations(input); // does validation on constructor
-  const currentEpochStartHeight = getEpochStart({
-    startHeight: DEFAULT_START_HEIGHT,
-    epochBlockLength: DEFAULT_EPOCH_BLOCK_LENGTH,
-    height: +SmartWeave.block.height,
+  const { observations, gateways, settings, distributions } = state;
+  const { observerReportTxId, failedGateways } = new SaveObservations(input);
+  const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
+    currentBlockHeight: new BlockHeight(+SmartWeave.block.height), // observations must be submitted within the epoch and after the last epochs distribution period (see below)
+    epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
+    epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
   });
 
-  // get the gateway that is creating the observation
-  const observingGatewayArray = Object.entries(gateways).find(
-    ([gatewayAddress, gateway]: [WalletAddress, Gateway]) =>
-      gatewayAddress === caller || gateway.observerWallet === caller,
-  );
-
-  // no observer found
-  if (!observingGatewayArray) {
-    throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
-  }
-
-  // get the gateway address and observer address of the gateway that is creating the observation
-  const [observingGatewayAddress, observingGateway]: [WalletAddress, Gateway] =
-    observingGatewayArray;
-
-  if (observingGateway.start > currentEpochStartHeight) {
-    throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
-  }
-
-  const prescribedObservers = await getPrescribedObservers(
-    gateways,
-    settings.registry.minNetworkJoinStakeAmount,
-    settings.registry.gatewayLeaveLength,
-    currentEpochStartHeight,
-  );
-
+  // avoid observations before the previous epoch distribution has occurred, as distributions affect weights of the current epoch
   if (
-    !prescribedObservers.find(
-      (prescribedObserver: WeightedObserver) =>
-        prescribedObserver.gatewayAddress === observingGatewayAddress ||
-        prescribedObserver.gatewayAddress === observingGateway.observerWallet,
-    )
+    +SmartWeave.block.height <
+    epochStartHeight.valueOf() + EPOCH_DISTRIBUTION_DELAY
   ) {
-    throw new ContractError(CALLER_NOT_VALID_OBSERVER_MESSAGE);
+    throw new ContractError(
+      `Observations for the current epoch cannot be submitted before block height: ${
+        epochStartHeight.valueOf() + EPOCH_DISTRIBUTION_DELAY
+      }`,
+    );
   }
 
-  // check if this is the first report filed in this epoch
-  if (!observations[currentEpochStartHeight]) {
-    observations[currentEpochStartHeight] = {
+  const prescribedObservers = await getPrescribedObserversForEpoch({
+    gateways,
+    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
+    epochStartHeight,
+    epochEndHeight,
+    distributions,
+  });
+
+  // find the observer that is submitting the observation
+  const observer: WeightedObserver | undefined = prescribedObservers.find(
+    (prescribedObserver: WeightedObserver) =>
+      prescribedObserver.observerAddress === caller,
+  );
+
+  if (!observer) {
+    throw new ContractError(INVALID_OBSERVATION_CALLER_MESSAGE);
+  }
+
+  // get the gateway that of this observer
+  const observingGateway = gateways[observer.gatewayAddress];
+
+  // no gateway found
+  if (!observingGateway) {
+    throw new ContractError(
+      'The associated gateway does not exist in the registry',
+    );
+  }
+
+  // check if this is the first report filed in this epoch (TODO: use start or end?)
+  if (!observations[epochStartHeight.valueOf()]) {
+    observations[epochStartHeight.valueOf()] = {
       failureSummaries: {},
       reports: {},
     };
   }
 
   // process the failed gateway summary
-  for (const observedFailedGatewayAddress of failedGateways) {
+  for (const address of failedGateways) {
+    const failedGateway: Gateway = gateways[address];
     // validate the gateway is in the gar or is leaving
-    const failedGateway = gateways[observedFailedGatewayAddress];
     if (
       !failedGateway ||
-      failedGateway.start > currentEpochStartHeight ||
+      failedGateway.start > epochStartHeight.valueOf() ||
       failedGateway.status !== NETWORK_JOIN_STATUS
     ) {
       continue;
     }
 
-    // Check if any observer has failed this gateway, and if not, mark it as failed
-    const existingObservationInEpochForGateway: WalletAddress[] =
-      observations[currentEpochStartHeight].failureSummaries[
-        observedFailedGatewayAddress
-      ];
+    // get the existing set of failed gateways for this observer
+    const existingObservers =
+      observations[epochStartHeight.valueOf()].failureSummaries[address] || [];
 
-    // editing observation for gateway, add current observing gateway to list of observers
-    if (existingObservationInEpochForGateway) {
-      // the observer has already reported it for the current epoch
-      if (
-        existingObservationInEpochForGateway.includes(observingGatewayAddress)
-      ) {
-        continue;
-      }
-      // add it to the list of observers
-      existingObservationInEpochForGateway.push(observingGatewayAddress);
-      continue;
-    }
+    // append any new observations to the existing set
+    const updatedObserversForFailedGateway: Set<WalletAddress> = new Set([
+      ...existingObservers,
+    ]);
 
-    // create the new failure summary for the observed gateway
-    observations[currentEpochStartHeight].failureSummaries[
-      observedFailedGatewayAddress
-    ] = [observingGatewayAddress];
+    // add it to the array for this observer
+    updatedObserversForFailedGateway.add(observingGateway.observerWallet);
+
+    // update the list of observers that mark the gateway as failed
+    observations[epochStartHeight.valueOf()].failureSummaries[address] = [
+      ...updatedObserversForFailedGateway,
+    ];
   }
 
   // add this observers report tx id to this epoch
-  state.observations[currentEpochStartHeight].reports[observingGatewayAddress] =
-    observerReportTxId;
+  observations[epochStartHeight.valueOf()].reports[
+    observingGateway.observerWallet
+  ] = observerReportTxId;
+
+  // update state
+  state.observations = observations;
 
   return { state };
 };

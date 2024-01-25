@@ -7,10 +7,10 @@
     "clean": "rimraf [ dist cache ]",
     "format:check": "prettier . --check --cache",
     "format:fix": "prettier . --write",
-    "lint:check": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "test:unit": "yarn build && jest --testPathPattern=src --coverage",
-    "test:integration": "yarn build && jest --testPathPattern=tests --globalSetup=./tests/setup.jest.ts --globalTeardown=./tests/teardown.jest.ts --runInBand",
+    "lint:check": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "test:unit": "yarn build && jest --config jest.config.js",
+    "test:integration": "yarn build && jest --config jest.integration.config.js --runInBand",
     "test": "yarn build && yarn test:unit ; yarn test:integration",
     "evolve": "yarn ts-node ./tools/evolve-contract.ts",
     "evolve:state": "yarn ts-node ./tools/evolve-state.ts",
@@ -24,7 +24,7 @@
     "@types/jest": "^27.4.0",
     "@types/node": "^18.15.7",
     "@typescript-eslint/eslint-plugin": "^4.18.0",
-    "@typescript-eslint/parser": "^4.18.0",
+    "@typescript-eslint/parser": "^6.18.1",
     "ajv": "^8.12.0",
     "arlocal": "^1.1.62",
     "arweave": "1.13.7",
@@ -45,7 +45,7 @@
     "ts-jest": "^27.1.3",
     "ts-node": "^10.9.1",
     "typescript": "4.3.5",
-    "warp-contracts": "1.4.26",
+    "warp-contracts": "^1.4.33",
     "warp-contracts-plugin-deploy": "^1.0.1"
   },
   "resolutions": {
@@ -53,7 +53,7 @@
   },
   "lint-staged": {
     "**/*.{ts,js,json}": [
-      "eslint --fix .",
+      "eslint --fix . --ext .ts",
       "prettier --write ."
     ]
   },

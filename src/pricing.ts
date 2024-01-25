@@ -1,7 +1,6 @@
 import {
   ANNUAL_PERCENTAGE_FEE,
   DEMAND_FACTORING_SETTINGS,
-  DemandFactoringCriteria,
   ONE_MIO,
   PERMABUY_LEASE_FEE_LENGTH,
   UNDERNAME_LEASE_FEE_PERCENTAGE,
@@ -12,6 +11,7 @@ import {
   BlockHeight,
   BlockTimestamp,
   DeepReadonly,
+  DemandFactoringCriteria,
   DemandFactoringData,
   Fees,
   IOState,

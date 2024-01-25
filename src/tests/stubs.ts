@@ -1,27 +1,16 @@
-import { FEE_STRUCTURE } from '../constants';
-import { ArNSLeaseAuctionData, DemandFactoringData, IOState } from '../types';
+import {
+  AUCTION_SETTINGS,
+  DEFAULT_GATEWAY_PERFORMANCE_STATS,
+  EPOCH_BLOCK_LENGTH,
+  EPOCH_DISTRIBUTION_DELAY,
+  GENESIS_FEES,
+  INITIAL_DEMAND_FACTOR_DATA,
+} from '../constants';
+import { ArNSLeaseAuctionData, Gateway, Gateways, IOState } from '../types';
 
 export const stubbedArweaveTxId = 'thevalidtransactionidthatis43characterslong';
-export const baselineDemandFactorData: DemandFactoringData = {
-  periodZeroBlockHeight: 0,
-  currentPeriod: 0,
-  trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
-  trailingPeriodRevenues: [0, 0, 0, 0, 0, 0, 0],
-  purchasesThisPeriod: 0,
-  revenueThisPeriod: 0,
-  demandFactor: 1,
-  consecutivePeriodsWithMinDemandFactor: 0,
-};
 
-export const baselineAuctionSettings = {
-  auctionDuration: 100,
-  scalingExponent: 10,
-  exponentialDecayRate: 0.001,
-  startPriceMultiplier: 100,
-  floorPriceMultiplier: 1,
-};
-
-export const getBaselineState = (): IOState => ({
+export const getBaselineState: () => IOState = (): IOState => ({
   ticker: 'ARNS-TEST',
   name: 'Arweave Name System Test',
   canEvolve: true,
@@ -30,35 +19,36 @@ export const getBaselineState = (): IOState => ({
   records: {},
   balances: {},
   vaults: {},
-  reserved: {},
-  fees: {
-    ...FEE_STRUCTURE,
+  distributions: {
+    epochZeroStartHeight: 0,
+    epochStartHeight: 0,
+    epochEndHeight: EPOCH_BLOCK_LENGTH - 1,
+    epochDistributionHeight: EPOCH_BLOCK_LENGTH - 1 + EPOCH_DISTRIBUTION_DELAY,
   },
+  reserved: {},
+  fees: GENESIS_FEES,
   auctions: {},
   settings: {
     registry: {
       minLockLength: 720,
       maxLockLength: 788400,
       minNetworkJoinStakeAmount: 10000,
-      minGatewayJoinLength: 3600,
-      gatewayLeaveLength: 3600,
+      minGatewayJoinLength: 1,
+      gatewayLeaveLength: 1,
       operatorStakeWithdrawLength: 3600,
     },
-    auctions: baselineAuctionSettings,
+    auctions: AUCTION_SETTINGS,
   },
   gateways: {},
   lastTickedHeight: 0,
   observations: {},
   demandFactoring: {
-    ...baselineDemandFactorData,
-    trailingPeriodPurchases:
-      baselineDemandFactorData.trailingPeriodPurchases.slice(),
-    trailingPeriodRevenues:
-      baselineDemandFactorData.trailingPeriodRevenues.slice(),
+    // intentionally spread as we don't want to reference the object directly
+    ...INITIAL_DEMAND_FACTOR_DATA,
   },
 });
 
-export const baselineAuctionData: ArNSLeaseAuctionData = {
+export const stubbedAuctionData: ArNSLeaseAuctionData = {
   startHeight: 1,
   startPrice: 1_000,
   endHeight: 101,
@@ -67,13 +57,50 @@ export const baselineAuctionData: ArNSLeaseAuctionData = {
   initiator: 'initiator',
   contractTxId: 'contractTxId',
   years: 1,
-  settings: baselineAuctionSettings,
+  settings: AUCTION_SETTINGS,
 };
 
-export const baselineAuctionState: Partial<IOState> = {
+export const stubbedAuctionState: Partial<IOState> = {
   auctions: {
     'test-auction-close': {
-      ...baselineAuctionData,
+      ...stubbedAuctionData,
     },
+  },
+};
+
+export const stubbedGatewayData: Gateway = {
+  observerWallet: 'test-observer-wallet',
+  start: 0,
+  end: 0,
+  vaults: {},
+  operatorStake: 10_000,
+  settings: {
+    label: 'test-gateway',
+    fqdn: 'test.com',
+    port: 443,
+    protocol: 'https',
+  },
+  status: 'joined',
+  stats: {
+    // intentionally spread as we don't want to reference the object directly
+    ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
+  },
+};
+
+export const stubbedGateways: Gateways = {
+  'a-gateway': {
+    ...stubbedGatewayData,
+    operatorStake: 100,
+    observerWallet: 'a-gateway-observer',
+  },
+  'a-gateway-2': {
+    ...stubbedGatewayData,
+    operatorStake: 200,
+    observerWallet: 'a-gateway-observer-2',
+  },
+  'a-gateway-3': {
+    ...stubbedGatewayData,
+    operatorStake: 300,
+    observerWallet: 'a-gateway-observer-3',
   },
 };

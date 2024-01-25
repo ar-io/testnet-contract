@@ -16,6 +16,7 @@ const {
   extendVaultSchema,
   increaseVaultSchema,
   saveObservationsSchema,
+  updateGatewaySchema,
 } = require('./schemas');
 
 // build our validation source code
@@ -32,6 +33,7 @@ const ajv = new Ajv({
     extendVaultSchema,
     increaseVaultSchema,
     saveObservationsSchema,
+    updateGatewaySchema,
   ],
   code: { source: true, esm: true },
   allErrors: true,
@@ -49,6 +51,7 @@ const moduleCode = standaloneCode(ajv, {
   validateExtendVault: '#/definitions/extendVault',
   validateIncreaseVault: '#/definitions/increaseVault',
   validateSaveObservations: '#/definitions/saveObservations',
+  validateUpdateGateway: '#/definitions/updateGateway',
 });
 
 // Now you can write the module code to file

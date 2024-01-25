@@ -2,8 +2,8 @@ import {
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_TARGET_MESSAGE,
   INVALID_VAULT_LOCK_LENGTH_MESSAGE,
-  MAX_TOKEN_LOCK_LENGTH,
-  MIN_TOKEN_LOCK_LENGTH,
+  MAX_TOKEN_LOCK_BLOCK_LENGTH,
+  MIN_TOKEN_LOCK_BLOCK_LENGTH,
 } from './constants';
 import {
   Balances,
@@ -75,8 +75,8 @@ export function safeVaultedTransfer({
   }
 
   if (
-    lockLength.valueOf() < MIN_TOKEN_LOCK_LENGTH ||
-    lockLength.valueOf() > MAX_TOKEN_LOCK_LENGTH
+    lockLength.valueOf() < MIN_TOKEN_LOCK_BLOCK_LENGTH ||
+    lockLength.valueOf() > MAX_TOKEN_LOCK_BLOCK_LENGTH
   ) {
     throw new ContractError(INVALID_VAULT_LOCK_LENGTH_MESSAGE);
   }

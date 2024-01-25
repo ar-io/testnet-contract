@@ -1,11 +1,10 @@
-import { IOState } from 'src/types';
-
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
-  MIN_TOKEN_LOCK_LENGTH,
+  MIN_TOKEN_LOCK_BLOCK_LENGTH,
 } from '../../constants';
 import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
+import { IOState } from '../../types';
 import { increaseVault } from './increaseVault';
 
 describe('increaseVault', () => {
@@ -18,7 +17,7 @@ describe('increaseVault', () => {
           test: {
             'existing-vault-id': {
               balance: 100,
-              end: SmartWeave.block.height + MIN_TOKEN_LOCK_LENGTH,
+              end: SmartWeave.block.height + MIN_TOKEN_LOCK_BLOCK_LENGTH,
               start: SmartWeave.block.height,
             },
           },
@@ -66,7 +65,7 @@ describe('increaseVault', () => {
         test: {
           [stubbedArweaveTxId]: {
             balance: 100,
-            end: SmartWeave.block.height + MIN_TOKEN_LOCK_LENGTH,
+            end: SmartWeave.block.height + MIN_TOKEN_LOCK_BLOCK_LENGTH,
             start: SmartWeave.block.height,
           },
         },
@@ -93,7 +92,7 @@ describe('increaseVault', () => {
         test: {
           [stubbedArweaveTxId]: {
             balance: 100,
-            end: SmartWeave.block.height + MIN_TOKEN_LOCK_LENGTH,
+            end: SmartWeave.block.height + MIN_TOKEN_LOCK_BLOCK_LENGTH,
             start: SmartWeave.block.height,
           },
         },
@@ -115,7 +114,7 @@ describe('increaseVault', () => {
         test: {
           [stubbedArweaveTxId]: {
             balance: 150,
-            end: SmartWeave.block.height + MIN_TOKEN_LOCK_LENGTH,
+            end: SmartWeave.block.height + MIN_TOKEN_LOCK_BLOCK_LENGTH,
             start: SmartWeave.block.height,
           },
         },

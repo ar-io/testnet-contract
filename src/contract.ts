@@ -1,17 +1,9 @@
 // ~~ Put all the interactions from '../actions/` together to write the final handle function which will be exported
 // from the contract source. ~~
-import { getAuction } from './actions/read/auction';
+import { getAuction } from './actions/read/auctions';
 import { balance } from './actions/read/balance';
-import {
-  getGateway,
-  getGatewayRegistry,
-  getGatewayTotalStake,
-  getRankedGatewayRegistry,
-} from './actions/read/gateways';
-import {
-  prescribedObserver,
-  prescribedObservers,
-} from './actions/read/observation';
+import { getGateway, getGateways } from './actions/read/gateways';
+import { getEpoch, getPrescribedObservers } from './actions/read/observers';
 import { getPriceForInteraction } from './actions/read/price';
 import { getRecord } from './actions/read/record';
 import { buyRecord } from './actions/write/buyRecord';
@@ -64,38 +56,15 @@ export async function handle(
   const { state: tickedState } = await tick(state);
 
   switch (input.function as IOContractFunctions) {
-    case 'transfer':
-      return transferTokens(tickedState, action);
-    case 'vaultedTransfer':
-      return vaultedTransfer(tickedState, action);
-    case 'createVault':
-      return createVault(tickedState, action);
-    case 'extendVault':
-      return extendVault(tickedState, action);
-    case 'increaseVault':
-      return increaseVault(tickedState, action);
-    case 'buyRecord':
-      return buyRecord(tickedState, action);
-    case 'extendRecord':
-      return extendRecord(tickedState, action);
-    case 'increaseUndernameCount':
-      return increaseUndernameCount(tickedState, action);
-    case 'balance':
-      return balance(tickedState, action);
-    case 'record':
-      return getRecord(tickedState, action);
+    // registry read interactions
     case 'gateway':
       return getGateway(tickedState, action);
-    case 'prescribedObserver':
-      return prescribedObserver(tickedState, action);
+    case 'gateways':
+      return getGateways(tickedState);
     case 'prescribedObservers':
-      return prescribedObservers(tickedState, action);
-    case 'gatewayTotalStake':
-      return getGatewayTotalStake(tickedState, action);
-    case 'gatewayRegistry':
-      return getGatewayRegistry(tickedState);
-    case 'rankedGatewayRegistry':
-      return getRankedGatewayRegistry(tickedState);
+      return getPrescribedObservers(tickedState);
+
+    // registry write interactions
     case 'joinNetwork':
       return joinNetwork(tickedState, action);
     case 'leaveNetwork':
@@ -106,15 +75,49 @@ export async function handle(
       return decreaseOperatorStake(tickedState, action);
     case 'updateGatewaySettings':
       return updateGatewaySettings(tickedState, action);
+    case 'saveObservations':
+      return saveObservations(tickedState, action);
+
+    // arns write interactions
     case 'submitAuctionBid':
       return submitAuctionBid(tickedState, action);
+    case 'buyRecord':
+      return buyRecord(tickedState, action);
+    case 'extendRecord':
+      return extendRecord(tickedState, action);
+    case 'increaseUndernameCount':
+      return increaseUndernameCount(tickedState, action);
+
+    // arns read interactions
+    case 'record':
+      return getRecord(tickedState, action);
     case 'auction':
       return getAuction(tickedState, action);
+
+    // balance write interactions
+    case 'transfer':
+      return transferTokens(tickedState, action);
+    case 'vaultedTransfer':
+      return vaultedTransfer(tickedState, action);
+    case 'createVault':
+      return createVault(tickedState, action);
+    case 'extendVault':
+      return extendVault(tickedState, action);
+    case 'increaseVault':
+      return increaseVault(tickedState, action);
+
+    // balance read interactions
+    case 'balance':
+      return balance(tickedState, action);
+
+    // utility write interactions
     case 'tick':
       // we already ticked, so just return the state
       return { state: tickedState };
-    case 'saveObservations':
-      return saveObservations(tickedState, action);
+
+    // utility read interactions
+    case 'epoch':
+      return getEpoch(tickedState, action);
     case 'priceForInteraction':
       return getPriceForInteraction(tickedState, action);
     default:

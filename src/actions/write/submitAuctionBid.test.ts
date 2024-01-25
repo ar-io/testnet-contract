@@ -1,17 +1,16 @@
 import { submitAuctionBid } from '../../actions/write/submitAuctionBid';
 import {
+  ARNS_LEASE_LENGTH_MAX_YEARS,
   ARNS_NAME_AUCTION_EXPIRED_MESSAGE,
+  AUCTION_SETTINGS,
   INSUFFICIENT_FUNDS_MESSAGE,
-  MAX_YEARS,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
 import {
-  baselineAuctionData,
-  baselineAuctionSettings,
-  baselineAuctionState,
-  baselineDemandFactorData,
   getBaselineState,
+  stubbedAuctionData,
+  stubbedAuctionState,
 } from '../../tests/stubs';
 import { ArNSAuctionData, IOState } from '../../types';
 
@@ -51,7 +50,7 @@ describe('submitAuctionBid', () => {
         name: 'valid-name',
         contractTxId: RESERVED_ATOMIC_TX_ID,
         type: 'lease',
-        years: MAX_YEARS + 1,
+        years: ARNS_LEASE_LENGTH_MAX_YEARS + 1,
       },
     ],
     [
@@ -163,18 +162,16 @@ describe('submitAuctionBid', () => {
         auctions: {
           'test-new-auction': {
             contractTxId: expectedData.contractTxId,
-            endHeight: 101,
+            endHeight:
+              SmartWeave.block.height + AUCTION_SETTINGS.auctionDuration,
             type: expectedData.type,
             startHeight: 1,
             initiator: 'initiator',
             startPrice:
-              expectedData.floorPrice *
-              baselineAuctionSettings.startPriceMultiplier,
+              expectedData.floorPrice * AUCTION_SETTINGS.startPriceMultiplier,
             floorPrice: expectedData.floorPrice,
             ...(interactionInput.type === 'lease' ? { years: 1 } : {}),
-            settings: {
-              ...baselineAuctionSettings,
-            },
+            settings: AUCTION_SETTINGS,
           },
         },
       });
@@ -184,7 +181,7 @@ describe('submitAuctionBid', () => {
   it('should throw an insufficient balance error when a second bidder attempts to bid on an auction with insufficient funds', () => {
     const inputData: IOState = {
       ...getBaselineState(),
-      ...baselineAuctionState,
+      ...stubbedAuctionState,
       balances: {
         'new-bidder': 0,
         'stubbed-contract-id': 0,
@@ -204,7 +201,7 @@ describe('submitAuctionBid', () => {
   it('should throw an error when the provided quantity is less than the required minimum bid', () => {
     const inputData: IOState = {
       ...getBaselineState(),
-      ...baselineAuctionState,
+      ...stubbedAuctionState,
       balances: {
         'new-bidder': 1_000,
         'stubbed-contract-id': 0,
@@ -231,7 +228,7 @@ describe('submitAuctionBid', () => {
       ...getBaselineState(),
       auctions: {
         'test-auction-close': {
-          ...baselineAuctionData,
+          ...stubbedAuctionData,
           endHeight: 0,
         },
       },
@@ -283,10 +280,10 @@ describe('submitAuctionBid', () => {
     'should close out an auction, update records, return balance to initiator when it has a balance, update protocol balance and increase demand factor for the period when a second bidder wins the auction',
     (inputAuctionData, expectedData) => {
       const auction = {
-        ...baselineAuctionData,
+        ...stubbedAuctionData,
         ...inputAuctionData,
       } as ArNSAuctionData;
-      const inputData: IOState = {
+      const initialState: IOState = {
         ...getBaselineState(),
         auctions: {
           'test-auction-close': auction,
@@ -296,7 +293,7 @@ describe('submitAuctionBid', () => {
           'new-bidder': 1000,
         },
       };
-      const { state } = submitAuctionBid(inputData, {
+      const { state } = submitAuctionBid(initialState, {
         caller: 'new-bidder',
         input: {
           name: 'test-auction-close',
@@ -322,7 +319,7 @@ describe('submitAuctionBid', () => {
           },
         },
         demandFactoring: {
-          ...baselineDemandFactorData,
+          ...initialState.demandFactoring,
           purchasesThisPeriod: 1,
           revenueThisPeriod: 1000,
         },
@@ -336,15 +333,15 @@ describe('submitAuctionBid', () => {
   );
 
   it('should close out an auction, update records, update the balance to initiator, update protocol balance and increase demand factor for the period when the initiator bids twice and wins the auction', () => {
-    const inputData: IOState = {
+    const initialState: IOState = {
       ...getBaselineState(),
-      ...baselineAuctionState,
+      ...stubbedAuctionState,
       records: {},
       balances: {
         initiator: 900,
       },
     };
-    const { state } = submitAuctionBid(inputData, {
+    const { state } = submitAuctionBid(initialState, {
       caller: 'initiator',
       input: {
         name: 'test-auction-close',
@@ -365,7 +362,7 @@ describe('submitAuctionBid', () => {
         },
       },
       demandFactoring: {
-        ...baselineDemandFactorData,
+        ...initialState.demandFactoring,
         purchasesThisPeriod: 1,
         revenueThisPeriod: 1000,
       },

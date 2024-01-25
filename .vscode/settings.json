@@ -16,5 +16,8 @@
     "**/dist": true,
     "**/coverage": true,
     "**/cache": true
+  },
+  "jest.autoRun": {
+    "watch": false
   }
 }

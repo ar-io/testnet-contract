@@ -1,8 +1,8 @@
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_VAULT_LOCK_LENGTH_MESSAGE,
-  MAX_TOKEN_LOCK_LENGTH,
-  MIN_TOKEN_LOCK_LENGTH,
+  MAX_TOKEN_LOCK_BLOCK_LENGTH,
+  MIN_TOKEN_LOCK_BLOCK_LENGTH,
 } from './constants';
 import { BlockHeight, PositiveFiniteInteger, RegistryVaults } from './types';
 import { safeCreateVault, safeExtendVault, safeIncreaseVault } from './vaults';
@@ -22,7 +22,7 @@ describe('safeCreateVault function', () => {
           address: fromAddr,
           vaults: {},
           id: 'new-vault-id',
-          lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+          lockLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
           startHeight: new BlockHeight(0),
         });
       }).toThrowError(INSUFFICIENT_FUNDS_MESSAGE);
@@ -37,7 +37,7 @@ describe('safeCreateVault function', () => {
         address: 'foo',
         vaults: {},
         id: 'new-vault-id',
-        lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+        lockLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
         startHeight: new BlockHeight(0),
       });
     }).toThrowError('Insufficient funds for this transaction.');
@@ -59,29 +59,30 @@ describe('safeCreateVault function', () => {
           },
         },
         id: 'existing-vault-id',
-        lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+        lockLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
         startHeight: new BlockHeight(0),
       });
     }).toThrowError("Vault with id 'existing-vault-id' already exists");
   });
 
-  it.each([0, MIN_TOKEN_LOCK_LENGTH - 1, MAX_TOKEN_LOCK_LENGTH + 1])(
-    'should throw an error if lock length is invalid %s',
-    (lockLength) => {
-      expect(() => {
-        const balances = { foo: 2, bar: 2 };
-        safeCreateVault({
-          balances,
-          qty: new PositiveFiniteInteger(1),
-          address: 'foo',
-          vaults: {},
-          lockLength: new BlockHeight(lockLength),
-          id: 'new-vault-id',
-          startHeight: new BlockHeight(0),
-        });
-      }).toThrowError(INVALID_VAULT_LOCK_LENGTH_MESSAGE);
-    },
-  );
+  it.each([
+    0,
+    MIN_TOKEN_LOCK_BLOCK_LENGTH - 1,
+    MAX_TOKEN_LOCK_BLOCK_LENGTH + 1,
+  ])('should throw an error if lock length is invalid %s', (lockLength) => {
+    expect(() => {
+      const balances = { foo: 2, bar: 2 };
+      safeCreateVault({
+        balances,
+        qty: new PositiveFiniteInteger(1),
+        address: 'foo',
+        vaults: {},
+        lockLength: new BlockHeight(lockLength),
+        id: 'new-vault-id',
+        startHeight: new BlockHeight(0),
+      });
+    }).toThrowError(INVALID_VAULT_LOCK_LENGTH_MESSAGE);
+  });
 
   it('should create vault in address with qty and lock length, and decrement address, by qty in balances object', () => {
     const balances = { foo: 2, bar: 2 };
@@ -95,14 +96,14 @@ describe('safeCreateVault function', () => {
       id: 'new-vault-id',
       address,
       vaults,
-      lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+      lockLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
       startHeight: new BlockHeight(0),
     });
 
     const expectedVault = {
       balance: qty.valueOf(),
       start: 0,
-      end: MIN_TOKEN_LOCK_LENGTH,
+      end: MIN_TOKEN_LOCK_BLOCK_LENGTH,
     };
     expect(balances).toEqual({ foo: 1, bar: 2 });
     expect(vaults[address][id]).toEqual(expectedVault);
@@ -124,7 +125,7 @@ describe('safeCreateVault function', () => {
     const expectedNewVault = {
       balance: qty.valueOf(),
       start: 0,
-      end: MIN_TOKEN_LOCK_LENGTH,
+      end: MIN_TOKEN_LOCK_BLOCK_LENGTH,
     };
     safeCreateVault({
       balances,
@@ -132,7 +133,7 @@ describe('safeCreateVault function', () => {
       id: 'new-vault-id',
       address,
       vaults,
-      lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+      lockLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
       startHeight: new BlockHeight(0),
     });
     expect(balances).toEqual({ foo: 2, bar: 1 });
@@ -155,7 +156,7 @@ describe('safeCreateVault function', () => {
     const newVault = {
       balance: qty.valueOf(),
       start: 0,
-      end: MIN_TOKEN_LOCK_LENGTH,
+      end: MIN_TOKEN_LOCK_BLOCK_LENGTH,
     };
     safeCreateVault({
       balances,
@@ -163,7 +164,7 @@ describe('safeCreateVault function', () => {
       address,
       vaults,
       id: 'new-vault-id',
-      lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+      lockLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
       startHeight: new BlockHeight(0),
     });
     expect(balances).toEqual({ foo: 1, bar: 2 });
@@ -192,14 +193,14 @@ describe('safeCreateVault function', () => {
     const newVaultData = {
       balance: qty.valueOf(),
       start: 0,
-      end: MIN_TOKEN_LOCK_LENGTH,
+      end: MIN_TOKEN_LOCK_BLOCK_LENGTH,
     };
     safeCreateVault({
       balances,
       qty,
       address,
       vaults,
-      lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+      lockLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
       id: 'new-vault-id',
       startHeight: new BlockHeight(0),
     });
@@ -215,14 +216,14 @@ describe('safeCreateVault function', () => {
     const newVaultData = {
       balance: qty.valueOf(),
       start: 0,
-      end: MIN_TOKEN_LOCK_LENGTH,
+      end: MIN_TOKEN_LOCK_BLOCK_LENGTH,
     };
     safeCreateVault({
       balances,
       qty,
       address,
       vaults,
-      lockLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+      lockLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
       id: 'new-vault-id',
       startHeight: new BlockHeight(0),
     });
@@ -238,7 +239,7 @@ describe('safeExtendVault function', () => {
         vaults: {},
         address: 'bar',
         id: 'non-existent-vault',
-        extendLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+        extendLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
       });
     }).toThrowError('Invalid vault ID.');
   });
@@ -259,7 +260,7 @@ describe('safeExtendVault function', () => {
         vaults,
         address,
         id: 'non-existent-vault-id',
-        extendLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+        extendLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
       });
     }).toThrowError('Invalid vault ID.');
   });
@@ -270,34 +271,35 @@ describe('safeExtendVault function', () => {
         vaults: {},
         address: 'bar',
         id: 'non-existent-vault',
-        extendLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+        extendLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
       });
     }).toThrowError('Invalid vault ID.');
   });
 
-  it.each([0, MIN_TOKEN_LOCK_LENGTH - 1, MAX_TOKEN_LOCK_LENGTH + 1])(
-    'should throw an error if lockLength is invalid %s',
-    (extendLength) => {
-      expect(() => {
-        const address = 'bar';
-        const vaults: RegistryVaults = {
-          [address]: {
-            'existing-vault-id': {
-              balance: 1,
-              end: 100,
-              start: 0,
-            },
+  it.each([
+    0,
+    MIN_TOKEN_LOCK_BLOCK_LENGTH - 1,
+    MAX_TOKEN_LOCK_BLOCK_LENGTH + 1,
+  ])('should throw an error if lockLength is invalid %s', (extendLength) => {
+    expect(() => {
+      const address = 'bar';
+      const vaults: RegistryVaults = {
+        [address]: {
+          'existing-vault-id': {
+            balance: 1,
+            end: 100,
+            start: 0,
           },
-        };
-        safeExtendVault({
-          vaults,
-          address,
-          id: 'existing-vault-id',
-          extendLength: new BlockHeight(extendLength),
-        });
-      }).toThrowError(INVALID_VAULT_LOCK_LENGTH_MESSAGE);
-    },
-  );
+        },
+      };
+      safeExtendVault({
+        vaults,
+        address,
+        id: 'existing-vault-id',
+        extendLength: new BlockHeight(extendLength),
+      });
+    }).toThrowError(INVALID_VAULT_LOCK_LENGTH_MESSAGE);
+  });
 
   it('should throw error if vault has already ended', () => {
     expect(() => {
@@ -315,7 +317,7 @@ describe('safeExtendVault function', () => {
         vaults,
         address,
         id: 'existing-vault-id',
-        extendLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+        extendLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
       });
     }).toThrowError('This vault has ended.');
   });
@@ -333,14 +335,14 @@ describe('safeExtendVault function', () => {
     };
     const expectedNewVaultData = {
       balance: 1,
-      end: 100 + MIN_TOKEN_LOCK_LENGTH,
+      end: 100 + MIN_TOKEN_LOCK_BLOCK_LENGTH,
       start: 0,
     };
     safeExtendVault({
       vaults,
       address,
       id: 'existing-vault-id',
-      extendLength: new BlockHeight(MIN_TOKEN_LOCK_LENGTH),
+      extendLength: new BlockHeight(MIN_TOKEN_LOCK_BLOCK_LENGTH),
     });
     expect(vaults[address]['existing-vault-id']).toEqual(expectedNewVaultData);
   });
@@ -359,14 +361,14 @@ describe('safeExtendVault function', () => {
     };
     const expectedNewVaultData = {
       balance: 1,
-      end: MAX_TOKEN_LOCK_LENGTH,
+      end: MAX_TOKEN_LOCK_BLOCK_LENGTH,
       start: 0,
     };
     safeExtendVault({
       vaults,
       address,
       id: 'existing-vault-id',
-      extendLength: new BlockHeight(MAX_TOKEN_LOCK_LENGTH - currentEnd),
+      extendLength: new BlockHeight(MAX_TOKEN_LOCK_BLOCK_LENGTH - currentEnd),
     });
     expect(vaults[address]['existing-vault-id']).toEqual(expectedNewVaultData);
   });

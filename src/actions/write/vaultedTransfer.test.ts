@@ -1,7 +1,7 @@
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
-  MIN_TOKEN_LOCK_LENGTH,
+  MIN_TOKEN_LOCK_BLOCK_LENGTH,
 } from '../../constants';
 import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
 import { vaultedTransfer } from './vaultedTransfer';
@@ -17,7 +17,7 @@ describe('vaultedTransfer', () => {
           input: {
             qty: badQty,
             target: 'new-wallet',
-            lockLength: MIN_TOKEN_LOCK_LENGTH,
+            lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
           },
         }).catch((e: any) => e);
         expect(error).toBeInstanceOf(Error);
@@ -36,7 +36,7 @@ describe('vaultedTransfer', () => {
           input: {
             qty: 100,
             target: badTarget,
-            lockLength: MIN_TOKEN_LOCK_LENGTH,
+            lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
           },
         }).catch((e: any) => e);
         expect(error).toBeInstanceOf(Error);
@@ -58,7 +58,7 @@ describe('vaultedTransfer', () => {
         input: {
           qty: 100,
           target: stubbedArweaveTxId,
-          lockLength: MIN_TOKEN_LOCK_LENGTH,
+          lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         },
       }).catch((e: any) => e);
       expect(error).toBeInstanceOf(Error);
@@ -79,7 +79,7 @@ describe('vaultedTransfer', () => {
         input: {
           qty: 100,
           target: stubbedArweaveTxId,
-          lockLength: MIN_TOKEN_LOCK_LENGTH,
+          lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         },
       });
       expect(state).toEqual({
@@ -92,7 +92,7 @@ describe('vaultedTransfer', () => {
             [SmartWeave.transaction.id]: {
               balance: 100,
               start: 1,
-              end: MIN_TOKEN_LOCK_LENGTH + 1,
+              end: MIN_TOKEN_LOCK_BLOCK_LENGTH + 1,
             },
           },
         },
@@ -110,7 +110,7 @@ describe('vaultedTransfer', () => {
             'existing-vault-id': {
               balance: 10,
               start: 0,
-              end: MIN_TOKEN_LOCK_LENGTH,
+              end: MIN_TOKEN_LOCK_BLOCK_LENGTH,
             },
           },
         },
@@ -120,7 +120,7 @@ describe('vaultedTransfer', () => {
         input: {
           qty: 100,
           target: stubbedArweaveTxId,
-          lockLength: MIN_TOKEN_LOCK_LENGTH,
+          lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         },
       });
       expect(state).toEqual({
@@ -133,14 +133,14 @@ describe('vaultedTransfer', () => {
             [SmartWeave.transaction.id]: {
               balance: 100,
               start: 1,
-              end: MIN_TOKEN_LOCK_LENGTH + 1,
+              end: MIN_TOKEN_LOCK_BLOCK_LENGTH + 1,
             },
           },
           test: {
             'existing-vault-id': {
               balance: 10,
               start: 0,
-              end: MIN_TOKEN_LOCK_LENGTH,
+              end: MIN_TOKEN_LOCK_BLOCK_LENGTH,
             },
           },
         },
@@ -159,7 +159,7 @@ describe('vaultedTransfer', () => {
         input: {
           qty: 100,
           target: stubbedArweaveTxId,
-          lockLength: MIN_TOKEN_LOCK_LENGTH,
+          lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         },
       });
       expect(state).toEqual({
@@ -172,7 +172,7 @@ describe('vaultedTransfer', () => {
             [SmartWeave.transaction.id]: {
               balance: 100,
               start: 1,
-              end: MIN_TOKEN_LOCK_LENGTH + 1,
+              end: MIN_TOKEN_LOCK_BLOCK_LENGTH + 1,
             },
           },
         },
@@ -190,7 +190,7 @@ describe('vaultedTransfer', () => {
             'existing-vault-id': {
               balance: 10,
               start: 0,
-              end: MIN_TOKEN_LOCK_LENGTH,
+              end: MIN_TOKEN_LOCK_BLOCK_LENGTH,
             },
           },
         },
@@ -200,7 +200,7 @@ describe('vaultedTransfer', () => {
         input: {
           qty: 100,
           target: stubbedArweaveTxId,
-          lockLength: MIN_TOKEN_LOCK_LENGTH,
+          lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         },
       });
       expect(state).toEqual({
@@ -213,12 +213,12 @@ describe('vaultedTransfer', () => {
             [SmartWeave.transaction.id]: {
               balance: 100,
               start: 1,
-              end: MIN_TOKEN_LOCK_LENGTH + 1,
+              end: MIN_TOKEN_LOCK_BLOCK_LENGTH + 1,
             },
             'existing-vault-id': {
               balance: 10,
               start: 0,
-              end: MIN_TOKEN_LOCK_LENGTH,
+              end: MIN_TOKEN_LOCK_BLOCK_LENGTH,
             },
           },
         },

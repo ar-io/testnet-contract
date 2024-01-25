@@ -25,7 +25,7 @@ export const leaveNetwork = async (
     !isGatewayEligibleToLeave({
       gateway,
       currentBlockHeight,
-      registrySettings: settings,
+      minimumGatewayJoinLength: new BlockHeight(settings.minGatewayJoinLength),
     })
   ) {
     throw new ContractError(

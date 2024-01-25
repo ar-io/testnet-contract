@@ -1,8 +1,8 @@
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
-  env: {
-    node: true,
+  parserOptions: {
+    project: './tsconfig.json',
   },
   extends: [
     'eslint:recommended',
@@ -10,13 +10,30 @@ module.exports = {
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
   ],
-  parserOptions: {
-    ecmaVersion: 2020,
-  },
   rules: {
     'no-console': 'error',
     'no-debugger': 'error',
+    '@typescript-eslint/no-floating-promises': 'error',
+    '@typescript-eslint/no-misused-promises': 'error',
     '@typescript-eslint/no-var-requires': 'off',
     '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '_' }],
   },
+  ignorePatterns: [
+    'dist',
+    'node_modules',
+    'build',
+    'public',
+    'dist',
+    'cache',
+    '.husky',
+    'contract_evolve.js',
+    'validations.js',
+    'schemas',
+    'jest*.config.js',
+    'coverage',
+    'build.js',
+    'tests',
+    'tools',
+    '*.json',
+  ],
 };
