@@ -1,5 +1,4 @@
 import {
-  AUCTION_SETTINGS,
   DEFAULT_GATEWAY_PERFORMANCE_STATS,
   EPOCH_BLOCK_LENGTH,
   EPOCH_DISTRIBUTION_DELAY,
@@ -28,17 +27,7 @@ export const getBaselineState: () => IOState = (): IOState => ({
   reserved: {},
   fees: GENESIS_FEES,
   auctions: {},
-  settings: {
-    registry: {
-      minLockLength: 720,
-      maxLockLength: 788400,
-      minNetworkJoinStakeAmount: 10000,
-      minGatewayJoinLength: 1,
-      gatewayLeaveLength: 1,
-      operatorStakeWithdrawLength: 3600,
-    },
-    auctions: AUCTION_SETTINGS,
-  },
+
   gateways: {},
   lastTickedHeight: 0,
   observations: {},
@@ -57,7 +46,6 @@ export const stubbedAuctionData: ArNSLeaseAuctionData = {
   initiator: 'initiator',
   contractTxId: 'contractTxId',
   years: 1,
-  settings: AUCTION_SETTINGS,
 };
 
 export const stubbedAuctionState: Partial<IOState> = {

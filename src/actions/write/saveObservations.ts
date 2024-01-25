@@ -48,7 +48,7 @@ export const saveObservations = async (
   { caller, input }: PstAction,
 ): Promise<ContractWriteResult> => {
   // get all other relevant state data
-  const { observations, gateways, settings, distributions } = state;
+  const { observations, gateways, distributions } = state;
   const { observerReportTxId, failedGateways } = new SaveObservations(input);
 
   // TODO: check if current height is less than epochZeroStartHeight
@@ -66,7 +66,6 @@ export const saveObservations = async (
 
   const prescribedObservers = await getPrescribedObserversForEpoch({
     gateways,
-    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
     epochStartHeight,
     epochEndHeight,
     distributions,

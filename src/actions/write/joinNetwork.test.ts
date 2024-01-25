@@ -76,13 +76,6 @@ describe('joinNetwork', () => {
       balances: {
         'a-gateway-with-balance': 100,
       },
-      settings: {
-        ...getBaselineState().settings,
-        registry: {
-          ...getBaselineState().settings.registry,
-          minNetworkJoinStakeAmount: 100,
-        },
-      },
     };
     const error = await joinNetwork(initialState, {
       caller: 'a-gateway-with-balance',
@@ -103,13 +96,6 @@ describe('joinNetwork', () => {
       gateways: {
         'existing-gateway': {
           ...stubbedGatewayData,
-        },
-      },
-      settings: {
-        ...getBaselineState().settings,
-        registry: {
-          ...getBaselineState().settings.registry,
-          minNetworkJoinStakeAmount: 10,
         },
       },
     };
@@ -136,13 +122,6 @@ describe('joinNetwork', () => {
           observerWallet: stubbedArweaveTxId,
         },
       },
-      settings: {
-        ...getBaselineState().settings,
-        registry: {
-          ...getBaselineState().settings.registry,
-          minNetworkJoinStakeAmount: 10,
-        },
-      },
     };
     const error = await joinNetwork(initialState, {
       caller: 'a-new-gateway',
@@ -159,13 +138,6 @@ describe('joinNetwork', () => {
       ...getBaselineState(),
       balances: {
         [stubbedArweaveTxId]: 10,
-      },
-      settings: {
-        ...getBaselineState().settings,
-        registry: {
-          ...getBaselineState().settings.registry,
-          minNetworkJoinStakeAmount: 10,
-        },
       },
     };
     const { state } = await joinNetwork(initialState, {

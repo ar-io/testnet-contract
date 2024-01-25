@@ -8,7 +8,7 @@ import { BlockHeight, ContractReadResult, IOState } from '../../types';
 export const getPrescribedObservers = async (
   state: IOState,
 ): Promise<ContractReadResult> => {
-  const { settings, gateways, distributions } = state;
+  const { gateways, distributions } = state;
 
   const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
@@ -18,7 +18,6 @@ export const getPrescribedObservers = async (
 
   const prescribedObservers = await getPrescribedObserversForEpoch({
     gateways,
-    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
     epochStartHeight,
     epochEndHeight,
     distributions,

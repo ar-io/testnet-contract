@@ -55,7 +55,6 @@ describe('getPrescribedObserversForEpoch', () => {
         },
       },
       distributions: INITIAL_EPOCH_DISTRIBUTION_DATA,
-      minNetworkJoinStakeAmount: 10,
       epochStartHeight: new BlockHeight(epochStartHeight),
       epochEndHeight: new BlockHeight(epochStartHeight + 10),
     });
@@ -99,7 +98,6 @@ describe('getPrescribedObserversForEpoch', () => {
     const observers = await getPrescribedObserversForEpoch({
       gateways: eligibleGateways,
       distributions: INITIAL_EPOCH_DISTRIBUTION_DATA,
-      minNetworkJoinStakeAmount: 10,
       epochStartHeight: new BlockHeight(epochStartHeight),
       epochEndHeight: new BlockHeight(epochStartHeight + 10),
     });
@@ -167,7 +165,7 @@ describe('getPrescribedObserversForEpoch', () => {
     const observers = await getPrescribedObserversForEpoch({
       gateways: extendedStubbedGateways,
       distributions: INITIAL_EPOCH_DISTRIBUTION_DATA,
-      minNetworkJoinStakeAmount: 10,
+
       epochStartHeight: new BlockHeight(epochStartHeight),
       epochEndHeight: new BlockHeight(epochStartHeight + EPOCH_BLOCK_LENGTH),
     });

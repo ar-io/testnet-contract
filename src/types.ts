@@ -37,7 +37,6 @@ export type IOState = {
   records: Records; // The list of all ArNS names and their associated data
   gateways: Gateways; // each gateway uses its public arweave wallet address to identify it in the gateway registry
   fees: Fees; // starting list of all fees for purchasing ArNS names
-  settings: ContractSettings; // protocol settings and parameters
   reserved: ReservedNames; // list of all reserved names that are not allowed to be purchased at this time
   auctions: Auctions;
   lastTickedHeight: number; // periodicity management
@@ -96,7 +95,6 @@ export type ArNSBaseAuctionData = {
   type: RegistrationType;
   initiator: string;
   contractTxId: string;
-  settings: AuctionSettings;
 };
 
 export type ArNSLeaseAuctionData = ArNSBaseAuctionData & {

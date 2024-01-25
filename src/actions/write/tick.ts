@@ -26,7 +26,6 @@ import {
   Balances,
   BlockHeight,
   BlockTimestamp,
-  ContractSettings,
   ContractWriteResult,
   DeepReadonly,
   DemandFactoringData,
@@ -127,7 +126,6 @@ async function tickInternal({
         updatedState.distributions || INITIAL_EPOCH_DISTRIBUTION_DATA,
       observations: updatedState.observations || {},
       balances: updatedState.balances,
-      settings: updatedState.settings,
     }),
   );
 
@@ -418,14 +416,12 @@ export async function tickRewardDistribution({
   distributions,
   observations,
   balances,
-  settings,
 }: {
   currentBlockHeight: BlockHeight;
   gateways: DeepReadonly<Gateways>;
   distributions: DeepReadonly<EpochDistributionData>;
   observations: DeepReadonly<Observations>;
   balances: DeepReadonly<Balances>;
-  settings: DeepReadonly<ContractSettings>;
 }): Promise<Pick<IOState, 'distributions' | 'balances' | 'gateways'>> {
   const updatedBalances: Balances = {};
   const updatedGateways: Gateways = {};
@@ -469,7 +465,6 @@ export async function tickRewardDistribution({
     gateways,
     epochStartHeight,
     epochEndHeight,
-    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
     distributions,
   });
 

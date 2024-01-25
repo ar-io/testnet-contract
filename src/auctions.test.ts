@@ -49,8 +49,6 @@ describe('calculateAuctionPriceForBlock', () => {
         startPrice,
         floorPrice,
         currentBlockHeight,
-        exponentialDecayRate: AUCTION_SETTINGS.exponentialDecayRate,
-        scalingExponent: AUCTION_SETTINGS.scalingExponent,
       });
       const percentDifference = Math.abs(
         1 - expectedPrice / priceAtBlock.valueOf(),
@@ -74,17 +72,12 @@ describe('calculateAuctionPriceForBlock', () => {
       [[10, 0, 0.001, 90], 100],
     ])(
       'given [current block height, moving average purchase count] of %j, should return %d',
-      (
-        [startHeight, currentHeight, exponentialDecayRate, scalingExponent],
-        expectedPrice,
-      ) => {
+      ([startHeight, currentHeight], expectedPrice) => {
         const calculatedMinimumBid = calculateAuctionPriceForBlock({
           startHeight: new BlockHeight(startHeight),
           startPrice: 100,
           floorPrice: 10,
           currentBlockHeight: new BlockHeight(currentHeight),
-          exponentialDecayRate,
-          scalingExponent,
         });
         expect(calculatedMinimumBid.valueOf()).toEqual(expectedPrice);
       },
@@ -92,17 +85,8 @@ describe('calculateAuctionPriceForBlock', () => {
   });
 
   describe('getAuctionPricesForInterval function', () => {
-    const baseAuctionSettings = {
-      auctionDuration: 3,
-      exponentialDecayRate: 0.001,
-      scalingExponent: 90,
-      floorPriceMultiplier: 1,
-      startPriceMultiplier: 10,
-    };
-
     it('should return the correct prices for all block heights', () => {
       const prices = getAuctionPricesForInterval({
-        auctionSettings: baseAuctionSettings,
         startHeight: new BlockHeight(0),
         startPrice: 100,
         floorPrice: 10,
@@ -126,13 +110,6 @@ describe('calculateAuctionPriceForBlock', () => {
       floorPrice: 10,
       initiator: 'initiator',
       contractTxId: 'atomic',
-      settings: {
-        auctionDuration: 3,
-        exponentialDecayRate: 0.1,
-        scalingExponent: 90,
-        floorPriceMultiplier: 1,
-        startPriceMultiplier: 10,
-      },
     };
 
     it.each([
@@ -183,13 +160,6 @@ describe('calculateExistingAuctionBidForCaller function', () => {
     initiator: '',
     contractTxId: '',
     years: 1,
-    settings: {
-      auctionDuration: Number.NEGATIVE_INFINITY,
-      exponentialDecayRate: Number.NEGATIVE_INFINITY,
-      scalingExponent: Number.NEGATIVE_INFINITY,
-      floorPriceMultiplier: Number.NEGATIVE_INFINITY,
-      startPriceMultiplier: Number.NEGATIVE_INFINITY,
-    },
   };
 
   it('should throw if submitted bid is less than the required minimum bid', () => {

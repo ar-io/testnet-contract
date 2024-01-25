@@ -97,7 +97,6 @@ export function getPriceForInteraction(
           ),
           currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
           fees: state.fees,
-          auctionSettings: state.settings.auctions,
           demandFactoring: state.demandFactoring,
           type: 'lease',
           initiator: caller,
@@ -111,8 +110,6 @@ export function getPriceForInteraction(
         currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
         startPrice: auction.startPrice,
         floorPrice: auction.floorPrice,
-        scalingExponent: auction.settings.scalingExponent,
-        exponentialDecayRate: auction.settings.exponentialDecayRate,
       });
       fee = minimumAuctionBid.valueOf();
       break;

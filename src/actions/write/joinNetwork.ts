@@ -1,5 +1,6 @@
 import {
   DEFAULT_GATEWAY_PERFORMANCE_STATS,
+  GATEWAY_REGISTRY_SETTINGS,
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_GATEWAY_EXISTS_MESSAGE,
   INVALID_GATEWAY_STAKE_AMOUNT_MESSAGE,
@@ -63,8 +64,7 @@ export const joinNetwork = async (
   state: IOState,
   { caller, input }: PstAction,
 ): Promise<ContractWriteResult> => {
-  const { balances, gateways = {}, settings } = state;
-  const { registry: registrySettings } = settings;
+  const { balances, gateways = {} } = state;
 
   const { qty, observerWallet, ...gatewaySettings } = new JoinNetwork(
     input,
@@ -75,7 +75,7 @@ export const joinNetwork = async (
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  if (qty < registrySettings.minNetworkJoinStakeAmount) {
+  if (qty < GATEWAY_REGISTRY_SETTINGS.minNetworkJoinStakeAmount) {
     throw new ContractError(INVALID_GATEWAY_STAKE_AMOUNT_MESSAGE);
   }
 

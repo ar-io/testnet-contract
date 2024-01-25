@@ -226,3 +226,12 @@ export const INITIAL_EPOCH_DISTRIBUTION_DATA: EpochDistributionData = {
     1 +
     EPOCH_DISTRIBUTION_DELAY,
 };
+
+export const GATEWAY_REGISTRY_SETTINGS = {
+  gatewayLeaveLength: 3600,
+  maxLockLength: 788400,
+  minGatewayJoinLength: 3600,
+  minLockLength: 720,
+  minNetworkJoinStakeAmount: 10000,
+  operatorStakeWithdrawLength: 3600,
+};
