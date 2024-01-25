@@ -1,11 +1,10 @@
-import { safeTransfer } from 'src/transfer';
-
 import {
   EPOCH_BLOCK_LENGTH,
   EPOCH_DISTRIBUTION_DELAY,
   INITIAL_PROTOCOL_BALANCE,
   NON_CONTRACT_OWNER_MESSAGE,
 } from '../../constants';
+import { safeTransfer } from '../../transfer';
 import { ContractWriteResult, IOState, PstAction } from '../../types';
 
 // Updates this contract to new source code
