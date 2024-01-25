@@ -9,6 +9,7 @@ import {
 } from '../src/types';
 import {
   CONTRACT_SETTINGS,
+  DEFAULT_GATEWAY_PERFORMANCE_STATS,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
   WALLET_FUND_AMOUNT,
@@ -314,6 +315,7 @@ describe('Network', () => {
           end: 0,
           observerWallet: newGatewayOperatorAddress,
           vaults: {},
+          stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
           settings: {
             label: joinGatewayPayload.label,
             fqdn: joinGatewayPayload.fqdn,
@@ -738,11 +740,10 @@ describe('Network', () => {
           expect(gateways[address]).toEqual({
             ...fullState.gateways[address],
             stats: {
-              // TODO: these will move to within the gateway state instead of distributions
               passedEpochCount: 0,
-              failedConsecutiveEpochCount: 0,
+              failedConsecutiveEpochs: 0,
               submittedEpochCount: 0,
-              prescribedObserverEpochCount: 0,
+              totalEpochsPrescribedCount: 0,
               totalEpochParticipationCount: 0,
             },
             weights: expect.objectContaining({

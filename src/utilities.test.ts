@@ -1,4 +1,7 @@
-import { TOTAL_IO_SUPPLY } from './constants';
+import {
+  DEFAULT_GATEWAY_PERFORMANCE_STATS,
+  TOTAL_IO_SUPPLY,
+} from './constants';
 import { getBaselineState } from './tests/stubs';
 import { BlockHeight, BlockTimestamp, GatewayStatus, IOState } from './types';
 import {
@@ -46,6 +49,7 @@ describe('isGatewayJoined function', () => {
               port: Number.NEGATIVE_INFINITY,
               protocol: 'https',
             },
+            stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
           },
         }),
       ).toEqual(expectedValue);
@@ -89,6 +93,7 @@ describe('isGatewayEligibleToBeRemoved function', () => {
               port: Number.NEGATIVE_INFINITY,
               protocol: 'https',
             },
+            stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
           },
           currentBlockHeight: new BlockHeight(currentBlockHeight),
         }),
@@ -144,6 +149,7 @@ describe('isGatewayEligibleToLeave function', () => {
               port: Number.NEGATIVE_INFINITY,
               protocol: 'https',
             },
+            stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
           },
           currentBlockHeight: new BlockHeight(currentBlockHeight),
           minimumGatewayJoinLength: new BlockHeight(2),
@@ -264,7 +270,7 @@ describe('incrementBalance function', () => {
 });
 
 describe('resetProtocolBalance function', () => {
-  it('should reset protocol balance to the expected differnce', () => {
+  it('should reset protocol balance to the expected difference', () => {
     const initialProtocolBalance = 100;
     const testingState: IOState = {
       ...getBaselineState(),
@@ -327,6 +333,7 @@ describe('resetProtocolBalance function', () => {
             port: 1234,
             protocol: 'https',
           },
+          stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
         },
       },
     };

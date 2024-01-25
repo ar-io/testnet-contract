@@ -34,21 +34,45 @@ export const evolveState = async (
     });
   }
 
-  // set up the distributions
-  const epochStartHeight = +SmartWeave.block.height;
-  const epochEndHeight = epochStartHeight + EPOCH_BLOCK_LENGTH - 1;
-  const epochDistributionHeight = epochEndHeight + EPOCH_DISTRIBUTION_DELAY;
-  state.distributions = {
-    epochZeroStartHeight: epochStartHeight,
-    epochStartHeight,
-    epochEndHeight,
-    epochDistributionHeight,
-    gateways: {},
-    observers: {},
-  };
+  // targeting devnet
+  if (state.distributions) {
+    // the type has changed so we cast to any here intentionally
+    const gatewayStats = (state.distributions as any).gateways;
+    const observerStats = (state.distributions as any).observers;
+    const updatedGateways = Object.keys(state.gateways).reduce(
+      (acc, gatewayAddress) => {
+        const gateway = state.gateways[gatewayAddress];
+        const stats = {
+          ...gatewayStats[gatewayAddress],
+          ...observerStats[gateway.observerWallet],
+        };
+        const updatedGatewayWithStats = {
+          ...gateway,
+          stats,
+        };
+        return {
+          ...acc,
+          [gatewayAddress]: updatedGatewayWithStats,
+        };
+      },
+      {},
+    );
+    state.gateways = updatedGateways;
+  } else {
+    // set up the distributions
+    const epochStartHeight = +SmartWeave.block.height;
+    const epochEndHeight = epochStartHeight + EPOCH_BLOCK_LENGTH - 1;
+    const epochDistributionHeight = epochEndHeight + EPOCH_DISTRIBUTION_DELAY;
+    state.distributions = {
+      epochZeroStartHeight: epochStartHeight,
+      epochStartHeight,
+      epochEndHeight,
+      epochDistributionHeight,
+    };
 
-  // set the observations
-  state.observations = {};
+    // set the observations
+    state.observations = {};
+  }
 
   return { state };
 };

@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import {
   EPOCH_BLOCK_LENGTH,
   GATEWAY_LEAVE_BLOCK_LENGTH,
-  INITIAL_DISTRIBUTIONS,
+  INITIAL_EPOCH_DISTRIBUTION_DATA,
   MAXIMUM_OBSERVERS_PER_EPOCH,
   TENURE_WEIGHT_PERIOD,
 } from './constants';
@@ -13,11 +13,7 @@ import {
   getPrescribedObserversForEpoch,
   isGatewayEligibleForDistribution,
 } from './observers';
-import {
-  getBaselineState,
-  stubbedGatewayData,
-  stubbedGateways,
-} from './tests/stubs';
+import { stubbedGatewayData, stubbedGateways } from './tests/stubs';
 import { BlockHeight, DeepReadonly, Gateway, Gateways } from './types';
 
 describe('getPrescribedObserversForEpoch', () => {
@@ -58,7 +54,7 @@ describe('getPrescribedObserversForEpoch', () => {
           observerWallet: 'test-observer-wallet-1',
         },
       },
-      distributions: INITIAL_DISTRIBUTIONS,
+      distributions: INITIAL_EPOCH_DISTRIBUTION_DATA,
       minNetworkJoinStakeAmount: 10,
       epochStartHeight: new BlockHeight(epochStartHeight),
       epochEndHeight: new BlockHeight(epochStartHeight + 10),
@@ -102,7 +98,7 @@ describe('getPrescribedObserversForEpoch', () => {
     const minNetworkJoinStakeAmount = 10;
     const observers = await getPrescribedObserversForEpoch({
       gateways: eligibleGateways,
-      distributions: INITIAL_DISTRIBUTIONS,
+      distributions: INITIAL_EPOCH_DISTRIBUTION_DATA,
       minNetworkJoinStakeAmount: 10,
       epochStartHeight: new BlockHeight(epochStartHeight),
       epochEndHeight: new BlockHeight(epochStartHeight + 10),
@@ -168,81 +164,16 @@ describe('getPrescribedObserversForEpoch', () => {
         observerWallet: 'test-observer-wallet-6',
       },
     };
-    const distributions = {
-      ...getBaselineState().distributions,
-      gateways: {
-        'test-observer-wallet-1': {
-          failedConsecutiveEpochs: 0,
-          passedEpochCount: 1,
-          totalEpochParticipationCount: 1,
-        },
-        'test-observer-wallet-2': {
-          failedConsecutiveEpochs: 0,
-          passedEpochCount: 2,
-          totalEpochParticipationCount: 2,
-        },
-        'test-observer-wallet-3': {
-          failedConsecutiveEpochs: 0,
-          passedEpochCount: 0,
-          totalEpochParticipationCount: 3,
-        },
-        'test-observer-wallet-4': {
-          failedConsecutiveEpochs: 0,
-          passedEpochCount: 0,
-          totalEpochParticipationCount: 4,
-        },
-        'test-observer-wallet-5': {
-          failedConsecutiveEpochs: 0,
-          passedEpochCount: 0,
-          totalEpochParticipationCount: 5,
-        },
-        'test-observer-wallet-6': {
-          failedConsecutiveEpochs: 0,
-          passedEpochCount: 0,
-          totalEpochParticipationCount: 6,
-        },
-      },
-      observers: {
-        'test-observer-wallet-1': {
-          submittedEpochCount: 1,
-          totalEpochsPrescribedCount: 1,
-        },
-        'test-observer-wallet-2': {
-          submittedEpochCount: 1,
-          totalEpochsPrescribedCount: 1,
-        },
-        'test-observer-wallet-3': {
-          submittedEpochCount: 1,
-          totalEpochsPrescribedCount: 1,
-        },
-        'test-observer-wallet-4': {
-          submittedEpochCount: 1,
-          totalEpochsPrescribedCount: 1,
-        },
-        'test-observer-wallet-5': {
-          submittedEpochCount: 1,
-          totalEpochsPrescribedCount: 1,
-        },
-        'test-observer-wallet-6': {
-          submittedEpochCount: 1,
-          totalEpochsPrescribedCount: 1,
-        },
-      },
-    };
     const observers = await getPrescribedObserversForEpoch({
       gateways: extendedStubbedGateways,
-      distributions,
+      distributions: INITIAL_EPOCH_DISTRIBUTION_DATA,
       minNetworkJoinStakeAmount: 10,
       epochStartHeight: new BlockHeight(epochStartHeight),
       epochEndHeight: new BlockHeight(epochStartHeight + EPOCH_BLOCK_LENGTH),
     });
     // only include the gateways that do not have a zero composite weight based on their composite weight
     expect(observers.map((o) => o.gatewayAddress)).toEqual(
-      expect.arrayContaining([
-        'test-observer-wallet-1',
-        'test-observer-wallet-2',
-        'test-observer-wallet-3',
-      ]),
+      expect.arrayContaining(['a-gateway', 'a-gateway-2', 'a-gateway-3']),
     );
   });
 });
