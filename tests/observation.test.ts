@@ -3,7 +3,7 @@ import { Contract, JWKInterface, PstState } from 'warp-contracts';
 import { getEpochBoundariesForHeight } from '../src/observers';
 import { BlockHeight, IOState, WeightedObserver } from '../src/types';
 import {
-  DEFAULT_START_HEIGHT,
+  DEFAULT_EPOCH_START_HEIGHT,
   EPOCH_BLOCK_LENGTH,
   EXAMPLE_OBSERVER_REPORT_TX_IDS,
   INVALID_OBSERVATION_CALLER_MESSAGE,
@@ -73,7 +73,7 @@ describe('Observation', () => {
       );
       currentEpochStartHeight = getEpochBoundariesForHeight({
         currentBlockHeight: new BlockHeight(height),
-        epochZeroStartHeight: new BlockHeight(DEFAULT_START_HEIGHT),
+        epochZeroStartHeight: new BlockHeight(DEFAULT_EPOCH_START_HEIGHT),
         epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
       }).epochStartHeight;
     });
@@ -175,7 +175,7 @@ describe('Observation', () => {
         // set our start height to the current height
         currentEpochStartHeight = getEpochBoundariesForHeight({
           currentBlockHeight: new BlockHeight(height),
-          epochZeroStartHeight: new BlockHeight(DEFAULT_START_HEIGHT),
+          epochZeroStartHeight: new BlockHeight(DEFAULT_EPOCH_START_HEIGHT),
           epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
         }).epochStartHeight;
         // get the prescribed observers

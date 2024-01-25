@@ -6,6 +6,7 @@ import {
   EPOCH_DISTRIBUTION_DELAY,
   EPOCH_REWARD_PERCENTAGE,
   GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
+  INITIAL_EPOCH_DISTRIBUTION_DATA,
   OBSERVATION_FAILURE_THRESHOLD,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
@@ -122,8 +123,9 @@ async function tickInternal({
     await tickRewardDistribution({
       currentBlockHeight,
       gateways: updatedState.gateways,
-      distributions: updatedState.distributions,
-      observations: updatedState.observations,
+      distributions:
+        updatedState.distributions || INITIAL_EPOCH_DISTRIBUTION_DATA,
+      observations: updatedState.observations || {},
       balances: updatedState.balances,
       settings: updatedState.settings,
     }),

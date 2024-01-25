@@ -1,6 +1,6 @@
 import {
-  EPOCH_BLOCK_LENGTH,
-  EPOCH_DISTRIBUTION_DELAY,
+  DEFAULT_GATEWAY_PERFORMANCE_STATS,
+  INITIAL_EPOCH_DISTRIBUTION_DATA,
   INITIAL_PROTOCOL_BALANCE,
   NON_CONTRACT_OWNER_MESSAGE,
 } from '../../constants';
@@ -34,51 +34,32 @@ export const evolveState = async (
     });
   }
 
-  // targeting devnet
-  if (state.distributions) {
-    // the type has changed so we cast to any here intentionally
-    const gatewayStats = (state.distributions as any).gateways;
-    const observerStats = (state.distributions as any).observers;
-    const updatedGateways = Object.keys(state.gateways).reduce(
-      (acc, gatewayAddress) => {
-        const gateway = state.gateways[gatewayAddress];
-        const stats = {
-          ...gatewayStats[gatewayAddress],
-          ...observerStats[gateway.observerWallet],
-        };
-        const updatedGatewayWithStats = {
-          ...gateway,
-          stats,
-        };
-        return {
-          ...acc,
-          [gatewayAddress]: updatedGatewayWithStats,
-        };
-      },
-      {},
-    );
-    state.gateways = updatedGateways;
+  // set the gateway stats
+  const updatedGateways = Object.entries(state.gateways).reduce(
+    (acc, [gatewayAddress, gateway]) => {
+      const stats = DEFAULT_GATEWAY_PERFORMANCE_STATS;
+      const updatedGatewayWithStats = {
+        stats,
+        ...gateway, // put this last so any existing stats persist
+      };
+      // set the gateway stats
+      return {
+        ...acc,
+        [gatewayAddress]: updatedGatewayWithStats,
+      };
+    },
+    {},
+  );
+  state.gateways = updatedGateways;
 
-    // remove the gateways and observers
-    state.distributions = {
-      epochDistributionHeight: state.distributions.epochDistributionHeight,
-      epochEndHeight: state.distributions.epochEndHeight,
-      epochStartHeight: state.distributions.epochStartHeight,
-      epochZeroStartHeight: state.distributions.epochZeroStartHeight,
-    };
-  } else {
+  // set the distributions and observations
+  if (!state.distributions) {
     // set up the distributions
-    const epochStartHeight = +SmartWeave.block.height;
-    const epochEndHeight = epochStartHeight + EPOCH_BLOCK_LENGTH - 1;
-    const epochDistributionHeight = epochEndHeight + EPOCH_DISTRIBUTION_DELAY;
     state.distributions = {
-      epochZeroStartHeight: epochStartHeight,
-      epochStartHeight,
-      epochEndHeight,
-      epochDistributionHeight,
+      ...INITIAL_EPOCH_DISTRIBUTION_DATA,
     };
 
-    // set the observations
+    // reset the observations
     state.observations = {};
   }
 

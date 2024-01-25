@@ -1,9 +1,10 @@
 import {
   AUCTION_SETTINGS,
   DEFAULT_GATEWAY_PERFORMANCE_STATS,
+  EPOCH_BLOCK_LENGTH,
+  EPOCH_DISTRIBUTION_DELAY,
   GENESIS_FEES,
   INITIAL_DEMAND_FACTOR_DATA,
-  INITIAL_EPOCH_DISTRIBUTION_DATA,
 } from '../constants';
 import { ArNSLeaseAuctionData, Gateway, Gateways, IOState } from '../types';
 
@@ -19,8 +20,10 @@ export const getBaselineState: () => IOState = (): IOState => ({
   balances: {},
   vaults: {},
   distributions: {
-    // intentionally spread as we don't want to reference the object directly
-    ...INITIAL_EPOCH_DISTRIBUTION_DATA,
+    epochZeroStartHeight: 0,
+    epochStartHeight: 0,
+    epochEndHeight: EPOCH_BLOCK_LENGTH - 1,
+    epochDistributionHeight: EPOCH_BLOCK_LENGTH - 1 + EPOCH_DISTRIBUTION_DELAY,
   },
   reserved: {},
   fees: GENESIS_FEES,
