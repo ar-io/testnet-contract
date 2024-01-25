@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import {
   EPOCH_BLOCK_LENGTH,
   GATEWAY_LEAVE_BLOCK_LENGTH,
+  GATEWAY_REGISTRY_SETTINGS,
   INITIAL_EPOCH_DISTRIBUTION_DATA,
   MAXIMUM_OBSERVERS_PER_EPOCH,
   TENURE_WEIGHT_PERIOD,
@@ -44,7 +45,6 @@ describe('getPrescribedObserversForEpoch', () => {
   it(`should return the all eligible observers with proper weights if the total number is less than ${MAXIMUM_OBSERVERS_PER_EPOCH}`, async () => {
     const epochStartHeight = 10;
     const totalStake = 100;
-    const minNetworkJoinStakeAmount = 10;
     const observers = await getPrescribedObserversForEpoch({
       gateways: {
         'test-observer-wallet-1': {
@@ -60,7 +60,8 @@ describe('getPrescribedObserversForEpoch', () => {
     });
 
     expect(observers).toBeDefined();
-    const expectedStakeWeight = totalStake / minNetworkJoinStakeAmount;
+    const expectedStakeWeight =
+      totalStake / GATEWAY_REGISTRY_SETTINGS.minNetworkJoinStakeAmount;
     const expectedTenureWeight = epochStartHeight / TENURE_WEIGHT_PERIOD;
     const expectedCompositeWeight = expectedTenureWeight * expectedStakeWeight;
     expect(observers).toEqual([
@@ -94,7 +95,6 @@ describe('getPrescribedObserversForEpoch', () => {
       };
     }
     const eligibleGateways: DeepReadonly<Gateways> = extendedStubbedGateways;
-    const minNetworkJoinStakeAmount = 10;
     const observers = await getPrescribedObserversForEpoch({
       gateways: eligibleGateways,
       distributions: INITIAL_EPOCH_DISTRIBUTION_DATA,
@@ -108,7 +108,8 @@ describe('getPrescribedObserversForEpoch', () => {
       const expectedGatewayRewardRatioWeight = 1;
       const expectedObserverRewardRatioWeight = 1;
       const expectedStakeWeight =
-        eligibleGateways[gateway].operatorStake / minNetworkJoinStakeAmount;
+        eligibleGateways[gateway].operatorStake /
+        GATEWAY_REGISTRY_SETTINGS.minNetworkJoinStakeAmount;
       const expectedTenureWeight =
         (epochStartHeight - eligibleGateways[gateway].start) /
         TENURE_WEIGHT_PERIOD;

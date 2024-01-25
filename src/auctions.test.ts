@@ -60,13 +60,13 @@ describe('calculateAuctionPriceForBlock', () => {
     it.each([
       // we keep the scalingComponent consistent to make it easier to reason about the test cases, and to represent the decay in the auction curve for block heights and varying decay rates
       [[0, 0, 0.001, 90], 100],
-      [[0, 1, 0.001, 90], 91.389003],
-      [[0, 2, 0.001, 90], 83.511968],
-      [[0, 3, 0.001, 90], 76.306977],
+      [[0, 1, 0.001, 90], 99.962007],
+      [[0, 2, 0.001, 90], 99.924029],
+      [[0, 3, 0.001, 90], 99.886065],
       [[0, 0, 0.002, 90], 100],
-      [[0, 1, 0.002, 90], 83.511968],
-      [[0, 2, 0.002, 90], 69.717284],
-      [[0, 3, 0.002, 90], 58.180118],
+      [[0, 1, 0.002, 90], 99.962007],
+      [[0, 2, 0.002, 90], 99.924029],
+      [[0, 3, 0.002, 90], 99.886065],
       // block heights before the start height should just return the start price
       [[10, 9, 0.001, 90], 100],
       [[10, 0, 0.001, 90], 100],
@@ -92,12 +92,18 @@ describe('calculateAuctionPriceForBlock', () => {
         floorPrice: 10,
         blocksPerInterval: 1,
       });
-      expect(prices).toEqual({
-        0: 100,
-        1: 91.389003,
-        2: 83.511968,
-        3: 76.306977,
-      });
+
+      expect(prices[0]).toEqual(100);
+      expect(prices[1000]).toEqual(68.360124);
+      expect(prices[2000]).toEqual(46.695422);
+      expect(prices[3000]).toEqual(31.872273);
+      expect(prices[4000]).toEqual(21.737906);
+      expect(prices[5000]).toEqual(14.814499);
+      expect(prices[6000]).toEqual(10.088334);
+      expect(prices[7000]).toEqual(10);
+      expect(prices[8000]).toEqual(10);
+      expect(prices[9000]).toEqual(10);
+      expect(prices[10079]).toEqual(10);
     });
   });
 

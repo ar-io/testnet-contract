@@ -171,7 +171,6 @@ describe('submitAuctionBid', () => {
               expectedData.floorPrice * AUCTION_SETTINGS.startPriceMultiplier,
             floorPrice: expectedData.floorPrice,
             ...(interactionInput.type === 'lease' ? { years: 1 } : {}),
-            settings: AUCTION_SETTINGS,
           },
         },
       });

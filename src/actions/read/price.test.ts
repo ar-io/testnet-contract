@@ -125,7 +125,7 @@ describe('getPriceForInteraction', () => {
           name: 'existing-auction',
         },
       },
-      904.382075,
+      999.620072,
     ],
     [
       'should return the floor price a new auction and submitAuctionBid',
