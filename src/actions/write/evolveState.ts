@@ -58,6 +58,14 @@ export const evolveState = async (
       {},
     );
     state.gateways = updatedGateways;
+
+    // remove the gateways and observers
+    state.distributions = {
+      epochDistributionHeight: state.distributions.epochDistributionHeight,
+      epochEndHeight: state.distributions.epochEndHeight,
+      epochStartHeight: state.distributions.epochStartHeight,
+      epochZeroStartHeight: state.distributions.epochZeroStartHeight,
+    };
   } else {
     // set up the distributions
     const epochStartHeight = +SmartWeave.block.height;
