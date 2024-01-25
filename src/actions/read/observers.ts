@@ -41,7 +41,6 @@ export async function getEpoch(
 
   if (
     isNaN(requestedHeight) ||
-    requestedHeight < distributions.epochZeroStartHeight ||
     // TODO: should we allow users to query future epochs?
     requestedHeight > +SmartWeave.block.height
   ) {
