@@ -17,5 +17,7 @@
     "**/coverage": true,
     "**/cache": true
   },
-  "jest.jestCommandLine": "yarn test:unit"
+  "jest.autoRun": {
+    "watch": false
+  }
 }
