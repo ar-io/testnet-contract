@@ -9,8 +9,10 @@ import {
 } from '../../actions/write/tick';
 import {
   BAD_OBSERVER_GATEWAY_PENALTY,
+  DEFAULT_GATEWAY_PERFORMANCE_STATS,
   EPOCH_BLOCK_LENGTH,
   EPOCH_DISTRIBUTION_DELAY,
+  INITIAL_DEMAND_FACTOR_DATA,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
@@ -22,17 +24,16 @@ import { updateDemandFactor } from '../../pricing';
 import {
   getBaselineState,
   stubbedArweaveTxId,
+  stubbedAuctionData,
   stubbedGatewayData,
+  stubbedGateways,
 } from '../../tests/stubs';
 import {
-  ArNSPermabuyAuctionData,
   Auctions,
   Balances,
   BlockHeight,
   BlockTimestamp,
   DeepReadonly,
-  DemandFactoringData,
-  GatewaySettings,
   Gateways,
   IOState,
   Records,
@@ -51,842 +52,772 @@ jest.mock('../../pricing', () => ({
   updateDemandFactor: jest.fn().mockReturnValue({}),
 }));
 
-const defaultAuctionSettings = {
-  auctionDuration: 2,
-  scalingExponent: 10,
-  exponentialDecayRate: 0.5,
-  floorPriceMultiplier: 1,
-  startPriceMultiplier: 10,
-};
-
-const testAuction: ArNSPermabuyAuctionData = {
-  startPrice: 100,
-  floorPrice: 10,
-  startHeight: 0,
-  endHeight: 2,
-  type: 'permabuy',
-  contractTxId: 'test-tx-id',
-  initiator: 'test-initiator',
-  settings: defaultAuctionSettings,
-};
-
-const demandFactorData: DeepReadonly<DemandFactoringData> = {
-  currentPeriod: 1,
-  trailingPeriodPurchases: [0, 0, 0, 0, 0, 0, 0],
-  trailingPeriodRevenues: [0, 0, 0, 0, 0, 0, 0],
-  purchasesThisPeriod: 0,
-  revenueThisPeriod: 0,
-  consecutivePeriodsWithMinDemandFactor: 0,
-  demandFactor: 1,
-  periodZeroBlockHeight: 0,
-};
-
-const defaultGatewaySettings: GatewaySettings = {
-  label: 'test-gateway', // The friendly name used to label this gateway
-  fqdn: 'test-gateway.com', // the fully qualified domain name this gateway can be reached at. eg arweave.net
-  port: 443, // The port used by this gateway eg. 443
-  protocol: 'https', // The protocol used by this gateway, either http or https
-};
-
-describe('tickAuctions', () => {
-  const blockTimestamp = Date.now();
-
-  it.each([
-    [
-      'should tick an auction for a permabuy name that has expired and add the floor price to an existing protocol balance',
-      {
-        balances: {
-          'some-other-balance': 1000,
-          [SmartWeave.contract.id]: 1000, // we want to validate this gets incremented by the floor price
-        } as Balances,
-        auctions: {
-          'tick-auction': testAuction,
-        } as Auctions,
-        records: {},
-        demandFactoring: demandFactorData,
-      },
-      {
-        balances: {
-          'some-other-balance': 1000,
-          [SmartWeave.contract.id]: 1000 + testAuction.floorPrice,
-        } as Balances,
-        auctions: {} as Auctions,
-        records: {
-          'tick-auction': {
-            contractTxId: 'test-tx-id',
-            type: 'permabuy',
-            startTimestamp: blockTimestamp,
-            undernames: 10,
-            purchasePrice: 10, // the floor price
-          },
-        } as Records,
-        demandFactoring: {
-          ...demandFactorData,
-          purchasesThisPeriod: 1,
-          revenueThisPeriod: 10,
-        },
-      },
-    ],
-    [
-      'should tick an auction for a leased name that has expired and add the floor price to a non-existent protocol balance',
-      {
-        balances: {
-          'some-other-balance': 1000,
-          // not protocol balance, we want to validate it gets created and incremented by the floor price
-        } as Balances,
-        auctions: {
-          'tick-leased-auction': {
-            ...testAuction,
-            type: 'lease',
-            years: 1,
-          },
-        },
-        records: {},
-        demandFactoring: demandFactorData,
-      },
-      {
-        balances: {
-          'some-other-balance': 1000,
-          [SmartWeave.contract.id]: testAuction.floorPrice,
-        } as Balances,
-        auctions: {},
-        records: {
-          'tick-leased-auction': {
-            startTimestamp: blockTimestamp,
-            undernames: 10,
-            endTimestamp: blockTimestamp + SECONDS_IN_A_YEAR,
-            type: 'lease',
-            contractTxId: 'test-tx-id',
-            purchasePrice: 10,
-          },
-        },
-        demandFactoring: {
-          ...demandFactorData,
-          purchasesThisPeriod: 1,
-          revenueThisPeriod: 10,
-        },
-      },
-    ],
-    [
-      'should not tick an auction that has not expired yet',
-      {
-        balances: {
-          'some-other-balance': 1000,
-        } as Balances,
-        auctions: {
-          'do-not-tick': {
-            ...testAuction,
-            endHeight: 10,
-          },
-        },
-        demandFactoring: demandFactorData,
-      },
-      {
-        balances: {
-          'some-other-balance': 1000,
-        } as Balances,
-        auctions: {
-          'do-not-tick': {
-            ...testAuction,
-            endHeight: 10,
-          },
-        },
-        records: {},
-        demandFactoring: demandFactorData,
-      },
-    ],
-  ])(
-    '%s',
-    (
-      _: string,
-      inputData: Pick<
-        IOState,
-        'balances' | 'auctions' | 'records' | 'demandFactoring'
-      >,
-      expectedData: Pick<
-        IOState,
-        'balances' | 'auctions' | 'records' | 'demandFactoring'
-      >,
-    ) => {
-      const { auctions, records, balances, demandFactoring } = tickAuctions({
-        currentBlockHeight: new BlockHeight(5),
-        currentBlockTimestamp: new BlockTimestamp(blockTimestamp),
-        records: {},
-        balances: inputData.balances,
-        auctions: inputData.auctions,
-        demandFactoring: inputData.demandFactoring,
-      });
-      expect(balances).toEqual(expectedData.balances);
-      expect(auctions).toEqual(expectedData.auctions);
-      expect(records).toEqual(expectedData.records);
-      expect(demandFactoring).toEqual({
-        ...inputData.demandFactoring,
-        ...expectedData.demandFactoring,
-      });
-    },
-  );
-});
-
-describe('tickRecords', () => {
-  const blockEndTimestamp = Date.now();
-
-  it.each([
-    [
-      'should remove a record that is expired and past the grace period',
-      {
-        records: {
-          'expired-record': {
-            contractTxId: 'test-tx-id',
-            type: 'lease',
-            startTimestamp: 0,
-            endTimestamp: blockEndTimestamp - SECONDS_IN_GRACE_PERIOD,
-            undernames: 10,
-            purchasePrice: 1000,
-          },
-        },
-      },
-      {
-        records: {},
-      },
-    ],
-    [
-      'should not remove a record that is in the grace period',
-      {
-        records: {
-          'grace-period-record': {
-            contractTxId: 'test-tx-id',
-            type: 'lease',
-            startTimestamp: 0,
-            endTimestamp: blockEndTimestamp - SECONDS_IN_GRACE_PERIOD + 1,
-            undernames: 10,
-            purchasePrice: 1000,
-          },
-        },
-      },
-      {
-        records: {
-          'grace-period-record': {
-            contractTxId: 'test-tx-id',
-            type: 'lease',
-            startTimestamp: 0,
-            endTimestamp: blockEndTimestamp - SECONDS_IN_GRACE_PERIOD + 1,
-            undernames: 10,
-            purchasePrice: 1000,
-          },
-        },
-      },
-    ],
-    [
-      'should not remove a record that is not expired nor in the grace period',
-      {
-        records: {
-          'grace-period-record': {
-            contractTxId: 'test-tx-id',
-            type: 'lease',
-            startTimestamp: 0,
-            endTimestamp: blockEndTimestamp + SECONDS_IN_A_YEAR,
-            undernames: 10,
-            purchasePrice: 1000,
-          },
-        },
-      },
-      {
-        records: {
-          'grace-period-record': {
-            contractTxId: 'test-tx-id',
-            type: 'lease',
-            startTimestamp: 0,
-            endTimestamp: blockEndTimestamp + SECONDS_IN_A_YEAR,
-            undernames: 10,
-            purchasePrice: 1000,
-          },
-        },
-      },
-    ],
-  ])('%s', (_, inputData, expectedData) => {
-    const { records } = tickRecords({
-      currentBlockTimestamp: new BlockTimestamp(blockEndTimestamp),
-      records: inputData.records as DeepReadonly<Records>,
-    });
-    expect(records).toEqual(expectedData.records);
-  });
-});
-
-describe('tickGatewayRegistry', () => {
-  it.each([
-    [
-      'should remove a gateway that is leaving and return all of its vaults to the operator',
-      {
-        gateways: {
-          'leaving-operator': {
-            operatorStake: 100,
-            observerWallet: 'existing-operator',
-            start: 0,
-            end: 5,
-            vaults: {
-              'existing-vault-id': {
-                balance: 100,
-                start: 0,
-                end: 10,
-              },
-            },
-            status: 'leaving',
-            settings: defaultGatewaySettings,
-          },
-        },
-        balances: {
-          'leaving-operator': 0,
-        },
-      },
-      {
-        gateways: {},
-        balances: {
-          'leaving-operator': 200,
-        },
-      },
-    ],
-    [
-      'should keep a gateway that is joined, but return any vaults that have expired',
-      {
-        gateways: {
-          'existing-operator': {
-            operatorStake: 100,
-            observerWallet: 'existing-operator',
-            start: 0,
-            end: 10,
-            vaults: {
-              'existing-vault-id': {
-                balance: 100,
-                start: 0,
-                end: 2,
-              },
-            },
-            status: 'joined',
-            settings: defaultGatewaySettings,
-          },
-        },
-        balances: {
-          'existing-operator': 0,
-        },
-      },
-      {
-        gateways: {
-          'existing-operator': {
-            operatorStake: 100,
-            observerWallet: 'existing-operator',
-            start: 0,
-            end: 10,
-            vaults: {},
-            status: 'joined',
-            settings: defaultGatewaySettings,
-          },
-        },
-        balances: {
-          'existing-operator': 100,
-        },
-      },
-    ],
-    [
-      'should keep a gateway that is joined and not return any vaults that have not yet expired',
-      {
-        gateways: {
-          'existing-operator': {
-            operatorStake: 100,
-            observerWallet: 'existing-operator',
-            start: 0,
-            end: 10,
-            vaults: {
-              'existing-vault-id': {
-                balance: 100,
-                start: 0,
-                end: 10,
-              },
-            },
-            status: 'joined',
-            settings: defaultGatewaySettings,
-          },
-        },
-        balances: {
-          'existing-operator': 0,
-        },
-      },
-      {
-        gateways: {
-          'existing-operator': {
-            operatorStake: 100,
-            observerWallet: 'existing-operator',
-            start: 0,
-            end: 10,
-            vaults: {
-              'existing-vault-id': {
-                balance: 100,
-                start: 0,
-                end: 10,
-              },
-            },
-            status: 'joined',
-            settings: defaultGatewaySettings,
-          },
-        },
-        balances: {
-          'existing-operator': 0,
-        },
-      },
-    ],
-  ])('%s', (_, inputData, expectedData) => {
-    const { balances, gateways } = tickGatewayRegistry({
-      currentBlockHeight: new BlockHeight(5),
-      balances: inputData.balances as DeepReadonly<Balances>,
-      gateways: inputData.gateways as DeepReadonly<Gateways>,
-    });
-    expect(balances).toEqual(expectedData.balances);
-    expect(gateways).toEqual(expectedData.gateways);
-  });
-});
-
-describe('tickReservedNames', () => {
-  const currentBlockTimestamp = Date.now();
-
-  it.each([
-    [
-      'should tick a reserved name that has not target but is expired',
-      {
-        reserved: {
-          'expired-reserved-name': {
-            endTimestamp: currentBlockTimestamp - 1,
-          },
-        },
-      },
-      {
-        reserved: {},
-      },
-    ],
-    [
-      'should tick a reserved name that has a target but is expired',
-      {
-        reserved: {
-          'expired-with-target': {
-            endTimestamp: currentBlockTimestamp - 1,
-            target: 'test-target',
-          },
-        },
-      },
-      {
-        reserved: {},
-      },
-    ],
-    [
-      'should not tick a reserved name that has a target and is not expired',
-      {
-        reserved: {
-          'not-expired-with-target': {
-            endTimestamp: currentBlockTimestamp + 1,
-            target: 'test-target',
-          },
-        },
-      },
-      {
-        reserved: {
-          'not-expired-with-target': {
-            endTimestamp: currentBlockTimestamp + 1,
-            target: 'test-target',
-          },
-        },
-      },
-    ],
-    [
-      'should not tick a reserved name that has no target and is not expired',
-      {
-        reserved: {
-          'not-expired-no-target': {
-            endTimestamp: currentBlockTimestamp + 1,
-          },
-        },
-      },
-      {
-        reserved: {
-          'not-expired-no-target': {
-            endTimestamp: currentBlockTimestamp + 1,
-          },
-        },
-      },
-    ],
-    [
-      'should not tick a reserved name that has no target and no endTimestamp',
-      {
-        reserved: {
-          'forever-reserved': {},
-        },
-      },
-      {
-        reserved: {
-          'forever-reserved': {},
-        },
-      },
-    ],
-  ])('%s', (_, inputData, expectedData) => {
-    const { reserved } = tickReservedNames({
-      currentBlockTimestamp: new BlockTimestamp(currentBlockTimestamp),
-      reservedNames: inputData.reserved as DeepReadonly<ReservedNames>,
-    });
-    expect(reserved).toEqual(expectedData.reserved);
-  });
-});
-
-describe('tickVaults', () => {
-  it('should not make changes when vaults are not present', () => {
-    const currentBlockHeight = new BlockHeight(5);
-    const vaults: RegistryVaults = {};
-    const balances = { foo: 1, bar: 2 };
-    const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
-      currentBlockHeight,
-      balances,
-      vaults,
-    });
-    expect(updatedBalances).toEqual({ foo: 1, bar: 2 });
-    expect(updatedVaults).toEqual({});
-  });
-
-  it('should not unlock single vault if it has not ended', () => {
-    const currentBlockHeight = new BlockHeight(5);
-    const address = 'bar';
-    const vaults: RegistryVaults = {
-      [address]: {
-        'existing-vault-id': {
-          balance: 1,
-          end: 100,
-          start: 0,
-        },
-      },
-    };
-    const balances = { foo: 1, bar: 2 };
-    const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
-      currentBlockHeight,
-      balances,
-      vaults,
-    });
-    expect(updatedBalances).toEqual({ foo: 1, bar: 2 });
-    expect(updatedVaults[address]).toEqual(vaults[address]);
-  });
-
-  it('should not unlock multiple vaults if they have not ended', () => {
-    const currentBlockHeight = new BlockHeight(5);
-    const vaults: RegistryVaults = {
-      ['foo']: {
-        'existing-vault-id': {
-          balance: 1,
-          end: 100,
-          start: 0,
-        },
-      },
-      ['bar']: {
-        'other-existing-vault-id': {
-          balance: 1,
-          end: 100,
-          start: 0,
-        },
-        'another-existing-vault-id-2': {
-          balance: 2,
-          end: 100,
-          start: 0,
-        },
-      },
-      ['baz']: {
-        'existing-vault-id': {
-          balance: 1,
-          end: 100,
-          start: 0,
-        },
-        'other-existing-vault-id': {
-          balance: 2,
-          end: 100,
-          start: 0,
-        },
-        'another-existing-vault-id-2': {
-          balance: 3,
-          end: 100,
-          start: 0,
-        },
-      },
-    };
-    const balances = { foo: 1, bar: 2, baz: 3 };
-    const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
-      currentBlockHeight,
-      balances,
-      vaults,
-    });
-    expect(updatedBalances).toEqual({ foo: 1, bar: 2, baz: 3 });
-    expect(updatedVaults['foo']).toEqual(vaults['foo']);
-    expect(updatedVaults['bar']).toEqual(vaults['bar']);
-    expect(updatedVaults['baz']).toEqual(vaults['baz']);
-  });
-
-  it('should unlock single vault when it is ended', () => {
-    const currentBlockHeight = new BlockHeight(6);
-    const address = 'bar';
-    const vaults: RegistryVaults = {
-      [address]: {
-        'existing-vault-id': {
-          balance: 1,
-          end: 5,
-          start: 0,
-        },
-      },
-    };
-    const balances = { foo: 1, bar: 2 };
-    const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
-      currentBlockHeight,
-      balances,
-      vaults,
-    });
-    expect(updatedVaults[address]).toEqual(undefined);
-    expect(updatedBalances).toEqual({ foo: 1, bar: 3 });
-  });
-
-  it('should unlock multiple vaults if they have ended', () => {
-    const currentBlockHeight = new BlockHeight(0);
-    const vaults: RegistryVaults = {
-      ['foo']: {
-        'existing-vault-id': {
-          balance: 1,
-          end: 0,
-          start: 0,
-        },
-      },
-      ['bar']: {
-        'other-existing-vault-id': {
-          balance: 1,
-          end: 0,
-          start: 0,
-        },
-        'another-existing-vault-id-2': {
-          balance: 2,
-          end: 100,
-          start: 0,
-        },
-      },
-      ['baz']: {
-        'existing-vault-id': {
-          balance: 1,
-          end: 0,
-          start: 0,
-        },
-        'other-existing-vault-id': {
-          balance: 2,
-          end: 0,
-          start: 0,
-        },
-        'another-existing-vault-id-2': {
-          balance: 3,
-          end: 100,
-          start: 0,
-        },
-      },
-    };
-    const balances = { foo: 1, bar: 2, baz: 3 };
-    const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
-      currentBlockHeight,
-      balances,
-      vaults,
-    });
-    expect(updatedBalances).toEqual({ foo: 2, bar: 3, baz: 6 });
-    expect(updatedVaults['foo']).toEqual(undefined);
-    expect(updatedVaults['bar']).toEqual({
-      'another-existing-vault-id-2': {
-        balance: 2,
-        end: 100,
-        start: 0,
-      },
-    });
-    expect(updatedVaults['baz']).toEqual({
-      'another-existing-vault-id-2': {
-        balance: 3,
-        end: 100,
-        start: 0,
-      },
-    });
-  });
-
-  it('should unlock all vaults if they have ended', () => {
-    const currentBlockHeight = new BlockHeight(0);
-    const vaults: RegistryVaults = {
-      ['foo']: {
-        'existing-vault-id': {
-          balance: 1,
-          end: 0,
-          start: 0,
-        },
-      },
-      ['bar']: {
-        'other-existing-vault-id': {
-          balance: 1,
-          end: 0,
-          start: 0,
-        },
-        'another-existing-vault-id-2': {
-          balance: 2,
-          end: 0,
-          start: 0,
-        },
-      },
-      ['baz']: {
-        'existing-vault-id': {
-          balance: 1,
-          end: 0,
-          start: 0,
-        },
-        'other-existing-vault-id': {
-          balance: 2,
-          end: 0,
-          start: 0,
-        },
-        'another-existing-vault-id-2': {
-          balance: 3,
-          end: 0,
-          start: 0,
-        },
-      },
-    };
-    const balances = { foo: 1, bar: 2, baz: 3 };
-    const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
-      currentBlockHeight,
-      balances,
-      vaults,
-    });
-    expect(updatedBalances).toEqual({ foo: 2, bar: 5, baz: 9 });
-    expect(updatedVaults['foo']).toEqual(undefined);
-    expect(updatedVaults['bar']).toEqual(undefined);
-    expect(updatedVaults['baz']).toEqual(undefined);
-  });
-});
-
-describe('tickRewardDistribution', () => {
+describe('tick', () => {
   beforeEach(() => {
-    (getPrescribedObserversForEpoch as jest.Mock).mockResolvedValue([
-      {
-        gatewayAddress: 'a-gateway',
-        observerAddress: 'an-observing-gateway',
-        stake: 100,
-        start: 0,
-        stakeWeight: 10,
-        tenureWeight: 1,
-        gatewayRewardRatioWeight: 1,
-        observerRewardRatioWeight: 1,
-        compositeWeight: 1,
-        normalizedCompositeWeight: 1,
-      },
-      {
-        gatewayAddress: 'a-gateway-2',
-        observerAddress: 'an-observing-gateway-2',
-        stake: 100,
-        start: 0,
-        stakeWeight: 10,
-        tenureWeight: 1,
-        gatewayRewardRatioWeight: 1,
-        observerRewardRatioWeight: 1,
-        compositeWeight: 1,
-        normalizedCompositeWeight: 1,
-      },
-      {
-        gatewayAddress: 'a-gateway-3',
-        observerAddress: 'an-observing-gateway-3',
-        stake: 100,
-        start: 0,
-        stakeWeight: 10,
-        tenureWeight: 1,
-        gatewayRewardRatioWeight: 1,
-        observerRewardRatioWeight: 1,
-        compositeWeight: 1,
-        normalizedCompositeWeight: 1,
-      },
-    ]);
-    (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({
-      'a-gateway': {
-        ...stubbedGatewayData,
-        observerWallet: 'an-observing-gateway',
-      },
-      'a-gateway-2': {
-        ...stubbedGatewayData,
-        observerWallet: 'an-observing-gateway-2',
-      },
-      'a-gateway-3': {
-        ...stubbedGatewayData,
-        observerWallet: 'an-observing-gateway-3',
-      },
-    });
+    (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue(stubbedGateways);
+    (getPrescribedObserversForEpoch as jest.Mock).mockResolvedValue(
+      Object.keys(stubbedGateways).map((address: string) => {
+        return {
+          gatewayAddress: address,
+          observerAddress: stubbedGateways[address].observerWallet,
+          stake: 100,
+          start: 0,
+          stakeWeight: 10,
+          tenureWeight: 1,
+          gatewayRewardRatioWeight: 1,
+          observerRewardRatioWeight: 1,
+          compositeWeight: 1,
+          normalizedCompositeWeight: 1,
+        };
+      }),
+    );
   });
 
-  afterEach(() => {
+  afterAll(() => {
     jest.resetAllMocks();
   });
 
-  it('should not distribute rewards when protocol balance is 0, but should update epoch distribution values', async () => {
-    const initialState: IOState = {
-      ...getBaselineState(),
-      balances: {
-        [SmartWeave.contract.id]: 0,
+  describe('tickAuctions', () => {
+    const blockTimestamp = Date.now();
+
+    it.each([
+      [
+        'should tick an auction for a permabuy name that has expired and add the floor price to an existing protocol balance',
+        {
+          balances: {
+            'some-other-balance': 1000,
+            [SmartWeave.contract.id]: 1000, // we want to validate this gets incremented by the floor price
+          } as Balances,
+          auctions: {
+            'tick-auction': {
+              ...stubbedAuctionData,
+              type: 'permabuy',
+              endHeight: SmartWeave.block.height,
+            },
+          } as Auctions,
+          records: {},
+          demandFactoring: INITIAL_DEMAND_FACTOR_DATA,
+        },
+        {
+          balances: {
+            'some-other-balance': 1000,
+            [SmartWeave.contract.id]: 1000 + stubbedAuctionData.floorPrice,
+          } as Balances,
+          auctions: {} as Auctions,
+          records: {
+            'tick-auction': {
+              contractTxId: stubbedAuctionData.contractTxId,
+              type: 'permabuy',
+              startTimestamp: blockTimestamp,
+              undernames: 10,
+              purchasePrice: stubbedAuctionData.floorPrice, // the floor price
+            },
+          } as Records,
+          demandFactoring: {
+            ...INITIAL_DEMAND_FACTOR_DATA,
+            purchasesThisPeriod: 1,
+            revenueThisPeriod: stubbedAuctionData.floorPrice,
+          },
+        },
+      ],
+      [
+        'should tick an auction for a leased name that has expired and add the floor price to a non-existent protocol balance',
+        {
+          balances: {
+            'some-other-balance': 1000,
+            // no protocol balance, we want to validate it gets created and incremented by the floor price
+          } as Balances,
+          auctions: {
+            'tick-leased-auction': {
+              ...stubbedAuctionData,
+              type: 'lease',
+              endHeight: SmartWeave.block.height,
+              years: 1,
+            },
+          },
+          records: {},
+          demandFactoring: INITIAL_DEMAND_FACTOR_DATA,
+        },
+        {
+          balances: {
+            'some-other-balance': 1000,
+            [SmartWeave.contract.id]: stubbedAuctionData.floorPrice,
+          } as Balances,
+          auctions: {},
+          records: {
+            'tick-leased-auction': {
+              startTimestamp: blockTimestamp,
+              undernames: 10,
+              endTimestamp: blockTimestamp + SECONDS_IN_A_YEAR,
+              type: 'lease',
+              contractTxId: stubbedAuctionData.contractTxId,
+              purchasePrice: stubbedAuctionData.floorPrice,
+            },
+          },
+          demandFactoring: {
+            ...INITIAL_DEMAND_FACTOR_DATA,
+            purchasesThisPeriod: 1,
+            revenueThisPeriod: stubbedAuctionData.floorPrice,
+          },
+        },
+      ],
+      [
+        'should not tick an auction that has not expired yet',
+        {
+          balances: {
+            'some-other-balance': 1000,
+          } as Balances,
+          auctions: {
+            'do-not-tick': {
+              ...stubbedAuctionData,
+              endHeight: SmartWeave.block.height + 10,
+            },
+          },
+          demandFactoring: INITIAL_DEMAND_FACTOR_DATA,
+        },
+        {
+          balances: {
+            'some-other-balance': 1000,
+          } as Balances,
+          auctions: {
+            'do-not-tick': {
+              ...stubbedAuctionData,
+              endHeight: SmartWeave.block.height + 10,
+            },
+          },
+          records: {},
+          demandFactoring: INITIAL_DEMAND_FACTOR_DATA,
+        },
+      ],
+    ])(
+      '%s',
+      (
+        _: string,
+        inputData: Pick<
+          IOState,
+          'balances' | 'auctions' | 'records' | 'demandFactoring'
+        >,
+        expectedData: Pick<
+          IOState,
+          'balances' | 'auctions' | 'records' | 'demandFactoring'
+        >,
+      ) => {
+        const { auctions, records, balances, demandFactoring } = tickAuctions({
+          currentBlockHeight: new BlockHeight(SmartWeave.block.height + 1),
+          currentBlockTimestamp: new BlockTimestamp(blockTimestamp),
+          records: {},
+          balances: inputData.balances,
+          auctions: inputData.auctions,
+          demandFactoring: inputData.demandFactoring,
+        });
+        expect(balances).toEqual(expectedData.balances);
+        expect(auctions).toEqual(expectedData.auctions);
+        expect(records).toEqual(expectedData.records);
+        expect(demandFactoring).toEqual({
+          ...inputData.demandFactoring,
+          ...expectedData.demandFactoring,
+        });
       },
-    };
-    const { balances, distributions } = await tickRewardDistribution({
-      currentBlockHeight: new BlockHeight(
-        initialState.distributions.epochDistributionHeight,
-      ),
-      gateways: initialState.gateways,
-      balances: initialState.balances,
-      distributions: initialState.distributions,
-      observations: initialState.observations,
-      settings: initialState.settings,
-    });
-    expect(balances).toEqual(initialState.balances);
-    expect(distributions).toEqual({
-      epochZeroStartHeight: initialState.distributions.epochZeroStartHeight,
-      epochStartHeight: initialState.distributions.epochEndHeight + 1,
-      epochEndHeight:
-        initialState.distributions.epochEndHeight + EPOCH_BLOCK_LENGTH,
-      epochDistributionHeight:
-        initialState.distributions.epochDistributionHeight + EPOCH_BLOCK_LENGTH,
-      gateways: {
-        'a-gateway': {
-          failedConsecutiveEpochs: 0,
-          passedEpochCount: 0,
-          totalEpochParticipationCount: 1,
+    );
+  });
+
+  describe('tickRecords', () => {
+    const blockEndTimestamp = Date.now();
+
+    it.each([
+      [
+        'should remove a record that is expired and past the grace period',
+        {
+          records: {
+            'expired-record': {
+              contractTxId: 'test-tx-id',
+              type: 'lease',
+              startTimestamp: 0,
+              endTimestamp: blockEndTimestamp - SECONDS_IN_GRACE_PERIOD,
+              undernames: 10,
+              purchasePrice: 1000,
+            },
+          },
         },
-        'a-gateway-2': {
-          failedConsecutiveEpochs: 0,
-          passedEpochCount: 0,
-          totalEpochParticipationCount: 1,
+        {
+          records: {},
         },
-        'a-gateway-3': {
-          failedConsecutiveEpochs: 0,
-          passedEpochCount: 0,
-          totalEpochParticipationCount: 1,
+      ],
+      [
+        'should not remove a record that is in the grace period',
+        {
+          records: {
+            'grace-period-record': {
+              contractTxId: 'test-tx-id',
+              type: 'lease',
+              startTimestamp: 0,
+              endTimestamp: blockEndTimestamp - SECONDS_IN_GRACE_PERIOD + 1,
+              undernames: 10,
+              purchasePrice: 1000,
+            },
+          },
         },
-      },
-      observers: {
-        'an-observing-gateway': {
-          submittedEpochCount: 0,
-          totalEpochsPrescribedCount: 1,
+        {
+          records: {
+            'grace-period-record': {
+              contractTxId: 'test-tx-id',
+              type: 'lease',
+              startTimestamp: 0,
+              endTimestamp: blockEndTimestamp - SECONDS_IN_GRACE_PERIOD + 1,
+              undernames: 10,
+              purchasePrice: 1000,
+            },
+          },
         },
-        'an-observing-gateway-2': {
-          submittedEpochCount: 0,
-          totalEpochsPrescribedCount: 1,
+      ],
+      [
+        'should not remove a record that is not expired nor in the grace period',
+        {
+          records: {
+            'grace-period-record': {
+              contractTxId: 'test-tx-id',
+              type: 'lease',
+              startTimestamp: 0,
+              endTimestamp: blockEndTimestamp + SECONDS_IN_A_YEAR,
+              undernames: 10,
+              purchasePrice: 1000,
+            },
+          },
         },
-        'an-observing-gateway-3': {
-          submittedEpochCount: 0,
-          totalEpochsPrescribedCount: 1,
+        {
+          records: {
+            'grace-period-record': {
+              contractTxId: 'test-tx-id',
+              type: 'lease',
+              startTimestamp: 0,
+              endTimestamp: blockEndTimestamp + SECONDS_IN_A_YEAR,
+              undernames: 10,
+              purchasePrice: 1000,
+            },
+          },
         },
-      },
+      ],
+    ])('%s', (_, inputData, expectedData) => {
+      const { records } = tickRecords({
+        currentBlockTimestamp: new BlockTimestamp(blockEndTimestamp),
+        records: inputData.records as DeepReadonly<Records>,
+      });
+      expect(records).toEqual(expectedData.records);
     });
   });
 
-  it('should not distribute rewards or update distribution values if the current block height is not greater than or equal to the distribution height', async () => {
+  describe('tickGatewayRegistry', () => {
+    it.each([
+      [
+        'should remove a gateway that is leaving and return all of its vaults to the operator',
+        {
+          gateways: {
+            'leaving-operator': {
+              operatorStake: 100,
+              observerWallet: 'existing-operator',
+              start: 0,
+              end: 5,
+              vaults: {
+                'existing-vault-id': {
+                  balance: 100,
+                  start: 0,
+                  end: 10,
+                },
+              },
+              status: 'leaving',
+              settings: stubbedGatewayData.settings,
+              stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
+            },
+          },
+          balances: {
+            'leaving-operator': 0,
+          },
+        },
+        {
+          gateways: {},
+          balances: {
+            'leaving-operator': 200,
+          },
+        },
+      ],
+      [
+        'should keep a gateway that is joined, but return any vaults that have expired',
+        {
+          gateways: {
+            'existing-operator': {
+              operatorStake: 100,
+              observerWallet: 'existing-operator',
+              start: 0,
+              end: 10,
+              vaults: {
+                'existing-vault-id': {
+                  balance: 100,
+                  start: 0,
+                  end: 2,
+                },
+              },
+              status: 'joined',
+              settings: stubbedGatewayData.settings,
+              stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
+            },
+          },
+          balances: {
+            'existing-operator': 0,
+          },
+        },
+        {
+          gateways: {
+            'existing-operator': {
+              operatorStake: 100,
+              observerWallet: 'existing-operator',
+              start: 0,
+              end: 10,
+              vaults: {},
+              status: 'joined',
+              settings: stubbedGatewayData.settings,
+              stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
+            },
+          },
+          balances: {
+            'existing-operator': 100,
+          },
+        },
+      ],
+      [
+        'should keep a gateway that is joined and not return any vaults that have not yet expired',
+        {
+          gateways: {
+            'existing-operator': {
+              operatorStake: 100,
+              observerWallet: 'existing-operator',
+              start: 0,
+              end: 10,
+              vaults: {
+                'existing-vault-id': {
+                  balance: 100,
+                  start: 0,
+                  end: 10,
+                },
+              },
+              status: 'joined',
+              settings: stubbedGatewayData.settings,
+              stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
+            },
+          },
+          balances: {
+            'existing-operator': 0,
+          },
+        },
+        {
+          gateways: {
+            'existing-operator': {
+              operatorStake: 100,
+              observerWallet: 'existing-operator',
+              start: 0,
+              end: 10,
+              vaults: {
+                'existing-vault-id': {
+                  balance: 100,
+                  start: 0,
+                  end: 10,
+                },
+              },
+              status: 'joined',
+              settings: stubbedGatewayData.settings,
+              stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
+            },
+          },
+          balances: {
+            'existing-operator': 0,
+          },
+        },
+      ],
+    ])('%s', (_, inputData, expectedData) => {
+      const { balances, gateways } = tickGatewayRegistry({
+        currentBlockHeight: new BlockHeight(5),
+        balances: inputData.balances as DeepReadonly<Balances>,
+        gateways: inputData.gateways as DeepReadonly<Gateways>,
+      });
+      expect(balances).toEqual(expectedData.balances);
+      expect(gateways).toEqual(expectedData.gateways);
+    });
+  });
+
+  describe('tickReservedNames', () => {
+    const currentBlockTimestamp = Date.now();
+
+    it.each([
+      [
+        'should tick a reserved name that has not target but is expired',
+        {
+          reserved: {
+            'expired-reserved-name': {
+              endTimestamp: currentBlockTimestamp - 1,
+            },
+          },
+        },
+        {
+          reserved: {},
+        },
+      ],
+      [
+        'should tick a reserved name that has a target but is expired',
+        {
+          reserved: {
+            'expired-with-target': {
+              endTimestamp: currentBlockTimestamp - 1,
+              target: 'test-target',
+            },
+          },
+        },
+        {
+          reserved: {},
+        },
+      ],
+      [
+        'should not tick a reserved name that has a target and is not expired',
+        {
+          reserved: {
+            'not-expired-with-target': {
+              endTimestamp: currentBlockTimestamp + 1,
+              target: 'test-target',
+            },
+          },
+        },
+        {
+          reserved: {
+            'not-expired-with-target': {
+              endTimestamp: currentBlockTimestamp + 1,
+              target: 'test-target',
+            },
+          },
+        },
+      ],
+      [
+        'should not tick a reserved name that has no target and is not expired',
+        {
+          reserved: {
+            'not-expired-no-target': {
+              endTimestamp: currentBlockTimestamp + 1,
+            },
+          },
+        },
+        {
+          reserved: {
+            'not-expired-no-target': {
+              endTimestamp: currentBlockTimestamp + 1,
+            },
+          },
+        },
+      ],
+      [
+        'should not tick a reserved name that has no target and no endTimestamp',
+        {
+          reserved: {
+            'forever-reserved': {},
+          },
+        },
+        {
+          reserved: {
+            'forever-reserved': {},
+          },
+        },
+      ],
+    ])('%s', (_, inputData, expectedData) => {
+      const { reserved } = tickReservedNames({
+        currentBlockTimestamp: new BlockTimestamp(currentBlockTimestamp),
+        reservedNames: inputData.reserved as DeepReadonly<ReservedNames>,
+      });
+      expect(reserved).toEqual(expectedData.reserved);
+    });
+  });
+
+  describe('tickVaults', () => {
+    it('should not make changes when vaults are not present', () => {
+      const currentBlockHeight = new BlockHeight(5);
+      const vaults: RegistryVaults = {};
+      const balances = { foo: 1, bar: 2 };
+      const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
+        currentBlockHeight,
+        balances,
+        vaults,
+      });
+      expect(updatedBalances).toEqual({ foo: 1, bar: 2 });
+      expect(updatedVaults).toEqual({});
+    });
+
+    it('should not unlock single vault if it has not ended', () => {
+      const currentBlockHeight = new BlockHeight(5);
+      const address = 'bar';
+      const vaults: RegistryVaults = {
+        [address]: {
+          'existing-vault-id': {
+            balance: 1,
+            end: 100,
+            start: 0,
+          },
+        },
+      };
+      const balances = { foo: 1, bar: 2 };
+      const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
+        currentBlockHeight,
+        balances,
+        vaults,
+      });
+      expect(updatedBalances).toEqual({ foo: 1, bar: 2 });
+      expect(updatedVaults[address]).toEqual(vaults[address]);
+    });
+
+    it('should not unlock multiple vaults if they have not ended', () => {
+      const currentBlockHeight = new BlockHeight(5);
+      const vaults: RegistryVaults = {
+        ['foo']: {
+          'existing-vault-id': {
+            balance: 1,
+            end: 100,
+            start: 0,
+          },
+        },
+        ['bar']: {
+          'other-existing-vault-id': {
+            balance: 1,
+            end: 100,
+            start: 0,
+          },
+          'another-existing-vault-id-2': {
+            balance: 2,
+            end: 100,
+            start: 0,
+          },
+        },
+        ['baz']: {
+          'existing-vault-id': {
+            balance: 1,
+            end: 100,
+            start: 0,
+          },
+          'other-existing-vault-id': {
+            balance: 2,
+            end: 100,
+            start: 0,
+          },
+          'another-existing-vault-id-2': {
+            balance: 3,
+            end: 100,
+            start: 0,
+          },
+        },
+      };
+      const balances = { foo: 1, bar: 2, baz: 3 };
+      const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
+        currentBlockHeight,
+        balances,
+        vaults,
+      });
+      expect(updatedBalances).toEqual({ foo: 1, bar: 2, baz: 3 });
+      expect(updatedVaults['foo']).toEqual(vaults['foo']);
+      expect(updatedVaults['bar']).toEqual(vaults['bar']);
+      expect(updatedVaults['baz']).toEqual(vaults['baz']);
+    });
+
+    it('should unlock single vault when it is ended', () => {
+      const currentBlockHeight = new BlockHeight(6);
+      const address = 'bar';
+      const vaults: RegistryVaults = {
+        [address]: {
+          'existing-vault-id': {
+            balance: 1,
+            end: 5,
+            start: 0,
+          },
+        },
+      };
+      const balances = { foo: 1, bar: 2 };
+      const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
+        currentBlockHeight,
+        balances,
+        vaults,
+      });
+      expect(updatedVaults[address]).toEqual(undefined);
+      expect(updatedBalances).toEqual({ foo: 1, bar: 3 });
+    });
+
+    it('should unlock multiple vaults if they have ended', () => {
+      const currentBlockHeight = new BlockHeight(0);
+      const vaults: RegistryVaults = {
+        ['foo']: {
+          'existing-vault-id': {
+            balance: 1,
+            end: 0,
+            start: 0,
+          },
+        },
+        ['bar']: {
+          'other-existing-vault-id': {
+            balance: 1,
+            end: 0,
+            start: 0,
+          },
+          'another-existing-vault-id-2': {
+            balance: 2,
+            end: 100,
+            start: 0,
+          },
+        },
+        ['baz']: {
+          'existing-vault-id': {
+            balance: 1,
+            end: 0,
+            start: 0,
+          },
+          'other-existing-vault-id': {
+            balance: 2,
+            end: 0,
+            start: 0,
+          },
+          'another-existing-vault-id-2': {
+            balance: 3,
+            end: 100,
+            start: 0,
+          },
+        },
+      };
+      const balances = { foo: 1, bar: 2, baz: 3 };
+      const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
+        currentBlockHeight,
+        balances,
+        vaults,
+      });
+      expect(updatedBalances).toEqual({ foo: 2, bar: 3, baz: 6 });
+      expect(updatedVaults['foo']).toEqual(undefined);
+      expect(updatedVaults['bar']).toEqual({
+        'another-existing-vault-id-2': {
+          balance: 2,
+          end: 100,
+          start: 0,
+        },
+      });
+      expect(updatedVaults['baz']).toEqual({
+        'another-existing-vault-id-2': {
+          balance: 3,
+          end: 100,
+          start: 0,
+        },
+      });
+    });
+
+    it('should unlock all vaults if they have ended', () => {
+      const currentBlockHeight = new BlockHeight(0);
+      const vaults: RegistryVaults = {
+        ['foo']: {
+          'existing-vault-id': {
+            balance: 1,
+            end: 0,
+            start: 0,
+          },
+        },
+        ['bar']: {
+          'other-existing-vault-id': {
+            balance: 1,
+            end: 0,
+            start: 0,
+          },
+          'another-existing-vault-id-2': {
+            balance: 2,
+            end: 0,
+            start: 0,
+          },
+        },
+        ['baz']: {
+          'existing-vault-id': {
+            balance: 1,
+            end: 0,
+            start: 0,
+          },
+          'other-existing-vault-id': {
+            balance: 2,
+            end: 0,
+            start: 0,
+          },
+          'another-existing-vault-id-2': {
+            balance: 3,
+            end: 0,
+            start: 0,
+          },
+        },
+      };
+      const balances = { foo: 1, bar: 2, baz: 3 };
+      const { vaults: updatedVaults, balances: updatedBalances } = tickVaults({
+        currentBlockHeight,
+        balances,
+        vaults,
+      });
+      expect(updatedBalances).toEqual({ foo: 2, bar: 5, baz: 9 });
+      expect(updatedVaults['foo']).toEqual(undefined);
+      expect(updatedVaults['bar']).toEqual(undefined);
+      expect(updatedVaults['baz']).toEqual(undefined);
+    });
+  });
+
+  describe('tickRewardDistribution', () => {
+    it('should not distribute rewards when protocol balance is 0, but should update epoch distribution values and increment gateway performance stats', async () => {
+      const initialState: IOState = {
+        ...getBaselineState(),
+        balances: {
+          [SmartWeave.contract.id]: 0,
+        },
+        gateways: stubbedGateways,
+      };
+      const { balances, distributions, gateways } =
+        await tickRewardDistribution({
+          currentBlockHeight: new BlockHeight(
+            initialState.distributions.epochDistributionHeight,
+          ),
+          gateways: initialState.gateways,
+          balances: initialState.balances,
+          distributions: initialState.distributions,
+          observations: initialState.observations,
+          settings: initialState.settings,
+        });
+      expect(balances).toEqual(initialState.balances);
+      expect(distributions).toEqual({
+        epochZeroStartHeight: initialState.distributions.epochZeroStartHeight,
+        epochStartHeight: initialState.distributions.epochEndHeight + 1,
+        epochEndHeight:
+          initialState.distributions.epochEndHeight + EPOCH_BLOCK_LENGTH,
+        epochDistributionHeight:
+          initialState.distributions.epochDistributionHeight +
+          EPOCH_BLOCK_LENGTH,
+      });
+      const expectedGateways = Object.keys(stubbedGateways).reduce(
+        (acc: Gateways, gatewayAddress: string) => {
+          acc[gatewayAddress] = {
+            ...stubbedGateways[gatewayAddress],
+            stats: {
+              submittedEpochCount: 0,
+              passedEpochCount: 0,
+              failedConsecutiveEpochs: 0,
+              totalEpochsPrescribedCount: 1,
+              totalEpochParticipationCount: 1,
+            },
+          };
+          return acc;
+        },
+        {},
+      );
+      expect(gateways).toEqual(expectedGateways);
+    });
+  });
+
+  it('should not distribute rewards, increment gateway performance stats or update epoch values if the current block height is not greater than or equal to the distribution height', async () => {
     const initialState: IOState = {
       ...getBaselineState(),
       balances: {
         [SmartWeave.contract.id]: 10_000_000,
       },
+      gateways: stubbedGateways,
     };
-    const { balances, distributions } = await tickRewardDistribution({
+    const { balances, distributions, gateways } = await tickRewardDistribution({
       currentBlockHeight: new BlockHeight(
         initialState.distributions.epochDistributionHeight - 1,
       ),
@@ -898,46 +829,51 @@ describe('tickRewardDistribution', () => {
     });
     expect(balances).toEqual(initialState.balances);
     expect(distributions).toEqual(initialState.distributions);
+    expect(gateways).toEqual(initialState.gateways);
   });
 
   it.each([0, EPOCH_DISTRIBUTION_DELAY - 1])(
-    'should not distribute rewards if the current block height is equal to the last epoch end height + %s blocks',
+    'should not distribute rewards or increment gateway stats and epoch values if the current block height is equal to the last epoch end height + %s blocks',
     async (blockHeight) => {
       const initialState: IOState = {
         ...getBaselineState(),
         balances: {
           [SmartWeave.contract.id]: 10_000_000,
         },
+        gateways: stubbedGateways,
       };
       const firstEpochEndHeight =
         initialState.distributions.epochZeroStartHeight +
         EPOCH_BLOCK_LENGTH -
         1;
       const invalidBlockHeight = firstEpochEndHeight + blockHeight;
-      const { balances, distributions } = await tickRewardDistribution({
-        currentBlockHeight: new BlockHeight(invalidBlockHeight),
-        gateways: initialState.gateways,
-        balances: initialState.balances,
-        distributions: initialState.distributions,
-        observations: initialState.observations,
-        settings: initialState.settings,
-      });
+      const { balances, distributions, gateways } =
+        await tickRewardDistribution({
+          currentBlockHeight: new BlockHeight(invalidBlockHeight),
+          gateways: initialState.gateways,
+          balances: initialState.balances,
+          distributions: initialState.distributions,
+          observations: initialState.observations,
+          settings: initialState.settings,
+        });
       expect(balances).toEqual(initialState.balances);
       expect(distributions).toEqual(initialState.distributions);
+      expect(gateways).toEqual(initialState.gateways);
     },
   );
 
-  it('should not distribute rewards if there are no gateways or observers in the GAR, but update distributions values for the epoch', async () => {
-    // both of these return empty objects
-    (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({});
+  // TODO: update this
+  it('should not distribute rewards if there are no gateways or observers in the GAR, but update epoch values', async () => {
+    // stub these so they don't return anything
     (getPrescribedObserversForEpoch as jest.Mock).mockResolvedValue([]);
+    (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({});
     const initialState: IOState = {
       ...getBaselineState(),
       balances: {
         [SmartWeave.contract.id]: 10_000_000,
       },
     };
-    const { balances, distributions } = await tickRewardDistribution({
+    const { balances, distributions, gateways } = await tickRewardDistribution({
       currentBlockHeight: new BlockHeight(
         initialState.distributions.epochEndHeight + EPOCH_DISTRIBUTION_DELAY,
       ),
@@ -958,34 +894,22 @@ describe('tickRewardDistribution', () => {
       epochDistributionHeight:
         expectedNewEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
     });
+    expect(gateways).toEqual(initialState.gateways);
   });
 
-  it('should not distribute rewards if no reports were submitted, but should update epoch counts for gateways and the distribution epoch values', async () => {
+  it('should not distribute rewards if no observations were submitted, but should update epoch counts for gateways and the distribution epoch values', async () => {
     const initialState: IOState = {
       ...getBaselineState(),
       balances: {
         [SmartWeave.contract.id]: 10_000_000,
       },
-      gateways: {
-        'a-gateway': {
-          ...stubbedGatewayData,
-          observerWallet: 'an-observing-gateway',
-        },
-        'a-gateway-2': {
-          ...stubbedGatewayData,
-          observerWallet: 'an-observing-gateway-2',
-        },
-        'a-gateway-3': {
-          ...stubbedGatewayData,
-          observerWallet: 'an-observing-gateway-3',
-        },
-      },
+      gateways: stubbedGateways,
       observations: {},
     };
-    const epochDistributionHeight =
-      initialState.distributions.epochDistributionHeight;
-    const { balances, distributions } = await tickRewardDistribution({
-      currentBlockHeight: new BlockHeight(epochDistributionHeight),
+    const { balances, distributions, gateways } = await tickRewardDistribution({
+      currentBlockHeight: new BlockHeight(
+        initialState.distributions.epochDistributionHeight,
+      ),
       gateways: initialState.gateways,
       balances: initialState.balances,
       distributions: initialState.distributions,
@@ -1004,80 +928,53 @@ describe('tickRewardDistribution', () => {
       epochEndHeight: expectedNewEpochEndHeight,
       epochDistributionHeight:
         expectedNewEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
-      gateways: {
-        'a-gateway': {
-          passedEpochCount: 0,
-          totalEpochParticipationCount: 1,
-          failedConsecutiveEpochs: 0,
-        },
-        'a-gateway-2': {
-          passedEpochCount: 0,
-          totalEpochParticipationCount: 1,
-          failedConsecutiveEpochs: 0,
-        },
-        'a-gateway-3': {
-          passedEpochCount: 0,
-          totalEpochParticipationCount: 1,
-          failedConsecutiveEpochs: 0,
-        },
-      },
-      observers: {
-        'an-observing-gateway': {
-          totalEpochsPrescribedCount: 1,
-          submittedEpochCount: 0,
-        },
-        'an-observing-gateway-2': {
-          totalEpochsPrescribedCount: 1,
-          submittedEpochCount: 0,
-        },
-        'an-observing-gateway-3': {
-          totalEpochsPrescribedCount: 1,
-          submittedEpochCount: 0,
-        },
-      },
     });
+    const expectedGateways = Object.keys(stubbedGateways).reduce(
+      (acc: Gateways, gatewayAddress: string) => {
+        acc[gatewayAddress] = {
+          ...stubbedGateways[gatewayAddress],
+          stats: {
+            submittedEpochCount: 0,
+            passedEpochCount: 0,
+            failedConsecutiveEpochs: 0,
+            totalEpochsPrescribedCount: 1,
+            totalEpochParticipationCount: 1,
+          },
+        };
+        return acc;
+      },
+      {},
+    );
+    expect(gateways).toEqual(expectedGateways);
   });
 
-  it('should distribute rewards to observers who submitted reports and gateways who passed and update distribution epoch values', async () => {
+  it('should distribute rewards to observers who submitted reports and gateways who passed, update distribution epoch values and increment performance stats', async () => {
     const initialState: IOState = {
       ...getBaselineState(),
       balances: {
         [SmartWeave.contract.id]: 10_000_000,
       },
-      gateways: {
-        'a-gateway': {
-          ...stubbedGatewayData,
-          observerWallet: 'an-observing-gateway',
-        },
-        'a-gateway-2': {
-          ...stubbedGatewayData,
-          observerWallet: 'an-observing-gateway-2',
-        },
-        'a-gateway-3': {
-          ...stubbedGatewayData,
-          observerWallet: 'an-observing-gateway-3',
-        },
-      },
+      gateways: stubbedGateways,
       observations: {
         0: {
           failureSummaries: {
             // one failure, but not more than half so still gets the reward, is penalized for not submitting a report
-            'a-gateway-2': ['an-observing-gateway'],
-            // observer 3 is failing more according to more than half the gateways, no gateway reward
-            'a-gateway-3': ['an-observing-gateway', 'an-observing-gateway-2'],
+            'a-gateway-2': ['a-gateway'],
+            // gateway-3 is failing more according to more than half the gateways, no gateway reward
+            'a-gateway-3': ['a-gateway', 'a-gateway-3'],
           },
           reports: {
-            // bot gateway-1 and gateway-3 get a full observer reward
-            'an-observing-gateway': stubbedArweaveTxId,
-            'an-observing-gateway-3': stubbedArweaveTxId,
-            // observer 2 did not submit a report
+            // gateway-1 and gateway-3 get a full observer reward
+            [stubbedGateways['a-gateway'].observerWallet]: stubbedArweaveTxId,
+            [stubbedGateways['a-gateway-3'].observerWallet]: stubbedArweaveTxId,
+            // gateway-2 did not submit a report
           },
         },
       },
     };
     const epochDistributionHeight =
       initialState.distributions.epochDistributionHeight;
-    const { balances, distributions } = await tickRewardDistribution({
+    const { balances, distributions, gateways } = await tickRewardDistribution({
       currentBlockHeight: new BlockHeight(epochDistributionHeight),
       gateways: initialState.gateways,
       balances: initialState.balances,
@@ -1114,100 +1011,47 @@ describe('tickRewardDistribution', () => {
       epochEndHeight: expectedNewEpochEndHeight,
       epochDistributionHeight:
         expectedNewEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
-      gateways: {
-        'a-gateway': {
-          passedEpochCount: 1,
-          totalEpochParticipationCount: 1,
-          failedConsecutiveEpochs: 0,
-        },
-        'a-gateway-2': {
-          passedEpochCount: 1,
-          totalEpochParticipationCount: 1,
-          failedConsecutiveEpochs: 0,
-        },
-        'a-gateway-3': {
-          passedEpochCount: 0,
-          totalEpochParticipationCount: 1,
-          failedConsecutiveEpochs: 1,
-        },
-      },
-      observers: {
-        'an-observing-gateway': {
-          totalEpochsPrescribedCount: 1,
-          submittedEpochCount: 1,
-        },
-        'an-observing-gateway-2': {
-          totalEpochsPrescribedCount: 1,
-          submittedEpochCount: 0,
-        },
-        'an-observing-gateway-3': {
-          totalEpochsPrescribedCount: 1,
-          submittedEpochCount: 1,
-        },
-      },
     });
-  });
-});
-
-describe('top level tick', () => {
-  beforeAll(() => {
-    (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({
+    expect(gateways).toEqual({
+      ...initialState.gateways,
       'a-gateway': {
-        ...stubbedGatewayData,
-        observerWallet: 'an-observing-gateway',
+        ...initialState.gateways['a-gateway'],
+        stats: {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 1,
+          passedEpochCount: 1,
+          failedConsecutiveEpochs: 0,
+          totalEpochParticipationCount: 1,
+        },
       },
       'a-gateway-2': {
-        ...stubbedGatewayData,
-        observerWallet: 'an-observing-gateway-2',
+        ...initialState.gateways['a-gateway-2'],
+        stats: {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 0,
+          passedEpochCount: 1,
+          failedConsecutiveEpochs: 0,
+          totalEpochParticipationCount: 1,
+        },
       },
       'a-gateway-3': {
-        ...stubbedGatewayData,
-        observerWallet: 'an-observing-gateway-3',
+        ...initialState.gateways['a-gateway-3'],
+        stats: {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 1,
+          passedEpochCount: 0,
+          failedConsecutiveEpochs: 1,
+          totalEpochParticipationCount: 1,
+        },
       },
     });
-    (getPrescribedObserversForEpoch as jest.Mock).mockResolvedValue([
-      {
-        gatewayAddress: 'a-gateway',
-        observerAddress: 'an-observing-gateway',
-        stake: 100,
-        start: 0,
-        stakeWeight: 10,
-        tenureWeight: 1,
-        gatewayRewardRatioWeight: 1,
-        observerRewardRatioWeight: 1,
-        compositeWeight: 1,
-        normalizedCompositeWeight: 1,
-      },
-      {
-        gatewayAddress: 'a-gateway-2',
-        observerAddress: 'an-observing-gateway-2',
-        stake: 100,
-        start: 0,
-        stakeWeight: 10,
-        tenureWeight: 1,
-        gatewayRewardRatioWeight: 1,
-        observerRewardRatioWeight: 1,
-        compositeWeight: 1,
-        normalizedCompositeWeight: 1,
-      },
-      {
-        gatewayAddress: 'a-gateway-3',
-        observerAddress: 'an-observing-gateway-3',
-        stake: 100,
-        start: 0,
-        stakeWeight: 10,
-        tenureWeight: 1,
-        gatewayRewardRatioWeight: 1,
-        observerRewardRatioWeight: 1,
-        compositeWeight: 1,
-        normalizedCompositeWeight: 1,
-      },
-    ]);
   });
 
-  it('should tick distributions if a the interaction height is equal to the epochDistributionHeight', async () => {
+  // top level tests
+  it('should tick distributions and update gateway performance stats if a the interaction height is equal to the epochDistributionHeight', async () => {
     const initialState: IOState = {
       ...getBaselineState(),
+      gateways: stubbedGateways,
     };
 
     // stub the demand factor change
@@ -1232,35 +1076,37 @@ describe('top level tick', () => {
           initialState.distributions.epochEndHeight +
           EPOCH_BLOCK_LENGTH +
           EPOCH_DISTRIBUTION_DELAY,
-        gateways: {
-          'a-gateway': {
-            passedEpochCount: 0,
-            failedConsecutiveEpochs: 0,
-            totalEpochParticipationCount: 1,
-          },
-          'a-gateway-2': {
-            passedEpochCount: 0,
-            failedConsecutiveEpochs: 0,
-            totalEpochParticipationCount: 1,
-          },
-          'a-gateway-3': {
+      },
+      gateways: {
+        ...initialState.gateways,
+        'a-gateway': {
+          ...initialState.gateways['a-gateway'],
+          stats: {
+            totalEpochsPrescribedCount: 1,
+            submittedEpochCount: 0,
             passedEpochCount: 0,
             failedConsecutiveEpochs: 0,
             totalEpochParticipationCount: 1,
           },
         },
-        observers: {
-          'an-observing-gateway': {
+        'a-gateway-2': {
+          ...initialState.gateways['a-gateway-2'],
+          stats: {
             totalEpochsPrescribedCount: 1,
             submittedEpochCount: 0,
+            passedEpochCount: 0,
+            failedConsecutiveEpochs: 0,
+            totalEpochParticipationCount: 1,
           },
-          'an-observing-gateway-2': {
+        },
+        'a-gateway-3': {
+          ...initialState.gateways['a-gateway-3'],
+          stats: {
             totalEpochsPrescribedCount: 1,
             submittedEpochCount: 0,
-          },
-          'an-observing-gateway-3': {
-            totalEpochsPrescribedCount: 1,
-            submittedEpochCount: 0,
+            passedEpochCount: 0,
+            failedConsecutiveEpochs: 0,
+            totalEpochParticipationCount: 1,
           },
         },
       },

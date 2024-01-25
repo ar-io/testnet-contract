@@ -2,7 +2,8 @@ import {
   AuctionSettings,
   DemandFactoringData,
   DemandFactoringSettings,
-  RewardDistributions,
+  EpochDistributionData,
+  GatewayPerformanceStats,
 } from './types';
 
 /**
@@ -207,11 +208,16 @@ export const OBSERVATION_FAILURE_THRESHOLD = 0.51; // 51% of the network must re
 export const BAD_OBSERVER_GATEWAY_PENALTY = 0.25; // 25% of the gateway's stake is slashed for bad observation reports
 export const MAXIMUM_OBSERVERS_PER_EPOCH = 50; // the maximum number of prescribed observers per epoch
 export const MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT = 21; // the number of consecutive epochs an observer can fail before being removed from the network
-export const INITIAL_DISTRIBUTIONS: RewardDistributions = {
+export const DEFAULT_GATEWAY_PERFORMANCE_STATS: GatewayPerformanceStats = {
+  passedEpochCount: 0,
+  failedConsecutiveEpochs: 0,
+  totalEpochParticipationCount: 0,
+  submittedEpochCount: 0,
+  totalEpochsPrescribedCount: 0,
+};
+export const INITIAL_EPOCH_DISTRIBUTION_DATA: EpochDistributionData = {
   epochZeroStartHeight: 0,
   epochStartHeight: 0,
   epochEndHeight: EPOCH_BLOCK_LENGTH - 1,
   epochDistributionHeight: EPOCH_BLOCK_LENGTH - 1 + EPOCH_DISTRIBUTION_DELAY,
-  gateways: {},
-  observers: {},
 };

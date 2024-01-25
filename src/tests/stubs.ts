@@ -1,8 +1,9 @@
 import {
   AUCTION_SETTINGS,
+  DEFAULT_GATEWAY_PERFORMANCE_STATS,
   GENESIS_FEES,
   INITIAL_DEMAND_FACTOR_DATA,
-  INITIAL_DISTRIBUTIONS,
+  INITIAL_EPOCH_DISTRIBUTION_DATA,
 } from '../constants';
 import { ArNSLeaseAuctionData, Gateway, Gateways, IOState } from '../types';
 
@@ -17,7 +18,10 @@ export const getBaselineState: () => IOState = (): IOState => ({
   records: {},
   balances: {},
   vaults: {},
-  distributions: INITIAL_DISTRIBUTIONS,
+  distributions: {
+    // intentionally spread as we don't want to reference the object directly
+    ...INITIAL_EPOCH_DISTRIBUTION_DATA,
+  },
   reserved: {},
   fees: GENESIS_FEES,
   auctions: {},
@@ -74,22 +78,26 @@ export const stubbedGatewayData: Gateway = {
     protocol: 'https',
   },
   status: 'joined',
+  stats: {
+    // intentionally spread as we don't want to reference the object directly
+    ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
+  },
 };
 
 export const stubbedGateways: Gateways = {
-  'test-observer-wallet-1': {
+  'a-gateway': {
     ...stubbedGatewayData,
     operatorStake: 100,
-    observerWallet: 'test-observer-wallet-1',
+    observerWallet: 'a-gateway-observer',
   },
-  'test-observer-wallet-2': {
+  'a-gateway-2': {
     ...stubbedGatewayData,
     operatorStake: 200,
-    observerWallet: 'test-observer-wallet-2',
+    observerWallet: 'a-gateway-observer-2',
   },
-  'test-observer-wallet-3': {
+  'a-gateway-3': {
     ...stubbedGatewayData,
     operatorStake: 300,
-    observerWallet: 'test-observer-wallet-3',
+    observerWallet: 'a-gateway-observer-3',
   },
 };

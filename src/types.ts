@@ -43,38 +43,24 @@ export type IOState = {
   lastTickedHeight: number; // periodicity management
   demandFactoring: DemandFactoringData;
   observations: Observations;
-  // TODO: these stats can be moved to gateways
-  distributions: RewardDistributions;
+  distributions: EpochDistributionData;
   vaults: RegistryVaults;
 };
 
-export type GatewayDistributionSummary = {
+export type GatewayPerformanceStats = {
   totalEpochParticipationCount: number; // the total number of epochs this gateway has participated in
   passedEpochCount: number; // the number of epochs this gateway has passed
   failedConsecutiveEpochs: number; // the number of consecutive epochs this gateway has failed
-};
-
-export type ObserverDistributionSummary = {
   submittedEpochCount: number; // the number of epochs this observer has submitted reports for
   totalEpochsPrescribedCount: number; // the total number of epochs this observer was prescribed to submit reports for
 };
 
-export type GatewayDistributions = Record<
-  WalletAddress,
-  GatewayDistributionSummary
->;
-export type ObserverDistributions = Record<
-  ObserverAddress,
-  ObserverDistributionSummary
->;
 // The distributions made at the end of each epoch
-export type RewardDistributions = {
+export type EpochDistributionData = {
   epochZeroStartHeight: number;
   epochStartHeight: number; // the current epoch start height
   epochEndHeight: number; // the current epoch end height
   epochDistributionHeight: number;
-  gateways: GatewayDistributions;
-  observers: ObserverDistributions;
 };
 
 export type ObserverAddress = WalletAddress;
@@ -142,16 +128,11 @@ export type GatewayRegistrySettings = {
   operatorStakeWithdrawLength: number; // the amount of blocks that have to elapse before a gateway operator's stake is returned
 };
 
+// TODO: these will be moved to constants
 export type ContractSettings = {
   // these settings control the various capabilities in the contract
   registry: GatewayRegistrySettings;
   auctions: AuctionSettings;
-  // TODO: should we put distribution settings here or leave as constants
-  // distributions: {
-  //   epochBlockLength: number;
-  //   observerGatewayPenalty: number (% of reward to deduce from gateways that did not observe)
-  //   tallyPeriod: number; // the number of blocks to wait before tallying the results of an epoch
-  // };
 };
 
 const gatewayStatus = [NETWORK_JOIN_STATUS, NETWORK_LEAVING_STATUS] as const;
@@ -159,16 +140,16 @@ export type GatewayStatus = (typeof gatewayStatus)[number];
 
 export type Gateway = {
   operatorStake: number; // the total stake of this gateway's operator.
-  observerWallet: string; // the wallet address used to save observation reports
+  observerWallet: WalletAddress; // the wallet address used to save observation reports
   start: number; // At what block the gateway joined the network.
   end: number; // At what block the gateway can leave the network.  0 means no end date.
   status: GatewayStatus; // hidden represents not leaving, but not participating
   vaults: Vaults; // the locked tokens staked by this gateway operator
   settings: GatewaySettings;
+  stats: GatewayPerformanceStats;
 };
 
 export type GatewaySettings = {
-  // All of the settings related to this gateway
   label: string; // The friendly name used to label this gateway
   fqdn: string; // the fully qualified domain name this gateway can be reached at. eg arweave.net
   port: number; // The port used by this gateway eg. 443

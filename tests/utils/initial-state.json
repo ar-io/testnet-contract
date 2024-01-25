@@ -18,9 +18,7 @@
     "epochZeroStartHeight": 0,
     "epochStartHeight": 0,
     "epochEndHeight": 49,
-    "epochDistributionHeight": 149,
-    "gateways": {},
-    "observers": {}
+    "epochDistributionHeight": 149
   },
   "demandFactoring": {
     "periodZeroBlockHeight": 0,

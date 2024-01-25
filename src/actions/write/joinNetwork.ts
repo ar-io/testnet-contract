@@ -1,4 +1,5 @@
 import {
+  DEFAULT_GATEWAY_PERFORMANCE_STATS,
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_GATEWAY_EXISTS_MESSAGE,
   INVALID_GATEWAY_STAKE_AMOUNT_MESSAGE,
@@ -102,6 +103,7 @@ export const joinNetwork = async (
     status: NETWORK_JOIN_STATUS,
     start: +SmartWeave.block.height, // TODO: timestamp vs. height
     end: 0,
+    stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
   };
 
   return { state };

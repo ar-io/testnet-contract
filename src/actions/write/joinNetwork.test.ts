@@ -1,4 +1,5 @@
 import {
+  DEFAULT_GATEWAY_PERFORMANCE_STATS,
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_GATEWAY_EXISTS_MESSAGE,
   INVALID_GATEWAY_STAKE_AMOUNT_MESSAGE,
@@ -188,6 +189,7 @@ describe('joinNetwork', () => {
       vaults: {},
       status: 'joined',
       end: 0,
+      stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
     });
     expect(state.balances[stubbedArweaveTxId]).toEqual(undefined);
   });

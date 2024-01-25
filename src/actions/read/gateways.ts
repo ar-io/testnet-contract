@@ -36,28 +36,14 @@ export const getGateway = async (
     gateways,
     minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
     epochStartHeight,
-    distributions: state.distributions,
   }).find(
     (observer: WeightedObserver) =>
       observer.gatewayAddress === target || observer.observerAddress === target,
   );
 
-  const gatewayStats = distributions.gateways[target] || {
-    passedEpochCount: 0,
-    failedConsecutiveEpochCount: 0,
-  };
-  const gatewayObserverStats = distributions.observers[target] || {
-    submittedEpochCount: 0,
-    prescribedObserverEpochCount: 0,
-    totalEpochParticipationCount: 0,
-  };
-
   const gatewayWithWeights = {
     ...gateway,
-    stats: {
-      ...gatewayStats,
-      ...gatewayObserverStats,
-    },
+    // computed weights based on the current epoch
     weights: {
       stakeWeight: observerWeights?.stakeWeight || 0,
       tenureWeight: observerWeights?.tenureWeight || 0,
@@ -90,7 +76,6 @@ export const getGateways = async (
     gateways,
     minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
     epochStartHeight,
-    distributions,
   });
 
   const gatewaysWithWeights = Object.keys(gateways).reduce(
@@ -110,19 +95,9 @@ export const getGateways = async (
 
       const gateway = gateways[address];
 
-      // TODO: these will move to the gateway state instead of distributions
-      const gatewayStats = distributions.gateways[address] || {
-        passedEpochCount: 0,
-        failedConsecutiveEpochCount: 0,
-      };
-      const gatewayObserverStats = distributions.observers[address] || {
-        submittedEpochCount: 0,
-        prescribedObserverEpochCount: 0,
-        totalEpochParticipationCount: 0,
-      };
-
       const gatewayWithWeights = {
         ...gateway,
+        // computed weights based on the current epoch
         weights: {
           stakeWeight: observerWeights?.stakeWeight || 0,
           tenureWeight: observerWeights?.tenureWeight || 0,
@@ -133,10 +108,6 @@ export const getGateways = async (
           compositeWeight: observerWeights?.compositeWeight || 0,
           normalizedCompositeWeight:
             observerWeights?.normalizedCompositeWeight || 0,
-        },
-        stats: {
-          ...gatewayStats,
-          ...gatewayObserverStats,
         },
       };
 

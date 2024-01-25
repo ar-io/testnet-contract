@@ -45,10 +45,10 @@ describe('getGateway', () => {
         start: 10,
         stats: {
           passedEpochCount: 0,
-          failedConsecutiveEpochCount: 0,
+          failedConsecutiveEpochs: 0,
           totalEpochParticipationCount: 0,
           submittedEpochCount: 0,
-          prescribedObserverEpochCount: 0,
+          totalEpochsPrescribedCount: 0,
         },
         weights: {
           stakeWeight: 1,
@@ -83,10 +83,10 @@ describe('getGateway', () => {
         ...stubbedGatewayData,
         stats: {
           passedEpochCount: 0,
-          failedConsecutiveEpochCount: 0,
+          failedConsecutiveEpochs: 0,
           totalEpochParticipationCount: 0,
           submittedEpochCount: 0,
-          prescribedObserverEpochCount: 0,
+          totalEpochsPrescribedCount: 0,
         },
         weights: {
           stakeWeight: 1,
@@ -123,10 +123,10 @@ describe('getGateway', () => {
         ...stubbedGatewayData,
         stats: {
           passedEpochCount: 0,
-          failedConsecutiveEpochCount: 0,
+          failedConsecutiveEpochs: 0,
           totalEpochParticipationCount: 0,
           submittedEpochCount: 0,
-          prescribedObserverEpochCount: 0,
+          totalEpochsPrescribedCount: 0,
         },
         weights: {
           stakeWeight: 1,
@@ -166,10 +166,10 @@ describe('getGateways', () => {
           observerWallet: 'a-test-gateway',
           stats: {
             passedEpochCount: 0,
-            failedConsecutiveEpochCount: 0,
+            failedConsecutiveEpochs: 0,
             totalEpochParticipationCount: 0,
             submittedEpochCount: 0,
-            prescribedObserverEpochCount: 0,
+            totalEpochsPrescribedCount: 0,
           },
           weights: {
             stakeWeight: 1,
@@ -186,10 +186,10 @@ describe('getGateways', () => {
           start: 10,
           stats: {
             passedEpochCount: 0,
-            failedConsecutiveEpochCount: 0,
+            failedConsecutiveEpochs: 0,
             totalEpochParticipationCount: 0,
             submittedEpochCount: 0,
-            prescribedObserverEpochCount: 0,
+            totalEpochsPrescribedCount: 0,
           },
           weights: {
             stakeWeight: 1,

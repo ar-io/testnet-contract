@@ -9,6 +9,7 @@ import {
   ARNS_LEASE_LENGTH_MAX_YEARS,
   AUCTION_SETTINGS,
   CONTRACT_SETTINGS,
+  DEFAULT_GATEWAY_PERFORMANCE_STATS,
   DEFAULT_UNDERNAME_COUNT,
   GENESIS_FEES,
   INITIAL_STATE,
@@ -134,6 +135,9 @@ function createGateways(wallets: string[]) {
         note: 'The friendliest gateway to the whole permaweb',
       },
       observerWallet: wallets[0],
+      stats: {
+        ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
+      },
     },
     [wallets[1]]: {
       operatorStake: 10_000,
@@ -150,6 +154,9 @@ function createGateways(wallets: string[]) {
         note: 'i do bad things',
       },
       observerWallet: wallets[1],
+      stats: {
+        ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
+      },
     },
     [wallets[2]]: {
       operatorStake: 250_000,
@@ -166,6 +173,9 @@ function createGateways(wallets: string[]) {
         note: '',
       },
       observerWallet: wallets[2],
+      stats: {
+        ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
+      },
     },
     [wallets[3]]: {
       operatorStake: 15_000,
@@ -182,6 +192,9 @@ function createGateways(wallets: string[]) {
         note: '',
       },
       observerWallet: wallets[3],
+      stats: {
+        ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
+      },
     },
     [wallets[4]]: {
       operatorStake: 100_000,
@@ -198,6 +211,9 @@ function createGateways(wallets: string[]) {
         note: 'Observation testing',
       },
       observerWallet: wallets[4],
+      stats: {
+        ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
+      },
     },
     [wallets[5]]: {
       operatorStake: 20_000,
@@ -214,6 +230,9 @@ function createGateways(wallets: string[]) {
         note: 'More observervation testing',
       },
       observerWallet: wallets[5],
+      stats: {
+        ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
+      },
     },
     [wallets[6]]: {
       operatorStake: 20_000,
@@ -230,6 +249,9 @@ function createGateways(wallets: string[]) {
         note: 'Leaving after epoch 0',
       },
       observerWallet: wallets[6],
+      stats: {
+        ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
+      },
     },
     [wallets[7]]: {
       operatorStake: 10_000,
@@ -246,6 +268,9 @@ function createGateways(wallets: string[]) {
         note: 'Leaving the network',
       },
       observerWallet: wallets[7],
+      stats: {
+        ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
+      },
     },
     [wallets[8]]: {
       operatorStake: 10_000,
@@ -262,6 +287,9 @@ function createGateways(wallets: string[]) {
         note: 'Leaving the network',
       },
       observerWallet: wallets[8],
+      stats: {
+        ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
+      },
     },
     [wallets[9]]: {
       operatorStake: 10_000,
@@ -278,6 +306,9 @@ function createGateways(wallets: string[]) {
         note: 'Leaving the network',
       },
       observerWallet: wallets[9],
+      stats: {
+        ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
+      },
     },
   };
 

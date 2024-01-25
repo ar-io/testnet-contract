@@ -9,9 +9,9 @@ import {
 import {
   BlockHeight,
   DeepReadonly,
+  EpochDistributionData,
   Gateway,
   Gateways,
-  RewardDistributions,
   WalletAddress,
   WeightedObserver,
 } from './types';
@@ -133,12 +133,10 @@ export function getEligibleGatewaysForEpoch({
 
 export function getObserverWeightsForEpoch({
   gateways,
-  distributions,
   epochStartHeight,
   minNetworkJoinStakeAmount,
 }: {
   gateways: DeepReadonly<Gateways>;
-  distributions: DeepReadonly<RewardDistributions>;
   epochStartHeight: BlockHeight;
   minNetworkJoinStakeAmount: number; // TODO: replace with constant
 }): WeightedObserver[] {
@@ -164,19 +162,16 @@ export function getObserverWeightsForEpoch({
     );
 
     // the percentage of epochs participated in that the gateway passed
-    const totalEpochsGatewayPassed =
-      distributions.gateways[address]?.passedEpochCount || 0;
+    const totalEpochsGatewayPassed = gateway.stats.passedEpochCount || 0;
     const totalEpochsParticipatedIn =
-      distributions.gateways[address]?.totalEpochParticipationCount || 0;
+      gateway.stats.totalEpochParticipationCount || 0;
     // default to 1 for gateways that have not participated in a full epoch
     const gatewayRewardRatioWeight =
       (1 + totalEpochsGatewayPassed) / (1 + totalEpochsParticipatedIn);
 
     // the percentage of epochs the observer was prescribed and submitted reports for
-    const totalEpochsPrescribed =
-      distributions.observers[address]?.totalEpochsPrescribedCount || 0;
-    const totalEpochsSubmitted =
-      distributions.observers[address]?.submittedEpochCount || 0;
+    const totalEpochsPrescribed = gateway.stats.totalEpochsPrescribedCount || 0;
+    const totalEpochsSubmitted = gateway.stats.submittedEpochCount || 0;
     // defaults to one again if either are 0, encouraging new gateways to join and observe
     const observerRewardRatioWeight =
       (1 + totalEpochsSubmitted) / (1 + totalEpochsPrescribed);
@@ -215,13 +210,12 @@ export function getObserverWeightsForEpoch({
 
 export async function getPrescribedObserversForEpoch({
   gateways,
-  distributions,
   minNetworkJoinStakeAmount,
   epochStartHeight,
   epochEndHeight,
 }: {
   gateways: DeepReadonly<Gateways>;
-  distributions: DeepReadonly<RewardDistributions>;
+  distributions: DeepReadonly<EpochDistributionData>;
   minNetworkJoinStakeAmount: number;
   epochStartHeight: BlockHeight;
   epochEndHeight: BlockHeight;
@@ -234,7 +228,6 @@ export async function getPrescribedObserversForEpoch({
 
   const weightedObservers = getObserverWeightsForEpoch({
     gateways: eligibleGateways,
-    distributions,
     epochStartHeight,
     minNetworkJoinStakeAmount,
     // filter out any that could have a normalized composite weight of 0 to avoid infinite loops when randomly selecting prescribed observers below
