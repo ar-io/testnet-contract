@@ -1,5 +1,6 @@
 import {
   EPOCH_BLOCK_LENGTH,
+  EPOCH_DISTRIBUTION_DELAY,
   INVALID_OBSERVATION_CALLER_MESSAGE,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
@@ -50,19 +51,23 @@ export const saveObservations = async (
   // get all other relevant state data
   const { observations, gateways, settings, distributions } = state;
   const { observerReportTxId, failedGateways } = new SaveObservations(input);
-
-  // TODO: check if current height is less than epochZeroStartHeight
-  if (+SmartWeave.block.height < distributions.epochZeroStartHeight) {
-    throw new ContractError(
-      `Observations cannot be submitted before block height: ${distributions.epochZeroStartHeight}`,
-    );
-  }
-
   const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
-    currentBlockHeight: new BlockHeight(+SmartWeave.block.height), // observations must be submitted within the epoch
+    currentBlockHeight: new BlockHeight(+SmartWeave.block.height), // observations must be submitted within the epoch and after the last epochs distribution period (see below)
     epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
     epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
   });
+
+  // avoid observations before the previous epoch distribution has occurred, as distributions affect weights of the current epoch
+  if (
+    +SmartWeave.block.height <=
+    epochStartHeight.valueOf() + EPOCH_DISTRIBUTION_DELAY
+  ) {
+    throw new ContractError(
+      `Observations for the current epoch cannot be submitted before block height: ${
+        epochStartHeight.valueOf() + EPOCH_DISTRIBUTION_DELAY
+      }`,
+    );
+  }
 
   const prescribedObservers = await getPrescribedObserversForEpoch({
     gateways,
