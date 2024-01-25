@@ -72,13 +72,7 @@ describe('joinNetwork', () => {
       balances: {
         'a-gateway-with-balance': 100,
       },
-      settings: {
-        ...getBaselineState().settings,
-        registry: {
-          ...getBaselineState().settings.registry,
-          minNetworkJoinStakeAmount: 100,
-        },
-      },
+      // TODO: Removed stubbed settings
     };
     const error = await joinNetwork(initialState, {
       caller: 'a-gateway-with-balance',
@@ -101,13 +95,7 @@ describe('joinNetwork', () => {
           ...baselineGatewayData,
         },
       },
-      settings: {
-        ...getBaselineState().settings,
-        registry: {
-          ...getBaselineState().settings.registry,
-          minNetworkJoinStakeAmount: 10,
-        },
-      },
+      // TODO: Removed stubbed settings
     };
     const error = await joinNetwork(initialState, {
       caller: 'existing-gateway',
@@ -132,13 +120,7 @@ describe('joinNetwork', () => {
           observerWallet: stubbedArweaveTxId,
         },
       },
-      settings: {
-        ...getBaselineState().settings,
-        registry: {
-          ...getBaselineState().settings.registry,
-          minNetworkJoinStakeAmount: 10,
-        },
-      },
+      // TODO: Removed stubbed settings
     };
     const error = await joinNetwork(initialState, {
       caller: 'a-new-gateway',
@@ -156,13 +138,7 @@ describe('joinNetwork', () => {
       balances: {
         [stubbedArweaveTxId]: 10,
       },
-      settings: {
-        ...getBaselineState().settings,
-        registry: {
-          ...getBaselineState().settings.registry,
-          minNetworkJoinStakeAmount: 10,
-        },
-      },
+      // TODO: Removed stubbed settings
     };
     const { state } = await joinNetwork(initialState, {
       caller: stubbedArweaveTxId,

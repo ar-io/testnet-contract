@@ -1,9 +1,8 @@
-import { SECONDS_IN_A_YEAR } from './constants';
+import { AUCTION_SETTINGS, SECONDS_IN_A_YEAR } from './constants';
 import { calculateRegistrationFee } from './pricing';
 import {
   ArNSAuctionData,
   ArNSBaseAuctionData,
-  AuctionSettings,
   BlockHeight,
   BlockTimestamp,
   DeepReadonly,
@@ -13,20 +12,19 @@ import {
   RegistrationType,
 } from './types';
 
+const { auctionDuration, exponentialDecayRate, scalingExponent } =
+  AUCTION_SETTINGS;
+
 export function calculateAuctionPriceForBlock({
   startHeight,
   startPrice,
   floorPrice,
   currentBlockHeight,
-  scalingExponent,
-  exponentialDecayRate,
 }: {
   startHeight: BlockHeight;
   startPrice: number;
   floorPrice: number;
   currentBlockHeight: BlockHeight;
-  scalingExponent: number;
-  exponentialDecayRate: number;
 }): IOToken {
   const blocksSinceStart = currentBlockHeight.valueOf() - startHeight.valueOf();
   const decaySinceStart = exponentialDecayRate * blocksSinceStart;
@@ -39,20 +37,16 @@ export function calculateAuctionPriceForBlock({
 }
 
 export function getAuctionPricesForInterval({
-  auctionSettings,
   startHeight,
   startPrice,
   floorPrice,
   blocksPerInterval,
 }: {
-  auctionSettings: AuctionSettings;
   startHeight: BlockHeight;
   startPrice: number;
   floorPrice: number;
   blocksPerInterval: number;
 }): Record<number, number> {
-  const { auctionDuration, exponentialDecayRate, scalingExponent } =
-    auctionSettings;
   const prices: Record<number, number> = {};
   for (
     let intervalBlockHeight = 0;
@@ -65,8 +59,6 @@ export function getAuctionPricesForInterval({
       startPrice,
       floorPrice,
       currentBlockHeight: new BlockHeight(blockHeightForInterval),
-      exponentialDecayRate,
-      scalingExponent,
     });
     prices[blockHeightForInterval] = price.valueOf();
   }
@@ -74,7 +66,6 @@ export function getAuctionPricesForInterval({
 }
 
 export function createAuctionObject({
-  auctionSettings,
   fees,
   contractTxId,
   currentBlockHeight,
@@ -86,7 +77,6 @@ export function createAuctionObject({
 }: {
   name: string;
   fees: Fees;
-  auctionSettings: AuctionSettings;
   contractTxId: string;
   currentBlockHeight: BlockHeight;
   currentBlockTimestamp: BlockTimestamp;
@@ -103,11 +93,11 @@ export function createAuctionObject({
     demandFactoring,
   });
   const calculatedFloorPrice =
-    initialRegistrationFee * auctionSettings.floorPriceMultiplier;
+    initialRegistrationFee * AUCTION_SETTINGS.floorPriceMultiplier;
   const startPrice =
-    calculatedFloorPrice * auctionSettings.startPriceMultiplier;
+    calculatedFloorPrice * AUCTION_SETTINGS.startPriceMultiplier;
   const endHeight =
-    currentBlockHeight.valueOf() + auctionSettings.auctionDuration;
+    currentBlockHeight.valueOf() + AUCTION_SETTINGS.auctionDuration;
 
   const baseAuctionData: ArNSBaseAuctionData = {
     initiator, // the balance that the floor price is decremented from
@@ -117,7 +107,6 @@ export function createAuctionObject({
     startHeight: currentBlockHeight.valueOf(), // auction starts right away
     endHeight, // auction ends after the set duration
     type,
-    settings: auctionSettings,
   };
   switch (type) {
     case 'permabuy':

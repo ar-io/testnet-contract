@@ -32,13 +32,7 @@ describe('calculateExistingAuctionBidForCaller function', () => {
     initiator: '',
     contractTxId: '',
     years: 1,
-    settings: {
-      auctionDuration: Number.NEGATIVE_INFINITY,
-      exponentialDecayRate: Number.NEGATIVE_INFINITY,
-      scalingExponent: Number.NEGATIVE_INFINITY,
-      floorPriceMultiplier: Number.NEGATIVE_INFINITY,
-      startPriceMultiplier: Number.NEGATIVE_INFINITY,
-    },
+    // TODO: Removed settings
   };
 
   it('should throw if submitted bid is less than the required minimum bid', () => {
@@ -369,13 +363,7 @@ describe('resetProtocolBalance function', () => {
           initiator: 'address-3',
           contractTxId: '',
           years: 1,
-          settings: {
-            auctionDuration: 0,
-            exponentialDecayRate: 0,
-            scalingExponent: 0,
-            floorPriceMultiplier: 0,
-            startPriceMultiplier: 0,
-          },
+          // removed settings
         },
       },
       gateways: {

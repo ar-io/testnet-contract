@@ -2,6 +2,7 @@ import {
   DEFAULT_EPOCH_BLOCK_LENGTH,
   DEFAULT_NUM_SAMPLED_BLOCKS,
   DEFAULT_SAMPLED_BLOCKS_OFFSET,
+  GATEWAY_REGISTRY_SETTINGS,
   MAXIMUM_OBSERVERS_PER_EPOCH,
   MAX_TENURE_WEIGHT,
   TENURE_WEIGHT_TOTAL_BLOCK_COUNT,
@@ -135,19 +136,18 @@ export function getObserverWeightsForEpoch({
   gateways,
   distributions,
   epochStartHeight,
-  minNetworkJoinStakeAmount,
 }: {
   gateways: DeepReadonly<Gateways>;
   distributions: DeepReadonly<RewardDistributions>;
   epochStartHeight: BlockHeight;
-  minNetworkJoinStakeAmount: number; // TODO: replace with constant
 }): WeightedObserver[] {
   const weightedObservers: WeightedObserver[] = [];
   let totalCompositeWeight = 0;
   // Get all eligible observers and assign weights
   for (const [address, gateway] of Object.entries(gateways)) {
     const stake = gateway.operatorStake; // e.g. 100 - no cap to this
-    const stakeWeight = stake / minNetworkJoinStakeAmount; // this is always greater than 1 as the minNetworkJoinStakeAmount is always less than the stake
+    const stakeWeight =
+      stake / GATEWAY_REGISTRY_SETTINGS.minNetworkJoinStakeAmount; // this is always greater than 1 as the minNetworkJoinStakeAmount is always less than the stake
     // the percentage of the epoch the gateway was joined for before this epoch, if the gateway starts in the future this will be 0
     const totalBlocksForGateway = epochStartHeight.valueOf() - gateway.start;
     // TODO: should we increment by one here or are observers that join at the epoch start not eligible to be selected as an observer
@@ -216,13 +216,11 @@ export function getObserverWeightsForEpoch({
 export async function getPrescribedObserversForEpoch({
   gateways,
   distributions,
-  minNetworkJoinStakeAmount,
   epochStartHeight,
   epochEndHeight,
 }: {
   gateways: DeepReadonly<Gateways>;
   distributions: DeepReadonly<RewardDistributions>;
-  minNetworkJoinStakeAmount: number;
   epochStartHeight: BlockHeight;
   epochEndHeight: BlockHeight;
 }): Promise<WeightedObserver[]> {
@@ -236,7 +234,6 @@ export async function getPrescribedObserversForEpoch({
     gateways: eligibleGateways,
     distributions,
     epochStartHeight,
-    minNetworkJoinStakeAmount,
     // filter out any that could have a normalized composite weight of 0 to avoid infinite loops when randomly selecting prescribed observers below
   }).filter((observer) => observer.normalizedCompositeWeight > 0); // TODO: this could be some required minimum weight
 

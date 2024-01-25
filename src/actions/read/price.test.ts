@@ -131,16 +131,6 @@ describe('getPriceForInteraction', () => {
       'should return the floor price a new auction and submitAuctionBid',
       {
         ...state,
-        settings: {
-          ...state.settings,
-          auctions: {
-            scalingExponent: 10,
-            exponentialDecayRate: 0.01,
-            auctionDuration: 10,
-            floorPriceMultiplier: 1,
-            startPriceMultiplier: 10,
-          },
-        },
       },
       {
         caller: 'test-caller',

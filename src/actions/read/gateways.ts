@@ -18,7 +18,7 @@ export const getGateway = async (
   state: IOState,
   { caller, input: { target = caller } }: PstAction,
 ): Promise<ContractReadResult & any> => {
-  const { gateways = {}, settings, distributions } = state;
+  const { gateways = {}, distributions } = state;
   if (!(target in gateways)) {
     throw new ContractError(`No gateway found with wallet address ${target}.`);
   }
@@ -34,7 +34,6 @@ export const getGateway = async (
 
   const observerWeights = getObserverWeightsForEpoch({
     gateways,
-    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
     epochStartHeight,
     distributions: state.distributions,
   }).find(
@@ -78,7 +77,7 @@ export const getGateway = async (
 export const getGateways = async (
   state: IOState,
 ): Promise<ContractReadResult> => {
-  const { gateways, distributions, settings } = state;
+  const { gateways, distributions } = state;
 
   const { epochStartHeight } = getEpochBoundariesForHeight({
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
@@ -88,7 +87,6 @@ export const getGateways = async (
 
   const allObserverWeights = getObserverWeightsForEpoch({
     gateways,
-    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
     epochStartHeight,
     distributions,
   });

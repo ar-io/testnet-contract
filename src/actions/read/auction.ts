@@ -3,6 +3,7 @@ import {
   createAuctionObject,
   getAuctionPricesForInterval,
 } from '../../auctions';
+import { AUCTION_SETTINGS } from '../../constants';
 import {
   BlockHeight,
   BlockTimestamp,
@@ -20,12 +21,11 @@ export const getAuction = (
   state: DeepReadonly<IOState>,
   { caller, input: { name, type = 'lease' } }: PstAction,
 ): ContractReadResult => {
-  const { records, auctions, settings, fees, reserved } = state;
+  const { records, auctions, fees, reserved } = state;
   const formattedName = name.toLowerCase().trim();
   const auction = auctions[formattedName];
 
   if (!auction) {
-    const auctionSettings = settings.auctions;
     const currentBlockTimestamp = new BlockTimestamp(
       +SmartWeave.block.timestamp,
     );
@@ -33,7 +33,6 @@ export const getAuction = (
 
     // a stubbed auction object
     const auctionObject = createAuctionObject({
-      auctionSettings,
       type,
       name,
       fees,
@@ -45,7 +44,6 @@ export const getAuction = (
     });
 
     const prices = getAuctionPricesForInterval({
-      auctionSettings,
       startHeight: currentBlockHeight, // set it to the current block height
       startPrice: auctionObject.startPrice,
       floorPrice: auctionObject.floorPrice,
@@ -86,14 +84,8 @@ export const getAuction = (
     };
   }
 
-  const {
-    startHeight,
-    floorPrice,
-    startPrice,
-    settings: existingAuctionSettings,
-  } = auction;
-  const expirationHeight =
-    startHeight + existingAuctionSettings.auctionDuration;
+  const { startHeight, floorPrice, startPrice } = auction;
+  const expirationHeight = startHeight + AUCTION_SETTINGS.auctionDuration;
   const isRequiredToBeAuctioned = isNameRequiredToBeAuction({
     name: formattedName,
     type: auction.type,
@@ -101,7 +93,6 @@ export const getAuction = (
 
   // get all the prices for the auction
   const prices = getAuctionPricesForInterval({
-    auctionSettings: existingAuctionSettings,
     startHeight: new BlockHeight(startHeight),
     startPrice, // TODO: use IO class class
     floorPrice,
@@ -114,8 +105,6 @@ export const getAuction = (
     startPrice,
     floorPrice,
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
-    scalingExponent: existingAuctionSettings.scalingExponent,
-    exponentialDecayRate: existingAuctionSettings.exponentialDecayRate,
   });
 
   // TODO: return stringified function used to compute the current price of the auction so clients can calculate prices per block heights themselves

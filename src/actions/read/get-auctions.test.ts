@@ -1,3 +1,4 @@
+import { AUCTION_SETTINGS } from '../../constants';
 import { baselineAuctionData, getBaselineState } from '../../tests/stubs';
 import { IOState } from '../../types';
 import { getAuction } from './auction';
@@ -59,14 +60,11 @@ describe('getAuction', () => {
         years: 1,
         type: 'lease',
         startHeight: stubbedBlockHeight,
-        endHeight:
-          stubbedBlockHeight +
-          getBaselineState().settings.auctions.auctionDuration,
+        endHeight: stubbedBlockHeight + AUCTION_SETTINGS.auctionDuration,
         startPrice: 54000000,
         floorPrice: 540000,
         initiator: '',
         contractTxId: '',
-        settings: getBaselineState().settings.auctions,
       },
     ],
   ])(`%s`, (_: string, inputState: IOState, expectedReadResult: any) => {

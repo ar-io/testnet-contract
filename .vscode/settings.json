@@ -16,5 +16,14 @@
     "**/dist": true,
     "**/coverage": true,
     "**/cache": true
-  }
+  },
+  "terminal.integrated.scrollback": 10000,
+  "cSpell.words": [
+    "commitlint",
+    "indep",
+    "PERMABUY",
+    "trivago",
+    "undername",
+    "undernames"
+  ]
 }

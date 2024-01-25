@@ -22,14 +22,6 @@ export const baselineDemandFactorData: DemandFactoringData = {
   consecutivePeriodsWithMinDemandFactor: 0,
 };
 
-export const baselineAuctionSettings = {
-  auctionDuration: 100,
-  scalingExponent: 10,
-  exponentialDecayRate: 0.001,
-  startPriceMultiplier: 100,
-  floorPriceMultiplier: 1,
-};
-
 export const getBaselineState: () => IOState = (): IOState => ({
   ticker: 'ARNS-TEST',
   name: 'Arweave Name System Test',
@@ -53,17 +45,7 @@ export const getBaselineState: () => IOState = (): IOState => ({
     ...FEE_STRUCTURE,
   },
   auctions: {},
-  settings: {
-    registry: {
-      minLockLength: 720,
-      maxLockLength: 788400,
-      minNetworkJoinStakeAmount: 10000,
-      minGatewayJoinLength: 1,
-      gatewayLeaveLength: 1,
-      operatorStakeWithdrawLength: 3600,
-    },
-    auctions: baselineAuctionSettings,
-  },
+
   gateways: {},
   lastTickedHeight: 0,
   observations: {},
@@ -85,7 +67,6 @@ export const baselineAuctionData: ArNSLeaseAuctionData = {
   initiator: 'initiator',
   contractTxId: 'contractTxId',
   years: 1,
-  settings: baselineAuctionSettings,
 };
 
 export const baselineAuctionState: Partial<IOState> = {

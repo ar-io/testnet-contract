@@ -1,6 +1,7 @@
 import { submitAuctionBid } from '../../actions/write/submitAuctionBid';
 import {
   ARNS_NAME_AUCTION_EXPIRED_MESSAGE,
+  AUCTION_SETTINGS,
   INSUFFICIENT_FUNDS_MESSAGE,
   MAX_YEARS,
   RESERVED_ATOMIC_TX_ID,
@@ -8,7 +9,6 @@ import {
 } from '../../constants';
 import {
   baselineAuctionData,
-  baselineAuctionSettings,
   baselineAuctionState,
   baselineDemandFactorData,
   getBaselineState,
@@ -168,13 +168,9 @@ describe('submitAuctionBid', () => {
             startHeight: 1,
             initiator: 'initiator',
             startPrice:
-              expectedData.floorPrice *
-              baselineAuctionSettings.startPriceMultiplier,
+              expectedData.floorPrice * AUCTION_SETTINGS.startPriceMultiplier,
             floorPrice: expectedData.floorPrice,
             ...(interactionInput.type === 'lease' ? { years: 1 } : {}),
-            settings: {
-              ...baselineAuctionSettings,
-            },
           },
         },
       });

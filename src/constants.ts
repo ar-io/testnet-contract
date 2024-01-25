@@ -181,3 +181,12 @@ export const DEMAND_FACTORING_SETTINGS: DemandFactoringSettings = {
 
 export const MIO_PER_IO = 1_000_000;
 export const ONE_MIO = 1 / MIO_PER_IO;
+
+export const GATEWAY_REGISTRY_SETTINGS = {
+  gatewayLeaveLength: 3600,
+  maxLockLength: 788400,
+  minGatewayJoinLength: 3600,
+  minLockLength: 720,
+  minNetworkJoinStakeAmount: 10000,
+  operatorStakeWithdrawLength: 3600,
+};
