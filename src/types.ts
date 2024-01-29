@@ -1,4 +1,4 @@
-import { PstContract } from 'warp-contracts';
+import { PstState } from 'warp-contracts';
 
 import {
   MAX_ALLOWED_DECIMALS,
@@ -30,11 +30,9 @@ export type Fees = Record<string, number>;
 export type Vaults = Record<TransactionId, VaultData>;
 export type RegistryVaults = Record<WalletAddress, Vaults>;
 
-// TODO: we may choose to not extend PstContract. It provides additional functions with warp (e.g. const contract = warp.pst(contractTxId).transfer())
-export interface IOState extends PstContract {
-  ticker: string;
+// TODO: we may choose to not extend PstState. It provides additional functions with warp (e.g. const contract = warp.pst(contractTxId).transfer())
+export interface IOState extends PstState {
   balances: Balances;
-  owner: string;
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
   records: Records; // The list of all ArNS names and their associated data
   gateways: Gateways; // each gateway uses its public arweave wallet address to identify it in the gateway registry
