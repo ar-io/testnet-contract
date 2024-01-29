@@ -1,4 +1,4 @@
-import { Contract, JWKInterface, PstState } from 'warp-contracts';
+import { Contract, JWKInterface } from 'warp-contracts';
 
 import { IOState } from '../src/types';
 import {
@@ -11,7 +11,7 @@ import { getLocalArNSContractKey, getLocalWallet } from './utils/helper';
 import { arweave, warp } from './utils/services';
 
 describe('Transfers', () => {
-  let contract: Contract<PstState>;
+  let contract: Contract<IOState>;
   let srcContractId: string;
 
   beforeAll(async () => {
@@ -23,7 +23,7 @@ describe('Transfers', () => {
 
     beforeAll(async () => {
       owner = getLocalWallet(0);
-      contract = warp.pst(srcContractId).connect(owner);
+      contract = warp.contract<IOState>(srcContractId).connect(owner);
     });
 
     it('should be able to transfer tokens to an existing wallet', async () => {
@@ -149,7 +149,9 @@ describe('Transfers', () => {
 
     beforeAll(async () => {
       nonContractOwner = getLocalWallet(1);
-      contract = warp.pst(srcContractId).connect(nonContractOwner);
+      contract = warp
+        .contract<IOState>(srcContractId)
+        .connect(nonContractOwner);
     });
 
     it('should be able to transfer tokens to an existing wallet', async () => {

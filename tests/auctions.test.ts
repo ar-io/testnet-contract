@@ -1,7 +1,6 @@
 import {
   Contract,
   JWKInterface,
-  PstState,
   WriteInteractionOptions,
   WriteInteractionResponse,
 } from 'warp-contracts';
@@ -27,7 +26,7 @@ import {
 import { arweave, warp } from './utils/services';
 
 describe('Auctions', () => {
-  let contract: Contract<PstState>;
+  let contract: Contract<IOState>;
   let srcContractId: string;
 
   beforeAll(async () => {
@@ -40,7 +39,9 @@ describe('Auctions', () => {
 
     beforeAll(async () => {
       nonContractOwner = getLocalWallet(1);
-      contract = warp.pst(srcContractId).connect(nonContractOwner);
+      contract = warp
+        .contract<IOState>(srcContractId)
+        .connect(nonContractOwner);
       nonContractOwnerAddress = await arweave.wallets.getAddress(
         nonContractOwner,
       );
@@ -669,7 +670,7 @@ describe('Auctions', () => {
 });
 
 async function writeInteractionOrFail<Input = unknown>(
-  contract: Contract<PstState>,
+  contract: Contract<IOState>,
   input: Input,
   options?: WriteInteractionOptions,
 ): Promise<WriteInteractionResponse> {

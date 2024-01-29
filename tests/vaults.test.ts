@@ -1,4 +1,4 @@
-import { Contract, JWKInterface, PstState } from 'warp-contracts';
+import { Contract, JWKInterface } from 'warp-contracts';
 
 import { IOState } from '../src/types';
 import {
@@ -16,7 +16,7 @@ import {
 import { arweave, warp } from './utils/services';
 
 describe('Vaults', () => {
-  let contract: Contract<PstState>;
+  let contract: Contract<IOState>;
   let srcContractId: string;
   let owner: JWKInterface;
   let ownerAddress: string;
@@ -25,7 +25,7 @@ describe('Vaults', () => {
     srcContractId = getLocalArNSContractKey('id');
     owner = getLocalWallet(0);
     ownerAddress = await arweave.wallets.getAddress(owner);
-    contract = warp.pst(srcContractId).connect(owner);
+    contract = warp.contract<IOState>(srcContractId).connect(owner);
   });
 
   describe('createVault', () => {
@@ -165,7 +165,7 @@ describe('Vaults', () => {
 
     beforeAll(async () => {
       owner = getLocalWallet(0);
-      contract = warp.pst(srcContractId).connect(owner);
+      contract = warp.contract<IOState>(srcContractId).connect(owner);
     });
 
     it('should be able to extend vault', async () => {
