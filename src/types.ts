@@ -1,3 +1,5 @@
+import { PstContract } from 'warp-contracts';
+
 import {
   MAX_ALLOWED_DECIMALS,
   NETWORK_JOIN_STATUS,
@@ -27,13 +29,13 @@ export type Auctions = Record<ArNSName, ArNSAuctionData>;
 export type Fees = Record<string, number>;
 export type Vaults = Record<TransactionId, VaultData>;
 export type RegistryVaults = Record<WalletAddress, Vaults>;
-export type IOState = {
+
+// TODO: we may choose to not extend PstContract. It provides additional functions with warp (e.g. const contract = warp.pst(contractTxId).transfer())
+export interface IOState extends PstContract {
   ticker: string;
   balances: Balances;
   owner: string;
-  canEvolve: boolean; // Whether or not this contract can evolve
   name: string; // The friendly name of the token, shown in block explorers and marketplaces
-  evolve: string; // The new Smartweave Source Code transaction to evolve this contract to
   records: Records; // The list of all ArNS names and their associated data
   gateways: Gateways; // each gateway uses its public arweave wallet address to identify it in the gateway registry
   fees: Fees; // starting list of all fees for purchasing ArNS names
@@ -44,7 +46,7 @@ export type IOState = {
   observations: Observations;
   distributions: EpochDistributionData;
   vaults: RegistryVaults;
-};
+}
 
 export type GatewayPerformanceStats = {
   totalEpochParticipationCount: number; // the total number of epochs this gateway has participated in
