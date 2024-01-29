@@ -3,7 +3,6 @@ import {
   DEFAULT_GATEWAY_PERFORMANCE_STATS,
   DEFAULT_UNDERNAME_COUNT,
   EPOCH_BLOCK_LENGTH,
-  EPOCH_DISTRIBUTION_DELAY,
   EPOCH_REWARD_PERCENTAGE,
   GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
   INITIAL_EPOCH_DISTRIBUTION_DATA,
@@ -12,6 +11,7 @@ import {
 } from '../../constants';
 import {
   getEligibleGatewaysForEpoch,
+  getEpochDataForHeight,
   getPrescribedObserversForEpoch,
 } from '../../observers';
 import {
@@ -431,14 +431,34 @@ export async function tickRewardDistribution({
   const updatedGateways: Gateways = {};
   const currentProtocolBalance = balances[SmartWeave.contract.id] || 0;
 
-  const distributionHeightForEpoch = new BlockHeight(
-    distributions.epochDistributionHeight,
+  const distributionHeightForLastEpoch = new BlockHeight(
+    distributions.nextDistributionHeight,
   );
 
   // distribution should only happen ONCE on block that is EPOCH_DISTRIBUTION_DELAY after the last completed epoch
-  if (currentBlockHeight.valueOf() !== distributionHeightForEpoch.valueOf()) {
+  if (
+    currentBlockHeight.valueOf() !== distributionHeightForLastEpoch.valueOf()
+  ) {
+    const {
+      epochStartHeight: nextEpochStartHeight,
+      epochEndHeight: nextEpochEndHeight,
+      epochPeriod: newEpochPeriod,
+    } = getEpochDataForHeight({
+      currentBlockHeight,
+      epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
+      epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
+    });
+    // increment the epoch variables if we've moved to the next epoch, but DO NOT update the nextDistributionHeight as that will happen below after distributions are complete
+    const updatedEpochData: EpochDistributionData = {
+      epochStartHeight: nextEpochStartHeight.valueOf(),
+      epochEndHeight: nextEpochEndHeight.valueOf(),
+      epochZeroStartHeight: distributions.epochZeroStartHeight,
+      nextDistributionHeight: distributionHeightForLastEpoch.valueOf(), // DON'T UPDATE THIS UNTIL THE DISTRIBUTION OCCURS
+      epochPeriod: newEpochPeriod.valueOf(),
+    };
+
     return {
-      distributions,
+      distributions: updatedEpochData,
       balances,
       gateways,
     };
@@ -678,15 +698,24 @@ export async function tickRewardDistribution({
     ? { ...gateways, ...updatedGateways }
     : gateways;
 
-  const nextEpochStartHeight = epochEndHeight.valueOf() + 1;
-  const nextEpochEndHeight = epochEndHeight.valueOf() + EPOCH_BLOCK_LENGTH;
-
-  const updatedEpochData: EpochDistributionData = {
-    // increment epoch variables to the next one
+  const {
     epochStartHeight: nextEpochStartHeight,
     epochEndHeight: nextEpochEndHeight,
+    epochDistributionHeight: nextDistributionHeight,
+    epochPeriod,
+  } = getEpochDataForHeight({
+    currentBlockHeight: new BlockHeight(epochEndHeight.valueOf() + 1),
+    epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
+    epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
+  });
+
+  const updatedEpochData: EpochDistributionData = {
+    // increment epoch variables to the next one - they should already be updated with the checks above
+    epochStartHeight: nextEpochStartHeight.valueOf(),
+    epochEndHeight: nextEpochEndHeight.valueOf(),
     epochZeroStartHeight: distributions.epochZeroStartHeight,
-    epochDistributionHeight: nextEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
+    nextDistributionHeight: nextDistributionHeight.valueOf(),
+    epochPeriod: epochPeriod.valueOf(),
   };
 
   return {

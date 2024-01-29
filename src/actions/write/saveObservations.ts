@@ -5,7 +5,7 @@ import {
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import {
-  getEpochBoundariesForHeight,
+  getEpochDataForHeight,
   getPrescribedObserversForEpoch,
 } from '../../observers';
 import {
@@ -51,7 +51,7 @@ export const saveObservations = async (
   // get all other relevant state data
   const { observations, gateways, settings, distributions } = state;
   const { observerReportTxId, failedGateways } = new SaveObservations(input);
-  const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
+  const { epochStartHeight, epochEndHeight } = getEpochDataForHeight({
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height), // observations must be submitted within the epoch and after the last epochs distribution period (see below)
     epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
     epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),

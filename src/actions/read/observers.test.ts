@@ -57,6 +57,7 @@ describe('getEpoch', () => {
     expect(result).toEqual({
       epochStartHeight: 0,
       epochEndHeight: EPOCH_BLOCK_LENGTH - 1,
+      epochPeriod: 0,
       epochDistributionHeight:
         EPOCH_BLOCK_LENGTH + EPOCH_DISTRIBUTION_DELAY - 1,
       epochZeroStartHeight: state.distributions.epochZeroStartHeight,
@@ -69,8 +70,27 @@ describe('getEpoch', () => {
     expect(result).toEqual({
       epochStartHeight: 0,
       epochEndHeight: EPOCH_BLOCK_LENGTH - 1,
+      epochPeriod: 0,
       epochDistributionHeight:
         EPOCH_BLOCK_LENGTH + EPOCH_DISTRIBUTION_DELAY - 1,
+      epochZeroStartHeight: state.distributions.epochZeroStartHeight,
+      epochBlockLength: EPOCH_BLOCK_LENGTH,
+    });
+  });
+
+  it('should return the epoch start and end heights when the height is in the future', async () => {
+    const { result } = await getEpoch(state, {
+      input: { height: SmartWeave.block.height + EPOCH_BLOCK_LENGTH + 1 },
+    });
+    const futureEpochStartHeight = EPOCH_BLOCK_LENGTH;
+    const futureEpochEndHeight =
+      futureEpochStartHeight + EPOCH_BLOCK_LENGTH - 1;
+
+    expect(result).toEqual({
+      epochStartHeight: futureEpochStartHeight,
+      epochEndHeight: futureEpochEndHeight,
+      epochPeriod: 1,
+      epochDistributionHeight: futureEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
       epochZeroStartHeight: state.distributions.epochZeroStartHeight,
       epochBlockLength: EPOCH_BLOCK_LENGTH,
     });

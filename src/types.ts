@@ -60,7 +60,8 @@ export type EpochDistributionData = {
   epochZeroStartHeight: number;
   epochStartHeight: number; // the current epoch start height
   epochEndHeight: number; // the current epoch end height
-  epochDistributionHeight: number;
+  epochPeriod: number;
+  nextDistributionHeight: number;
 };
 
 export type ObserverAddress = WalletAddress;

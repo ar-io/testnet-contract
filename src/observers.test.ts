@@ -9,7 +9,7 @@ import {
 } from './constants';
 import {
   getEntropyHashForEpoch,
-  getEpochBoundariesForHeight,
+  getEpochDataForHeight,
   getPrescribedObserversForEpoch,
   isGatewayEligibleForDistribution,
 } from './observers';
@@ -284,7 +284,7 @@ describe('isGatewayEligibleForDistribution', () => {
   );
 });
 
-describe('getEpochBoundariesForHeight', () => {
+describe('getEpochDataForHeight', () => {
   it.each([
     [1, 1, 1, 1, 1],
     [19, 2, 100, 2, 101],
@@ -302,7 +302,7 @@ describe('getEpochBoundariesForHeight', () => {
       const {
         epochStartHeight: returnedStartHeight,
         epochEndHeight: returnedEndHeight,
-      } = getEpochBoundariesForHeight({
+      } = getEpochDataForHeight({
         currentBlockHeight: new BlockHeight(currentHeight),
         epochZeroStartHeight: new BlockHeight(zeroHeight),
         epochBlockLength: new BlockHeight(epochLength),
@@ -313,7 +313,7 @@ describe('getEpochBoundariesForHeight', () => {
   );
 
   it('should default the epoch block length if not provided', () => {
-    const { epochStartHeight, epochEndHeight } = getEpochBoundariesForHeight({
+    const { epochStartHeight, epochEndHeight } = getEpochDataForHeight({
       currentBlockHeight: new BlockHeight(5),
       epochZeroStartHeight: new BlockHeight(0),
     });

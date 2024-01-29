@@ -220,7 +220,8 @@ export const INITIAL_EPOCH_DISTRIBUTION_DATA: EpochDistributionData = {
   epochZeroStartHeight: EPOCH_BLOCK_ZERO_START_HEIGHT,
   epochStartHeight: EPOCH_BLOCK_ZERO_START_HEIGHT,
   epochEndHeight: EPOCH_BLOCK_ZERO_START_HEIGHT + EPOCH_BLOCK_LENGTH - 1,
-  epochDistributionHeight:
+  epochPeriod: 0,
+  nextDistributionHeight:
     EPOCH_BLOCK_ZERO_START_HEIGHT +
     EPOCH_BLOCK_LENGTH -
     1 +

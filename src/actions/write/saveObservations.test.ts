@@ -26,7 +26,8 @@ describe('saveObservations', () => {
           epochZeroStartHeight: 10,
           epochStartHeight: 10,
           epochEndHeight: 10 + EPOCH_BLOCK_LENGTH - 1,
-          epochDistributionHeight:
+          epochPeriod: 0,
+          nextDistributionHeight:
             10 + EPOCH_BLOCK_LENGTH - 1 + EPOCH_DISTRIBUTION_DELAY,
         },
       };
