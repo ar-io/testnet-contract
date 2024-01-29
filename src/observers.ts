@@ -29,12 +29,16 @@ export function getEpochBoundariesForHeight({
   epochEndHeight: BlockHeight;
 } {
   const epochIndexForCurrentBlockHeight = Math.floor(
-    (currentBlockHeight.valueOf() - epochZeroStartHeight.valueOf()) /
-      epochBlockLength.valueOf(),
+    Math.max(
+      0,
+      (currentBlockHeight.valueOf() - epochZeroStartHeight.valueOf()) /
+        epochBlockLength.valueOf(),
+    ),
   );
   const epochStartHeight =
     epochZeroStartHeight.valueOf() +
     epochBlockLength.valueOf() * epochIndexForCurrentBlockHeight;
+
   return {
     epochStartHeight: new BlockHeight(epochStartHeight),
     epochEndHeight: new BlockHeight(

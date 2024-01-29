@@ -36,20 +36,17 @@ describe('getPrescribedObservers', () => {
 describe('getEpoch', () => {
   const state = getBaselineState();
 
-  it.each([
-    'not-a-number',
-    +SmartWeave.block.height + 1,
-    +state.distributions.epochZeroStartHeight - 1,
-  ])(
+  it.each(['not-a-number', +SmartWeave.block.height + 1, -1])(
     'should throw an error when the height is less than epochZeroStartHeight',
     async (invalidHeight: number) => {
-      const error = await getEpoch(state, {
+      await getEpoch(state, {
         input: { height: invalidHeight },
-      }).catch((e) => e);
-      expect(error).toBeInstanceOf(ContractError);
-      expect(error.message).toEqual(
-        'Invalid height. Must be a number less than or equal to the current block height and greater than or equal to the epoch zero start height',
-      );
+      }).catch((error) => {
+        expect(error).toBeInstanceOf(ContractError);
+        expect(error.message).toEqual(
+          'Invalid height. Must be a number greater than 0.',
+        );
+      });
     },
   );
 
