@@ -6,6 +6,7 @@ import {
   EPOCH_DISTRIBUTION_DELAY,
   EPOCH_REWARD_PERCENTAGE,
   GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
+  GATEWAY_REGISTRY_SETTINGS,
   INITIAL_EPOCH_DISTRIBUTION_DATA,
   OBSERVATION_FAILURE_THRESHOLD,
   SECONDS_IN_A_YEAR,
@@ -466,6 +467,7 @@ export async function tickRewardDistribution({
     epochStartHeight,
     epochEndHeight,
     distributions,
+    minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
   });
 
   // TODO: consider having this be a set, gateways can not run on the same wallet

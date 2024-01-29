@@ -75,7 +75,7 @@ export const joinNetwork = async (
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  if (qty < GATEWAY_REGISTRY_SETTINGS.minNetworkJoinStakeAmount) {
+  if (qty < GATEWAY_REGISTRY_SETTINGS.minOperatorStake) {
     throw new ContractError(INVALID_GATEWAY_STAKE_AMOUNT_MESSAGE);
   }
 

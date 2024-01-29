@@ -1,6 +1,5 @@
 import {
   EPOCH_BLOCK_LENGTH,
-  GATEWAY_REGISTRY_SETTINGS,
   MAXIMUM_OBSERVERS_PER_EPOCH,
   MAX_TENURE_WEIGHT,
   OBSERVERS_SAMPLED_BLOCKS_COUNT,
@@ -135,17 +134,18 @@ export function getEligibleGatewaysForEpoch({
 export function getObserverWeightsForEpoch({
   gateways,
   epochStartHeight,
+  minOperatorStake,
 }: {
   gateways: DeepReadonly<Gateways>;
   epochStartHeight: BlockHeight;
+  minOperatorStake: number;
 }): WeightedObserver[] {
   const weightedObservers: WeightedObserver[] = [];
   let totalCompositeWeight = 0;
   // Get all eligible observers and assign weights
   for (const [address, gateway] of Object.entries(gateways)) {
     const stake = gateway.operatorStake; // e.g. 100 - no cap to this
-    const stakeWeight =
-      stake / GATEWAY_REGISTRY_SETTINGS.minNetworkJoinStakeAmount; // this is always greater than 1 as the minNetworkJoinStakeAmount is always less than the stake
+    const stakeWeight = stake / minOperatorStake; // this is always greater than 1 as the minOperatorStake is always less than the stake
     // the percentage of the epoch the gateway was joined for before this epoch, if the gateway starts in the future this will be 0
     const totalBlocksForGateway = epochStartHeight.valueOf() - gateway.start;
     // TODO: should we increment by one here or are observers that join at the epoch start not eligible to be selected as an observer
@@ -212,11 +212,13 @@ export async function getPrescribedObserversForEpoch({
   gateways,
   epochStartHeight,
   epochEndHeight,
+  minOperatorStake,
 }: {
   gateways: DeepReadonly<Gateways>;
   distributions: DeepReadonly<EpochDistributionData>;
   epochStartHeight: BlockHeight;
   epochEndHeight: BlockHeight;
+  minOperatorStake: number;
 }): Promise<WeightedObserver[]> {
   const eligibleGateways = getEligibleGatewaysForEpoch({
     epochStartHeight,
@@ -227,6 +229,7 @@ export async function getPrescribedObserversForEpoch({
   const weightedObservers = getObserverWeightsForEpoch({
     gateways: eligibleGateways,
     epochStartHeight,
+    minOperatorStake,
     // filter out any that could have a normalized composite weight of 0 to avoid infinite loops when randomly selecting prescribed observers below
   }).filter((observer) => observer.normalizedCompositeWeight > 0); // TODO: this could be some required minimum weight
 

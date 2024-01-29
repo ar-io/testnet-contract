@@ -1,4 +1,8 @@
-import { EPOCH_BLOCK_LENGTH, EPOCH_DISTRIBUTION_DELAY } from '../../constants';
+import {
+  EPOCH_BLOCK_LENGTH,
+  EPOCH_DISTRIBUTION_DELAY,
+  GATEWAY_REGISTRY_SETTINGS,
+} from '../../constants';
 import {
   getEpochBoundariesForHeight,
   getPrescribedObserversForEpoch,
@@ -21,6 +25,7 @@ export const getPrescribedObservers = async (
     epochStartHeight,
     epochEndHeight,
     distributions,
+    minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
   });
 
   return { result: prescribedObservers };

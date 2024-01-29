@@ -1,5 +1,6 @@
 import {
   EPOCH_BLOCK_LENGTH,
+  GATEWAY_REGISTRY_SETTINGS,
   INVALID_OBSERVATION_CALLER_MESSAGE,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
@@ -69,6 +70,7 @@ export const saveObservations = async (
     epochStartHeight,
     epochEndHeight,
     distributions,
+    minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
   });
 
   // find the observer that is submitting the observation

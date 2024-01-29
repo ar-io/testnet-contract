@@ -57,11 +57,12 @@ describe('getPrescribedObserversForEpoch', () => {
       distributions: INITIAL_EPOCH_DISTRIBUTION_DATA,
       epochStartHeight: new BlockHeight(epochStartHeight),
       epochEndHeight: new BlockHeight(epochStartHeight + 10),
+      minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
     });
 
     expect(observers).toBeDefined();
     const expectedStakeWeight =
-      totalStake / GATEWAY_REGISTRY_SETTINGS.minNetworkJoinStakeAmount;
+      totalStake / GATEWAY_REGISTRY_SETTINGS.minOperatorStake;
     const expectedTenureWeight = epochStartHeight / TENURE_WEIGHT_PERIOD;
     const expectedCompositeWeight = expectedTenureWeight * expectedStakeWeight;
     expect(observers).toEqual([
@@ -100,6 +101,7 @@ describe('getPrescribedObserversForEpoch', () => {
       distributions: INITIAL_EPOCH_DISTRIBUTION_DATA,
       epochStartHeight: new BlockHeight(epochStartHeight),
       epochEndHeight: new BlockHeight(epochStartHeight + 10),
+      minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
     });
     expect(observers).toBeDefined();
     expect(observers.length).toBe(MAXIMUM_OBSERVERS_PER_EPOCH);
@@ -109,7 +111,7 @@ describe('getPrescribedObserversForEpoch', () => {
       const expectedObserverRewardRatioWeight = 1;
       const expectedStakeWeight =
         eligibleGateways[gateway].operatorStake /
-        GATEWAY_REGISTRY_SETTINGS.minNetworkJoinStakeAmount;
+        GATEWAY_REGISTRY_SETTINGS.minOperatorStake;
       const expectedTenureWeight =
         (epochStartHeight - eligibleGateways[gateway].start) /
         TENURE_WEIGHT_PERIOD;
@@ -166,7 +168,7 @@ describe('getPrescribedObserversForEpoch', () => {
     const observers = await getPrescribedObserversForEpoch({
       gateways: extendedStubbedGateways,
       distributions: INITIAL_EPOCH_DISTRIBUTION_DATA,
-
+      minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
       epochStartHeight: new BlockHeight(epochStartHeight),
       epochEndHeight: new BlockHeight(epochStartHeight + EPOCH_BLOCK_LENGTH),
     });

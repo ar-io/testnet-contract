@@ -25,10 +25,10 @@ export const decreaseOperatorStake = async (
 
   if (
     gateways[caller].operatorStake - qty <
-    GATEWAY_REGISTRY_SETTINGS.minNetworkJoinStakeAmount
+    GATEWAY_REGISTRY_SETTINGS.minOperatorStake
   ) {
     throw new ContractError(
-      `${qty} is not enough operator stake to maintain the minimum of ${GATEWAY_REGISTRY_SETTINGS.minNetworkJoinStakeAmount}`,
+      `${qty} is not enough operator stake to maintain the minimum of ${GATEWAY_REGISTRY_SETTINGS.minOperatorStake}`,
     );
   }
 
