@@ -7,8 +7,6 @@ import { BlockHeight, Gateways, IOState } from '../../src/types';
 import {
   ANT_CONTRACT_IDS,
   ARNS_LEASE_LENGTH_MAX_YEARS,
-  AUCTION_SETTINGS,
-  CONTRACT_SETTINGS,
   DEFAULT_GATEWAY_PERFORMANCE_STATS,
   DEFAULT_UNDERNAME_COUNT,
   GENESIS_FEES,
@@ -349,12 +347,6 @@ export async function setupInitialContractState(
 
   // set the owner to the first wallet
   state.owner = owner;
-
-  // configure the necessary contract settings
-  state.settings = {
-    registry: CONTRACT_SETTINGS,
-    auctions: AUCTION_SETTINGS,
-  };
 
   // configure some basic gateways
   state.gateways = createGateways(wallets);

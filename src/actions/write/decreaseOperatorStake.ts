@@ -1,4 +1,7 @@
-import { NETWORK_LEAVING_STATUS } from '../../constants';
+import {
+  GATEWAY_REGISTRY_SETTINGS,
+  NETWORK_LEAVING_STATUS,
+} from '../../constants';
 import { ContractWriteResult, IOState, PstAction } from '../../types';
 
 // Begins the process to unlocks the vault of a gateway operator
@@ -6,8 +9,7 @@ export const decreaseOperatorStake = async (
   state: IOState,
   { caller, input }: PstAction,
 ): Promise<ContractWriteResult> => {
-  const { settings, gateways = {} } = state;
-  const { registry: registrySettings } = settings;
+  const { gateways = {} } = state;
   // TODO: object parse validation
   const { qty } = input as any;
 
@@ -23,10 +25,10 @@ export const decreaseOperatorStake = async (
 
   if (
     gateways[caller].operatorStake - qty <
-    registrySettings.minNetworkJoinStakeAmount
+    GATEWAY_REGISTRY_SETTINGS.minOperatorStake
   ) {
     throw new ContractError(
-      `${qty} is not enough operator stake to maintain the minimum of ${registrySettings.minNetworkJoinStakeAmount}`,
+      `${qty} is not enough operator stake to maintain the minimum of ${GATEWAY_REGISTRY_SETTINGS.minOperatorStake}`,
     );
   }
 
@@ -38,7 +40,8 @@ export const decreaseOperatorStake = async (
     balance: qty,
     start: +SmartWeave.block.height,
     end:
-      +SmartWeave.block.height + registrySettings.operatorStakeWithdrawLength,
+      +SmartWeave.block.height +
+      GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength,
   };
 
   // update state

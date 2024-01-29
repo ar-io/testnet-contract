@@ -1,4 +1,4 @@
-import { Contract, JWKInterface, PstState } from 'warp-contracts';
+import { Contract, JWKInterface } from 'warp-contracts';
 
 import { getEpochBoundariesForHeight } from '../src/observers';
 import { BlockHeight, IOState, WeightedObserver } from '../src/types';
@@ -21,7 +21,7 @@ import { arweave, warp } from './utils/services';
 
 describe('Observation', () => {
   const gatewayWalletAddresses: string[] = [];
-  let contract: Contract<PstState>;
+  let contract: Contract<IOState>;
   let srcContractId: string;
   const wallets: {
     addr: string;
@@ -49,7 +49,7 @@ describe('Observation', () => {
       gatewayWalletAddresses.push(gatewayWalletAddress);
     }
     srcContractId = getLocalArNSContractKey('id');
-    contract = warp.pst(srcContractId);
+    contract = warp.contract<IOState>(srcContractId);
     failedGateways = [
       wallets[0].addr,
       wallets[1].addr,
@@ -104,7 +104,9 @@ describe('Observation', () => {
         }
         const writeInteractions = await Promise.all(
           prescribedObserverWallets.map((wallet) => {
-            contract = warp.pst(srcContractId).connect(wallet.jwk);
+            contract = warp
+              .contract<IOState>(srcContractId)
+              .connect(wallet.jwk);
             return contract.writeInteraction({
               function: 'saveObservations',
               observerReportTxId: EXAMPLE_OBSERVER_REPORT_TX_IDS[0],
@@ -150,7 +152,7 @@ describe('Observation', () => {
           previousState.observations[currentEpochStartHeight.valueOf()]
             ?.reports;
         contract = warp
-          .pst(srcContractId)
+          .contract<IOState>(srcContractId)
           .connect(prescribedObserverWallets[0].jwk);
         // ensure that we are past the delay period
         const minimumObservationHeight =
@@ -215,7 +217,9 @@ describe('Observation', () => {
       it('should save observations if prescribed observer with all using multiple failed gateways', async () => {
         const writeInteractions = await Promise.all(
           prescribedObserverWallets.map((wallet) => {
-            contract = warp.pst(srcContractId).connect(wallet.jwk);
+            contract = warp
+              .contract<IOState>(srcContractId)
+              .connect(wallet.jwk);
             return contract.writeInteraction({
               function: 'saveObservations',
               observerReportTxId: EXAMPLE_OBSERVER_REPORT_TX_IDS[0],
@@ -264,7 +268,9 @@ describe('Observation', () => {
           prevState.observations[currentEpochStartHeight.valueOf()];
         const writeInteractions = await Promise.all(
           prescribedObserverWallets.map((wallet) => {
-            contract = warp.pst(srcContractId).connect(wallet.jwk);
+            contract = warp
+              .contract<IOState>(srcContractId)
+              .connect(wallet.jwk);
             return contract.writeInteraction({
               function: 'saveObservations',
               observerReportTxId: EXAMPLE_OBSERVER_REPORT_TX_IDS[1],
@@ -306,7 +312,9 @@ describe('Observation', () => {
       it('should not save observation report if not prescribed observer', async () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const nonPrescribedObserver = wallets[8].jwk; // not allowed to observe
-        contract = warp.pst(srcContractId).connect(nonPrescribedObserver);
+        contract = warp
+          .contract<IOState>(srcContractId)
+          .connect(nonPrescribedObserver);
         const writeInteraction = await contract.writeInteraction({
           function: 'saveObservations',
           observerReportTxId: EXAMPLE_OBSERVER_REPORT_TX_IDS[0],
@@ -323,7 +331,9 @@ describe('Observation', () => {
       it('should not save observation report if the caller is not a registered observer', async () => {
         const notJoinedGateway = await createLocalWallet(arweave);
         const { cachedValue: prevCachedValue } = await contract.readState();
-        contract = warp.pst(srcContractId).connect(notJoinedGateway.wallet);
+        contract = warp
+          .contract<IOState>(srcContractId)
+          .connect(notJoinedGateway.wallet);
         const writeInteraction = await contract.writeInteraction({
           function: 'saveObservations',
           observerReportTxId: EXAMPLE_OBSERVER_REPORT_TX_IDS[0],

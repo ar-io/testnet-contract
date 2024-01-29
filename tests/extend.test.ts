@@ -1,4 +1,4 @@
-import { Contract, JWKInterface, PstState } from 'warp-contracts';
+import { Contract, JWKInterface } from 'warp-contracts';
 
 import { IOState } from '../src/types';
 import {
@@ -20,7 +20,7 @@ import {
 import { arweave, warp } from './utils/services';
 
 describe('Extend', () => {
-  let contract: Contract<PstState>;
+  let contract: Contract<IOState>;
   let srcContractId: string;
 
   beforeAll(async () => {
@@ -37,7 +37,9 @@ describe('Extend', () => {
       nonContractOwnerAddress = await arweave.wallets.getAddress(
         nonContractOwner,
       );
-      contract = warp.pst(srcContractId).connect(nonContractOwner);
+      contract = warp
+        .contract<IOState>(srcContractId)
+        .connect(nonContractOwner);
       emptyWalletCaller = await arweave.wallets.generate();
       const emptyWalletAddress = await arweave.wallets.getAddress(
         emptyWalletCaller,

@@ -1,4 +1,4 @@
-import { Contract, JWKInterface, PstState } from 'warp-contracts';
+import { Contract, JWKInterface } from 'warp-contracts';
 
 import { BlockTimestamp, IOState } from '../src/types';
 import {
@@ -20,12 +20,12 @@ import {
 import { arweave, warp } from './utils/services';
 
 describe('Records', () => {
-  let contract: Contract<PstState>;
+  let contract: Contract<IOState>;
   let srcContractId: string;
 
   beforeAll(() => {
     srcContractId = getLocalArNSContractKey('id');
-    contract = warp.pst(srcContractId);
+    contract = warp.contract<IOState>(srcContractId);
   });
 
   describe('any wallet', () => {

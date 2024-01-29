@@ -22,7 +22,7 @@ const validInput = {
   fqdn: 'test.com',
   note: 'test-note',
   properties: stubbedArweaveTxId,
-  qty: 10,
+  qty: 10000,
 };
 
 describe('joinNetwork', () => {
@@ -70,24 +70,18 @@ describe('joinNetwork', () => {
     expect(error.message).toEqual(INSUFFICIENT_FUNDS_MESSAGE);
   });
 
-  it('should throw an error if the stake amount is less then minimum join amount', async () => {
+  it('should throw an error if the stake amount is less than minimum join amount', async () => {
     const initialState = {
       ...getBaselineState(),
       balances: {
-        'a-gateway-with-balance': 100,
-      },
-      settings: {
-        ...getBaselineState().settings,
-        registry: {
-          ...getBaselineState().settings.registry,
-          minNetworkJoinStakeAmount: 100,
-        },
+        'a-gateway-with-balance': 100000,
       },
     };
     const error = await joinNetwork(initialState, {
       caller: 'a-gateway-with-balance',
       input: {
         ...validInput,
+        qty: 1,
       },
     }).catch((e) => e);
     expect(error).toBeInstanceOf(Error);
@@ -98,18 +92,11 @@ describe('joinNetwork', () => {
     const initialState = {
       ...getBaselineState(),
       balances: {
-        'existing-gateway': 10,
+        'existing-gateway': 10000,
       },
       gateways: {
         'existing-gateway': {
           ...stubbedGatewayData,
-        },
-      },
-      settings: {
-        ...getBaselineState().settings,
-        registry: {
-          ...getBaselineState().settings.registry,
-          minNetworkJoinStakeAmount: 10,
         },
       },
     };
@@ -127,20 +114,13 @@ describe('joinNetwork', () => {
     const initialState = {
       ...getBaselineState(),
       balances: {
-        'existing-gateway': 10,
-        'a-new-gateway': 10,
+        'existing-gateway': 10000,
+        'a-new-gateway': 10000,
       },
       gateways: {
         'existing-gateway': {
           ...stubbedGatewayData,
           observerWallet: stubbedArweaveTxId,
-        },
-      },
-      settings: {
-        ...getBaselineState().settings,
-        registry: {
-          ...getBaselineState().settings.registry,
-          minNetworkJoinStakeAmount: 10,
         },
       },
     };
@@ -158,14 +138,7 @@ describe('joinNetwork', () => {
     const initialState = {
       ...getBaselineState(),
       balances: {
-        [stubbedArweaveTxId]: 10,
-      },
-      settings: {
-        ...getBaselineState().settings,
-        registry: {
-          ...getBaselineState().settings.registry,
-          minNetworkJoinStakeAmount: 10,
-        },
+        [stubbedArweaveTxId]: 10000,
       },
     };
     const { state } = await joinNetwork(initialState, {
@@ -175,7 +148,7 @@ describe('joinNetwork', () => {
       },
     });
     expect(state.gateways[stubbedArweaveTxId]).toEqual({
-      operatorStake: 10,
+      operatorStake: 10000,
       settings: {
         port: 1234,
         protocol: 'https',

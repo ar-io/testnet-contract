@@ -1,7 +1,6 @@
 import {
   Contract,
   JWKInterface,
-  PstState,
   WriteInteractionOptions,
   WriteInteractionResponse,
 } from 'warp-contracts';
@@ -27,7 +26,7 @@ import {
 import { arweave, warp } from './utils/services';
 
 describe('Auctions', () => {
-  let contract: Contract<PstState>;
+  let contract: Contract<IOState>;
   let srcContractId: string;
 
   beforeAll(async () => {
@@ -40,7 +39,9 @@ describe('Auctions', () => {
 
     beforeAll(async () => {
       nonContractOwner = getLocalWallet(1);
-      contract = warp.pst(srcContractId).connect(nonContractOwner);
+      contract = warp
+        .contract<IOState>(srcContractId)
+        .connect(nonContractOwner);
       nonContractOwnerAddress = await arweave.wallets.getAddress(
         nonContractOwner,
       );
@@ -213,7 +214,6 @@ describe('Auctions', () => {
                   initiator: nonContractOwnerAddress,
                   contractTxId: ANT_CONTRACT_IDS[0],
                   years: 1,
-                  settings: AUCTION_SETTINGS,
                 }),
               );
               expect(balances[nonContractOwnerAddress]).toEqual(
@@ -273,8 +273,6 @@ describe('Auctions', () => {
                   startPrice: auctionObj.startPrice,
                   floorPrice: auctionObj.floorPrice,
                   currentBlockHeight: await getCurrentBlock(arweave),
-                  scalingExponent: AUCTION_SETTINGS.scalingExponent,
-                  exponentialDecayRate: AUCTION_SETTINGS.exponentialDecayRate,
                 }).valueOf();
                 const auctionBid = {
                   name: 'apple',
@@ -296,8 +294,6 @@ describe('Auctions', () => {
                   startPrice: auctionObj.startPrice,
                   floorPrice: auctionObj.floorPrice,
                   currentBlockHeight: await getCurrentBlock(arweave),
-                  scalingExponent: AUCTION_SETTINGS.scalingExponent,
-                  exponentialDecayRate: AUCTION_SETTINGS.exponentialDecayRate,
                 }).valueOf();
                 expect(writeInteraction?.originalTxId).not.toBeUndefined();
                 const { cachedValue } = await contract.readState();
@@ -452,7 +448,6 @@ describe('Auctions', () => {
                 initiator: nonContractOwnerAddress,
                 contractTxId: ANT_CONTRACT_IDS[0],
                 years: 1,
-                settings: AUCTION_SETTINGS,
               });
               expect(balances[nonContractOwnerAddress]).toEqual(
                 prevState.balances[nonContractOwnerAddress] -
@@ -498,7 +493,6 @@ describe('Auctions', () => {
               AUCTION_SETTINGS.auctionDuration,
             initiator: nonContractOwnerAddress,
             contractTxId: ANT_CONTRACT_IDS[0],
-            settings: AUCTION_SETTINGS,
           });
           expect(balances[nonContractOwnerAddress]).toEqual(
             prevState.balances[nonContractOwnerAddress] -
@@ -524,8 +518,6 @@ describe('Auctions', () => {
             startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
             currentBlockHeight: await getCurrentBlock(arweave),
-            scalingExponent: AUCTION_SETTINGS.scalingExponent,
-            exponentialDecayRate: AUCTION_SETTINGS.exponentialDecayRate,
           }).valueOf();
           const auctionBid = {
             name: 'microsoft',
@@ -547,8 +539,6 @@ describe('Auctions', () => {
             startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
             currentBlockHeight: await getCurrentBlock(arweave),
-            scalingExponent: AUCTION_SETTINGS.scalingExponent,
-            exponentialDecayRate: AUCTION_SETTINGS.exponentialDecayRate,
           }).valueOf();
           expect(writeInteraction?.originalTxId).not.toBeUndefined();
           const { cachedValue } = await contract.readState();
@@ -616,7 +606,6 @@ describe('Auctions', () => {
             initiator: nonContractOwnerAddress,
             contractTxId: ANT_CONTRACT_IDS[0],
             years: 1,
-            settings: AUCTION_SETTINGS,
           });
           expect(balances[nonContractOwnerAddress]).toEqual(
             prevState.balances[nonContractOwnerAddress] -
@@ -635,8 +624,6 @@ describe('Auctions', () => {
             startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
             currentBlockHeight: await getCurrentBlock(arweave),
-            scalingExponent: AUCTION_SETTINGS.scalingExponent,
-            exponentialDecayRate: AUCTION_SETTINGS.exponentialDecayRate,
           }).valueOf();
           const auctionBid = {
             name: 'tesla',
@@ -653,8 +640,6 @@ describe('Auctions', () => {
             startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
             currentBlockHeight: await getCurrentBlock(arweave),
-            scalingExponent: AUCTION_SETTINGS.scalingExponent,
-            exponentialDecayRate: AUCTION_SETTINGS.exponentialDecayRate,
           }).valueOf();
           expect(writeInteraction?.originalTxId).not.toBeUndefined();
           const { cachedValue } = await contract.readState();
@@ -685,7 +670,7 @@ describe('Auctions', () => {
 });
 
 async function writeInteractionOrFail<Input = unknown>(
-  contract: Contract<PstState>,
+  contract: Contract<IOState>,
   input: Input,
   options?: WriteInteractionOptions,
 ): Promise<WriteInteractionResponse> {

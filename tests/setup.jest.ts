@@ -2,6 +2,7 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import path from 'path';
 
+import { IOState } from '../src/types';
 import { WALLETS_TO_CREATE } from './utils/constants';
 import { createLocalWallet, setupInitialContractState } from './utils/helper';
 import { arlocal, arweave, warp } from './utils/services';
@@ -62,11 +63,14 @@ module.exports = async () => {
   });
 
   // transfer funds to the protocol balance
-  await warp.pst(contractTxId).connect(wallets[0].wallet).writeInteraction({
-    function: 'transfer',
-    target: contractTxId,
-    qty: 1, // just a hack for now - we'll need to give it a balance
-  });
+  await warp
+    .contract<IOState>(contractTxId)
+    .connect(wallets[0].wallet)
+    .writeInteraction({
+      function: 'transfer',
+      target: contractTxId,
+      qty: 1, // just a hack for now - we'll need to give it a balance
+    });
 
   // write contract to local
   fs.writeFileSync(

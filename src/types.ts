@@ -37,7 +37,6 @@ export type IOState = {
   records: Records; // The list of all ArNS names and their associated data
   gateways: Gateways; // each gateway uses its public arweave wallet address to identify it in the gateway registry
   fees: Fees; // starting list of all fees for purchasing ArNS names
-  settings: ContractSettings; // protocol settings and parameters
   reserved: ReservedNames; // list of all reserved names that are not allowed to be purchased at this time
   auctions: Auctions;
   lastTickedHeight: number; // periodicity management
@@ -96,7 +95,6 @@ export type ArNSBaseAuctionData = {
   type: RegistrationType;
   initiator: string;
   contractTxId: string;
-  settings: AuctionSettings;
 };
 
 export type ArNSLeaseAuctionData = ArNSBaseAuctionData & {
@@ -110,7 +108,6 @@ export type ArNSPermabuyAuctionData = ArNSBaseAuctionData & {
 
 export type ArNSAuctionData = ArNSLeaseAuctionData | ArNSPermabuyAuctionData;
 
-// TODO: Since we're not allowing mutability of this via governance, we could do away with ID-based settings
 export type AuctionSettings = {
   floorPriceMultiplier: number;
   startPriceMultiplier: number;
@@ -122,18 +119,15 @@ export type AuctionSettings = {
 export type GatewayRegistrySettings = {
   minLockLength: number; // the minimum amount of blocks tokens can be locked in a community vault
   maxLockLength: number; // the maximum amount of blocks tokens can be locked in a community vault
-  minNetworkJoinStakeAmount: number; // the minimum amount of tokens needed to stake to join the ar.io network as a gateway
+  minOperatorStake: number; // the minimum amount of tokens needed to stake to join the ar.io network as a gateway
+  // TODO: remove this number - it's achieved by gatewayLeaveLength
   minGatewayJoinLength: number; // the minimum amount of blocks a gateway can be joined to the ar.io network
   gatewayLeaveLength: number; // the amount of blocks that have to elapse before a gateway leaves the network
   operatorStakeWithdrawLength: number; // the amount of blocks that have to elapse before a gateway operator's stake is returned
+  // TODO: add delegatedStakeWithdrawLength for delegated staking
 };
 
 // TODO: these will be moved to constants
-export type ContractSettings = {
-  // these settings control the various capabilities in the contract
-  registry: GatewayRegistrySettings;
-  auctions: AuctionSettings;
-};
 
 const gatewayStatus = [NETWORK_JOIN_STATUS, NETWORK_LEAVING_STATUS] as const;
 export type GatewayStatus = (typeof gatewayStatus)[number];
