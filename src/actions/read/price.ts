@@ -2,7 +2,7 @@ import {
   calculateAuctionPriceForBlock,
   createAuctionObject,
 } from '../../auctions';
-import { PERMABUY_LEASE_FEE_LENGTH } from '../../constants';
+import { AUCTION_SETTINGS, PERMABUY_LEASE_FEE_LENGTH } from '../../constants';
 import {
   calculateAnnualRenewalFee,
   calculateRegistrationFee,
@@ -110,6 +110,7 @@ export function getPriceForInteraction(
         currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
         startPrice: auction.startPrice,
         floorPrice: auction.floorPrice,
+        auctionSettings: AUCTION_SETTINGS,
       });
       fee = minimumAuctionBid.valueOf();
       break;

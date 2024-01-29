@@ -46,6 +46,7 @@ export const getAuction = (
       startPrice: auctionObject.startPrice,
       floorPrice: auctionObject.floorPrice,
       blocksPerInterval: 30, // TODO: this could be an input on the function
+      auctionSettings: AUCTION_SETTINGS,
     });
 
     // existing record
@@ -83,6 +84,7 @@ export const getAuction = (
   }
 
   const { startHeight, floorPrice, startPrice } = auction;
+  // TODO: add auction end height to auction object
   const expirationHeight = startHeight + AUCTION_SETTINGS.auctionDuration;
   const isRequiredToBeAuctioned = isNameRequiredToBeAuction({
     name: formattedName,
@@ -95,6 +97,7 @@ export const getAuction = (
     startPrice, // TODO: use IO class class
     floorPrice,
     blocksPerInterval: 30, // TODO: this could be an input on the function
+    auctionSettings: AUCTION_SETTINGS,
   });
 
   // calculate the minimum bid
@@ -103,6 +106,7 @@ export const getAuction = (
     startPrice,
     floorPrice,
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
+    auctionSettings: AUCTION_SETTINGS,
   });
 
   // TODO: return stringified function used to compute the current price of the auction so clients can calculate prices per block heights themselves

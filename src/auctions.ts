@@ -9,6 +9,7 @@ import {
   ArNSAuctionData,
   ArNSBaseAuctionData,
   ArNSNameData,
+  AuctionSettings,
   BlockHeight,
   BlockTimestamp,
   DeepReadonly,
@@ -19,24 +20,24 @@ import {
   ReservedNameData,
 } from './types';
 
-const { auctionDuration, scalingExponent, exponentialDecayRate } =
-  AUCTION_SETTINGS;
-
 export function calculateAuctionPriceForBlock({
   startHeight,
   startPrice,
   floorPrice,
   currentBlockHeight,
+  auctionSettings = AUCTION_SETTINGS,
 }: {
   startHeight: BlockHeight;
   startPrice: number;
   floorPrice: number;
   currentBlockHeight: BlockHeight;
+  auctionSettings: AuctionSettings;
 }): IOToken {
   const blocksSinceStart = currentBlockHeight.valueOf() - startHeight.valueOf();
-  const decaySinceStart = exponentialDecayRate * blocksSinceStart;
+  const decaySinceStart =
+    auctionSettings.exponentialDecayRate * blocksSinceStart;
   const dutchAuctionBid =
-    startPrice * Math.pow(1 - decaySinceStart, scalingExponent);
+    startPrice * Math.pow(1 - decaySinceStart, auctionSettings.scalingExponent);
   // TODO: we shouldn't be rounding like this, use a separate class to handle the number of allowed decimals for IO values and use them here
   return new IOToken(
     Math.min(startPrice, Math.max(floorPrice, dutchAuctionBid)),
@@ -48,16 +49,18 @@ export function getAuctionPricesForInterval({
   startPrice,
   floorPrice,
   blocksPerInterval,
+  auctionSettings = AUCTION_SETTINGS,
 }: {
   startHeight: BlockHeight;
   startPrice: number;
   floorPrice: number;
   blocksPerInterval: number;
+  auctionSettings: AuctionSettings;
 }): Record<number, number> {
   const prices: Record<number, number> = {};
   for (
     let intervalBlockHeight = 0;
-    intervalBlockHeight <= auctionDuration;
+    intervalBlockHeight <= auctionSettings.auctionDuration;
     intervalBlockHeight += blocksPerInterval
   ) {
     const blockHeightForInterval = startHeight.valueOf() + intervalBlockHeight;
@@ -66,6 +69,7 @@ export function getAuctionPricesForInterval({
       startPrice,
       floorPrice,
       currentBlockHeight: new BlockHeight(blockHeightForInterval),
+      auctionSettings,
     });
     prices[blockHeightForInterval] = price.valueOf();
   }

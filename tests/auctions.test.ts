@@ -273,6 +273,7 @@ describe('Auctions', () => {
                   startPrice: auctionObj.startPrice,
                   floorPrice: auctionObj.floorPrice,
                   currentBlockHeight: await getCurrentBlock(arweave),
+                  auctionSettings: AUCTION_SETTINGS,
                 }).valueOf();
                 const auctionBid = {
                   name: 'apple',
@@ -294,6 +295,7 @@ describe('Auctions', () => {
                   startPrice: auctionObj.startPrice,
                   floorPrice: auctionObj.floorPrice,
                   currentBlockHeight: await getCurrentBlock(arweave),
+                  auctionSettings: AUCTION_SETTINGS,
                 }).valueOf();
                 expect(writeInteraction?.originalTxId).not.toBeUndefined();
                 const { cachedValue } = await contract.readState();
@@ -518,6 +520,7 @@ describe('Auctions', () => {
             startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
             currentBlockHeight: await getCurrentBlock(arweave),
+            auctionSettings: AUCTION_SETTINGS,
           }).valueOf();
           const auctionBid = {
             name: 'microsoft',
@@ -539,6 +542,7 @@ describe('Auctions', () => {
             startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
             currentBlockHeight: await getCurrentBlock(arweave),
+            auctionSettings: AUCTION_SETTINGS,
           }).valueOf();
           expect(writeInteraction?.originalTxId).not.toBeUndefined();
           const { cachedValue } = await contract.readState();
@@ -624,6 +628,7 @@ describe('Auctions', () => {
             startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
             currentBlockHeight: await getCurrentBlock(arweave),
+            auctionSettings: AUCTION_SETTINGS,
           }).valueOf();
           const auctionBid = {
             name: 'tesla',
@@ -640,6 +645,7 @@ describe('Auctions', () => {
             startPrice: auctionObj.startPrice,
             floorPrice: auctionObj.floorPrice,
             currentBlockHeight: await getCurrentBlock(arweave),
+            auctionSettings: AUCTION_SETTINGS,
           }).valueOf();
           expect(writeInteraction?.originalTxId).not.toBeUndefined();
           const { cachedValue } = await contract.readState();
