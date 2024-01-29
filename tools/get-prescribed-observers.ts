@@ -24,7 +24,12 @@ import { getContractManifest, initialize, warp } from './utilities';
       validity: true,
     });
 
-  const state = await contract.readState();
+  const { result: prescribed } = await contract.viewState<
+    { function: string },
+    any[]
+  >({
+    function: 'prescribedObservers',
+  });
 
-  console.log(JSON.stringify(state, null, 2));
+  console.log(JSON.stringify(prescribed, null, 2));
 })();
