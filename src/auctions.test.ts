@@ -49,6 +49,7 @@ describe('calculateAuctionPriceForBlock', () => {
         startPrice,
         floorPrice,
         currentBlockHeight,
+        auctionSettings: AUCTION_SETTINGS,
       });
       const percentDifference = Math.abs(
         1 - expectedPrice / priceAtBlock.valueOf(),
@@ -76,6 +77,7 @@ describe('calculateAuctionPriceForBlock', () => {
           startPrice: 100,
           floorPrice: 10,
           currentBlockHeight: new BlockHeight(currentHeight),
+          auctionSettings: AUCTION_SETTINGS,
         });
         expect(calculatedMinimumBid.valueOf()).toEqual(expectedPrice);
       },
@@ -89,6 +91,7 @@ describe('calculateAuctionPriceForBlock', () => {
         startPrice: 100,
         floorPrice: 10,
         blocksPerInterval: 1,
+        auctionSettings: AUCTION_SETTINGS,
       });
 
       expect(Object.keys(prices).length).toEqual(10081);

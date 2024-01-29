@@ -6,6 +6,7 @@ import {
 } from '../../auctions';
 import {
   ARNS_NAME_AUCTION_EXPIRED_MESSAGE,
+  AUCTION_SETTINGS,
   DEFAULT_UNDERNAME_COUNT,
   INSUFFICIENT_FUNDS_MESSAGE,
   RESERVED_ATOMIC_TX_ID,
@@ -139,6 +140,7 @@ function handleBidForExistingAuction({
     startPrice: existingAuction.startPrice,
     floorPrice: existingAuction.floorPrice,
     currentBlockHeight: currentBlockHeight,
+    auctionSettings: AUCTION_SETTINGS,
   });
 
   /**
