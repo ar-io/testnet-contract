@@ -65,8 +65,12 @@ export function safeDelegateStake({
   }
 
   // If this delegate has staked before, update its amount, if not, create a new delegated staker
+  // The quantity must also be greater than the minimum delegated stake set by the gateway
   if (!gateways[gatewayAddress].delegates[fromAddress]) {
-    if (qty.valueOf() < MIN_DELEGATED_STAKE) {
+    if (
+      qty.valueOf() < MIN_DELEGATED_STAKE ||
+      qty.valueOf() < gateways[gatewayAddress].settings.minDelegatedStake
+    ) {
       throw new ContractError(
         `Qty must be greater than the minimum delegated stake amount.`,
       );
@@ -79,7 +83,10 @@ export function safeDelegateStake({
   } else if (
     gateways[gatewayAddress].delegates[fromAddress].delegatedStake === 0
   ) {
-    if (qty.valueOf() < MIN_DELEGATED_STAKE) {
+    if (
+      qty.valueOf() < MIN_DELEGATED_STAKE ||
+      qty.valueOf() < gateways[gatewayAddress].settings.minDelegatedStake
+    ) {
       throw new ContractError(
         `Qty must be greater than the minimum delegated stake amount.`,
       );

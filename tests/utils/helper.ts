@@ -3,7 +3,7 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import path from 'path';
 
-import { BlockHeight, Gateways, IOState } from '../../src/types';
+import { BlockHeight, Delegates, Gateways, IOState } from '../../src/types';
 import {
   ANT_CONTRACT_IDS,
   AUCTION_SETTINGS,
@@ -400,7 +400,7 @@ export function getLocalArNSContractKey(key: 'srcTxId' | 'id' = 'id'): string {
 
 // Helper function to create mock delegates
 export function createMockDelegates(numDelegates: number) {
-  const delegates = {};
+  const delegates: Delegates = {};
   for (let i = 0; i < numDelegates; i++) {
     const delegateAddress = `delegateAddress${i}`; // Mock unique delegate address
     delegates[delegateAddress] = {

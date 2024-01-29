@@ -139,7 +139,7 @@ describe('updateGatewaySettings', () => {
 
     it('should change all settings', async () => {
       const observerWallet = 'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA';
-      const reservedDelegates: string[] = [];
+      const allowedDelegates: string[] = [];
       const updatedGatewaySettings = {
         label: 'Updated Label', // friendly label
         port: 80,
@@ -151,7 +151,7 @@ describe('updateGatewaySettings', () => {
         delegateRewardShareRatio: Math.floor(
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
         ),
-        reservedDelegates,
+        allowedDelegates,
         minDelegatedStake: MIN_DELEGATED_STAKE + 1,
       };
       const initialState: IOState = {

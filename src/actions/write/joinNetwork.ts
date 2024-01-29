@@ -30,7 +30,7 @@ export class JoinNetwork {
   observerWallet: string;
   allowDelegatedStaking: boolean;
   delegateRewardShareRatio: number;
-  reservedDelegates: string[];
+  allowedDelegates: string[];
   minDelegatedStake: number;
 
   constructor(input: any, caller: TransactionId) {
@@ -52,7 +52,7 @@ export class JoinNetwork {
       observerWallet = caller,
       allowDelegatedStaking,
       delegateRewardShareRatio,
-      reservedDelegates,
+      allowedDelegates,
       minDelegatedStake,
     } = input;
     this.qty = qty;
@@ -74,10 +74,10 @@ export class JoinNetwork {
     } else {
       this.delegateRewardShareRatio = 0;
     }
-    if (reservedDelegates !== undefined) {
-      this.reservedDelegates = reservedDelegates;
+    if (allowedDelegates !== undefined) {
+      this.allowedDelegates = allowedDelegates;
     } else {
-      this.reservedDelegates = [];
+      this.allowedDelegates = [];
     }
     if (minDelegatedStake !== undefined) {
       this.minDelegatedStake = minDelegatedStake;

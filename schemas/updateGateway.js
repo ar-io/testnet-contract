@@ -43,7 +43,7 @@ const updateGatewaySchema = {
       minimum: 0,
       maximum: 100,
     },
-    reservedDelegates: {
+    allowedDelegates: {
       type: 'array',
       items: {
         type: 'string',

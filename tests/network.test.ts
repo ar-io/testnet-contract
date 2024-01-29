@@ -323,7 +323,7 @@ describe('Network', () => {
             allowDelegatedStaking: false,
             delegateRewardShareRatio: 0,
             minDelegatedStake: MIN_DELEGATED_STAKE,
-            reservedDelegates: [],
+            allowedDelegates: [],
           },
         });
       });
@@ -434,7 +434,7 @@ describe('Network', () => {
     describe('gateway settings', () => {
       it('should modify gateway settings with correct parameters', async () => {
         const observerWallet = 'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA';
-        const reservedDelegates: string[] = [];
+        const allowedDelegates: string[] = [];
         const updatedGatewaySettings = {
           label: 'Updated Label', // friendly label
           port: 80,
@@ -446,7 +446,7 @@ describe('Network', () => {
           delegateRewardShareRatio: Math.floor(
             (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
           ),
-          reservedDelegates,
+          allowedDelegates,
           minDelegatedStake: MIN_DELEGATED_STAKE + 1,
         };
         const writeInteraction = await contract.writeInteraction({
@@ -652,12 +652,12 @@ describe('Network', () => {
         ],
         ['iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA', 1],
       ])(
-        'should not modify gateway settings with invalid reservedDelegates',
+        'should not modify gateway settings with invalid allowedDelegates',
         async (badProperties) => {
           const { cachedValue: prevCachedValue } = await contract.readState();
           const writeInteraction = await contract.writeInteraction({
             function: 'updateGatewaySettings',
-            reservedDelegates: badProperties,
+            allowedDelegates: badProperties,
           });
           expect(writeInteraction?.originalTxId).not.toBe(undefined);
           const { cachedValue: newCachedValue } = await contract.readState();

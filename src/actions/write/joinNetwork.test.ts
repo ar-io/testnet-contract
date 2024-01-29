@@ -84,38 +84,38 @@ describe('joinNetwork', () => {
       },
     ],
     [
-      'should throw an error for invalid reservedDelegates (no array)',
+      'should throw an error for invalid allowedDelegates (no array)',
       {
         ...validInput,
-        reservedDelegates: stubbedArweaveTxId, // must be in an array
+        allowedDelegates: stubbedArweaveTxId, // must be in an array
       },
     ],
     [
-      'should throw an error for invalid reservedDelegates (invalid array)',
+      'should throw an error for invalid allowedDelegates (invalid array)',
       {
         ...validInput,
-        reservedDelegates: [1, 2, 3], // must be in an array of valid arweave wallets
+        allowedDelegates: [1, 2, 3], // must be in an array of valid arweave wallets
       },
     ],
     [
-      'should throw an error for invalid reservedDelegates (non-unique wallets',
+      'should throw an error for invalid allowedDelegates (non-unique wallets',
       {
         ...validInput,
-        reservedDelegates: [stubbedArweaveTxId, stubbedArweaveTxId], // must be in an array of valid arweave wallets
+        allowedDelegates: [stubbedArweaveTxId, stubbedArweaveTxId], // must be in an array of valid arweave wallets
       },
     ],
     [
-      'should throw an error for invalid reservedDelegates (invalid wallet in array)',
+      'should throw an error for invalid allowedDelegates (invalid wallet in array)',
       {
         ...validInput,
-        reservedDelegates: ['&GWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'], // must be in an array of valid arweave wallets
+        allowedDelegates: ['&GWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'], // must be in an array of valid arweave wallets
       },
     ],
     [
-      'should throw an error for invalid reservedDelegates (invalid multi-element array)',
+      'should throw an error for invalid allowedDelegates (invalid multi-element array)',
       {
         ...validInput,
-        reservedDelegates: [stubbedArweaveTxId, 'woops'], // must be in an array of valid arweave wallets
+        allowedDelegates: [stubbedArweaveTxId, 'woops'], // must be in an array of valid arweave wallets
       },
     ],
     [
@@ -282,7 +282,7 @@ describe('joinNetwork', () => {
         note: 'test-note',
         properties: stubbedArweaveTxId,
         allowDelegatedStaking: false,
-        reservedDelegates: [],
+        allowedDelegates: [],
         minDelegatedStake: MIN_DELEGATED_STAKE,
         delegateRewardShareRatio: 0,
       },
@@ -331,7 +331,7 @@ describe('joinNetwork', () => {
         note: 'test-note',
         properties: stubbedArweaveTxId,
         allowDelegatedStaking: true,
-        reservedDelegates: [],
+        allowedDelegates: [],
         minDelegatedStake: MIN_DELEGATED_STAKE,
         delegateRewardShareRatio: Math.floor(
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
@@ -368,7 +368,7 @@ describe('joinNetwork', () => {
         delegateRewardShareRatio: Math.floor(
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
         ),
-        reservedDelegates: [stubbedArweaveTxId],
+        allowedDelegates: [stubbedArweaveTxId],
       },
     });
     expect(state.gateways[stubbedArweaveTxId]).toEqual({
@@ -382,7 +382,7 @@ describe('joinNetwork', () => {
         note: 'test-note',
         properties: stubbedArweaveTxId,
         allowDelegatedStaking: false,
-        reservedDelegates: [stubbedArweaveTxId],
+        allowedDelegates: [stubbedArweaveTxId],
         minDelegatedStake: MIN_DELEGATED_STAKE,
         delegateRewardShareRatio: Math.floor(
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
