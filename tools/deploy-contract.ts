@@ -32,7 +32,7 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
   });
 
   const contract = await warp
-    .contract(ARNS_CONTRACT_TX_ID)
+    .contract<IOState>(ARNS_CONTRACT_TX_ID)
     .setEvaluationOptions(evaluationOptions)
     .syncState(`https://api.arns.app/v1/contract/${ARNS_CONTRACT_TX_ID}`);
 

@@ -13,7 +13,7 @@ export const evolveState = async (
   }
 
   // set to null to be compatible from IOState - but we do not use it
-  delete (state as any).settings;
+  state.settings = undefined;
 
   return { state };
 };

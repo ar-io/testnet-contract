@@ -3,8 +3,9 @@ import * as fs from 'fs';
 import path from 'path';
 import { LoggerFactory } from 'warp-contracts';
 
+import { IOState } from '../src/types';
 import { keyfile } from './constants';
-import { initialize, warp } from './utilities';
+import { arweave, getContractManifest, initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
@@ -24,9 +25,19 @@ import { initialize, warp } from './utilities';
     process.env.ARNS_CONTRACT_TX_ID ??
     'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
+  const { evaluationOptions = {} } = await getContractManifest({
+    contractTxId: arnsContractTxId,
+    arweave,
+  });
+
   // Read the ArNS Registry Contract
-  const contract = warp.pst(arnsContractTxId);
-  contract.connect(wallet);
+  const contract = await warp
+    .contract<IOState>(arnsContractTxId)
+    .connect(wallet)
+    .setEvaluationOptions(evaluationOptions)
+    .syncState(`https://api.arns.app/v1/contract/${arnsContractTxId}`, {
+      validity: true,
+    });
 
   // ~~ Read contract source and initial state files ~~
   const newLocalSourceCodeJS = fs.readFileSync(

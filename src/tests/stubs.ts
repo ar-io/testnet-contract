@@ -27,7 +27,6 @@ export const getBaselineState: () => IOState = (): IOState => ({
   reserved: {},
   fees: GENESIS_FEES,
   auctions: {},
-
   gateways: {},
   lastTickedHeight: 0,
   observations: {},
@@ -35,6 +34,7 @@ export const getBaselineState: () => IOState = (): IOState => ({
     // intentionally spread as we don't want to reference the object directly
     ...INITIAL_DEMAND_FACTOR_DATA,
   },
+  settings: undefined,
 });
 
 export const stubbedAuctionData: ArNSLeaseAuctionData = {
