@@ -1,4 +1,5 @@
 import {
+  DELEGATED_STAKE_UNLOCK_LENGTH,
   INVALID_GATEWAY_REGISTERED_MESSAGE,
   INVALID_OBSERVER_WALLET,
 } from '../../constants';
@@ -15,6 +16,10 @@ export class GatewaySettings {
     properties?: string;
     protocol?: 'http' | 'https';
     port?: number;
+    allowDelegatedStaking: boolean;
+    delegateRewardShareRatio: number;
+    allowedDelegates: string[];
+    minDelegatedStake: number;
   };
 
   constructor(input: any) {
@@ -25,8 +30,19 @@ export class GatewaySettings {
       );
     }
 
-    const { label, port, fqdn, note, protocol, properties, observerWallet } =
-      input;
+    const {
+      label,
+      port,
+      fqdn,
+      note,
+      protocol,
+      properties,
+      observerWallet,
+      allowDelegatedStaking,
+      delegateRewardShareRatio,
+      allowedDelegates,
+      minDelegatedStake,
+    } = input;
     this.settings = {
       ...(fqdn !== undefined && { fqdn }),
       ...(label !== undefined && { label }),
@@ -34,6 +50,12 @@ export class GatewaySettings {
       ...(properties !== undefined && { properties }),
       ...(protocol !== undefined && { protocol }),
       ...(port !== undefined && { port }),
+      ...(allowDelegatedStaking !== undefined && { allowDelegatedStaking }),
+      ...(delegateRewardShareRatio !== undefined && {
+        delegateRewardShareRatio,
+      }),
+      ...(allowedDelegates !== undefined && { allowedDelegates }),
+      ...(minDelegatedStake !== undefined && { minDelegatedStake }),
     };
     this.observerWallet = observerWallet;
   }
@@ -68,6 +90,28 @@ export const updateGatewaySettings = async (
       ...updatedSettings,
     },
   };
+
+  // remove all delegated stakes if it is disabled
+  if (
+    updatedSettings.allowDelegatedStaking === false &&
+    Object.keys(gateway.delegates).length
+  ) {
+    // Add tokens from each delegate to a vault that unlocks after the delegate withdrawal period ends
+    const delegateEndHeight =
+      +SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH;
+    for (const address in updatedGateway.delegates) {
+      updatedGateway.delegates[address].vaults[SmartWeave.transaction.id] = {
+        balance: updatedGateway.delegates[address].delegatedStake,
+        start: +SmartWeave.block.height,
+        end: delegateEndHeight,
+      };
+
+      // reduce gateway stake and set this delegate stake to 0
+      updatedGateway.delegatedStake -=
+        updatedGateway.delegates[address].delegatedStake;
+      updatedGateway.delegates[address].delegatedStake = 0;
+    }
+  }
 
   // update the contract state
   state.gateways[caller] = updatedGateway;

@@ -29,6 +29,19 @@ export const MIN_TOKEN_LOCK_BLOCK_LENGTH = 14 * BLOCKS_PER_DAY; // The minimum a
 export const MINIMUM_ALLOWED_NAME_LENGTH = 5; // names less than 5 characters are reserved for auction
 export const NETWORK_JOIN_STATUS = 'joined';
 export const NETWORK_LEAVING_STATUS = 'leaving';
+export const MIN_OPERATOR_STAKE = 10000; // The minimum amount of tokens needed to stake to join a gateway to the network.
+export const DELEGATED_STAKE_UNLOCK_LENGTH = 30 * BLOCKS_PER_DAY; // 30 DAYS
+export const MAX_DELEGATES = 10_000; // The maximum number of delegated stakers for a single gateway. TODO: Consider ramifications of many delegated stakers
+export const MIN_DELEGATED_STAKE = MIN_OPERATOR_STAKE * 0.01; // The minimum amount of tokens needed to delegate to another gateway on the network
+export const GATEWAY_REGISTRY_SETTINGS: GatewayRegistrySettings = {
+  gatewayLeaveLength: 3600, // approximately 5 days
+  maxLockLength: 788400,
+  minGatewayJoinLength: 3600, // TODO: remove this as gatewayLeaveLength achieves the same thing
+  minLockLength: 720, // 1 day
+  minOperatorStake: MIN_OPERATOR_STAKE,
+  operatorStakeWithdrawLength: 3600, // TODO: bump to 90 days
+  // TODO: add delegatedStakeWithdrawLength to 30 days
+};
 
 /**
  * OBSERVER WEIGHTS
@@ -226,14 +239,4 @@ export const INITIAL_EPOCH_DISTRIBUTION_DATA: EpochDistributionData = {
     EPOCH_BLOCK_LENGTH -
     1 +
     EPOCH_DISTRIBUTION_DELAY,
-};
-
-export const GATEWAY_REGISTRY_SETTINGS: GatewayRegistrySettings = {
-  gatewayLeaveLength: 3600, // approximately 5 days
-  maxLockLength: 788400,
-  minGatewayJoinLength: 3600, // TODO: remove this as gatewayLeaveLength achieves the same thing
-  minLockLength: 720, // 1 day
-  minOperatorStake: 10000,
-  operatorStakeWithdrawLength: 3600, // TODO: bump to 90 days
-  // TODO: add delegatedStakeWithdrawLength to 30 days
 };

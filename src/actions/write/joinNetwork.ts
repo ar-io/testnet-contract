@@ -5,6 +5,7 @@ import {
   INVALID_GATEWAY_EXISTS_MESSAGE,
   INVALID_GATEWAY_STAKE_AMOUNT_MESSAGE,
   INVALID_OBSERVER_WALLET,
+  MIN_DELEGATED_STAKE,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import {
@@ -29,6 +30,10 @@ export class JoinNetwork {
   protocol: 'http' | 'https';
   port: number;
   observerWallet: string;
+  allowDelegatedStaking: boolean;
+  delegateRewardShareRatio: number;
+  allowedDelegates: string[];
+  minDelegatedStake: number;
 
   constructor(input: any, caller: TransactionId) {
     // validate using ajv validator
@@ -47,6 +52,10 @@ export class JoinNetwork {
       protocol,
       properties,
       observerWallet = caller,
+      allowDelegatedStaking,
+      delegateRewardShareRatio,
+      allowedDelegates,
+      minDelegatedStake,
     } = input;
     this.qty = qty;
     this.label = label;
@@ -56,6 +65,27 @@ export class JoinNetwork {
     this.fqdn = fqdn;
     this.note = note;
     this.observerWallet = observerWallet;
+    // TODO clean this up
+    if (allowDelegatedStaking !== undefined) {
+      this.allowDelegatedStaking = allowDelegatedStaking;
+    } else {
+      this.allowDelegatedStaking = false;
+    }
+    if (delegateRewardShareRatio !== undefined) {
+      this.delegateRewardShareRatio = delegateRewardShareRatio;
+    } else {
+      this.delegateRewardShareRatio = 0;
+    }
+    if (allowedDelegates !== undefined) {
+      this.allowedDelegates = allowedDelegates;
+    } else {
+      this.allowedDelegates = [];
+    }
+    if (minDelegatedStake !== undefined) {
+      this.minDelegatedStake = minDelegatedStake;
+    } else {
+      this.minDelegatedStake = MIN_DELEGATED_STAKE;
+    }
   }
 }
 
@@ -95,8 +125,10 @@ export const joinNetwork = async (
   unsafeDecrementBalance(state.balances, caller, qty);
   state.gateways[caller] = {
     operatorStake: qty,
+    delegatedStake: 0, // defaults to no delegated stake
     observerWallet, // defaults to caller
     vaults: {},
+    delegates: {},
     settings: {
       ...gatewaySettings,
     },

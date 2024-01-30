@@ -389,6 +389,7 @@ describe('tick', () => {
           gateways: {
             'existing-operator': {
               operatorStake: 100,
+              delegatedStake: 0,
               observerWallet: 'existing-operator',
               start: 0,
               end: 10,
@@ -399,6 +400,7 @@ describe('tick', () => {
                   end: 10,
                 },
               },
+              delegates: {},
               status: 'joined',
               settings: stubbedGatewayData.settings,
               stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
@@ -412,6 +414,7 @@ describe('tick', () => {
           gateways: {
             'existing-operator': {
               operatorStake: 100,
+              delegatedStake: 100,
               observerWallet: 'existing-operator',
               start: 0,
               end: 10,
@@ -422,6 +425,7 @@ describe('tick', () => {
                   end: 10,
                 },
               },
+              delegates: {},
               status: 'joined',
               settings: stubbedGatewayData.settings,
               stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,

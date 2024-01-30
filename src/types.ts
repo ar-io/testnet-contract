@@ -26,6 +26,7 @@ export type ReservedNames = Record<ArNSName, ReservedNameData>;
 export type Auctions = Record<ArNSName, ArNSAuctionData>;
 export type Fees = Record<string, number>;
 export type Vaults = Record<TransactionId, VaultData>;
+export type Delegates = Record<WalletAddress, DelegateData>;
 export type RegistryVaults = Record<WalletAddress, Vaults>;
 export type IOState = {
   ticker: string;
@@ -128,17 +129,24 @@ export type GatewayRegistrySettings = {
 };
 
 // TODO: these will be moved to constants
+export type DelegateData = {
+  delegatedStake: number;
+  start: number; // At what block this delegate began their stake
+  vaults: Vaults; // the locked tokens staked by this gateway operator
+};
 
 const gatewayStatus = [NETWORK_JOIN_STATUS, NETWORK_LEAVING_STATUS] as const;
 export type GatewayStatus = (typeof gatewayStatus)[number];
 
 export type Gateway = {
   operatorStake: number; // the total stake of this gateway's operator.
+  delegatedStake: number; // the total stake of this gateway's delegates
   observerWallet: WalletAddress; // the wallet address used to save observation reports
   start: number; // At what block the gateway joined the network.
   end: number; // At what block the gateway can leave the network.  0 means no end date.
   status: GatewayStatus; // hidden represents not leaving, but not participating
   vaults: Vaults; // the locked tokens staked by this gateway operator
+  delegates: Delegates; // the delegates who have staked tokens with this gateway
   settings: GatewaySettings;
   stats: GatewayPerformanceStats;
 };
@@ -149,6 +157,10 @@ export type GatewaySettings = {
   port: number; // The port used by this gateway eg. 443
   protocol: AllowedProtocols; // The protocol used by this gateway, either http or https
   properties?: string; // An Arweave transaction ID containing additional properties of this gateway
+  allowDelegatedStaking?: boolean; // If true, other token holders can delegate their stake to this gateway
+  delegateRewardShareRatio?: number; // Number between 0-100 indicating the percent of gateway and observer rewards given to delegates eg. 30 is 30% distributed to delegates
+  // allowedDelegates?: string[]; // A list of allowed arweave wallets that can act as delegates, if empty then anyone can delegate their tokens to this gateway
+  minDelegatedStake?: number; // The minimum delegated stake for this gateway
   note?: string; // An additional note (256 character max) the gateway operator can set to indicate things like maintenance or other operational updates.
 };
 
@@ -240,7 +252,9 @@ export type RegistryFunctions =
   | 'gateways'
   | 'increaseOperatorStake'
   | 'initiateOperatorStakeDecrease'
-  | 'updateGatewaySettings';
+  | 'updateGatewaySettings'
+  | 'delegateStake'
+  | 'decreaseDelegateStake';
 
 export type ObservationFunctions = 'saveObservations' | 'prescribedObservers';
 

@@ -635,12 +635,74 @@ export async function tickRewardDistribution({
       );
     }
 
-    safeTransfer({
-      balances: updatedBalances,
-      fromAddress: SmartWeave.contract.id,
-      toAddress: gatewayAddress,
-      qty: totalGatewayReward,
-    });
+    // Split reward to delegates if applicable
+    if (
+      gateways[gatewayAddress].settings.allowDelegatedStaking === true && // Delegated staking disabled
+      Object.keys(gateways[gatewayAddress].delegates).length && // No delegates to share with
+      gateways[gatewayAddress].settings.delegateRewardShareRatio > 0 // Do not split rewards at all
+    ) {
+      // Track tokens for each delegated staker
+      const tokensForDelegate: Record<WalletAddress, number> = {};
+      let totalDistributed = 0;
+
+      // Calculate the rewards to share between the gateway and delegates
+      const gatewayRewardRatio =
+        (100 - gateways[gatewayAddress].settings.delegateRewardShareRatio) /
+          100 || 0;
+      const gatewayRewardShare = Math.floor(
+        totalGatewayReward * gatewayRewardRatio,
+      );
+      const delegateRewardShare = totalGatewayReward - gatewayRewardShare;
+      // get reward amount for each delegate
+      const totalDelegatedStake = gateways[gatewayAddress].delegatedStake;
+      for (const delegateAddress in gateways[gatewayAddress].delegates) {
+        const delegateData =
+          gateways[gatewayAddress].delegates[delegateAddress];
+        const delegateShare = delegateData.delegatedStake / totalDelegatedStake;
+        tokensForDelegate[delegateAddress] = Math.floor(
+          delegateRewardShare * delegateShare,
+        );
+        totalDistributed += tokensForDelegate[delegateAddress];
+      }
+
+      // Calculate the remaining tokens to distribute due to rounding
+      let remainingTokens = delegateRewardShare - totalDistributed;
+      while (remainingTokens > 0) {
+        for (const delegateAddress in gateways[gatewayAddress].delegates) {
+          if (remainingTokens === 0) {
+            break;
+          }
+          tokensForDelegate[delegateAddress]++;
+          remainingTokens--;
+        }
+      }
+
+      // distribute tokens to each delegate
+      for (const delegateAddress in tokensForDelegate) {
+        safeTransfer({
+          balances: updatedBalances,
+          fromAddress: SmartWeave.contract.id,
+          toAddress: delegateAddress,
+          qty: tokensForDelegate[delegateAddress],
+        });
+      }
+
+      // Give the rest to the gateway operator
+      safeTransfer({
+        balances: updatedBalances,
+        fromAddress: SmartWeave.contract.id,
+        toAddress: gatewayAddress,
+        qty: gatewayRewardShare,
+      });
+    } else {
+      // gateway receives full reward
+      safeTransfer({
+        balances: updatedBalances,
+        fromAddress: SmartWeave.contract.id,
+        toAddress: gatewayAddress,
+        qty: totalGatewayReward,
+      });
+    }
   }
 
   // distribute observer tokens
@@ -657,12 +719,80 @@ export async function tickRewardDistribution({
         balances[gatewayObservedAndPassed] || 0;
     }
 
-    safeTransfer({
-      balances: updatedBalances,
-      fromAddress: SmartWeave.contract.id,
-      toAddress: gatewayObservedAndPassed,
-      qty: perObserverReward,
-    });
+    // Split reward to delegates if applicable
+    if (
+      gateways[gatewayObservedAndPassed].settings.allowDelegatedStaking ===
+        true && // Delegated staking disabled
+      Object.keys(gateways[gatewayObservedAndPassed].delegates).length && // No delegates to share with
+      gateways[gatewayObservedAndPassed].settings.delegateRewardShareRatio > 0 // Do not split rewards at all
+    ) {
+      // Track tokens for each delegated staker
+      const tokensForDelegate: Record<WalletAddress, number> = {};
+      let totalDistributed = 0;
+
+      // Calculate the rewards to share between the gateway and delegates
+      const observerRewardRatio =
+        (100 -
+          gateways[gatewayObservedAndPassed].settings
+            .delegateRewardShareRatio) /
+          100 || 0;
+      const observerRewardShare = Math.floor(
+        perObserverReward * observerRewardRatio,
+      );
+      const delegateRewardShare = perObserverReward - observerRewardShare;
+
+      // get reward amount for each delegate
+      const totalDelegatedStake =
+        gateways[gatewayObservedAndPassed].delegatedStake;
+      for (const delegateAddress in gateways[gatewayObservedAndPassed]
+        .delegates) {
+        const delegateData =
+          gateways[gatewayObservedAndPassed].delegates[delegateAddress];
+        const delegateShare = delegateData.delegatedStake / totalDelegatedStake;
+        tokensForDelegate[delegateAddress] = Math.floor(
+          delegateRewardShare * delegateShare,
+        );
+        totalDistributed += tokensForDelegate[delegateAddress];
+      }
+
+      // Calculate the remaining tokens to distribute due to rounding
+      let remainingTokens = delegateRewardShare - totalDistributed;
+      while (remainingTokens > 0) {
+        for (const delegateAddress in gateways[gatewayObservedAndPassed]
+          .delegates) {
+          if (remainingTokens === 0) {
+            break;
+          }
+          tokensForDelegate[delegateAddress]++;
+          remainingTokens--;
+        }
+      }
+
+      // distribute tokens to each delegate
+      for (const delegateAddress in tokensForDelegate) {
+        safeTransfer({
+          balances: updatedBalances,
+          fromAddress: SmartWeave.contract.id,
+          toAddress: delegateAddress,
+          qty: tokensForDelegate[delegateAddress],
+        });
+      }
+
+      // give the rest to the gateway operator
+      safeTransfer({
+        balances: updatedBalances,
+        fromAddress: SmartWeave.contract.id,
+        toAddress: gatewayObservedAndPassed,
+        qty: observerRewardShare,
+      });
+    } else {
+      safeTransfer({
+        balances: updatedBalances,
+        fromAddress: SmartWeave.contract.id,
+        toAddress: gatewayObservedAndPassed,
+        qty: perObserverReward,
+      });
+    }
   }
 
   // avoids copying balances if not necessary
