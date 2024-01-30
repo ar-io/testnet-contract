@@ -28,7 +28,7 @@ import { arweave, initialize, warp } from './utilities';
   const walletAddress = await arweave.wallets.getAddress(wallet);
 
   // Read the ANT Registry Contract
-  const contract = warp.pst(contractTxId).connect(wallet);
+  const contract = warp.contract<IOState>(contractTxId).connect(wallet);
 
   const writeInteraction = await contract.writeInteraction(
     {

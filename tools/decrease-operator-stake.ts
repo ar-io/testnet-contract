@@ -1,6 +1,7 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 
+import { IOState } from '../src/types';
 import { keyfile } from './constants';
 import { arweave, getContractManifest, initialize, warp } from './utilities';
 
@@ -34,13 +35,15 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
   });
 
   // Read the ANT Registry Contract
-  const pst = await warp
-    .pst(arnsContractTxId)
+  const contract = await warp
+    .contract<IOState>(arnsContractTxId)
     .connect(wallet)
     .setEvaluationOptions(evaluationOptions)
-    .syncState(`https://api.arns.app/v1/contract/${arnsContractTxId}`);
+    .syncState(`https://api.arns.app/v1/contract/${arnsContractTxId}`, {
+      validity: true,
+    });
 
-  const txId = await pst.writeInteraction(
+  const txId = await contract.writeInteraction(
     {
       function: 'decreaseOperatorStake',
       qty,

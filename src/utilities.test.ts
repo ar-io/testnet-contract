@@ -304,13 +304,6 @@ describe('resetProtocolBalance function', () => {
           initiator: 'address-3',
           contractTxId: '',
           years: 1,
-          settings: {
-            auctionDuration: 0,
-            exponentialDecayRate: 0,
-            scalingExponent: 0,
-            floorPriceMultiplier: 0,
-            startPriceMultiplier: 0,
-          },
         },
       },
       gateways: {

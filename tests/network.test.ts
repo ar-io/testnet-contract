@@ -1,4 +1,4 @@
-import { Contract, JWKInterface, PstState } from 'warp-contracts';
+import { Contract, JWKInterface } from 'warp-contracts';
 
 import {
   Gateway,
@@ -25,7 +25,7 @@ import { arweave, warp } from './utils/services';
 
 describe('Network', () => {
   let nonGatewayOperator: JWKInterface;
-  let contract: Contract<PstState>;
+  let contract: Contract<IOState>;
   let owner: JWKInterface;
   let ownerAddress: string;
   let srcContractId: string;
@@ -44,7 +44,9 @@ describe('Network', () => {
       newGatewayOperatorAddress = await arweave.wallets.getAddress(
         newGatewayOperator,
       );
-      contract = warp.pst(srcContractId).connect(newGatewayOperator);
+      contract = warp
+        .contract<IOState>(srcContractId)
+        .connect(newGatewayOperator);
     });
 
     describe('join network', () => {
@@ -659,7 +661,9 @@ describe('Network', () => {
       owner = getLocalWallet(0);
       ownerAddress = await arweave.wallets.getAddress(owner);
       nonGatewayOperator = getLocalWallet(16);
-      contract = warp.pst(srcContractId).connect(nonGatewayOperator);
+      contract = warp
+        .contract<IOState>(srcContractId)
+        .connect(nonGatewayOperator);
     });
 
     describe('read interactions', () => {

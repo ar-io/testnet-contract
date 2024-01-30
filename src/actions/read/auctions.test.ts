@@ -67,7 +67,6 @@ describe('getAuction', () => {
           (1 + ANNUAL_PERCENTAGE_FEE),
         initiator: '',
         contractTxId: '',
-        settings: AUCTION_SETTINGS,
       },
     ],
   ])(`%s`, (_: string, inputState: IOState, expectedReadResult: any) => {

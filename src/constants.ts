@@ -4,6 +4,7 @@ import {
   DemandFactoringSettings,
   EpochDistributionData,
   GatewayPerformanceStats,
+  GatewayRegistrySettings,
 } from './types';
 
 /**
@@ -225,4 +226,14 @@ export const INITIAL_EPOCH_DISTRIBUTION_DATA: EpochDistributionData = {
     EPOCH_BLOCK_LENGTH -
     1 +
     EPOCH_DISTRIBUTION_DELAY,
+};
+
+export const GATEWAY_REGISTRY_SETTINGS: GatewayRegistrySettings = {
+  gatewayLeaveLength: 3600, // approximately 5 days
+  maxLockLength: 788400,
+  minGatewayJoinLength: 3600, // TODO: remove this as gatewayLeaveLength achieves the same thing
+  minLockLength: 720, // 1 day
+  minOperatorStake: 10000,
+  operatorStakeWithdrawLength: 3600, // TODO: bump to 90 days
+  // TODO: add delegatedStakeWithdrawLength to 30 days
 };

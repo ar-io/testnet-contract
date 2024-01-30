@@ -6,6 +6,7 @@ import {
 } from '../../auctions';
 import {
   ARNS_NAME_AUCTION_EXPIRED_MESSAGE,
+  AUCTION_SETTINGS,
   DEFAULT_UNDERNAME_COUNT,
   INSUFFICIENT_FUNDS_MESSAGE,
   RESERVED_ATOMIC_TX_ID,
@@ -14,7 +15,6 @@ import { tallyNamePurchase } from '../../pricing';
 import { assertAvailableRecord } from '../../records';
 import {
   ArNSAuctionData,
-  AuctionSettings,
   Balances,
   BlockHeight,
   BlockTimestamp,
@@ -140,8 +140,7 @@ function handleBidForExistingAuction({
     startPrice: existingAuction.startPrice,
     floorPrice: existingAuction.floorPrice,
     currentBlockHeight: currentBlockHeight,
-    exponentialDecayRate: existingAuction.settings.exponentialDecayRate,
-    scalingExponent: existingAuction.settings.scalingExponent,
+    auctionSettings: AUCTION_SETTINGS,
   });
 
   /**
@@ -274,15 +273,12 @@ function handleBidForNewAuction({
 
   // no current auction, create one and vault the balance (floor price) from the user in the auction
   // calculate the registration fee taking into account demand factoring
-  // get the current auction settings, create one if it doesn't exist yet
-  const currentAuctionSettings: AuctionSettings = state.settings.auctions;
 
   // create the initial auction bid
   const initialAuctionBid = createAuctionObject({
     name,
     type,
     fees: state.fees,
-    auctionSettings: currentAuctionSettings,
     currentBlockTimestamp,
     demandFactoring: state.demandFactoring,
     currentBlockHeight,

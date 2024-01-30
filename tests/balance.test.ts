@@ -1,11 +1,11 @@
-import { Contract, JWKInterface, PstState } from 'warp-contracts';
+import { Contract, JWKInterface } from 'warp-contracts';
 
 import { IOState } from '../src/types';
 import { getLocalArNSContractKey, getLocalWallet } from './utils/helper';
 import { arweave, warp } from './utils/services';
 
 describe('Balance', () => {
-  let contract: Contract<PstState>;
+  let contract: Contract<IOState>;
   let srcContractId: string;
 
   beforeAll(async () => {
@@ -17,7 +17,9 @@ describe('Balance', () => {
 
     beforeAll(async () => {
       nonContractOwner = getLocalWallet(1);
-      contract = warp.pst(srcContractId).connect(nonContractOwner);
+      contract = warp
+        .contract<IOState>(srcContractId)
+        .connect(nonContractOwner);
     });
 
     it('should able to retrieve its own balance', async () => {
