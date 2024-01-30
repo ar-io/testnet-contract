@@ -1,4 +1,5 @@
 import {
+  DEFAULT_GATEWAY_PERFORMANCE_STATS,
   GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_GATEWAY_EXISTS_MESSAGE,
@@ -7,6 +8,7 @@ import {
   INVALID_OBSERVER_WALLET,
   MAX_PORT_NUMBER,
   MIN_DELEGATED_STAKE,
+  MIN_OPERATOR_STAKE,
 } from '../../constants';
 import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
 import { stubbedGatewayData } from '../../tests/stubs';
@@ -235,7 +237,7 @@ describe('joinNetwork', () => {
     const initialState = {
       ...getBaselineState(),
       balances: {
-        [stubbedArweaveTxId]: 10,
+        [stubbedArweaveTxId]: MIN_OPERATOR_STAKE,
       },
     };
     const { state } = await joinNetwork(initialState, {
@@ -245,7 +247,7 @@ describe('joinNetwork', () => {
       },
     });
     expect(state.gateways[stubbedArweaveTxId]).toEqual({
-      operatorStake: 10,
+      operatorStake: MIN_OPERATOR_STAKE,
       delegatedStake: 0,
       settings: {
         port: 1234,
@@ -265,6 +267,7 @@ describe('joinNetwork', () => {
       delegates: {},
       status: 'joined',
       end: 0,
+      stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
     });
     expect(state.balances[stubbedArweaveTxId]).toEqual(undefined);
   });
@@ -273,7 +276,7 @@ describe('joinNetwork', () => {
     const initialState = {
       ...getBaselineState(),
       balances: {
-        [stubbedArweaveTxId]: 10,
+        [stubbedArweaveTxId]: MIN_OPERATOR_STAKE,
       },
     };
     const { state } = await joinNetwork(initialState, {
@@ -287,7 +290,7 @@ describe('joinNetwork', () => {
       },
     });
     expect(state.gateways[stubbedArweaveTxId]).toEqual({
-      operatorStake: 10,
+      operatorStake: MIN_OPERATOR_STAKE,
       delegatedStake: 0,
       settings: {
         port: 1234,
@@ -309,6 +312,7 @@ describe('joinNetwork', () => {
       delegates: {},
       status: 'joined',
       end: 0,
+      stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
     });
     expect(state.balances[stubbedArweaveTxId]).toEqual(undefined);
   });
@@ -317,7 +321,7 @@ describe('joinNetwork', () => {
     const initialState = {
       ...getBaselineState(),
       balances: {
-        [stubbedArweaveTxId]: 10,
+        [stubbedArweaveTxId]: MIN_OPERATOR_STAKE,
       },
     };
     const { state } = await joinNetwork(initialState, {
@@ -331,7 +335,7 @@ describe('joinNetwork', () => {
       },
     });
     expect(state.gateways[stubbedArweaveTxId]).toEqual({
-      operatorStake: 10,
+      operatorStake: MIN_OPERATOR_STAKE,
       delegatedStake: 0,
       settings: {
         port: 1234,
@@ -353,6 +357,7 @@ describe('joinNetwork', () => {
       delegates: {},
       status: 'joined',
       end: 0,
+      stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
     });
     expect(state.balances[stubbedArweaveTxId]).toEqual(undefined);
   });

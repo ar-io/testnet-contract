@@ -57,7 +57,7 @@ const updateGatewaySchema = {
     },
     minDelegatedStake: {
       type: 'integer',
-      minimum: 500,
+      minimum: 100,
     },
   },
   required: [],
