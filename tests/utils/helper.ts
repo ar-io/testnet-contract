@@ -120,10 +120,12 @@ function createGateways(wallets: string[]) {
   const gateways: Gateways = {
     [wallets[0]]: {
       operatorStake: 50_000,
-      start: 0,
+      delegatedStake: 0,
+      start: -1,
       end: 0,
       status: NETWORK_JOIN_STATUS,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'Arweave Community Gateway', // The friendly name used to label this gateway
         fqdn: 'arweave.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -139,10 +141,12 @@ function createGateways(wallets: string[]) {
     },
     [wallets[1]]: {
       operatorStake: 10_000,
+      delegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
-      start: 0,
+      start: -1,
       end: 0,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'Slashme', // The friendly name used to label this gateway
         fqdn: 'slash-this-gateway.io', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -158,10 +162,12 @@ function createGateways(wallets: string[]) {
     },
     [wallets[2]]: {
       operatorStake: 250_000,
+      delegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
-      start: 0,
+      start: -1,
       end: 0,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'Delegateme', // The friendly name used to label this gateway
         fqdn: 'delegate.org', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -177,10 +183,12 @@ function createGateways(wallets: string[]) {
     },
     [wallets[3]]: {
       operatorStake: 15_000,
+      delegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
-      start: 0,
+      start: -1,
       end: 0,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'Wack-gateway', // The friendly name used to label this gateway
         fqdn: 'brokeninfra.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -196,10 +204,12 @@ function createGateways(wallets: string[]) {
     },
     [wallets[4]]: {
       operatorStake: 100_000,
+      delegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
-      start: 0,
+      start: -1,
       end: 0,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'Observation', // The friendly name used to label this gateway
         fqdn: 'observation.com', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -215,10 +225,12 @@ function createGateways(wallets: string[]) {
     },
     [wallets[5]]: {
       operatorStake: 20_000,
+      delegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
-      start: 0,
+      start: -1,
       end: 0,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'Another Observer', // The friendly name used to label this gateway
         fqdn: 'observation-again.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -234,10 +246,12 @@ function createGateways(wallets: string[]) {
     },
     [wallets[6]]: {
       operatorStake: 20_000,
+      delegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
-      start: 0,
+      start: -1,
       end: 0,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'Leaving', // The friendly name used to label this gateway
         fqdn: 'leaving.io', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -253,10 +267,12 @@ function createGateways(wallets: string[]) {
     },
     [wallets[7]]: {
       operatorStake: 10_000,
+      delegatedStake: 0,
       status: NETWORK_LEAVING_STATUS,
-      start: 0,
+      start: -1,
       end: 0,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'See Ya Later', // The friendly name used to label this gateway
         fqdn: 'goodbye.com', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -272,10 +288,12 @@ function createGateways(wallets: string[]) {
     },
     [wallets[8]]: {
       operatorStake: 10_000,
+      delegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 10_000,
       end: 0,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'See Ya Later', // The friendly name used to label this gateway
         fqdn: 'goodbye.com', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -291,10 +309,12 @@ function createGateways(wallets: string[]) {
     },
     [wallets[9]]: {
       operatorStake: 10_000,
+      delegatedStake: 0,
       status: NETWORK_LEAVING_STATUS,
-      start: 0,
+      start: -1,
       end: 100,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'See Ya Later', // The friendly name used to label this gateway
         fqdn: 'goodbye.com', // the fully qualified domain name this gateway can be reached at. eg arweave.net

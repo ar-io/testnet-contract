@@ -61,7 +61,7 @@ const joinNetworkSchema = {
     },
     minDelegatedStake: {
       type: 'integer',
-      minimum: 500,
+      minimum: 100,
     },
   },
   required: ['qty', 'fqdn', 'port', 'protocol', 'properties', 'note', 'label'],

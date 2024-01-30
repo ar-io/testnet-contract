@@ -10,6 +10,8 @@ import {
 import {
   CONTRACT_SETTINGS,
   DEFAULT_GATEWAY_PERFORMANCE_STATS,
+  GATEWAY_LEAVE_BLOCK_LENGTH,
+  MIN_DELEGATED_STAKE,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
   WALLET_FUND_AMOUNT,
@@ -285,6 +287,7 @@ describe('Network', () => {
 
       it('should join the network with correct parameters', async () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
+        const allowedDelegates: string[] = [];
         const prevBalance =
           prevCachedValue.state.balances[newGatewayOperatorAddress];
         const joinGatewayPayload = {
@@ -296,6 +299,10 @@ describe('Network', () => {
           protocol: 'http',
           properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44',
           note: 'Our gateway is the best test gateway. Contact bob@ar.io for more.',
+          allowDelegatedStaking: false,
+          allowedDelegates,
+          delegateRewardShareRatio: 0,
+          minDelegatedStake: MIN_DELEGATED_STAKE,
         };
         const writeInteraction = await contract.writeInteraction({
           function: 'joinNetwork',
@@ -312,11 +319,13 @@ describe('Network', () => {
         );
         expect(newState.gateways[newGatewayOperatorAddress]).toEqual({
           operatorStake: joinGatewayPayload.qty,
+          delegatedStake: 0,
           status: NETWORK_JOIN_STATUS,
           start: (await getCurrentBlock(arweave)).valueOf(),
           end: 0,
           observerWallet: newGatewayOperatorAddress,
           vaults: {},
+          delegates: {},
           stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
           settings: {
             label: joinGatewayPayload.label,
@@ -325,6 +334,10 @@ describe('Network', () => {
             protocol: joinGatewayPayload.protocol,
             properties: joinGatewayPayload.properties,
             note: joinGatewayPayload.note,
+            allowDelegatedStaking: false,
+            allowedDelegates,
+            delegateRewardShareRatio: 0,
+            minDelegatedStake: MIN_DELEGATED_STAKE,
           },
         });
       });
@@ -435,6 +448,7 @@ describe('Network', () => {
     describe('gateway settings', () => {
       it('should modify gateway settings with correct parameters', async () => {
         const observerWallet = 'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA';
+        const allowedDelegates: string[] = [];
         const updatedGatewaySettings = {
           label: 'Updated Label', // friendly label
           port: 80,
@@ -442,6 +456,10 @@ describe('Network', () => {
           fqdn: 'back-to-port-80.com',
           properties: 'WRONg6rQ9Py7L8j4CkS8jn818gdXW25Oofg0q2E58ro',
           note: 'a new note',
+          allowDelegatedStaking: true,
+          delegateRewardShareRatio: Math.floor((1 - 0.9) * 100),
+          allowedDelegates,
+          minDelegatedStake: MIN_DELEGATED_STAKE + 1,
         };
         const writeInteraction = await contract.writeInteraction({
           function: 'updateGatewaySettings',
@@ -603,6 +621,76 @@ describe('Network', () => {
         },
       );
 
+      it.each(['false', 0])(
+        'should not modify gateway settings with invalid allowDelegatedStaking',
+        async (badProperties) => {
+          const { cachedValue: prevCachedValue } = await contract.readState();
+          const writeInteraction = await contract.writeInteraction({
+            function: 'updateGatewaySettings',
+            allowDelegatedStaking: badProperties,
+          });
+          expect(writeInteraction?.originalTxId).not.toBe(undefined);
+          const { cachedValue: newCachedValue } = await contract.readState();
+          expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        },
+      );
+
+      it.each([-1, 1.5, 101, '50'])(
+        'should not modify gateway settings with invalid delegateRewardShareRatio',
+        async (badProperties) => {
+          const { cachedValue: prevCachedValue } = await contract.readState();
+          const writeInteraction = await contract.writeInteraction({
+            function: 'updateGatewaySettings',
+            delegateRewardShareRatio: badProperties,
+          });
+          expect(writeInteraction?.originalTxId).not.toBe(undefined);
+          const { cachedValue: newCachedValue } = await contract.readState();
+          expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        },
+      );
+
+      it.each([
+        1,
+        'string',
+        'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA',
+        ['%KryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA'],
+        [
+          'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA',
+          'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA',
+        ],
+        [
+          'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA',
+          '%KryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA',
+        ],
+        ['iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA', 1],
+      ])(
+        'should not modify gateway settings with invalid allowedDelegates',
+        async (badProperties) => {
+          const { cachedValue: prevCachedValue } = await contract.readState();
+          const writeInteraction = await contract.writeInteraction({
+            function: 'updateGatewaySettings',
+            allowedDelegates: badProperties,
+          });
+          expect(writeInteraction?.originalTxId).not.toBe(undefined);
+          const { cachedValue: newCachedValue } = await contract.readState();
+          expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        },
+      );
+
+      it.each([MIN_DELEGATED_STAKE - 1, '1000', MIN_DELEGATED_STAKE + 0.1])(
+        'should not modify gateway settings with invalid minDelegatedStake',
+        async (badProperties) => {
+          const { cachedValue: prevCachedValue } = await contract.readState();
+          const writeInteraction = await contract.writeInteraction({
+            function: 'updateGatewaySettings',
+            minDelegatedStake: badProperties,
+          });
+          expect(writeInteraction?.originalTxId).not.toBe(undefined);
+          const { cachedValue: newCachedValue } = await contract.readState();
+          expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        },
+      );
+
       it('should not modify gateway settings with invalid parameters', async () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const status = 'leavingNetwork';
@@ -622,6 +710,10 @@ describe('Network', () => {
     describe('leaveNetwork', () => {
       it('should set the gateway status as leaving and create a new vault when the gateway has been joined for the minimum join length', async () => {
         // mine the required number of blocks
+        const { cachedValue: prevCachedValue } = await contract.readState();
+        const prevState = prevCachedValue.state as IOState;
+        const prevOperatorStake =
+          prevState.gateways[newGatewayOperatorAddress].operatorStake;
         await mineBlocks(arweave, CONTRACT_SETTINGS.minGatewayJoinLength);
         const writeInteraction = await contract.writeInteraction({
           function: 'leaveNetwork',
@@ -630,11 +722,10 @@ describe('Network', () => {
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
         const newState = newCachedValue.state as IOState;
-        const vaultsForOperator =
-          newState.gateways[newGatewayOperatorAddress].vaults;
+        newState.gateways[newGatewayOperatorAddress].vaults;
         const expectedEndBlock =
           (await getCurrentBlock(arweave)).valueOf() +
-          CONTRACT_SETTINGS.gatewayLeaveLength;
+          GATEWAY_LEAVE_BLOCK_LENGTH;
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
           writeInteraction.originalTxId,
         );
@@ -644,14 +735,16 @@ describe('Network', () => {
         expect(newState.gateways[newGatewayOperatorAddress].end).toEqual(
           expectedEndBlock,
         );
-        // confirm all vaults get updated
-        for (const vault of Object.values(vaultsForOperator)) {
-          expect(vault).toEqual({
-            balance: expect.any(Number),
-            start: expect.any(Number),
-            end: expectedEndBlock,
-          });
-        }
+        // confirm the vault with the operator balance was created
+        expect(
+          newState.gateways[newGatewayOperatorAddress].vaults[
+            writeInteraction.originalTxId
+          ],
+        ).toEqual({
+          balance: prevOperatorStake,
+          start: expect.any(Number),
+          end: expectedEndBlock,
+        });
       });
     });
   });
