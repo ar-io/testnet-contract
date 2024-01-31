@@ -85,6 +85,8 @@ export const submitAuctionBid = (
     records: state.records,
     reserved: state.reserved,
     currentBlockTimestamp,
+    type: auctionBid.type,
+    auction: true,
   });
 
   // existing auction, handle the bid

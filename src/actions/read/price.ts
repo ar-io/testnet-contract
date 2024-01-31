@@ -67,6 +67,8 @@ export function getPriceForInteraction(
         records: state.records,
         reserved: state.reserved,
         currentBlockTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),
+        type,
+        auction,
       });
       fee = calculateRegistrationFee({
         name,
@@ -79,7 +81,7 @@ export function getPriceForInteraction(
       break;
     }
     case 'submitAuctionBid': {
-      const { name } = new AuctionBid(parsedInput);
+      const { name, type } = new AuctionBid(parsedInput);
       const auction = state.auctions[name];
       assertAvailableRecord({
         caller,
@@ -87,6 +89,8 @@ export function getPriceForInteraction(
         records: state.records,
         reserved: state.reserved,
         currentBlockTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),
+        type,
+        auction: true,
       });
       // return the floor price to start the auction
       if (!auction) {
