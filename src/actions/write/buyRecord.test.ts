@@ -31,6 +31,7 @@ describe('buyRecord', () => {
         },
       });
       expect(state.records[reservedName]).toBeDefined();
+      expect(state.reserved[reservedName]).toBeUndefined();
     },
   );
 
@@ -58,6 +59,7 @@ describe('buyRecord', () => {
         },
       });
       expect(state.records[reservedName]).toBeDefined();
+      expect(state.reserved[reservedName]).toBeUndefined();
     },
   );
 
