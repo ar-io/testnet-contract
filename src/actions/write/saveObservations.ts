@@ -1,14 +1,10 @@
 import {
   EPOCH_BLOCK_LENGTH,
   EPOCH_DISTRIBUTION_DELAY,
-  GATEWAY_REGISTRY_SETTINGS,
   INVALID_OBSERVATION_CALLER_MESSAGE,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
-import {
-  getEpochDataForHeight,
-  getPrescribedObserversForEpoch,
-} from '../../observers';
+import { getEpochDataForHeight } from '../../observers';
 import {
   BlockHeight,
   ContractWriteResult,
@@ -50,9 +46,14 @@ export const saveObservations = async (
   { caller, input }: PstAction,
 ): Promise<ContractWriteResult> => {
   // get all other relevant state data
-  const { observations, gateways, distributions } = state;
+  const {
+    observations,
+    gateways,
+    distributions,
+    prescribedObservers: observersForEpoch,
+  } = state;
   const { observerReportTxId, failedGateways } = new SaveObservations(input);
-  const { epochStartHeight, epochEndHeight } = getEpochDataForHeight({
+  const { epochStartHeight } = getEpochDataForHeight({
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height), // observations must be submitted within the epoch and after the last epochs distribution period (see below)
     epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
     epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
@@ -70,13 +71,8 @@ export const saveObservations = async (
     );
   }
 
-  const prescribedObservers = await getPrescribedObserversForEpoch({
-    gateways,
-    epochStartHeight,
-    epochEndHeight,
-    distributions,
-    minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
-  });
+  const prescribedObservers =
+    observersForEpoch[epochStartHeight.valueOf()] || [];
 
   // find the observer that is submitting the observation
   const observer: WeightedObserver | undefined = prescribedObservers.find(

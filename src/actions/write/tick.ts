@@ -36,6 +36,7 @@ import {
   Gateways,
   IOState,
   Observations,
+  PrescribedObservers,
   Records,
   RegistryVaults,
   ReservedNames,
@@ -128,6 +129,7 @@ async function tickInternal({
         updatedState.distributions || INITIAL_EPOCH_DISTRIBUTION_DATA,
       observations: updatedState.observations || {},
       balances: updatedState.balances,
+      prescribedObservers: updatedState.prescribedObservers || {},
     }),
   );
 
@@ -418,13 +420,20 @@ export async function tickRewardDistribution({
   distributions,
   observations,
   balances,
+  prescribedObservers,
 }: {
   currentBlockHeight: BlockHeight;
   gateways: DeepReadonly<Gateways>;
   distributions: DeepReadonly<EpochDistributionData>;
   observations: DeepReadonly<Observations>;
   balances: DeepReadonly<Balances>;
-}): Promise<Pick<IOState, 'distributions' | 'balances' | 'gateways'>> {
+  prescribedObservers: DeepReadonly<PrescribedObservers>;
+}): Promise<
+  Pick<
+    IOState,
+    'distributions' | 'balances' | 'gateways' | 'prescribedObservers'
+  >
+> {
   const updatedBalances: Balances = {};
   const updatedGateways: Gateways = {};
   const currentProtocolBalance = balances[SmartWeave.contract.id] || 0;
@@ -446,6 +455,14 @@ export async function tickRewardDistribution({
       epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
       epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
     });
+
+    const updatedPrescribedObservers = await getPrescribedObserversForEpoch({
+      gateways,
+      epochStartHeight: nextEpochStartHeight,
+      epochEndHeight: nextEpochEndHeight,
+      distributions,
+      minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
+    });
     // increment the epoch variables if we've moved to the next epoch, but DO NOT update the nextDistributionHeight as that will happen below after distributions are complete
     const updatedEpochData: EpochDistributionData = {
       epochStartHeight: nextEpochStartHeight.valueOf(),
@@ -459,6 +476,9 @@ export async function tickRewardDistribution({
       distributions: updatedEpochData,
       balances,
       gateways,
+      prescribedObservers: {
+        [nextEpochStartHeight.valueOf()]: updatedPrescribedObservers,
+      },
     };
   }
 
@@ -488,17 +508,11 @@ export async function tickRewardDistribution({
   });
 
   // get the observers for the epoch
-  const prescribedObservers = await getPrescribedObserversForEpoch({
-    gateways,
-    epochStartHeight,
-    epochEndHeight,
-    distributions,
-    minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
-  });
+  const existingPrescribedObservers =
+    prescribedObservers[epochStartHeight.valueOf()] || [];
 
   // TODO: consider having this be a set, gateways can not run on the same wallet
   const gatewaysToReward: WalletAddress[] = [];
-  // note this should not be a set, you can run multiple gateways with one wallet
   const observerGatewaysToReward: WalletAddress[] = [];
 
   // identify observers who reported the above gateways as eligible for rewards
@@ -560,7 +574,7 @@ export async function tickRewardDistribution({
   }
 
   // identify observers who reported the above gateways as eligible for rewards
-  for (const observer of prescribedObservers) {
+  for (const observer of existingPrescribedObservers) {
     const existingGateway =
       updatedGateways[observer.gatewayAddress] ||
       gateways[observer.gatewayAddress];
@@ -649,7 +663,7 @@ export async function tickRewardDistribution({
     let totalGatewayReward = perGatewayReward;
     // if you were prescribed observer but didn't submit a report, you get gateway reward penalized
     if (
-      prescribedObservers.some(
+      existingPrescribedObservers.some(
         (prescribed: WeightedObserver) =>
           prescribed.gatewayAddress === gatewayAddress,
       ) &&
@@ -721,10 +735,21 @@ export async function tickRewardDistribution({
     epochPeriod: epochPeriod.valueOf(),
   };
 
+  const updatedPrescribedObservers = await getPrescribedObserversForEpoch({
+    gateways: newGateways,
+    epochStartHeight: nextEpochStartHeight,
+    epochEndHeight: nextEpochEndHeight,
+    distributions: updatedEpochData,
+    minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
+  });
+
   return {
     distributions: updatedEpochData,
     balances: newBalances,
     gateways: newGateways,
+    prescribedObservers: {
+      [nextEpochStartHeight.valueOf()]: updatedPrescribedObservers,
+    },
   };
 }
 

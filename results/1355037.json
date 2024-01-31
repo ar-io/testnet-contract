@@ -1,0 +1,14 @@
+{
+  "contractTxId": "bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U",
+  "result": {
+    "epochEndHeight": 1355739,
+    "epochPeriod": 6,
+    "epochStartHeight": 1355020,
+    "epochZeroStartHeight": 1350700,
+    "nextDistributionHeight": 1356474
+  },
+  "sortKey": "000001355037,0000000000000,8d35430eb45334e9bc7b59211814ff6169af6a5dd30b0e69a2356db78e724c02",
+  "evaluationOptions": {
+    "maxInteractionEvaluationTimeSeconds": 3600
+  }
+}

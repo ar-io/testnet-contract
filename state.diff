@@ -1,0 +1,11 @@
+71,75c71,74
+<     "epochZeroStartHeight": 1346006,
+<     "epochStartHeight": 1354646,
+<     "epochEndHeight": 1355365,
+<     "epochPeriod": 12,
+<     "nextDistributionHeight": 1355380
+---
+>     "epochDistributionHeight": 1355260,
+>     "epochEndHeight": 1355245,
+>     "epochStartHeight": 1354526,
+>     "epochZeroStartHeight": 1346006
