@@ -777,7 +777,6 @@ describe('tick', () => {
           balances: initialState.balances,
           distributions: initialState.distributions,
           observations: initialState.observations,
-          settings: initialState.settings,
         });
       expect(balances).toEqual(initialState.balances);
       expect(distributions).toEqual({
@@ -826,7 +825,6 @@ describe('tick', () => {
       balances: initialState.balances,
       distributions: initialState.distributions,
       observations: initialState.observations,
-      settings: initialState.settings,
     });
     expect(balances).toEqual(initialState.balances);
     expect(distributions).toEqual(initialState.distributions);
@@ -857,7 +855,6 @@ describe('tick', () => {
           balances: initialState.balances,
           distributions: initialState.distributions,
           observations: initialState.observations,
-          settings: initialState.settings,
         });
       expect(balances).toEqual(initialState.balances);
       expect(distributions).toEqual({
@@ -890,7 +887,6 @@ describe('tick', () => {
       balances: initialState.balances,
       distributions: initialState.distributions,
       observations: initialState.observations,
-      settings: initialState.settings,
     });
     const expectedNewEpochStartHeight = EPOCH_BLOCK_LENGTH;
     const expectedNewEpochEndHeight =
@@ -924,7 +920,6 @@ describe('tick', () => {
       balances: initialState.balances,
       distributions: initialState.distributions,
       observations: initialState.observations,
-      settings: initialState.settings,
     });
     expect(balances).toEqual({
       ...initialState.balances,
@@ -991,7 +986,6 @@ describe('tick', () => {
       balances: initialState.balances,
       distributions: initialState.distributions,
       observations: initialState.observations,
-      settings: initialState.settings,
     });
     const totalRewardsEligible = 10_000_000 * 0.0025;
     const totalObserverReward = totalRewardsEligible * 0.05; // 5% of the total distributions

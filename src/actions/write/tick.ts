@@ -5,6 +5,7 @@ import {
   EPOCH_BLOCK_LENGTH,
   EPOCH_REWARD_PERCENTAGE,
   GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
+  GATEWAY_REGISTRY_SETTINGS,
   INITIAL_EPOCH_DISTRIBUTION_DATA,
   OBSERVATION_FAILURE_THRESHOLD,
   SECONDS_IN_A_YEAR,
@@ -26,7 +27,6 @@ import {
   Balances,
   BlockHeight,
   BlockTimestamp,
-  ContractSettings,
   ContractWriteResult,
   DeepReadonly,
   DemandFactoringData,
@@ -127,7 +127,6 @@ async function tickInternal({
         updatedState.distributions || INITIAL_EPOCH_DISTRIBUTION_DATA,
       observations: updatedState.observations || {},
       balances: updatedState.balances,
-      settings: updatedState.settings,
     }),
   );
 
@@ -418,14 +417,12 @@ export async function tickRewardDistribution({
   distributions,
   observations,
   balances,
-  settings,
 }: {
   currentBlockHeight: BlockHeight;
   gateways: DeepReadonly<Gateways>;
   distributions: DeepReadonly<EpochDistributionData>;
   observations: DeepReadonly<Observations>;
   balances: DeepReadonly<Balances>;
-  settings: DeepReadonly<ContractSettings>;
 }): Promise<Pick<IOState, 'distributions' | 'balances' | 'gateways'>> {
   const updatedBalances: Balances = {};
   const updatedGateways: Gateways = {};
@@ -489,8 +486,8 @@ export async function tickRewardDistribution({
     gateways,
     epochStartHeight,
     epochEndHeight,
-    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
     distributions,
+    minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
   });
 
   // TODO: consider having this be a set, gateways can not run on the same wallet

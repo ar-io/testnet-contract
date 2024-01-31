@@ -1,5 +1,6 @@
-import { Contract, JWKInterface, PstState } from 'warp-contracts';
+import { Contract, JWKInterface } from 'warp-contracts';
 
+import { IOState } from '../src/types';
 import {
   arweave,
   getContractManifest,
@@ -14,7 +15,7 @@ const testnetContractTxId =
 
 describe('evolving', () => {
   let localContractOwnerJWK: JWKInterface;
-  let newForkedContract: Contract<PstState>;
+  let newForkedContract: Contract<IOState>;
   let localSourceCodeId: string;
 
   beforeAll(async () => {
@@ -28,7 +29,7 @@ describe('evolving', () => {
     });
     // fetches the currently deployed contract (on arweave.net) state against the most recent sort key
     const testnetContract = await warpMainnet
-      .contract(testnetContractTxId)
+      .contract<IOState>(testnetContractTxId)
       .setEvaluationOptions(evaluationOptions)
       .syncState(`https://api.arns.app/v1/contract/${testnetContractTxId}`);
     const { cachedValue } = await testnetContract.readState();
@@ -52,7 +53,7 @@ describe('evolving', () => {
         true,
       );
     newForkedContract = warpLocal
-      .pst(newContractTxId)
+      .contract<IOState>(newContractTxId)
       .connect(localContractOwnerJWK);
   });
 

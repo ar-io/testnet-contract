@@ -1,4 +1,4 @@
-import { EPOCH_BLOCK_LENGTH } from '../../constants';
+import { EPOCH_BLOCK_LENGTH, GATEWAY_REGISTRY_SETTINGS } from '../../constants';
 import {
   getEpochDataForHeight,
   getPrescribedObserversForEpoch,
@@ -13,7 +13,7 @@ import {
 export const getPrescribedObservers = async (
   state: IOState,
 ): Promise<ContractReadResult> => {
-  const { settings, gateways, distributions } = state;
+  const { gateways, distributions } = state;
 
   if (+SmartWeave.block.height < distributions.epochZeroStartHeight) {
     return { result: [] };
@@ -27,10 +27,10 @@ export const getPrescribedObservers = async (
 
   const prescribedObservers = await getPrescribedObserversForEpoch({
     gateways,
-    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
     epochStartHeight,
     epochEndHeight,
     distributions,
+    minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
   });
 
   return { result: prescribedObservers };

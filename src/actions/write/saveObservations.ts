@@ -1,6 +1,7 @@
 import {
   EPOCH_BLOCK_LENGTH,
   EPOCH_DISTRIBUTION_DELAY,
+  GATEWAY_REGISTRY_SETTINGS,
   INVALID_OBSERVATION_CALLER_MESSAGE,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
@@ -49,7 +50,7 @@ export const saveObservations = async (
   { caller, input }: PstAction,
 ): Promise<ContractWriteResult> => {
   // get all other relevant state data
-  const { observations, gateways, settings, distributions } = state;
+  const { observations, gateways, distributions } = state;
   const { observerReportTxId, failedGateways } = new SaveObservations(input);
   const { epochStartHeight, epochEndHeight } = getEpochDataForHeight({
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height), // observations must be submitted within the epoch and after the last epochs distribution period (see below)
@@ -71,10 +72,10 @@ export const saveObservations = async (
 
   const prescribedObservers = await getPrescribedObserversForEpoch({
     gateways,
-    minNetworkJoinStakeAmount: settings.registry.minNetworkJoinStakeAmount,
     epochStartHeight,
     epochEndHeight,
     distributions,
+    minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
   });
 
   // find the observer that is submitting the observation
