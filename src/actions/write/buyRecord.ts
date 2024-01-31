@@ -1,7 +1,5 @@
-import { isNameRequiredToBeAuction } from '../../auctions';
 import {
   ARNS_NAME_IN_AUCTION_MESSAGE,
-  ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE,
   DEFAULT_UNDERNAME_COUNT,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
@@ -56,10 +54,10 @@ export class BuyRecord {
   }
 }
 
-export const buyRecord = (
+export const buyRecord = async (
   state: IOState,
   { caller, input }: PstAction,
-): ContractWriteResult => {
+): Promise<ContractWriteResult> => {
   // get all other relevant state data
   const { balances, records, reserved, fees, auctions } = state;
   const { name, contractTxId, years, type, auction } = new BuyRecord(input); // does validation on constructor
@@ -84,11 +82,9 @@ export const buyRecord = (
     records,
     reserved,
     currentBlockTimestamp,
+    type,
+    auction,
   });
-
-  if (isNameRequiredToBeAuction({ name, type })) {
-    throw new ContractError(ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE);
-  }
 
   const totalRegistrationFee = calculateRegistrationFee({
     name,

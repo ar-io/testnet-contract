@@ -2,10 +2,6 @@ const buyRecordSchema = {
   $id: '#/definitions/buyRecord',
   type: 'object',
   properties: {
-    function: {
-      type: 'string',
-      const: 'buyRecord',
-    },
     name: {
       type: 'string',
       pattern: '^([a-zA-Z0-9][a-zA-Z0-9-]{0,49}[a-zA-Z0-9]|[a-zA-Z0-9]{1})$',
@@ -27,7 +23,7 @@ const buyRecordSchema = {
       type: 'boolean',
     },
   },
-  required: ['name', 'function'],
+  required: ['name'],
   additionalProperties: true, // allows for auction properties to be provided to buy record
 };
 
