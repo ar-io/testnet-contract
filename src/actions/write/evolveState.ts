@@ -1,5 +1,14 @@
-import { NON_CONTRACT_OWNER_MESSAGE } from '../../constants';
-import { ContractWriteResult, IOState, PstAction } from '../../types';
+import {
+  EPOCH_BLOCK_LENGTH,
+  NON_CONTRACT_OWNER_MESSAGE,
+} from '../../constants';
+import { getEpochDataForHeight } from '../../observers';
+import {
+  BlockHeight,
+  ContractWriteResult,
+  IOState,
+  PstAction,
+} from '../../types';
 
 // Updates this contract to new source code
 export const evolveState = async (
@@ -12,8 +21,26 @@ export const evolveState = async (
     throw new ContractError(NON_CONTRACT_OWNER_MESSAGE);
   }
 
-  // set to null to be compatible from IOState - but we do not use it
-  state.settings = undefined;
+  const {
+    epochStartHeight,
+    epochEndHeight,
+    epochPeriod,
+    epochDistributionHeight,
+  } = getEpochDataForHeight({
+    currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
+    epochZeroStartHeight: new BlockHeight(
+      state.distributions.epochZeroStartHeight,
+    ),
+    epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
+  });
+
+  state.distributions = {
+    epochZeroStartHeight: state.distributions.epochZeroStartHeight,
+    epochStartHeight: epochStartHeight.valueOf(),
+    epochEndHeight: epochEndHeight.valueOf(),
+    epochPeriod: epochPeriod.valueOf(),
+    nextDistributionHeight: epochDistributionHeight.valueOf(),
+  };
 
   return { state };
 };

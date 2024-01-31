@@ -1,6 +1,6 @@
 import { EPOCH_BLOCK_LENGTH, GATEWAY_REGISTRY_SETTINGS } from '../../constants';
 import {
-  getEpochBoundariesForHeight,
+  getEpochDataForHeight,
   getObserverWeightsForEpoch,
 } from '../../observers';
 import {
@@ -26,7 +26,7 @@ export const getGateway = async (
   // TODO: allow getting gateway by observer address
   const gateway = gateways[target];
 
-  const { epochStartHeight } = getEpochBoundariesForHeight({
+  const { epochStartHeight } = getEpochDataForHeight({
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
     epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
     epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
@@ -66,7 +66,7 @@ export const getGateways = async (
 ): Promise<ContractReadResult> => {
   const { gateways, distributions } = state;
 
-  const { epochStartHeight } = getEpochBoundariesForHeight({
+  const { epochStartHeight } = getEpochDataForHeight({
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
     epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
     epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),

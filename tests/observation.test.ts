@@ -1,6 +1,6 @@
 import { Contract, JWKInterface } from 'warp-contracts';
 
-import { getEpochBoundariesForHeight } from '../src/observers';
+import { getEpochDataForHeight } from '../src/observers';
 import { BlockHeight, IOState, WeightedObserver } from '../src/types';
 import {
   DEFAULT_EPOCH_START_HEIGHT,
@@ -72,7 +72,7 @@ describe('Observation', () => {
             observer.observerAddress === wallet.addr,
         ),
       );
-      currentEpochStartHeight = getEpochBoundariesForHeight({
+      currentEpochStartHeight = getEpochDataForHeight({
         currentBlockHeight: new BlockHeight(height),
         epochZeroStartHeight: new BlockHeight(DEFAULT_EPOCH_START_HEIGHT),
         epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
@@ -195,7 +195,7 @@ describe('Observation', () => {
         await mineBlocks(arweave, EPOCH_BLOCK_LENGTH + 1);
         const height = (await getCurrentBlock(arweave)).valueOf();
         // set our start height to the current height
-        currentEpochStartHeight = getEpochBoundariesForHeight({
+        currentEpochStartHeight = getEpochDataForHeight({
           currentBlockHeight: new BlockHeight(height),
           epochZeroStartHeight: new BlockHeight(DEFAULT_EPOCH_START_HEIGHT),
           epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
