@@ -3,6 +3,7 @@ import {
   DEFAULT_GATEWAY_PERFORMANCE_STATS,
   DEFAULT_UNDERNAME_COUNT,
   EPOCH_BLOCK_LENGTH,
+  EPOCH_DISTRIBUTION_DELAY,
   EPOCH_REWARD_PERCENTAGE,
   GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
   GATEWAY_REGISTRY_SETTINGS,
@@ -461,9 +462,14 @@ export async function tickRewardDistribution({
     };
   }
 
-  // get our epoch heights
-  const epochStartHeight = new BlockHeight(distributions.epochStartHeight);
-  const epochEndHeight = new BlockHeight(distributions.epochEndHeight);
+  // get our epoch heights based off the distribution end height
+  const { epochStartHeight, epochEndHeight } = getEpochDataForHeight({
+    currentBlockHeight: new BlockHeight(
+      distributionHeightForLastEpoch.valueOf() - EPOCH_DISTRIBUTION_DELAY - 1,
+    ),
+    epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
+    epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
+  });
 
   // get all the reports submitted for the epoch based on its start height
   const totalReportsSubmitted = Object.keys(
