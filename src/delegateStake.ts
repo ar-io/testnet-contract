@@ -103,6 +103,43 @@ export function safeDelegateStake({
   unsafeDecrementBalance(balances, fromAddress, qty.valueOf());
 }
 
+export function safeDelegateDistribution({
+  balances,
+  gateways,
+  protocolAddress,
+  gatewayAddress,
+  delegateAddress,
+  qty,
+}: {
+  balances: Balances;
+  gateways: Gateways;
+  protocolAddress: WalletAddress;
+  gatewayAddress: WalletAddress;
+  delegateAddress: WalletAddress;
+  qty: number;
+}): void {
+  if (balances[protocolAddress] === null || isNaN(balances[protocolAddress])) {
+    throw new ContractError(`Caller balance is not defined!`);
+  }
+
+  if (!walletHasSufficientBalance(balances, protocolAddress, qty.valueOf())) {
+    throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
+  }
+
+  if (!gateways[gatewayAddress]) {
+    throw new ContractError(INVALID_GATEWAY_REGISTERED_MESSAGE);
+  }
+
+  if (!gateways[gatewayAddress].delegates[delegateAddress]) {
+    throw new ContractError('Delegate not staked on this gateway.');
+  }
+
+  // Increase the gateway's total delegated stake, and then decrement from the caller.
+  gateways[gatewayAddress].delegates[delegateAddress].delegatedStake +=
+    qty.valueOf();
+  unsafeDecrementBalance(balances, protocolAddress, qty.valueOf());
+}
+
 export function safeDecreaseDelegateStake({
   gateways,
   fromAddress,

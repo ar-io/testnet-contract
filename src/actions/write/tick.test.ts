@@ -12,6 +12,8 @@ import {
   DEFAULT_GATEWAY_PERFORMANCE_STATS,
   EPOCH_BLOCK_LENGTH,
   EPOCH_DISTRIBUTION_DELAY,
+  EPOCH_REWARD_PERCENTAGE,
+  GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
   INITIAL_DEMAND_FACTOR_DATA,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
@@ -874,7 +876,7 @@ describe('tick', () => {
         {
           gatewayAddress: 'a-gateway-5',
           observerAddress: 'an-observing-gateway-5',
-          stake: 200,
+          stake: 400,
           start: 0,
           stakeWeight: 20,
           tenureWeight: 1,
@@ -895,7 +897,7 @@ describe('tick', () => {
           },
           delegates: {
             ['delegate-1']: {
-              ...stubbedGatewayData,
+              ...stubbedDelegateData,
             },
           },
           observerWallet: 'an-observing-gateway',
@@ -910,10 +912,10 @@ describe('tick', () => {
           },
           delegates: {
             ['delegate-2']: {
-              ...stubbedGatewayData,
+              ...stubbedDelegateData,
             },
             ['delegate-3']: {
-              ...stubbedGatewayData,
+              ...stubbedDelegateData,
             },
           },
           observerWallet: 'an-observing-gateway-2',
@@ -927,7 +929,24 @@ describe('tick', () => {
           observerWallet: 'an-observing-gateway-4',
         },
         'a-gateway-5': {
-          ...stubbedDelegatedGatewayData,
+          ...stubbedGatewayData,
+          delegatedStake: 300,
+          settings: {
+            ...stubbedGatewayData.settings,
+            allowDelegatedStaking: true,
+            delegateRewardShareRatio: 50,
+          },
+          delegates: {
+            ['delegate-4']: {
+              ...stubbedDelegateData,
+            },
+            ['delegate-5']: {
+              ...stubbedDelegateData,
+            },
+            ['delegate-6']: {
+              ...stubbedDelegateData,
+            },
+          },
           observerWallet: 'an-observing-gateway-5',
         },
       });
@@ -991,14 +1010,21 @@ describe('tick', () => {
             observerWallet: 'an-observing-gateway-4',
           },
           'a-gateway-5': {
-            ...stubbedDelegatedGatewayData,
+            ...stubbedGatewayData,
+            delegatedStake: 300,
             settings: {
               ...stubbedGatewayData.settings,
               allowDelegatedStaking: true,
-              delegateRewardShareRatio: 50,
+              delegateRewardShareRatio: 30,
             },
             delegates: {
               ['delegate-4']: {
+                ...stubbedDelegateData,
+              },
+              ['delegate-5']: {
+                ...stubbedDelegateData,
+              },
+              ['delegate-6']: {
                 ...stubbedDelegateData,
               },
             },
@@ -1006,6 +1032,7 @@ describe('tick', () => {
           },
         },
         observations: {
+          // 3 good gateways, 1 good gateway/bad observer, 3 good observers
           0: {
             failureSummaries: {
               // nobody failed a-gateway-1
@@ -1014,7 +1041,7 @@ describe('tick', () => {
                 'an-observing-gateway',
                 'an-observing-gateway-2',
                 'an-observing-gateway-4',
-              ],
+              ], // a-gateway-3 will not receive a gateway reward
               'a-gateway-4': ['an-observing-gateway-2'],
               'a-gateway-5': ['an-observing-gateway'],
             },
@@ -1022,49 +1049,103 @@ describe('tick', () => {
             reports: {
               'an-observing-gateway': stubbedArweaveTxId,
               'an-observing-gateway-2': stubbedArweaveTxId,
-              // observer 3 did not submit a report
+              // observer 3 did not submit a report and will not receive an observer reward
               'an-observing-gateway-4': stubbedArweaveTxId,
-              // observer 5 did not submit a report
+              // observer 5 did not submit a report and will not receive an observer reward
             },
           },
         },
       };
       const epochDistributionHeight =
         initialState.distributions.epochDistributionHeight;
-      const { balances, distributions } = await tickRewardDistribution({
-        currentBlockHeight: new BlockHeight(epochDistributionHeight),
-        gateways: initialState.gateways,
-        balances: initialState.balances,
-        distributions: initialState.distributions,
-        observations: initialState.observations,
-      });
-      const totalRewardsEligible = 10_000_000 * 0.0025;
-      const totalObserverReward = Math.floor(totalRewardsEligible * 0.05); // 5% of the total distributions
-      const perObserverReward = Math.floor(totalObserverReward / 5); // 4 observers
-      const totalGatewayReward = totalRewardsEligible - totalObserverReward; // 95% of total distribution
-      const perGatewayReward = Math.floor(totalGatewayReward / 5); // 4 gateways
+      const { balances, distributions, gateways } =
+        await tickRewardDistribution({
+          currentBlockHeight: new BlockHeight(epochDistributionHeight),
+          gateways: initialState.gateways,
+          balances: initialState.balances,
+          distributions: initialState.distributions,
+          observations: initialState.observations,
+        });
+      const totalPotentialReward = Math.floor(
+        10_000_000 * EPOCH_REWARD_PERCENTAGE,
+      );
+
+      const totalPotentialGatewayReward = Math.floor(
+        totalPotentialReward * GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
+      );
+
+      const perGatewayReward = totalPotentialGatewayReward / 5;
+      const totalPotentialObserverReward =
+        totalPotentialReward - totalPotentialGatewayReward;
+      const perObserverReward = totalPotentialObserverReward / 5;
+
       const penalizedGatewayReward = Math.floor(
         perGatewayReward * (1 - BAD_OBSERVER_GATEWAY_PENALTY),
       );
-      const delegate1Reward = 2500;
-      const delegate2Reward = 1251;
-      const delegate3Reward = 1249;
-      const delegate4Reward = 1781;
       const totalRewardsDistributed =
         perObserverReward * 3 + perGatewayReward * 3 + penalizedGatewayReward; // 3 rewards for 3 observers, 3 gateway rewards, 1 penalized gateway reward
       expect(balances).toEqual({
         ...initialState.balances,
-        'a-gateway': Math.floor((perObserverReward + perGatewayReward) * 0.5), // gives 5% of reward to delegate 1
+        'a-gateway': Math.floor((perObserverReward + perGatewayReward) * 0.5), // gives 50% of reward to delegate 1
         'a-gateway-2': Math.floor((perObserverReward + perGatewayReward) * 0.5), // splits reward with delegate 2 and 3
         'a-gateway-4': perObserverReward + perGatewayReward, // gets full reward (no delegates)
-        'a-gateway-5': Math.floor(penalizedGatewayReward * 0.5), // split reward with delegate 4
-        'delegate-1': delegate1Reward,
-        'delegate-2': delegate2Reward,
-        'delegate-3': delegate3Reward,
-        'delegate-4': delegate4Reward,
+        'a-gateway-5': Math.floor(penalizedGatewayReward * 0.7), // split reward with delegates 4, 5, 6
         // observer three does not get anything!
         [SmartWeave.contract.id]: 10_000_000 - totalRewardsDistributed,
       });
+      expect(
+        gateways['a-gateway'].delegates['delegate-1'].delegatedStake,
+      ).toEqual(
+        initialState.gateways['a-gateway'].delegates['delegate-1']
+          .delegatedStake +
+          Math.floor((perObserverReward + perGatewayReward) * 0.5), // splits the reward fully with the gateway
+      );
+      expect(
+        gateways['a-gateway-2'].delegates['delegate-2'].delegatedStake,
+      ).toEqual(
+        initialState.gateways['a-gateway-2'].delegates['delegate-2']
+          .delegatedStake +
+          Math.ceil(perGatewayReward * 0.25) + // gets 1/4 of the total reward
+          Math.ceil(perObserverReward * 0.25), // gets 1/4 of the total reward, rounded up
+      );
+
+      expect(
+        gateways['a-gateway-2'].delegates['delegate-3'].delegatedStake,
+      ).toEqual(
+        initialState.gateways['a-gateway-2'].delegates['delegate-3']
+          .delegatedStake +
+          Math.floor(perGatewayReward * 0.25) + // gets 1/4 of the total reward
+          Math.floor(perObserverReward * 0.25), // gets 1/4 of the total reward, rounded down
+      );
+
+      expect(
+        gateways['a-gateway-2'].delegates['delegate-3'].delegatedStake,
+      ).toEqual(
+        initialState.gateways['a-gateway-2'].delegates['delegate-3']
+          .delegatedStake +
+          Math.floor(perGatewayReward * 0.25) + // gets 1/4 of the total reward
+          Math.floor(perObserverReward * 0.25), // gets 1/4 of the total reward, rounded down
+      );
+
+      expect(
+        gateways['a-gateway-5'].delegates['delegate-4'].delegatedStake,
+      ).toEqual(
+        initialState.gateways['a-gateway-5'].delegates['delegate-4']
+          .delegatedStake + Math.ceil(penalizedGatewayReward * 0.1),
+      );
+      expect(
+        gateways['a-gateway-5'].delegates['delegate-5'].delegatedStake,
+      ).toEqual(
+        initialState.gateways['a-gateway-5'].delegates['delegate-5']
+          .delegatedStake + Math.floor(penalizedGatewayReward * 0.1),
+      );
+      expect(
+        gateways['a-gateway-5'].delegates['delegate-6'].delegatedStake,
+      ).toEqual(
+        initialState.gateways['a-gateway-5'].delegates['delegate-6']
+          .delegatedStake + Math.floor(penalizedGatewayReward * 0.1),
+      );
+
       const expectedNewEpochStartHeight = EPOCH_BLOCK_LENGTH;
       const expectedNewEpochEndHeight =
         expectedNewEpochStartHeight + EPOCH_BLOCK_LENGTH - 1;

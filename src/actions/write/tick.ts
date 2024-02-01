@@ -11,6 +11,7 @@ import {
   OBSERVATION_FAILURE_THRESHOLD,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
+import { safeDelegateDistribution } from '../../delegateStake';
 import {
   getEligibleGatewaysForEpoch,
   getPrescribedObserversForEpoch,
@@ -607,7 +608,7 @@ export async function tickRewardDistribution({
 
   // TODO: set thresholds for the perGatewayReward and perObserverReward to be greater than at least 1 mIO
 
-  // // distribute observer tokens
+  // distribute gateway tokens
   for (const gatewayAddress of gatewaysToReward) {
     // add protocol balance if we do not have it
     if (!updatedBalances[SmartWeave.contract.id]) {
@@ -677,17 +678,19 @@ export async function tickRewardDistribution({
         }
       }
 
-      // distribute tokens to each delegate
+      // distribute tokens to each delegate to their existing delegated stake
       for (const delegateAddress in tokensForDelegate) {
-        safeTransfer({
+        safeDelegateDistribution({
           balances: updatedBalances,
-          fromAddress: SmartWeave.contract.id,
-          toAddress: delegateAddress,
+          gateways: updatedGateways,
+          protocolAddress: SmartWeave.contract.id,
+          gatewayAddress,
+          delegateAddress,
           qty: tokensForDelegate[delegateAddress],
         });
       }
-
       // Give the rest to the gateway operator
+      // TO DO: use autoStake setting
       safeTransfer({
         balances: updatedBalances,
         fromAddress: SmartWeave.contract.id,
@@ -770,15 +773,18 @@ export async function tickRewardDistribution({
 
       // distribute tokens to each delegate
       for (const delegateAddress in tokensForDelegate) {
-        safeTransfer({
+        safeDelegateDistribution({
           balances: updatedBalances,
-          fromAddress: SmartWeave.contract.id,
-          toAddress: delegateAddress,
+          gateways: updatedGateways,
+          protocolAddress: SmartWeave.contract.id,
+          gatewayAddress: gatewayObservedAndPassed,
+          delegateAddress,
           qty: tokensForDelegate[delegateAddress],
         });
       }
 
       // give the rest to the gateway operator
+      // TODO: Use autoStaking setting
       safeTransfer({
         balances: updatedBalances,
         fromAddress: SmartWeave.contract.id,
