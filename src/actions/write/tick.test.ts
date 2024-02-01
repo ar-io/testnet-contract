@@ -954,7 +954,7 @@ describe('tick', () => {
     expect(gateways).toEqual(expectedGateways);
   });
 
-  it('should distribute rewards to observers who submitted reports and gateways who passed, update distribution epoch values and increment performance stats', async () => {
+  it('should distribute rewards to observers who submitted reports and gateways who passed for the previous epoch, update distribution epoch values and increment performance stats', async () => {
     const initialState: IOState = {
       ...getBaselineState(),
       balances: {
@@ -976,6 +976,12 @@ describe('tick', () => {
             // gateway-2 did not submit a report
           },
         },
+      },
+      distributions: {
+        ...getBaselineState().distributions,
+        // setting these to next epoch values to validate distributions depend on only the nextDistributionHeight
+        epochEndHeight: SmartWeave.block.height + 2 * EPOCH_BLOCK_LENGTH - 1,
+        epochStartHeight: SmartWeave.block.height + EPOCH_BLOCK_LENGTH - 1,
       },
     };
     const nextDistributionHeight =
@@ -1054,7 +1060,7 @@ describe('tick', () => {
   });
 
   // top level tests
-  it('should tick distributions, update gateway performance stats and increment the nextDistributionHeight if a the interaction height is equal to the nextDistributionHeight', async () => {
+  it('should tick distributions for update gateway performance stats and increment the nextDistributionHeight if a the interaction height is equal to the nextDistributionHeight', async () => {
     const initialState: IOState = {
       ...getBaselineState(),
       gateways: stubbedGateways,
