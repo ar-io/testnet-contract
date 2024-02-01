@@ -1,6 +1,8 @@
+import { isNameRequiredToBeAuction } from './auctions';
 import {
   ARNS_INVALID_SHORT_NAME,
   ARNS_LEASE_LENGTH_MAX_YEARS,
+  ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE,
   ARNS_NAME_RESERVED_MESSAGE,
   ARNS_NON_EXPIRED_NAME_MESSAGE,
   MINIMUM_ALLOWED_NAME_LENGTH,
@@ -117,10 +119,13 @@ export function isActiveReservedName({
   if (permanentlyReserved) {
     return true;
   }
-  const callerNotTarget = !caller || target !== caller;
-  const notExpired =
+
+  const isCallerTarget = caller !== undefined && target === caller;
+  const isActiveReservation =
     endTimestamp && endTimestamp > currentBlockTimestamp.valueOf();
-  if (callerNotTarget && notExpired) {
+
+  // if the caller is not the target, and it's still active - the name is considered reserved
+  if (!isCallerTarget && isActiveReservation) {
     return true;
   }
   return false;
@@ -132,33 +137,51 @@ export function assertAvailableRecord({
   records,
   reserved,
   currentBlockTimestamp,
+  type,
+  auction,
 }: {
   caller: string | undefined; // TODO: type for this
   name: DeepReadonly<string>;
   records: DeepReadonly<Records>;
   reserved: DeepReadonly<ReservedNames>;
   currentBlockTimestamp: BlockTimestamp;
+  type: 'permabuy' | 'lease';
+  auction: boolean;
 }): void {
-  if (
-    isExistingActiveRecord({
-      record: records[name],
-      currentBlockTimestamp,
-    })
-  ) {
+  const isActiveRecord = isExistingActiveRecord({
+    record: records[name],
+    currentBlockTimestamp,
+  });
+  const isReserved = isActiveReservedName({
+    caller,
+    reservedName: reserved[name],
+    currentBlockTimestamp,
+  });
+  const isShortName = isShortNameRestricted({
+    name,
+    currentBlockTimestamp,
+  });
+  const isAuctionRequired = isNameRequiredToBeAuction({ name, type });
+  if (isActiveRecord) {
     throw new ContractError(ARNS_NON_EXPIRED_NAME_MESSAGE);
   }
-  if (
-    isActiveReservedName({
-      caller,
-      reservedName: reserved[name],
-      currentBlockTimestamp,
-    })
-  ) {
+
+  if (reserved[name]?.target === caller) {
+    // if the caller is the target of the reserved name, they can buy it
+    return;
+  }
+
+  if (isReserved) {
     throw new ContractError(ARNS_NAME_RESERVED_MESSAGE);
   }
 
-  if (isShortNameRestricted({ name, currentBlockTimestamp })) {
+  if (isShortName) {
     throw new ContractError(ARNS_INVALID_SHORT_NAME);
+  }
+
+  // TODO: we may want to move this up if we want to force permabuys for short names on reserved names
+  if (isAuctionRequired && !auction) {
+    throw new ContractError(ARNS_NAME_MUST_BE_AUCTIONED_MESSAGE);
   }
 }
 
