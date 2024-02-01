@@ -192,14 +192,23 @@ describe('Observation', () => {
 
     describe('fast forwarding to the next epoch', () => {
       beforeAll(async () => {
-        await mineBlocks(arweave, EPOCH_BLOCK_LENGTH + 1);
-        const height = (await getCurrentBlock(arweave)).valueOf();
+        await mineBlocks(
+          arweave,
+          EPOCH_BLOCK_LENGTH + EPOCH_DISTRIBUTION_DELAY,
+        );
+        // tick to update our prescribed observer list
+        await contract.writeInteraction({
+          function: 'tick',
+        });
         // set our start height to the current height
-        currentEpochStartHeight = getEpochDataForHeight({
-          currentBlockHeight: new BlockHeight(height),
-          epochZeroStartHeight: new BlockHeight(DEFAULT_EPOCH_START_HEIGHT),
-          epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
-        }).epochStartHeight;
+        const {
+          result: { epochStartHeight: fetchedCurrentEpochStartHeight },
+        } = (await contract.viewState({
+          function: 'epoch',
+        })) as { result: { epochStartHeight: number } };
+        currentEpochStartHeight = new BlockHeight(
+          fetchedCurrentEpochStartHeight,
+        );
         // get the prescribed observers
         const { result: prescribedObservers }: { result: WeightedObserver[] } =
           await contract.viewState({

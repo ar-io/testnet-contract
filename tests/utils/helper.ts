@@ -319,6 +319,8 @@ export async function setupInitialContractState(
 ): Promise<IOState> {
   const state: IOState = INITIAL_STATE as unknown as IOState;
 
+  const currentBlockHeight = await getCurrentBlock(arweave);
+
   // set the fees
   state.fees = GENESIS_FEES;
 
@@ -335,9 +337,7 @@ export async function setupInitialContractState(
   };
 
   // setup demand factor based from the current block height
-  state.demandFactoring.periodZeroBlockHeight = (
-    await getCurrentBlock(arweave)
-  ).valueOf();
+  state.demandFactoring.periodZeroBlockHeight = currentBlockHeight.valueOf();
 
   // setup auctions
   state.auctions = {};
@@ -354,7 +354,25 @@ export async function setupInitialContractState(
   // distributions
   state.distributions = {
     ...state.distributions,
-    epochZeroStartHeight: (await getCurrentBlock(arweave)).valueOf(),
+    epochZeroStartHeight: currentBlockHeight.valueOf(),
+  };
+
+  // prescribed observers
+  state.prescribedObservers = {
+    [state.distributions.epochStartHeight]: Object.keys(state.gateways).map(
+      (gatewayAddress) => ({
+        gatewayAddress,
+        stake: 10000,
+        start: currentBlockHeight.valueOf(),
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        tenureWeight: 1,
+        stakeWeight: 1,
+        compositeWeight: 1,
+        normalizedCompositeWeight: 1,
+        observerAddress: state.gateways[gatewayAddress].observerWallet,
+      }),
+    ),
   };
 
   // add some reserved names
