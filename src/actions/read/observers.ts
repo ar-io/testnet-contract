@@ -1,8 +1,5 @@
-import { EPOCH_BLOCK_LENGTH, GATEWAY_REGISTRY_SETTINGS } from '../../constants';
-import {
-  getEpochDataForHeight,
-  getPrescribedObserversForEpoch,
-} from '../../observers';
+import { EPOCH_BLOCK_LENGTH } from '../../constants';
+import { getEpochDataForHeight } from '../../observers';
 import {
   BlockHeight,
   ContractReadResult,
@@ -13,27 +10,14 @@ import {
 export const getPrescribedObservers = async (
   state: IOState,
 ): Promise<ContractReadResult> => {
-  const { gateways, distributions } = state;
-
-  if (+SmartWeave.block.height < distributions.epochZeroStartHeight) {
-    return { result: [] };
-  }
-
-  const { epochStartHeight, epochEndHeight } = getEpochDataForHeight({
+  const { prescribedObservers, distributions } = state;
+  const { epochStartHeight } = getEpochDataForHeight({
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
     epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
     epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
   });
 
-  const prescribedObservers = await getPrescribedObserversForEpoch({
-    gateways,
-    epochStartHeight,
-    epochEndHeight,
-    distributions,
-    minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
-  });
-
-  return { result: prescribedObservers };
+  return { result: prescribedObservers[epochStartHeight.valueOf()] || {} };
 };
 
 export async function getEpoch(
