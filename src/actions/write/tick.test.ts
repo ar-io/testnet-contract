@@ -1060,7 +1060,7 @@ describe('tick', () => {
   });
 
   // top level tests
-  it('should tick distributions for update gateway performance stats and increment the nextDistributionHeight if a the interaction height is equal to the nextDistributionHeight', async () => {
+  it('should tick distributions for the previous epoch, update gateway performance stats and increment the nextDistributionHeight if a the interaction height is equal to the nextDistributionHeight', async () => {
     const initialState: IOState = {
       ...getBaselineState(),
       gateways: stubbedGateways,
