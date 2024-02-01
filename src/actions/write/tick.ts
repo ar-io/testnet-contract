@@ -639,9 +639,10 @@ export async function tickRewardDistribution({
   const totalPotentialObserverReward =
     totalPotentialReward - totalPotentialGatewayReward;
 
-  const perObserverReward = Object.keys(prescribedObservers).length
+  const perObserverReward = Object.keys(existingPrescribedObservers).length
     ? Math.floor(
-        totalPotentialObserverReward / Object.keys(prescribedObservers).length,
+        totalPotentialObserverReward /
+          Object.keys(existingPrescribedObservers).length,
       )
     : 0;
 

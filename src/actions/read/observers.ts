@@ -17,7 +17,7 @@ export const getPrescribedObservers = async (
     epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
   });
 
-  return { result: prescribedObservers[epochStartHeight.valueOf()] || {} };
+  return { result: prescribedObservers[epochStartHeight.valueOf()] || [] };
 };
 
 export async function getEpoch(

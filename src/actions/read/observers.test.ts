@@ -1,36 +1,50 @@
+import { EPOCH_BLOCK_LENGTH, EPOCH_DISTRIBUTION_DELAY } from '../../constants';
 import {
-  EPOCH_BLOCK_LENGTH,
-  EPOCH_DISTRIBUTION_DELAY,
-  TENURE_WEIGHT_PERIOD,
-} from '../../constants';
-import { getBaselineState, stubbedGatewayData } from '../../tests/stubs';
+  getBaselineState,
+  stubbedGatewayData,
+  stubbedPrescribedObserver,
+} from '../../tests/stubs';
 import { getEpoch, getPrescribedObservers } from './observers';
 
 describe('getPrescribedObservers', () => {
-  it('should return the prescribed observers for the current epoch', async () => {
+  it('should return the prescribed observers for the current epoch from state', async () => {
     const state = {
       ...getBaselineState(),
       gateways: {
         'a-test-gateway': stubbedGatewayData,
       },
+      prescribedObservers: {
+        [0]: Object.keys(stubbedGatewayData).map((gatewayAddress) => ({
+          ...stubbedPrescribedObserver,
+          gatewayAddress,
+          observerAddress: gatewayAddress,
+        })),
+      },
       // no distributions
     };
     const { result } = await getPrescribedObservers(state);
-    expect(result).toEqual([
-      {
-        compositeWeight: 1 / TENURE_WEIGHT_PERIOD, // gateway started at the same block as the epoch, so it gets the default value
-        gatewayAddress: 'a-test-gateway',
-        gatewayRewardRatioWeight: 1,
-        normalizedCompositeWeight: 1,
-        observerAddress: 'test-observer-wallet',
-        observerRewardRatioWeight: 1,
-        stake: 10000,
-        stakeWeight: 1,
-        start: 0,
-        tenureWeight: 1 / TENURE_WEIGHT_PERIOD, // gateway started at the same block as the epoch, so it gets the default value
-      },
-    ]);
+    expect(result).toEqual(state.prescribedObservers[0]);
   });
+});
+
+it('should return the empty array if the current epoch does not have any prescribed observers', async () => {
+  const state = {
+    ...getBaselineState(),
+    gateways: {
+      'a-test-gateway': stubbedGatewayData,
+    },
+    prescribedObservers: {
+      // some other epochs prescribed observers
+      [1]: Object.keys(stubbedGatewayData).map((gatewayAddress) => ({
+        ...stubbedPrescribedObserver,
+        gatewayAddress,
+        observerAddress: gatewayAddress,
+      })),
+    },
+    // no distributions
+  };
+  const { result } = await getPrescribedObservers(state);
+  expect(result).toEqual([]);
 });
 
 describe('getEpoch', () => {

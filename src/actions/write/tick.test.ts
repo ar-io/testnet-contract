@@ -1028,7 +1028,13 @@ describe('tick', () => {
         epochStartHeight: SmartWeave.block.height + EPOCH_BLOCK_LENGTH - 1,
       },
       prescribedObservers: {
-        0: [],
+        0: Object.keys(stubbedGateways).map((gatewayAddress: string) => {
+          return {
+            ...stubbedPrescribedObserver,
+            gatewayAddress,
+            observerAddress: stubbedGateways[gatewayAddress].observerWallet,
+          };
+        }),
       },
     };
     const nextDistributionHeight =
