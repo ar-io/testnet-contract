@@ -494,7 +494,6 @@ describe('Records', () => {
   });
 
   it('should be able to buy reserved name if it is the target of the reserved name', async () => {
-    contract.connect(nonContractOwner);
     const namePurchase = {
       name: 'twitter',
       contractTxId: ANT_CONTRACT_IDS[0],

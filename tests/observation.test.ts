@@ -56,35 +56,33 @@ describe('Observation', () => {
       wallets[9].addr, // should not be included as its leaving
     ];
   });
+  beforeEach(async () => {
+    const { result }: { result: WeightedObserver[] } = await contract.viewState(
+      {
+        function: 'prescribedObservers',
+      },
+    );
+    prescribedObservers = result;
+    prescribedObserverWallets = wallets.filter((wallet) =>
+      prescribedObservers.find(
+        (observer: { gatewayAddress: string }) =>
+          observer.gatewayAddress === wallet.addr,
+      ),
+    );
+    currentEpochStartHeight = await contract
+      .viewState({
+        function: 'epoch',
+      })
+      .then(
+        (response) =>
+          new BlockHeight(
+            (response.result as { epochStartHeight: number }).epochStartHeight,
+          ),
+      );
+  });
 
   describe('valid observer', () => {
-    beforeEach(async () => {
-      const { result }: { result: WeightedObserver[] } =
-        await contract.viewState({
-          function: 'prescribedObservers',
-        });
-      prescribedObservers = result;
-      prescribedObserverWallets = wallets.filter((wallet) =>
-        prescribedObservers.find(
-          (observer: { gatewayAddress: string }) =>
-            observer.gatewayAddress === wallet.addr,
-        ),
-      );
-      currentEpochStartHeight = await contract
-        .viewState({
-          function: 'epoch',
-        })
-        .then(
-          (response) =>
-            new BlockHeight(
-              (
-                response.result as { epochStartHeight: number }
-              ).epochStartHeight,
-            ),
-        );
-    });
-
-    describe('read operations', () => {
+    describe('read interactions', () => {
       it('should return the same prescribed observers for the current epoch', async () => {
         const {
           result: refreshPrescribedObservers,
