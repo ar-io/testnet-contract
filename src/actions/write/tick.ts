@@ -679,7 +679,8 @@ export async function tickRewardDistribution({
         }
       }
 
-      // distribute tokens to each delegate to their existing delegated stake
+      // distribute gateway reward tokens to each delegate to their existing stake on this gateway
+      // ensure the gateway's total delegated stake is updated each time
       for (const delegateAddress in tokensForDelegate) {
         safeDelegateDistribution({
           balances: updatedBalances,
@@ -772,7 +773,8 @@ export async function tickRewardDistribution({
         }
       }
 
-      // distribute tokens to each delegate
+      // distribute observer reward tokens to each delegate to their existing stake on this gateway
+      // ensure the gateway's total delegated stake is updated each time
       for (const delegateAddress in tokensForDelegate) {
         safeDelegateDistribution({
           balances: updatedBalances,
