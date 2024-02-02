@@ -91,9 +91,6 @@ describe('Records', () => {
       demandFactoring: prevState.demandFactoring,
     });
 
-    const totalCostOfLease =
-      expectedPurchasePrice * prevState.demandFactoring.demandFactor;
-
     const writeInteraction = await contract.writeInteraction(
       {
         function: 'buyRecord',
@@ -114,15 +111,15 @@ describe('Records', () => {
       contractTxId: ANT_CONTRACT_IDS[0],
       endTimestamp: expect.any(Number),
       startTimestamp: expect.any(Number),
-      purchasePrice: totalCostOfLease,
+      purchasePrice: expectedPurchasePrice,
       undernames: DEFAULT_UNDERNAME_COUNT,
       type: 'lease',
     });
     expect(balances[nonContractOwnerAddress]).toEqual(
-      prevBalance - totalCostOfLease,
+      prevBalance - expectedPurchasePrice,
     );
     expect(balances[srcContractId]).toEqual(
-      prevState.balances[srcContractId] + totalCostOfLease,
+      prevState.balances[srcContractId] + expectedPurchasePrice,
     );
   });
 
@@ -143,9 +140,6 @@ describe('Records', () => {
       demandFactoring: prevState.demandFactoring,
     });
 
-    const totalCostOfLease =
-      expectedPurchasePrice * prevState.demandFactoring.demandFactor;
-
     const writeInteraction = await contract.writeInteraction(
       {
         function: 'buyRecord',
@@ -167,14 +161,14 @@ describe('Records', () => {
       endTimestamp: expect.any(Number),
       startTimestamp: expect.any(Number),
       undernames: DEFAULT_UNDERNAME_COUNT,
-      purchasePrice: totalCostOfLease,
+      purchasePrice: expectedPurchasePrice,
       type: 'lease',
     });
     expect(balances[nonContractOwnerAddress]).toEqual(
-      prevBalance - totalCostOfLease,
+      prevBalance - expectedPurchasePrice,
     );
     expect(balances[srcContractId]).toEqual(
-      prevState.balances[srcContractId] + totalCostOfLease,
+      prevState.balances[srcContractId] + expectedPurchasePrice,
     );
   });
 
@@ -193,9 +187,6 @@ describe('Records', () => {
       currentBlockTimestamp: new BlockTimestamp(currentBlock.timestamp),
       demandFactoring: prevState.demandFactoring,
     });
-
-    const totalCostOfPermabuy =
-      expectedPurchasePrice * prevState.demandFactoring.demandFactor;
 
     const writeInteraction = await contract.writeInteraction(
       {
@@ -218,13 +209,13 @@ describe('Records', () => {
       type: 'permabuy',
       startTimestamp: expect.any(Number),
       undernames: DEFAULT_UNDERNAME_COUNT,
-      purchasePrice: totalCostOfPermabuy,
+      purchasePrice: expectedPurchasePrice,
     });
     expect(balances[nonContractOwnerAddress]).toEqual(
-      prevBalance - totalCostOfPermabuy,
+      prevBalance - expectedPurchasePrice,
     );
     expect(balances[srcContractId]).toEqual(
-      prevState.balances[srcContractId] + totalCostOfPermabuy,
+      prevState.balances[srcContractId] + expectedPurchasePrice,
     );
   });
 
@@ -500,6 +491,8 @@ describe('Records', () => {
       years: 1,
     };
     const currentBlock = await arweave.blocks.getCurrent();
+
+    // this function includes demand factor of state
     const expectedPurchasePrice = calculateRegistrationFee({
       name: namePurchase.name,
       type: 'lease',
@@ -508,9 +501,6 @@ describe('Records', () => {
       currentBlockTimestamp: new BlockTimestamp(currentBlock.timestamp),
       demandFactoring: prevState.demandFactoring,
     });
-
-    const totalCostOfLease =
-      expectedPurchasePrice * prevState.demandFactoring.demandFactor;
 
     const writeInteraction = await contract.writeInteraction(
       {
@@ -531,7 +521,7 @@ describe('Records', () => {
       endTimestamp: expect.any(Number),
       startTimestamp: expect.any(Number),
       undernames: DEFAULT_UNDERNAME_COUNT,
-      purchasePrice: totalCostOfLease,
+      purchasePrice: expectedPurchasePrice,
       type: 'lease',
     });
     expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toBe(
@@ -539,10 +529,10 @@ describe('Records', () => {
     );
     expect(reserved[namePurchase.name.toLowerCase()]).toEqual(undefined);
     expect(balances[nonContractOwnerAddress]).toEqual(
-      prevState.balances[nonContractOwnerAddress] - totalCostOfLease,
+      prevState.balances[nonContractOwnerAddress] - expectedPurchasePrice,
     );
     expect(balances[srcContractId]).toEqual(
-      prevState.balances[srcContractId] + totalCostOfLease,
+      prevState.balances[srcContractId] + expectedPurchasePrice,
     );
   });
 
