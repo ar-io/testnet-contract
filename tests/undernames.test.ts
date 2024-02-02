@@ -155,7 +155,7 @@ describe('undernames', () => {
     });
 
     describe('with valid input', () => {
-      const arnsName = 'name1';
+      const arnsName = 'name-1';
 
       it.each([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 1000])(
         'should successfully increase undernames with valid quantity provided: %s',
@@ -190,7 +190,7 @@ describe('undernames', () => {
         },
       );
 
-      it.each(['name1', 'name2', 'name3'])(
+      it.each(['name-1', 'name-2', 'name-3'])(
         'should successfully increase undernames with valid name provided: %s',
         async (validName) => {
           const undernameInput = {

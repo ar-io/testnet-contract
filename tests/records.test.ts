@@ -38,20 +38,26 @@ describe('Records', () => {
       nonContractOwnerAddress = await arweave.wallets.getAddress(
         nonContractOwner,
       );
+      contract.connect(nonContractOwner);
     });
 
     beforeEach(async () => {
-      contract.connect(nonContractOwner);
+      // tick so we are always working off freshest state
+      await contract.writeInteraction({ function: 'tick' });
       prevState = (await contract.readState()).cachedValue.state as IOState;
+    });
+
+    afterEach(() => {
+      contract.connect(nonContractOwner);
     });
 
     it('should be able to fetch record details via view state', async () => {
       const { result: record } = await contract.viewState({
         function: 'record',
-        name: 'name1',
+        name: 'name-1',
       });
       const expectObjected = {
-        name: 'name1',
+        name: 'name-1',
         endTimestamp: expect.any(Number),
         startTimestamp: expect.any(Number),
         contractTxID: expect.any(String),
@@ -72,8 +78,6 @@ describe('Records', () => {
     });
 
     it('should be able to lease a name for a provided number of years', async () => {
-      const { cachedValue: prevCachedValue } = await contract.readState();
-      const prevState = prevCachedValue.state as IOState;
       const prevBalance = prevState.balances[nonContractOwnerAddress];
       const namePurchase = {
         name: 'newName',
@@ -123,8 +127,6 @@ describe('Records', () => {
     });
 
     it('should be able to lease a name without specifying years and type', async () => {
-      const { cachedValue: prevCachedValue } = await contract.readState();
-      const prevState = prevCachedValue.state as IOState;
       const prevBalance = prevState.balances[nonContractOwnerAddress];
       const namePurchase = {
         name: 'newname2',
@@ -173,8 +175,6 @@ describe('Records', () => {
     });
 
     it('should be able to permabuy name longer than 12 characters', async () => {
-      const { cachedValue: prevCachedValue } = await contract.readState();
-      const prevState = prevCachedValue.state as IOState;
       const prevBalance = prevState.balances[nonContractOwnerAddress];
       const namePurchase = {
         name: 'permabuy-name',

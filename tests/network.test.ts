@@ -1,4 +1,4 @@
-import { Contract, EvalStateResult, JWKInterface } from 'warp-contracts';
+import { Contract, JWKInterface } from 'warp-contracts';
 
 import {
   Gateway,
@@ -29,6 +29,7 @@ describe('Network', () => {
   let owner: JWKInterface;
   let ownerAddress: string;
   let srcContractId: string;
+  let prevState: IOState;
 
   beforeAll(async () => {
     srcContractId = getLocalArNSContractKey('id');
@@ -49,6 +50,12 @@ describe('Network', () => {
         .connect(newGatewayOperator);
     });
 
+    beforeEach(async () => {
+      // tick so we are always working off freshest state
+      await contract.writeInteraction({ function: 'tick' });
+      prevState = (await contract.readState()).cachedValue.state;
+    });
+
     describe('join network', () => {
       it.each([
         'blah',
@@ -58,7 +65,6 @@ describe('Network', () => {
       ])(
         'should fail network join with invalid observer wallet address',
         async (badObserverWallet) => {
-          const { cachedValue: prevCachedValue } = await contract.readState();
           const joinGatewayPayload = {
             observerWallet: badObserverWallet,
             qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
@@ -77,14 +83,13 @@ describe('Network', () => {
           expect(Object.keys(newCachedValue.errorMessages)).toContain(
             writeInteraction?.originalTxId,
           );
-          expect(newCachedValue.state).toEqual(prevCachedValue.state);
+          expect(newCachedValue.state).toEqual(prevState);
         },
       );
 
       it.each(['', undefined, -1, 100_000])(
         'should fail for invalid ports',
         async (badPort) => {
-          const { cachedValue: prevCachedValue } = await contract.readState();
           const joinGatewayPayload = {
             qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
             label: 'Test Gateway', // friendly label
@@ -102,14 +107,13 @@ describe('Network', () => {
           expect(Object.keys(newCachedValue.errorMessages)).toContain(
             writeInteraction.originalTxId,
           );
-          expect(newCachedValue.state).toEqual(prevCachedValue.state);
+          expect(newCachedValue.state).toEqual(prevState);
         },
       );
 
       it.each(['bad', undefined, 1, 'httpsp'])(
         'should fail for invalid protocol',
         async (badProtocol) => {
-          const { cachedValue: prevCachedValue } = await contract.readState();
           const joinGatewayPayload = {
             qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
             label: 'Test Gateway', // friendly label
@@ -127,7 +131,7 @@ describe('Network', () => {
           expect(Object.keys(newCachedValue.errorMessages)).toContain(
             writeInteraction.originalTxId,
           );
-          expect(newCachedValue.state).toEqual(prevCachedValue.state);
+          expect(newCachedValue.state).toEqual(prevState);
         },
       );
 
@@ -137,7 +141,6 @@ describe('Network', () => {
         1,
         'SUUUUUUUUUUUUUUUUUUUUUUUUUUPER LONG LABEL LONGER THAN 64 CHARS!!!!!!!!!',
       ])('should fail for invalid label', async (badLabel) => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
         const joinGatewayPayload = {
           qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
           label: badLabel, // friendly label
@@ -155,7 +158,7 @@ describe('Network', () => {
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
           writeInteraction?.originalTxId,
         );
-        expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        expect(newCachedValue.state).toEqual(prevState);
       });
 
       it.each([
@@ -180,7 +183,6 @@ describe('Network', () => {
         100,
         '%percent.com',
       ])('should fail for invalid fqdn', async (badFqdn) => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
         const joinGatewayPayload = {
           qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
           label: 'test gateway', // friendly label
@@ -198,7 +200,7 @@ describe('Network', () => {
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
           writeInteraction?.originalTxId,
         );
-        expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        expect(newCachedValue.state).toEqual(prevState);
       });
 
       it.each([
@@ -207,7 +209,6 @@ describe('Network', () => {
         100,
         'this note is way too long.  please ignore this very long note. this note is way too long.  please ignore this very long note. this note is way too long.  please ignore this very long note. this note is way too long.  please ignore this very long note. this note is way too long.  please ignore this very long note.',
       ])('should fail for invalid note', async (badNote) => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
         const joinGatewayPayload = {
           qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
           label: 'test gateway', // friendly label
@@ -225,7 +226,7 @@ describe('Network', () => {
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
           writeInteraction?.originalTxId,
         );
-        expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        expect(newCachedValue.state).toEqual(prevState);
       });
 
       it.each([
@@ -235,7 +236,6 @@ describe('Network', () => {
         'not a tx',
         'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY4*',
       ])('should fail for invalid properties', async (badProperties) => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
         const joinGatewayPayload = {
           qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
           label: 'test gateway', // friendly label
@@ -253,7 +253,7 @@ describe('Network', () => {
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
           writeInteraction?.originalTxId,
         );
-        expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        expect(newCachedValue.state).toEqual(prevState);
       });
 
       it.each([
@@ -262,7 +262,6 @@ describe('Network', () => {
         -1,
         CONTRACT_SETTINGS.minNetworkJoinStakeAmount.toString,
       ])('should fail for invalid qty', async (badQty) => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
         const joinGatewayPayload = {
           qty: badQty, // must meet the minimum
           label: 'test gateway', // friendly label
@@ -280,13 +279,11 @@ describe('Network', () => {
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
           writeInteraction?.originalTxId,
         );
-        expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        expect(newCachedValue.state).toEqual(prevState);
       });
 
       it('should join the network with correct parameters', async () => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
-        const prevBalance =
-          prevCachedValue.state.balances[newGatewayOperatorAddress];
+        const prevBalance = prevState.balances[newGatewayOperatorAddress];
         const joinGatewayPayload = {
           observerWallet: newGatewayOperatorAddress,
           qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
@@ -332,8 +329,6 @@ describe('Network', () => {
 
     describe('operator stake', () => {
       it('should increase operator stake with correct parameters', async () => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
-        const prevState = prevCachedValue.state as IOState;
         const prevBalance = prevState.balances[newGatewayOperatorAddress];
         const prevGatewayOperatorBalance =
           prevState.gateways[newGatewayOperatorAddress].operatorStake;
@@ -359,8 +354,6 @@ describe('Network', () => {
       });
 
       it('should not increase operator stake without correct funds', async () => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
-        const prevState = prevCachedValue.state as IOState;
         const prevBalance = prevState.balances[newGatewayOperatorAddress];
         const prevGatewayOperatorBalance =
           prevState.gateways[newGatewayOperatorAddress].operatorStake;
@@ -384,8 +377,6 @@ describe('Network', () => {
       });
 
       it('should decrease operator stake and create new vault', async () => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
-        const prevState = prevCachedValue.state as IOState;
         const qty = CONTRACT_SETTINGS.minNetworkJoinStakeAmount; // This vault should still have enough tokens left
         const writeInteraction = await contract.writeInteraction({
           function: 'decreaseOperatorStake',
@@ -418,7 +409,6 @@ describe('Network', () => {
       });
 
       it('should not decrease operator stake decrease if it brings the gateway below the minimum', async () => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
         const writeInteraction = await contract.writeInteraction({
           function: 'decreaseOperatorStake',
           qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount,
@@ -428,7 +418,7 @@ describe('Network', () => {
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
           writeInteraction.originalTxId,
         );
-        expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        expect(newCachedValue.state).toEqual(prevState);
       });
     });
 
@@ -463,14 +453,10 @@ describe('Network', () => {
       });
 
       describe('invalid inputs', () => {
-        let prevCachedValue: EvalStateResult<IOState>;
-
         beforeAll(async () => {
           await contract.writeInteraction({
             function: 'tick',
           });
-          const { cachedValue } = await contract.readState();
-          prevCachedValue = cachedValue;
         });
 
         it.each([
@@ -490,7 +476,7 @@ describe('Network', () => {
             expect(Object.keys(newCachedValue.errorMessages)).toContain(
               writeInteraction?.originalTxId,
             );
-            expect(newCachedValue.state).toEqual(prevCachedValue.state);
+            expect(newCachedValue.state).toEqual(prevState);
           },
         );
 
@@ -507,21 +493,20 @@ describe('Network', () => {
             });
             expect(writeInteraction?.originalTxId).not.toBe(undefined);
             const { cachedValue: newCachedValue } = await contract.readState();
-            expect(newCachedValue.state).toEqual(prevCachedValue.state);
+            expect(newCachedValue.state).toEqual(prevState);
           },
         );
 
         it.each(['', '443', 12345678, false])(
           'should not modify gateway settings with invalid port',
           async (badPort) => {
-            const { cachedValue: prevCachedValue } = await contract.readState();
             const writeInteraction = await contract.writeInteraction({
               function: 'updateGatewaySettings',
               port: badPort,
             });
             expect(writeInteraction?.originalTxId).not.toBe(undefined);
             const { cachedValue: newCachedValue } = await contract.readState();
-            expect(newCachedValue.state).toEqual(prevCachedValue.state);
+            expect(newCachedValue.state).toEqual(prevState);
           },
         );
 
@@ -536,7 +521,7 @@ describe('Network', () => {
           expect(Object.keys(newCachedValue.errorMessages)).toContain(
             writeInteraction.originalTxId,
           );
-          expect(newCachedValue.state).toEqual(prevCachedValue.state);
+          expect(newCachedValue.state).toEqual(prevState);
         });
 
         it.each([
@@ -548,7 +533,6 @@ describe('Network', () => {
           'this-is-a-looong-name-a-verrrryyyyy-loooooong-name-that-is-too-long',
           '192.168.1.1',
           'https://full-domain.net',
-          undefined,
           'abcde',
           'test domain.com',
           'jons.cool.site.',
@@ -561,15 +545,18 @@ describe('Network', () => {
           100,
           '%percent.com',
         ])(
-          'should not modify gateway settings with invalid fqdn',
-          async (badFQDN) => {
+          'should not modify gateway settings with invalid fqdn: %s',
+          async (badFQDN: string | number) => {
             const writeInteraction = await contract.writeInteraction({
               function: 'updateGatewaySettings',
               fqdn: badFQDN,
             });
             expect(writeInteraction?.originalTxId).not.toBe(undefined);
             const { cachedValue: newCachedValue } = await contract.readState();
-            expect(newCachedValue.state).toEqual(prevCachedValue.state);
+            expect(Object.keys(newCachedValue.errorMessages)).toContain(
+              writeInteraction.originalTxId,
+            );
+            expect(newCachedValue.state).toEqual(prevState);
           },
         );
 
@@ -587,7 +574,7 @@ describe('Network', () => {
             });
             expect(writeInteraction?.originalTxId).not.toBe(undefined);
             const { cachedValue: newCachedValue } = await contract.readState();
-            expect(newCachedValue.state).toEqual(prevCachedValue.state);
+            expect(newCachedValue.state).toEqual(prevState);
           },
         );
 
@@ -603,7 +590,7 @@ describe('Network', () => {
             });
             expect(writeInteraction?.originalTxId).not.toBe(undefined);
             const { cachedValue: newCachedValue } = await contract.readState();
-            expect(newCachedValue.state).toEqual(prevCachedValue.state);
+            expect(newCachedValue.state).toEqual(prevState);
           },
         );
 
@@ -618,7 +605,7 @@ describe('Network', () => {
           expect(Object.keys(newCachedValue.errorMessages)).toContain(
             writeInteraction.originalTxId,
           );
-          expect(newCachedValue.state).toEqual(prevCachedValue.state);
+          expect(newCachedValue.state).toEqual(prevState);
         });
       });
     });
@@ -658,124 +645,18 @@ describe('Network', () => {
         }
       });
     });
-  });
 
-  describe('non-valid gateway operator', () => {
-    beforeAll(async () => {
-      owner = getLocalWallet(0);
-      ownerAddress = await arweave.wallets.getAddress(owner);
-      nonGatewayOperator = getLocalWallet(16);
-      contract = warp
-        .contract<IOState>(srcContractId)
-        .connect(nonGatewayOperator);
-    });
-
-    describe('read interactions', () => {
+    describe('new gateway operator', () => {
       beforeAll(async () => {
-        await contract.writeInteraction({
-          function: 'tick',
-        });
+        owner = getLocalWallet(0);
+        ownerAddress = await arweave.wallets.getAddress(owner);
+        nonGatewayOperator = getLocalWallet(16);
+        contract = warp
+          .contract<IOState>(srcContractId)
+          .connect(nonGatewayOperator);
       });
 
-      it('should be able to fetch gateway details via view state', async () => {
-        const { result: gateway } = await contract.viewState({
-          function: 'gateway',
-          target: ownerAddress,
-        });
-        const expectedGatewayObj = expect.objectContaining({
-          operatorStake: expect.any(Number),
-          status: expect.any(String),
-          vaults: expect.any(Object),
-          settings: expect.any(Object),
-          weights: expect.any(Object),
-        });
-        expect(gateway).not.toBe(undefined);
-        expect(gateway).toEqual(expectedGatewayObj);
-      });
-
-      it('should be return an error when fetching a non-existent gateway via viewState', async () => {
-        const response = await contract.viewState({
-          function: 'gateway',
-          target: 'non-existent-gateway',
-        });
-        expect(response).not.toBe(undefined);
-        expect(response?.errorMessage).toEqual(
-          'No gateway found with wallet address non-existent-gateway.',
-        );
-      });
-
-      it('should return the observer weights if the caller is valid gateway', async () => {
-        const { result }: { result: WeightedObserver } =
-          await contract.viewState({
-            function: 'gateway',
-            target: ownerAddress,
-          });
-        expect(result).toEqual(
-          expect.objectContaining({
-            // other gateway information here
-            weights: {
-              stakeWeight: expect.any(Number),
-              tenureWeight: expect.any(Number),
-              gatewayRewardRatioWeight: expect.any(Number),
-              observerRewardRatioWeight: expect.any(Number),
-              compositeWeight: expect.any(Number),
-              normalizedCompositeWeight: expect.any(Number),
-            },
-          }),
-        );
-      });
-
-      it('should return an error if the gateway is not in the registry', async () => {
-        const notJoinedGateway = await createLocalWallet(arweave);
-        const error = await contract.viewState({
-          function: 'gateway',
-          target: notJoinedGateway.address,
-        });
-        expect(error.type).toEqual('error');
-        expect(error.errorMessage).toEqual(
-          expect.stringContaining(
-            `No gateway found with wallet address ${notJoinedGateway.address}.`,
-          ),
-        );
-      });
-
-      it('should be able to fetch gateway address registry with weights via view state', async () => {
-        const { cachedValue } = await contract.readState();
-        const fullState = cachedValue.state as IOState;
-        const {
-          result: gateways,
-        }: {
-          result: Record<WalletAddress, Gateway & { weights: ObserverWeights }>;
-        } = await contract.viewState({
-          function: 'gateways',
-        });
-        expect(gateways).not.toBe(undefined);
-        for (const address of Object.keys(gateways)) {
-          expect(gateways[address]).toEqual({
-            ...fullState.gateways[address],
-            stats: {
-              passedEpochCount: 0,
-              failedConsecutiveEpochs: 0,
-              submittedEpochCount: 0,
-              totalEpochsPrescribedCount: 0,
-              totalEpochParticipationCount: 0,
-            },
-            weights: expect.objectContaining({
-              stakeWeight: expect.any(Number),
-              tenureWeight: expect.any(Number),
-              gatewayRewardRatioWeight: expect.any(Number),
-              observerRewardRatioWeight: expect.any(Number),
-              compositeWeight: expect.any(Number),
-              normalizedCompositeWeight: expect.any(Number),
-            }),
-          });
-        }
-      });
-    });
-
-    describe('write interactions', () => {
       it('should not join the network without right amount of funds', async () => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
         const qty = WALLET_FUND_AMOUNT * 2; // This user should not have this much
         const label = 'Invalid Gateway'; // friendly label
         const fqdn = 'invalid.io';
@@ -798,11 +679,10 @@ describe('Network', () => {
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
           writeInteraction.originalTxId,
         );
-        expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        expect(newCachedValue.state).toEqual(prevState);
       });
 
       it('should not modify gateway settings without already being in GAR', async () => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
         const writeInteraction = await contract.writeInteraction({
           function: 'updateGatewaySettings',
           fqdn: 'test.com',
@@ -812,8 +692,105 @@ describe('Network', () => {
         expect(Object.keys(newCachedValue.errorMessages)).toContain(
           writeInteraction.originalTxId,
         );
-        expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        expect(newCachedValue.state).toEqual(prevState);
       });
+    });
+  });
+  describe('read interactions', () => {
+    it('should be able to fetch gateway details via view state', async () => {
+      const { result: gateway } = await contract.viewState({
+        function: 'gateway',
+        target: ownerAddress,
+      });
+      const expectedGatewayObj = expect.objectContaining({
+        operatorStake: expect.any(Number),
+        status: expect.any(String),
+        vaults: expect.any(Object),
+        settings: expect.any(Object),
+        weights: expect.any(Object),
+      });
+      expect(gateway).not.toBe(undefined);
+      expect(gateway).toEqual(expectedGatewayObj);
+    });
+
+    it('should be return an error when fetching a non-existent gateway via viewState', async () => {
+      const response = await contract.viewState({
+        function: 'gateway',
+        target: 'non-existent-gateway',
+      });
+      expect(response).not.toBe(undefined);
+      expect(response?.errorMessage).toEqual(
+        'No gateway found with wallet address non-existent-gateway.',
+      );
+    });
+
+    it('should return the observer weights if the caller is valid gateway', async () => {
+      const { result }: { result: WeightedObserver } = await contract.viewState(
+        {
+          function: 'gateway',
+          target: ownerAddress,
+        },
+      );
+      expect(result).toEqual(
+        expect.objectContaining({
+          // other gateway information here
+          weights: {
+            stakeWeight: expect.any(Number),
+            tenureWeight: expect.any(Number),
+            gatewayRewardRatioWeight: expect.any(Number),
+            observerRewardRatioWeight: expect.any(Number),
+            compositeWeight: expect.any(Number),
+            normalizedCompositeWeight: expect.any(Number),
+          },
+        }),
+      );
+    });
+
+    it('should return an error if the gateway is not in the registry', async () => {
+      const notJoinedGateway = await createLocalWallet(arweave);
+      const error = await contract.viewState({
+        function: 'gateway',
+        target: notJoinedGateway.address,
+      });
+      expect(error.type).toEqual('error');
+      expect(error.errorMessage).toEqual(
+        expect.stringContaining(
+          `No gateway found with wallet address ${notJoinedGateway.address}.`,
+        ),
+      );
+    });
+
+    it('should be able to fetch gateway address registry with weights via view state', async () => {
+      const { cachedValue } = await contract.readState();
+      const fullState = cachedValue.state as IOState;
+      const {
+        result: gateways,
+      }: {
+        result: Record<WalletAddress, Gateway & { weights: ObserverWeights }>;
+      } = await contract.viewState({
+        function: 'gateways',
+      });
+      expect(gateways).not.toBe(undefined);
+      for (const address of Object.keys(gateways)) {
+        expect(gateways[address]).toEqual({
+          ...fullState.gateways[address],
+          stats: {
+            passedEpochCount: expect.any(Number),
+            failedConsecutiveEpochs: expect.any(Number),
+            submittedEpochCount: expect.any(Number),
+            totalEpochsPrescribedCount: expect.any(Number),
+            totalEpochParticipationCount: expect.any(Number),
+          },
+          weights: expect.objectContaining({
+            stakeWeight: expect.any(Number),
+            tenureWeight: expect.any(Number),
+            gatewayRewardRatioWeight: expect.any(Number),
+            observerRewardRatioWeight: expect.any(Number),
+            compositeWeight: expect.any(Number),
+            normalizedCompositeWeight: expect.any(Number),
+          }),
+        });
+      }
     });
   });
 });
