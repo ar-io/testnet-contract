@@ -172,6 +172,9 @@ describe('Extend', () => {
         years,
       });
 
+      const expectedCostOfExtension =
+        prevState.demandFactoring.demandFactor * totalExtensionAnnualFee;
+
       const writeInteraction = await contract.writeInteraction({
         function: 'extendRecord',
         name: name,
@@ -190,10 +193,10 @@ describe('Extend', () => {
         prevStateRecord.endTimestamp + years * SECONDS_IN_A_YEAR,
       );
       expect(state.balances[nonContractOwnerAddress]).toEqual(
-        prevBalance - totalExtensionAnnualFee,
+        prevBalance - expectedCostOfExtension,
       );
       expect(state.balances[srcContractId]).toEqual(
-        prevState.balances[srcContractId] + totalExtensionAnnualFee,
+        prevState.balances[srcContractId] + expectedCostOfExtension,
       );
     },
   );
@@ -211,6 +214,9 @@ describe('Extend', () => {
         years,
       });
 
+      const expectedCostOfExtension =
+        prevState.demandFactoring.demandFactor * totalExtensionAnnualFee;
+
       const writeInteraction = await contract.writeInteraction({
         function: 'extendRecord',
         name: name,
@@ -228,10 +234,10 @@ describe('Extend', () => {
         prevStateRecord.endTimestamp + years * SECONDS_IN_A_YEAR,
       );
       expect(state.balances[nonContractOwnerAddress]).toEqual(
-        prevBalance - totalExtensionAnnualFee,
+        prevBalance - expectedCostOfExtension,
       );
       expect(state.balances[srcContractId]).toEqual(
-        prevState.balances[srcContractId] + totalExtensionAnnualFee,
+        prevState.balances[srcContractId] + expectedCostOfExtension,
       );
     },
   );
