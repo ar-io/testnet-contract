@@ -496,7 +496,7 @@ export async function tickRewardDistribution({
     observations[epochStartHeight.valueOf()]?.reports || [],
   ).length;
 
-  // this should be consistently 50 observers * 51% - if you have more than 26 failed reports - you are not eligible for a reward
+  // this should be consistently 50 observers * 50% + 1 - if you have more than 26 failed reports - you are not eligible for a reward
   const failureReportCountThreshold = Math.floor(
     totalReportsSubmitted * OBSERVATION_FAILURE_THRESHOLD,
   );
@@ -507,9 +507,16 @@ export async function tickRewardDistribution({
     gateways,
   });
 
-  // get the observers for the epoch
+  // get the observers for the epoch - if we don't have it in state we need to compute it
   const existingPrescribedObservers =
-    prescribedObservers[epochStartHeight.valueOf()] || [];
+    prescribedObservers[epochStartHeight.valueOf()] ||
+    (await getPrescribedObserversForEpoch({
+      gateways,
+      epochStartHeight,
+      epochEndHeight,
+      distributions,
+      minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
+    }));
 
   // TODO: consider having this be a set, gateways can not run on the same wallet
   const gatewaysToReward: WalletAddress[] = [];
@@ -647,7 +654,6 @@ export async function tickRewardDistribution({
     : 0;
 
   // TODO: set thresholds for the perGatewayReward and perObserverReward to be greater than at least 1 mIO
-
   // // distribute observer tokens
   for (const gatewayAddress of gatewaysToReward) {
     // add protocol balance if we do not have it
@@ -683,7 +689,6 @@ export async function tickRewardDistribution({
       qty: totalGatewayReward,
     });
   }
-
   // distribute observer tokens
   for (const gatewayObservedAndPassed of observerGatewaysToReward) {
     // add protocol balance if we do not have it
@@ -705,7 +710,6 @@ export async function tickRewardDistribution({
       qty: perObserverReward,
     });
   }
-
   // avoids copying balances if not necessary
   const newBalances: Balances = Object.keys(updatedBalances).length
     ? { ...balances, ...updatedBalances }
@@ -736,6 +740,7 @@ export async function tickRewardDistribution({
     epochPeriod: epochPeriod.valueOf(),
   };
 
+  // now that we've updated stats, refresh our prescribed observers
   const updatedPrescribedObservers = await getPrescribedObserversForEpoch({
     gateways: newGateways,
     epochStartHeight: nextEpochStartHeight,

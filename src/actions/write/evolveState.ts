@@ -1,8 +1,12 @@
 import {
   EPOCH_BLOCK_LENGTH,
+  GATEWAY_REGISTRY_SETTINGS,
   NON_CONTRACT_OWNER_MESSAGE,
 } from '../../constants';
-import { getEpochDataForHeight } from '../../observers';
+import {
+  getEpochDataForHeight,
+  getPrescribedObserversForEpoch,
+} from '../../observers';
 import {
   BlockHeight,
   ContractWriteResult,
@@ -21,12 +25,7 @@ export const evolveState = async (
     throw new ContractError(NON_CONTRACT_OWNER_MESSAGE);
   }
 
-  const {
-    epochStartHeight,
-    epochEndHeight,
-    epochPeriod,
-    epochDistributionHeight,
-  } = getEpochDataForHeight({
+  const { epochStartHeight, epochEndHeight } = getEpochDataForHeight({
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
     epochZeroStartHeight: new BlockHeight(
       state.distributions.epochZeroStartHeight,
@@ -34,12 +33,16 @@ export const evolveState = async (
     epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
   });
 
-  state.distributions = {
-    epochZeroStartHeight: state.distributions.epochZeroStartHeight,
-    epochStartHeight: epochStartHeight.valueOf(),
-    epochEndHeight: epochEndHeight.valueOf(),
-    epochPeriod: epochPeriod.valueOf(),
-    nextDistributionHeight: epochDistributionHeight.valueOf(),
+  const prescribedObservers = await getPrescribedObserversForEpoch({
+    gateways: state.gateways,
+    distributions: state.distributions,
+    epochStartHeight,
+    epochEndHeight,
+    minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
+  });
+
+  state.prescribedObservers = {
+    [epochStartHeight.valueOf()]: prescribedObservers,
   };
 
   return { state };

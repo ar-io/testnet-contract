@@ -27,7 +27,7 @@ describe('getPrescribedObservers', () => {
   });
 });
 
-it('should return the empty array if the current epoch does not have any prescribed observers', async () => {
+it('should return the current array of prescribed observer if not set in state yet', async () => {
   const state = {
     ...getBaselineState(),
     gateways: {
@@ -44,7 +44,13 @@ it('should return the empty array if the current epoch does not have any prescri
     // no distributions
   };
   const { result } = await getPrescribedObservers(state);
-  expect(result).toEqual([]);
+  expect(result).toEqual(
+    Object.keys(stubbedGatewayData).map((gatewayAddress) => ({
+      ...stubbedPrescribedObserver,
+      gatewayAddress,
+      observerAddress: gatewayAddress,
+    })),
+  );
 });
 
 describe('getEpoch', () => {

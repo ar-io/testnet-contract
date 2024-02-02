@@ -31,6 +31,10 @@ export function safeTransfer({
   toAddress: WalletAddress;
   qty: number; // TODO: use IOToken
 }): void {
+  // do not do anything if the transfer quantity is less than 1
+  if (qty < 1) {
+    return;
+  }
   if (fromAddress === toAddress) {
     throw new ContractError(INVALID_TARGET_MESSAGE);
   }
