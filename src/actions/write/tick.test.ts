@@ -318,7 +318,7 @@ describe('tick', () => {
           gateways: {
             'leaving-operator': {
               operatorStake: 100,
-              delegatedStake: 0,
+              delegatedStake: 100,
               observerWallet: 'existing-operator',
               start: 0,
               end: 5,
@@ -326,23 +326,37 @@ describe('tick', () => {
                 'existing-vault-id': {
                   balance: 100,
                   start: 0,
-                  end: 10,
+                  end: 5,
                 },
               },
-              delegates: {},
+              delegates: {
+                'existing-delegate': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 5,
+                    },
+                  },
+                },
+              },
               status: 'leaving',
-              settings: stubbedGatewayData.settings,
+              settings: stubbedDelegatedGatewayData.settings,
               stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
             },
           },
           balances: {
             'leaving-operator': 0,
+            'existing-delegate': 0,
           },
         },
         {
           gateways: {},
           balances: {
             'leaving-operator': 200,
+            'existing-delegate': 200,
           },
         },
       ],
@@ -352,7 +366,7 @@ describe('tick', () => {
           gateways: {
             'existing-operator': {
               operatorStake: 100,
-              delegatedStake: 0,
+              delegatedStake: 100,
               observerWallet: 'existing-operator',
               start: 0,
               end: 10,
@@ -363,7 +377,35 @@ describe('tick', () => {
                   end: 2,
                 },
               },
-              delegates: {},
+              delegates: {
+                'existing-delegate': {
+                  delegatedStake: 0,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 2,
+                    },
+                    'existing-vault-id-2': {
+                      balance: 100,
+                      start: 0,
+                      end: 2,
+                    },
+                  },
+                },
+                'existing-delegate-2': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 20,
+                    },
+                  },
+                },
+              },
               status: 'joined',
               settings: stubbedGatewayData.settings,
               stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
@@ -377,12 +419,24 @@ describe('tick', () => {
           gateways: {
             'existing-operator': {
               operatorStake: 100,
-              delegatedStake: 0,
+              delegatedStake: 100,
               observerWallet: 'existing-operator',
               start: 0,
               end: 10,
               vaults: {},
-              delegates: {},
+              delegates: {
+                'existing-delegate-2': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 20,
+                    },
+                  },
+                },
+              },
               status: 'joined',
               settings: stubbedGatewayData.settings,
               stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
@@ -390,6 +444,7 @@ describe('tick', () => {
           },
           balances: {
             'existing-operator': 100,
+            'existing-delegate': 200,
           },
         },
       ],
@@ -399,7 +454,7 @@ describe('tick', () => {
           gateways: {
             'existing-operator': {
               operatorStake: 100,
-              delegatedStake: 0,
+              delegatedStake: 200,
               observerWallet: 'existing-operator',
               start: 0,
               end: 10,
@@ -410,7 +465,35 @@ describe('tick', () => {
                   end: 10,
                 },
               },
-              delegates: {},
+              delegates: {
+                'existing-delegate': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 20,
+                    },
+                    'existing-vault-id-2': {
+                      balance: 100,
+                      start: 0,
+                      end: 20,
+                    },
+                  },
+                },
+                'existing-delegate-2': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 20,
+                    },
+                  },
+                },
+              },
               status: 'joined',
               settings: stubbedGatewayData.settings,
               stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
@@ -424,7 +507,7 @@ describe('tick', () => {
           gateways: {
             'existing-operator': {
               operatorStake: 100,
-              delegatedStake: 0,
+              delegatedStake: 200,
               observerWallet: 'existing-operator',
               start: 0,
               end: 10,
@@ -435,7 +518,35 @@ describe('tick', () => {
                   end: 10,
                 },
               },
-              delegates: {},
+              delegates: {
+                'existing-delegate': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 20,
+                    },
+                    'existing-vault-id-2': {
+                      balance: 100,
+                      start: 0,
+                      end: 20,
+                    },
+                  },
+                },
+                'existing-delegate-2': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 20,
+                    },
+                  },
+                },
+              },
               status: 'joined',
               settings: stubbedGatewayData.settings,
               stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
@@ -443,6 +554,100 @@ describe('tick', () => {
           },
           balances: {
             'existing-operator': 0,
+          },
+        },
+      ],
+      [
+        'should keep a gateway that is joined and only return delegate vaults that have expired',
+        {
+          gateways: {
+            'existing-operator': {
+              operatorStake: 100,
+              delegatedStake: 200,
+              observerWallet: 'existing-operator',
+              start: 0,
+              end: 10,
+              vaults: {
+                'existing-vault-id': {
+                  balance: 100,
+                  start: 0,
+                  end: 10,
+                },
+              },
+              delegates: {
+                'existing-delegate': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 2,
+                    },
+                    'existing-vault-id-2': {
+                      balance: 100,
+                      start: 0,
+                      end: 2,
+                    },
+                  },
+                },
+                'existing-delegate-2': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 2,
+                    },
+                  },
+                },
+              },
+              status: 'joined',
+              settings: stubbedGatewayData.settings,
+              stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
+            },
+          },
+          balances: {
+            'existing-operator': 0,
+          },
+        },
+        {
+          gateways: {
+            'existing-operator': {
+              operatorStake: 100,
+              delegatedStake: 200,
+              observerWallet: 'existing-operator',
+              start: 0,
+              end: 10,
+              vaults: {
+                'existing-vault-id': {
+                  balance: 100,
+                  start: 0,
+                  end: 10,
+                },
+              },
+              delegates: {
+                'existing-delegate': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {},
+                },
+                'existing-delegate-2': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {},
+                },
+              },
+              status: 'joined',
+              settings: stubbedGatewayData.settings,
+              stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
+            },
+          },
+          balances: {
+            'existing-operator': 0,
+            'existing-delegate': 200,
+            'existing-delegate-2': 100,
           },
         },
       ],

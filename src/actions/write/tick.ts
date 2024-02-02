@@ -30,6 +30,7 @@ import {
   BlockTimestamp,
   ContractWriteResult,
   DeepReadonly,
+  Delegates,
   DemandFactoringData,
   EpochDistributionData,
   GatewayPerformanceStats,
@@ -209,7 +210,7 @@ export function tickGatewayRegistry({
     (acc: Gateways, key: string) => {
       const gateway = gateways[key];
 
-      // if it's not eligible to leave, keep it in the registry
+      // If the gateway is eligible to be removed, all its operator and delegate stakes are returned
       if (
         isGatewayEligibleToBeRemoved({
           gateway,
@@ -222,14 +223,34 @@ export function tickGatewayRegistry({
 
         // TODO: remove gateways that have observation fail count > threshold
 
-        // gateway is leaving, make sure we return all the vaults to it
         for (const vault of Object.values(gateway.vaults)) {
           incrementBalance(updatedBalances, key, vault.balance);
         }
         // return any remaining operator stake
-        incrementBalance(updatedBalances, key, gateway.operatorStake);
+        if (gateway.operatorStake) {
+          incrementBalance(updatedBalances, key, gateway.operatorStake);
+        }
+        // return any delegated stake
+        for (const [delegateAddress, delegate] of Object.entries(
+          gateway.delegates,
+        )) {
+          for (const vault of Object.values(delegate.vaults)) {
+            // return the vault balance to the delegate and do not add back vault
+            incrementBalance(updatedBalances, delegateAddress, vault.balance);
+          }
+          // return any remaining delegate stake
+          if (delegate.delegatedStake) {
+            incrementBalance(
+              updatedBalances,
+              delegateAddress,
+              delegate.delegatedStake,
+            );
+          }
+        }
         return acc;
       }
+
+      // The gateway is not leaving yet
       // return any vaulted balances to the owner if they are expired, but keep the gateway
       const updatedVaults: Vaults = {};
       for (const [id, vault] of Object.entries(gateway.vaults)) {
@@ -244,8 +265,43 @@ export function tickGatewayRegistry({
           updatedVaults[id] = vault;
         }
       }
+
+      // return any vaulted balances to delegates if they are expired, but keep the delegate
+      const updatedDelegates: Delegates = {};
+      for (const [delegateAddress, delegate] of Object.entries(
+        gateway.delegates,
+      )) {
+        // Check if this delegate was added to updated delegates
+        if (!updatedDelegates[delegateAddress]) {
+          updatedDelegates[delegateAddress] = {
+            ...gateways[key].delegates[delegateAddress],
+            vaults: {}, // start with no vaults
+          };
+        }
+        for (const [id, vault] of Object.entries(delegate.vaults)) {
+          if (vault.end <= currentBlockHeight.valueOf()) {
+            if (!updatedBalances[delegateAddress]) {
+              updatedBalances[delegateAddress] = balances[delegateAddress] || 0;
+            }
+
+            // return the vault balance to the delegate and do not add back vault
+            incrementBalance(updatedBalances, delegateAddress, vault.balance);
+          } else {
+            // still an active vault so add it
+            updatedDelegates[delegateAddress].vaults[id] = vault;
+          }
+        }
+        if (
+          updatedDelegates[delegateAddress].delegatedStake === 0 &&
+          Object.keys(updatedDelegates[delegateAddress].vaults).length === 0
+        ) {
+          // This delegate must be removed from updated delegates because it has no more vaults or stake
+          delete updatedDelegates[delegateAddress];
+        }
+      }
       acc[key] = {
         ...gateway,
+        delegates: updatedDelegates,
         vaults: updatedVaults,
       };
       return acc;
