@@ -13,27 +13,24 @@ import {
 export const getPrescribedObservers = async (
   state: IOState,
 ): Promise<ContractReadResult> => {
-  const { gateways, distributions } = state;
-
-  if (+SmartWeave.block.height < distributions.epochZeroStartHeight) {
-    return { result: [] };
-  }
-
+  const { prescribedObservers, distributions } = state;
   const { epochStartHeight, epochEndHeight } = getEpochDataForHeight({
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
     epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
     epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
   });
 
-  const prescribedObservers = await getPrescribedObserversForEpoch({
-    gateways,
-    epochStartHeight,
-    epochEndHeight,
-    distributions,
-    minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
-  });
+  const existingOrComputedObservers =
+    prescribedObservers[epochStartHeight.valueOf()] ||
+    (await getPrescribedObserversForEpoch({
+      gateways: state.gateways,
+      distributions: state.distributions,
+      epochStartHeight,
+      epochEndHeight,
+      minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
+    }));
 
-  return { result: prescribedObservers };
+  return { result: existingOrComputedObservers };
 };
 
 export async function getEpoch(
