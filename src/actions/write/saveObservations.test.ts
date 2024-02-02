@@ -9,6 +9,7 @@ import {
   getBaselineState,
   stubbedArweaveTxId,
   stubbedGatewayData,
+  stubbedPrescribedObserver,
 } from '../../tests/stubs';
 import { IOState, Observations } from '../../types';
 import { saveObservations } from './saveObservations';
@@ -230,6 +231,15 @@ describe('saveObservations', () => {
               },
             },
             observations: existingObservations,
+            prescribedObservers: {
+              [0]: [
+                {
+                  ...stubbedPrescribedObserver,
+                  gatewayAddress: 'observer-address',
+                  observerAddress: 'observer-address',
+                },
+              ],
+            },
           };
           // set the current height to one that allows observations to be submitted
           SmartWeave.block.height =
@@ -268,6 +278,15 @@ describe('saveObservations', () => {
               ...stubbedGatewayData,
               observerWallet: 'observer-address',
             },
+          },
+          prescribedObservers: {
+            [0]: [
+              {
+                ...stubbedPrescribedObserver,
+                gatewayAddress: 'observer-address',
+                observerAddress: 'observer-address',
+              },
+            ],
           },
         };
         // set the current height to one that allows observations to be submitted
@@ -310,6 +329,15 @@ describe('saveObservations', () => {
               observerWallet: stubbedArweaveTxId,
             },
           },
+          prescribedObservers: {
+            [0]: [
+              {
+                ...stubbedPrescribedObserver,
+                gatewayAddress: 'observer-address',
+                observerAddress: 'observer-address',
+              },
+            ],
+          },
         };
         const { state } = await saveObservations(initialState, {
           caller: 'observer-address',
@@ -345,6 +373,15 @@ describe('saveObservations', () => {
               status: NETWORK_LEAVING_STATUS,
             },
           },
+          prescribedObservers: {
+            [0]: [
+              {
+                ...stubbedPrescribedObserver,
+                gatewayAddress: 'observer-address',
+                observerAddress: 'observer-address',
+              },
+            ],
+          },
         };
         const { state } = await saveObservations(initialState, {
           caller: 'observer-address',
@@ -379,6 +416,15 @@ describe('saveObservations', () => {
               ...stubbedGatewayData,
               observerAddress: stubbedArweaveTxId,
             },
+          },
+          prescribedObservers: {
+            [0]: [
+              {
+                ...stubbedPrescribedObserver,
+                gatewayAddress: 'observer-address',
+                observerAddress: 'observer-address',
+              },
+            ],
           },
           observations: {},
         };
@@ -434,6 +480,20 @@ describe('saveObservations', () => {
             },
           },
           observations: initialObservationsForEpoch,
+          prescribedObservers: {
+            [0]: [
+              {
+                ...stubbedPrescribedObserver,
+                gatewayAddress: 'observer-address',
+                observerAddress: 'observer-address',
+              },
+              {
+                ...stubbedPrescribedObserver,
+                gatewayAddress: 'a-second-observer-address',
+                observerAddress: 'a-second-observer-address',
+              },
+            ],
+          },
         };
         const { state } = await saveObservations(initialState, {
           caller: 'a-second-observer-address',

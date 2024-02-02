@@ -5,7 +5,13 @@ import {
   GENESIS_FEES,
   INITIAL_DEMAND_FACTOR_DATA,
 } from '../constants';
-import { ArNSLeaseAuctionData, Gateway, Gateways, IOState } from '../types';
+import {
+  ArNSLeaseAuctionData,
+  Gateway,
+  Gateways,
+  IOState,
+  WeightedObserver,
+} from '../types';
 
 export const stubbedArweaveTxId = 'thevalidtransactionidthatis43characterslong';
 
@@ -35,6 +41,7 @@ export const getBaselineState: () => IOState = (): IOState => ({
     // intentionally spread as we don't want to reference the object directly
     ...INITIAL_DEMAND_FACTOR_DATA,
   },
+  prescribedObservers: {},
   settings: undefined,
 });
 
@@ -92,4 +99,25 @@ export const stubbedGateways: Gateways = {
     operatorStake: 300,
     observerWallet: 'a-gateway-observer-3',
   },
+};
+
+export const stubbedPrescribedObservers = Object.keys(stubbedGateways).map(
+  (gatewayAddress) => ({
+    ...stubbedPrescribedObserver,
+    gatewayAddress,
+    observerAddress: stubbedGateways[gatewayAddress].observerWallet,
+  }),
+);
+
+export const stubbedPrescribedObserver: WeightedObserver = {
+  observerAddress: stubbedGatewayData.observerWallet,
+  gatewayAddress: 'a-gateway',
+  stake: 10000,
+  start: 0,
+  tenureWeight: 0,
+  stakeWeight: 1,
+  gatewayRewardRatioWeight: 0,
+  observerRewardRatioWeight: 0,
+  compositeWeight: 0,
+  normalizedCompositeWeight: 0,
 };

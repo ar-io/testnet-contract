@@ -21,6 +21,8 @@ export type DemandFactoringData = {
 
 // TODO: add InputValidator class that can be extended for specific methods
 export type ArNSName = string;
+export type Epoch = number;
+export type Observations = Record<Epoch, EpochObservations>;
 export type Balances = Record<WalletAddress, number>;
 export type Gateways = Record<WalletAddress, Gateway>;
 export type Records = Record<ArNSName, ArNSNameData>; // TODO: create ArNS Name type
@@ -29,6 +31,7 @@ export type Auctions = Record<ArNSName, ArNSAuctionData>;
 export type Fees = Record<string, number>;
 export type Vaults = Record<TransactionId, VaultData>;
 export type RegistryVaults = Record<WalletAddress, Vaults>;
+export type PrescribedObservers = Record<Epoch, WeightedObserver[]>;
 
 // TODO: we may choose to not extend PstState. It provides additional functions with warp (e.g. const contract = warp.pst(contractTxId).transfer())
 export interface IOState extends PstState {
@@ -44,6 +47,7 @@ export interface IOState extends PstState {
   observations: Observations;
   distributions: EpochDistributionData;
   vaults: RegistryVaults;
+  prescribedObservers: PrescribedObservers;
 }
 
 export type GatewayPerformanceStats = {
@@ -71,8 +75,6 @@ export type EpochObservations = {
 };
 
 // The health reports and failure failureSummaries submitted by observers for an epoch
-export type Epoch = number;
-export type Observations = Record<Epoch, EpochObservations>;
 export type ObserverWeights = {
   stakeWeight: number;
   tenureWeight: number;

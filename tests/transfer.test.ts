@@ -20,17 +20,22 @@ describe('Transfers', () => {
 
   describe('contract owner', () => {
     let owner: JWKInterface;
+    let prevState: IOState;
 
     beforeAll(async () => {
       owner = getLocalWallet(0);
       contract = warp.contract<IOState>(srcContractId).connect(owner);
     });
 
+    beforeEach(async () => {
+      // tick so we are always working off freshest state
+      await contract.writeInteraction({ function: 'tick' });
+      prevState = (await contract.readState()).cachedValue.state as IOState;
+    });
+
     it('should be able to transfer tokens to an existing wallet', async () => {
       const existingWallet = getLocalWallet(1);
       const ownerAddress = await arweave.wallets.getAddress(owner);
-      const { cachedValue: prevCachedValue } = await contract.readState();
-      const prevState = prevCachedValue.state as IOState;
       const prevOwnerBalance = prevState.balances[ownerAddress];
       const targetAddress = await arweave.wallets.getAddress(existingWallet);
       const prevTargetBalance = prevState.balances[targetAddress];

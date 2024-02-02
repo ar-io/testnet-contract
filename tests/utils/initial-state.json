@@ -17,9 +17,9 @@
   "distributions": {
     "epochZeroStartHeight": 0,
     "epochStartHeight": 0,
-    "epochEndHeight": 49,
+    "epochEndHeight": 719,
     "epochPeriod": 0,
-    "nextDistributionHeight": 149
+    "nextDistributionHeight": 734
   },
   "demandFactoring": {
     "periodZeroBlockHeight": 0,
@@ -30,5 +30,7 @@
     "demandFactor": 1,
     "revenueThisPeriod": 0,
     "consecutivePeriodsWithMinDemandFactor": 0
-  }
+  },
+  "prescribedObservers": {},
+  "lastTickedHeight": 0
 }

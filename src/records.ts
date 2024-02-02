@@ -21,8 +21,8 @@ import {
 } from './types';
 
 export function isNameInGracePeriod({
-  currentBlockTimestamp,
   record,
+  currentBlockTimestamp,
 }: {
   currentBlockTimestamp: BlockTimestamp;
   record: ArNSLeaseData;
@@ -77,17 +77,14 @@ export function isExistingActiveRecord({
 }): boolean {
   if (!record) return false;
 
-  if (record.type === 'permabuy') {
+  if (!isLeaseRecord(record)) {
     return true;
   }
 
-  if (record.type === 'lease' && record.endTimestamp) {
-    return (
-      record.endTimestamp > currentBlockTimestamp.valueOf() ||
-      isNameInGracePeriod({ currentBlockTimestamp, record })
-    );
-  }
-  return false;
+  return (
+    record.endTimestamp > currentBlockTimestamp.valueOf() ||
+    isNameInGracePeriod({ currentBlockTimestamp, record })
+  );
 }
 
 export function isShortNameRestricted({
