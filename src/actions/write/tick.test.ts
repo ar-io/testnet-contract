@@ -28,6 +28,7 @@ import {
   stubbedGatewayData,
   stubbedGateways,
   stubbedPrescribedObserver,
+  stubbedPrescribedObservers,
 } from '../../tests/stubs';
 import {
   Auctions,
@@ -769,13 +770,7 @@ describe('tick', () => {
         },
         gateways: stubbedGateways,
         prescribedObservers: {
-          [0]: Object.keys(stubbedGateways).map((gatewayAddress: string) => {
-            return {
-              ...stubbedPrescribedObserver,
-              gatewayAddress,
-              observerAddress: stubbedGateways[gatewayAddress].observerWallet,
-            };
-          }),
+          [0]: stubbedPrescribedObservers,
         },
       };
       const { balances, distributions, gateways, prescribedObservers } =
@@ -946,13 +941,7 @@ describe('tick', () => {
       gateways: stubbedGateways,
       observations: {},
       prescribedObservers: {
-        [0]: Object.keys(stubbedGateways).map((gatewayAddress: string) => {
-          return {
-            ...stubbedPrescribedObserver,
-            gatewayAddress,
-            observerAddress: stubbedGateways[gatewayAddress].observerWallet,
-          };
-        }),
+        [0]: stubbedPrescribedObservers,
       },
     };
     const { balances, distributions, gateways } = await tickRewardDistribution({
@@ -1028,13 +1017,7 @@ describe('tick', () => {
         epochStartHeight: SmartWeave.block.height + EPOCH_BLOCK_LENGTH - 1,
       },
       prescribedObservers: {
-        0: Object.keys(stubbedGateways).map((gatewayAddress: string) => {
-          return {
-            ...stubbedPrescribedObserver,
-            gatewayAddress,
-            observerAddress: stubbedGateways[gatewayAddress].observerWallet,
-          };
-        }),
+        0: stubbedPrescribedObservers,
       },
     };
     const nextDistributionHeight =
@@ -1119,13 +1102,7 @@ describe('tick', () => {
       ...getBaselineState(),
       gateways: stubbedGateways,
       prescribedObservers: {
-        [0]: Object.keys(stubbedGateways).map((gatewayAddress: string) => {
-          return {
-            ...stubbedPrescribedObserver,
-            gatewayAddress,
-            observerAddress: stubbedGateways[gatewayAddress].observerWallet,
-          };
-        }),
+        [0]: stubbedPrescribedObservers,
       },
     };
 

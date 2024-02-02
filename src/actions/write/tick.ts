@@ -508,7 +508,7 @@ export async function tickRewardDistribution({
   });
 
   // get the observers for the epoch - if we don't have it in state we need to compute it
-  const existingPrescribedObservers =
+  const previouslyPrescribedObservers =
     prescribedObservers[epochStartHeight.valueOf()] ||
     (await getPrescribedObserversForEpoch({
       gateways,
@@ -581,7 +581,7 @@ export async function tickRewardDistribution({
   }
 
   // identify observers who reported the above gateways as eligible for rewards
-  for (const observer of existingPrescribedObservers) {
+  for (const observer of previouslyPrescribedObservers) {
     const existingGateway =
       updatedGateways[observer.gatewayAddress] ||
       gateways[observer.gatewayAddress];
@@ -646,10 +646,10 @@ export async function tickRewardDistribution({
   const totalPotentialObserverReward =
     totalPotentialReward - totalPotentialGatewayReward;
 
-  const perObserverReward = Object.keys(existingPrescribedObservers).length
+  const perObserverReward = Object.keys(previouslyPrescribedObservers).length
     ? Math.floor(
         totalPotentialObserverReward /
-          Object.keys(existingPrescribedObservers).length,
+          Object.keys(previouslyPrescribedObservers).length,
       )
     : 0;
 
@@ -670,7 +670,7 @@ export async function tickRewardDistribution({
     let totalGatewayReward = perGatewayReward;
     // if you were prescribed observer but didn't submit a report, you get gateway reward penalized
     if (
-      existingPrescribedObservers.some(
+      previouslyPrescribedObservers.some(
         (prescribed: WeightedObserver) =>
           prescribed.gatewayAddress === gatewayAddress,
       ) &&

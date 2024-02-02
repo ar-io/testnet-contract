@@ -83,19 +83,6 @@ export const stubbedGatewayData: Gateway = {
   },
 };
 
-export const stubbedPrescribedObserver: WeightedObserver = {
-  observerAddress: stubbedGatewayData.observerWallet,
-  gatewayAddress: 'a-gateway',
-  stake: 10000,
-  start: 0,
-  tenureWeight: 0,
-  stakeWeight: 1,
-  gatewayRewardRatioWeight: 0,
-  observerRewardRatioWeight: 0,
-  compositeWeight: 0,
-  normalizedCompositeWeight: 0,
-};
-
 export const stubbedGateways: Gateways = {
   'a-gateway': {
     ...stubbedGatewayData,
@@ -112,4 +99,25 @@ export const stubbedGateways: Gateways = {
     operatorStake: 300,
     observerWallet: 'a-gateway-observer-3',
   },
+};
+
+export const stubbedPrescribedObservers = Object.keys(stubbedGateways).map(
+  (gatewayAddress) => ({
+    ...stubbedPrescribedObserver,
+    gatewayAddress,
+    observerAddress: stubbedGateways[gatewayAddress].observerWallet,
+  }),
+);
+
+export const stubbedPrescribedObserver: WeightedObserver = {
+  observerAddress: stubbedGatewayData.observerWallet,
+  gatewayAddress: 'a-gateway',
+  stake: 10000,
+  start: 0,
+  tenureWeight: 0,
+  stakeWeight: 1,
+  gatewayRewardRatioWeight: 0,
+  observerRewardRatioWeight: 0,
+  compositeWeight: 0,
+  normalizedCompositeWeight: 0,
 };

@@ -7,7 +7,8 @@ import {
 import {
   getBaselineState,
   stubbedGatewayData,
-  stubbedPrescribedObserver,
+  stubbedGateways,
+  stubbedPrescribedObservers,
 } from '../../tests/stubs';
 import { getEpoch, getPrescribedObservers } from './observers';
 
@@ -15,15 +16,9 @@ describe('getPrescribedObservers', () => {
   it('should return the prescribed observers for the current epoch from state', async () => {
     const state = {
       ...getBaselineState(),
-      gateways: {
-        'a-test-gateway': stubbedGatewayData,
-      },
+      gateways: stubbedGateways,
       prescribedObservers: {
-        [0]: Object.keys(stubbedGatewayData).map((gatewayAddress) => ({
-          ...stubbedPrescribedObserver,
-          gatewayAddress,
-          observerAddress: gatewayAddress,
-        })),
+        [0]: stubbedPrescribedObservers,
       },
       // no distributions
     };
@@ -41,11 +36,7 @@ it('should return the current array of prescribed observer if not set in state y
     },
     prescribedObservers: {
       // some other epochs prescribed observers
-      [1]: Object.keys(stubbedGatewayData).map((gatewayAddress) => ({
-        ...stubbedPrescribedObserver,
-        gatewayAddress,
-        observerAddress: gatewayAddress,
-      })),
+      [1]: stubbedPrescribedObservers,
     },
     // no distributions
   };
