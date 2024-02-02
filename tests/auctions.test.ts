@@ -43,6 +43,8 @@ describe('Auctions', () => {
   });
 
   beforeEach(async () => {
+    // tick so we are always working off freshest state
+    await contract.writeInteraction({ function: 'tick' });
     prevState = (await contract.readState()).cachedValue.state as IOState;
   });
 
