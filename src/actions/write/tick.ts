@@ -35,6 +35,7 @@ import {
   GatewayPerformanceStats,
   Gateways,
   IOState,
+  IOToken,
   Observations,
   Records,
   RegistryVaults,
@@ -686,7 +687,7 @@ export async function tickRewardDistribution({
           protocolAddress: SmartWeave.contract.id,
           gatewayAddress,
           delegateAddress,
-          qty: tokensForDelegate[delegateAddress],
+          qty: new IOToken(tokensForDelegate[delegateAddress]),
         });
       }
       // Give the rest to the gateway operator
@@ -779,7 +780,7 @@ export async function tickRewardDistribution({
           protocolAddress: SmartWeave.contract.id,
           gatewayAddress: gatewayObservedAndPassed,
           delegateAddress,
-          qty: tokensForDelegate[delegateAddress],
+          qty: new IOToken(tokensForDelegate[delegateAddress]),
         });
       }
 

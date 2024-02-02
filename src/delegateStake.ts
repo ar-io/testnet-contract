@@ -116,7 +116,7 @@ export function safeDelegateDistribution({
   protocolAddress: WalletAddress;
   gatewayAddress: WalletAddress;
   delegateAddress: WalletAddress;
-  qty: number;
+  qty: IOToken;
 }): void {
   if (balances[protocolAddress] === null || isNaN(balances[protocolAddress])) {
     throw new ContractError(`Caller balance is not defined!`);
@@ -134,9 +134,13 @@ export function safeDelegateDistribution({
     throw new ContractError('Delegate not staked on this gateway.');
   }
 
-  // Increase the gateway's total delegated stake, and then decrement from the caller.
+  // Increase the individual delegate's stake
   gateways[gatewayAddress].delegates[delegateAddress].delegatedStake +=
     qty.valueOf();
+
+  // Increase the gateway's total delegated stake
+  gateways[gatewayAddress].delegatedStake += qty.valueOf();
+
   unsafeDecrementBalance(balances, protocolAddress, qty.valueOf());
 }
 
