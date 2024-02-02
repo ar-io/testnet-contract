@@ -401,7 +401,7 @@ describe('safeDelegateDistribution function', () => {
         gatewayAddress: 'a-gateway',
         delegateAddress: 'doesnt-exist',
       });
-    }).toThrowError(INVALID_GATEWAY_REGISTERED_MESSAGE);
+    }).toThrowError('Delegate not staked on this gateway.');
   });
 
   it('should distribute stake to delegate', () => {
