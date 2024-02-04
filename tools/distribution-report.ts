@@ -1,19 +1,22 @@
-import prescribed from '../results/prescribed.json';
-
 (async () => {
   const arnsContractTxId = 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
-  const tickHeight = 1354315;
-  const epochStartHeight = 1353580;
+  const epochStartHeight = 1355740;
   const epochEndHeight = epochStartHeight + 720 - 1;
+  const epochDistributionHeight = epochEndHeight + 15;
+  const epochPeriod = Math.floor((epochStartHeight - 1350700) / 720);
   const url = `https://api.arns.app/v1/contract/${arnsContractTxId}`;
   const [before, after] = await Promise.all(
-    [tickHeight - 1, tickHeight].map(async (height) => {
-      return fetch(`${url}?blockHeight=${height}`).then(
-        async (res) => (await res.json()) as { state: any },
-      );
-    }),
+    [epochDistributionHeight - 15 - 1, epochDistributionHeight + 10].map(
+      async (height) => {
+        return fetch(`${url}?blockHeight=${height}`).then(
+          async (res) => (await res.json()) as { state: any },
+        );
+      },
+    ),
   );
 
+  const prescribedObserversForEpoch =
+    before.state.prescribedObservers[epochStartHeight];
   const protocolBalanceBefore = before.state.balances[arnsContractTxId];
   const protocolBalanceAfter = after.state.balances[arnsContractTxId];
   const eligibleForDistribution = protocolBalanceBefore * 0.0025;
@@ -21,7 +24,9 @@ import prescribed from '../results/prescribed.json';
 
   const totalGateways = Object.keys(before.state.gateways);
   const totalGatewayRewards = eligibleForDistribution * 0.95;
-  const perGatewayRewards = totalGatewayRewards / totalGateways.length;
+  const perGatewayRewards = Math.floor(
+    totalGatewayRewards / totalGateways.length,
+  );
 
   const expectedObservationCount = 50;
   const observersForEpoch = Object.keys(
@@ -33,10 +38,12 @@ import prescribed from '../results/prescribed.json';
   const percentOfExpectedObservations =
     (totalSubmittedObservations / expectedObservationCount) * 100;
   const totalObserverRewards = eligibleForDistribution * 0.05;
-  const perObserverRewards = totalObserverRewards / expectedObservationCount;
+  const perObserverRewards = Math.floor(
+    totalObserverRewards / expectedObservationCount,
+  );
 
-  const prescribedObservers = prescribed.map(
-    (observer) => observer.gatewayAddress,
+  const prescribedObservers = prescribedObserversForEpoch.map(
+    (observer: { gatewayAddress: string }) => observer.gatewayAddress,
   );
 
   let gatewayFailedCount = 0;
@@ -101,7 +108,8 @@ import prescribed from '../results/prescribed.json';
   console.log('****SUMMARY*****');
   console.log(`Epoch start height: ${epochStartHeight}`);
   console.log(`Epoch end height: ${epochEndHeight}`);
-  console.log(`Distribution ticked height: ${tickHeight}`);
+  console.log(`Epoch period: ${epochPeriod}`);
+  console.log(`Distribution ticked height: ${epochDistributionHeight}`);
   console.log(`Protocol balance before distribution: ${protocolBalanceBefore}`);
   console.log(`Protocol balance after distribution: ${protocolBalanceAfter}`);
   console.log(
@@ -129,7 +137,7 @@ import prescribed from '../results/prescribed.json';
   console.log(`Total per gateway reward: ${perGatewayRewards}`);
 
   console.log('\n****OBSERVATIONS*****');
-  console.log(`Expected observation count ${expectedObservationCount}`);
+  console.log(`Expected observation count: ${expectedObservationCount}`);
   console.log(`Total submitted observations: ${totalSubmittedObservations}`);
   console.log(
     `Total observations submitted %: ${percentOfExpectedObservations} %`,
@@ -140,7 +148,7 @@ import prescribed from '../results/prescribed.json';
   console.log(
     `Total observers penalized %: ${
       (totalPenalizedObservers / expectedObservationCount) * 100
-    }`,
+    }%`,
   );
 
   console.log('\n****BALANCES*****');
@@ -154,9 +162,14 @@ import prescribed from '../results/prescribed.json';
   );
   console.log('Total gateways that received no reward: ', totalNoRewards);
   console.log('\n****ERRORS*****');
-  balanceChecks.forEach(([_, balanceUpdatedCorrectly, diff]) => {
-    if (!balanceUpdatedCorrectly) {
-      console.log(diff);
-    }
-  });
+  const totalErrors = balanceChecks.filter(([_, correct]) => !correct).length;
+  if (totalErrors > 0) {
+    balanceChecks.forEach(([_, balanceUpdatedCorrectly, diff]) => {
+      if (!balanceUpdatedCorrectly) {
+        console.log(diff);
+      }
+    });
+  } else {
+    console.log('NONE!');
+  }
 })();
