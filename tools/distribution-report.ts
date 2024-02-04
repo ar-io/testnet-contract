@@ -1,18 +1,16 @@
 (async () => {
   const arnsContractTxId = 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
-  const epochStartHeight = 1355740;
+  const epochStartHeight = 1356460;
   const epochEndHeight = epochStartHeight + 720 - 1;
   const epochDistributionHeight = epochEndHeight + 15;
   const epochPeriod = Math.floor((epochStartHeight - 1350700) / 720);
   const url = `https://api.arns.app/v1/contract/${arnsContractTxId}`;
   const [before, after] = await Promise.all(
-    [epochDistributionHeight - 15 - 1, epochDistributionHeight + 10].map(
-      async (height) => {
-        return fetch(`${url}?blockHeight=${height}`).then(
-          async (res) => (await res.json()) as { state: any },
-        );
-      },
-    ),
+    [epochEndHeight, epochDistributionHeight + 10].map(async (height) => {
+      return fetch(`${url}?blockHeight=${height}`).then(
+        async (res) => (await res.json()) as { state: any },
+      );
+    }),
   );
 
   const prescribedObserversForEpoch =
@@ -51,12 +49,13 @@
   let totalRewardedGateways = 0;
   let totalRewardedObservers = 0;
   let totalNoRewards = 0;
+  let totalDistributedRewards = 0;
   const balanceChecks = Object.keys(after.state.gateways).map((address) => {
     let expectedReward = 0;
     const gateway = after.state.gateways[address];
     const failureCounts = failureSummariesForEpoch[address]?.length || 0;
     const minimumFailureCount = totalSubmittedObservations * 0.5;
-    const didGatewayPass = failureCounts < minimumFailureCount;
+    const didGatewayPass = failureCounts <= minimumFailureCount;
     const wasPrescribed = prescribedObservers.includes(address);
     const didObserve = observersForEpoch.includes(gateway.observerWallet);
 
@@ -88,6 +87,9 @@
     const balanceDiff = gatewayBalanceAfter - balanceBefore;
     const balanceUpdatedCorrectly =
       Math.floor(balanceDiff) === Math.floor(expectedReward);
+
+    // increment our total
+    totalDistributedRewards += Math.floor(expectedReward);
     return [
       gateway,
       balanceUpdatedCorrectly,
@@ -109,7 +111,7 @@
   console.log(`Epoch start height: ${epochStartHeight}`);
   console.log(`Epoch end height: ${epochEndHeight}`);
   console.log(`Epoch period: ${epochPeriod}`);
-  console.log(`Distribution ticked height: ${epochDistributionHeight}`);
+  console.log(`Epoch distribution height: ${epochDistributionHeight}`);
   console.log(`Protocol balance before distribution: ${protocolBalanceBefore}`);
   console.log(`Protocol balance after distribution: ${protocolBalanceAfter}`);
   console.log(
@@ -154,6 +156,7 @@
   console.log('\n****BALANCES*****');
   console.log(`Observers balances updated correctly: ${balancesMatchExpected}`);
   console.log(`Gateway balances updated correctly: ${balancesMatchExpected}`);
+  console.log(`Total distributed rewards: ${totalDistributedRewards}`);
   console.log('Total rewarded gateways: ', totalRewardedGateways);
   console.log('Total rewarded observers: ', totalRewardedObservers);
   console.log(
