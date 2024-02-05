@@ -1,6 +1,6 @@
 (async () => {
   const arnsContractTxId = 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
-  const epochStartHeight = 1356460;
+  const epochStartHeight = 1356460 + 720;
   const epochEndHeight = epochStartHeight + 720 - 1;
   const epochDistributionHeight = epochEndHeight + 15;
   const epochPeriod = Math.floor((epochStartHeight - 1350700) / 720);
@@ -50,6 +50,8 @@
   let totalRewardedObservers = 0;
   let totalNoRewards = 0;
   let totalDistributedRewards = 0;
+  const failedObservers: string[] = [];
+  const failedGateways: string[] = [];
   const balanceChecks = Object.keys(after.state.gateways).map((address) => {
     let expectedReward = 0;
     const gateway = after.state.gateways[address];
@@ -61,6 +63,11 @@
 
     if (!didGatewayPass) {
       gatewayFailedCount++;
+      failedGateways.push(address);
+    }
+
+    if (wasPrescribed && !didObserve) {
+      failedObservers.push(address);
     }
 
     // it did all it's duties - max reward
@@ -152,6 +159,7 @@
       (totalPenalizedObservers / expectedObservationCount) * 100
     }%`,
   );
+  console.log('Gateways failed to observer: ', failedObservers);
 
   console.log('\n****BALANCES*****');
   console.log(`Observers balances updated correctly: ${balancesMatchExpected}`);
@@ -164,6 +172,7 @@
     totalPenalizedObservers,
   );
   console.log('Total gateways that received no reward: ', totalNoRewards);
+
   console.log('\n****ERRORS*****');
   const totalErrors = balanceChecks.filter(([_, correct]) => !correct).length;
   if (totalErrors > 0) {
