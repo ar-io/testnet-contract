@@ -15,7 +15,6 @@ import {
   NETWORK_LEAVING_STATUS,
   REGISTRATION_TYPES,
   SECONDS_IN_A_YEAR,
-  SECONDS_IN_GRACE_PERIOD,
   WALLET_FUND_AMOUNT,
 } from './constants';
 import { arweave } from './services';
@@ -38,6 +37,12 @@ export async function mineBlock(arweave: Arweave): Promise<boolean> {
 
 export async function getCurrentBlock(arweave: Arweave): Promise<BlockHeight> {
   return new BlockHeight((await arweave.blocks.getCurrent()).height);
+}
+
+export async function getCurrentBlockTimestamp(
+  arweave: Arweave,
+): Promise<number> {
+  return (await arweave.blocks.getCurrent()).timestamp;
 }
 
 export async function mineBlocks(
@@ -63,55 +68,51 @@ export async function createLocalWallet(
   };
 }
 
-function createRecords(count = ARNS_LEASE_LENGTH_MAX_YEARS) {
+async function createRecords(count = ARNS_LEASE_LENGTH_MAX_YEARS) {
   const records: any = {};
+  const currentBlockTimestamp = await getCurrentBlockTimestamp(arweave);
   for (let i = 0; i < count; i++) {
-    const name = `name${i + 1}`;
+    const name = `name-${i + 1}`;
     const obj = {
       contractTxID: ANT_CONTRACT_IDS[0],
-      endTimestamp: Math.round(new Date('01/01/2025').getTime() / 1000),
-      startTimestamp: Math.round(Date.now() / 1000 - SECONDS_IN_A_YEAR),
+      endTimestamp: currentBlockTimestamp + SECONDS_IN_A_YEAR * 5,
+      startTimestamp: currentBlockTimestamp,
       undernames: DEFAULT_UNDERNAME_COUNT,
       type: REGISTRATION_TYPES.LEASE,
     };
     records[name] = obj;
     // names in grace periods
-    const gracePeriodName = `grace-period-name${i + 1}`;
+    const gracePeriodName = `grace-period-name-${i + 1}`;
     const gracePeriodObj = {
       contractTxID: ANT_CONTRACT_IDS[0],
-      endTimestamp: Math.round(Date.now() / 1000),
-      startTimestamp: Math.round(Date.now() / 1000 - SECONDS_IN_A_YEAR),
+      endTimestamp: currentBlockTimestamp, // it's expired but enough time to extend
+      startTimestamp: currentBlockTimestamp,
       undernames: DEFAULT_UNDERNAME_COUNT,
       type: REGISTRATION_TYPES.LEASE,
     };
     records[gracePeriodName] = gracePeriodObj;
     // expired names
-    const expiredName = `expired-name${i + 1}`;
+    const expiredName = `expired-name-${i + 1}`;
     const expiredObj = {
       contractTxID: ANT_CONTRACT_IDS[0],
-      endTimestamp: Math.round(Date.now() / 1000),
-      startTimestamp: Math.round(
-        Date.now() / 1000 - (SECONDS_IN_A_YEAR + SECONDS_IN_GRACE_PERIOD + 1),
-      ),
+      endTimestamp: 0,
+      startTimestamp: currentBlockTimestamp,
       undernames: DEFAULT_UNDERNAME_COUNT,
       type: REGISTRATION_TYPES.LEASE,
     };
     records[expiredName] = expiredObj;
     // a name for each lease length
-    const leaseLengthName = `lease-length-name${
-      i > 0 ? i : REGISTRATION_TYPES.BUY
-    }`;
-    const leaseLengthObj = {
+    const recordName = i == 0 ? 'permabuy' : `lease-length-name-${i}`;
+
+    const recordObj = {
       contractTxID: ANT_CONTRACT_IDS[0],
       endTimestamp:
-        i > 0
-          ? Math.round(Date.now() / 1000 + SECONDS_IN_A_YEAR * i - 1)
-          : undefined,
-      startTimestamp: Math.round(Date.now() / 1000 - 1),
+        i > 0 ? currentBlockTimestamp + SECONDS_IN_A_YEAR * i : undefined,
+      startTimestamp: currentBlockTimestamp,
       undernames: DEFAULT_UNDERNAME_COUNT,
       type: i > 0 ? REGISTRATION_TYPES.LEASE : REGISTRATION_TYPES.BUY,
     };
-    records[leaseLengthName] = leaseLengthObj;
+    records[recordName] = recordObj;
   }
   return records;
 }
@@ -339,6 +340,8 @@ export async function setupInitialContractState(
 ): Promise<IOState> {
   const state: IOState = INITIAL_STATE as unknown as IOState;
 
+  const currentBlockHeight = await getCurrentBlock(arweave);
+
   // set the fees
   state.fees = GENESIS_FEES;
 
@@ -355,15 +358,13 @@ export async function setupInitialContractState(
   };
 
   // setup demand factor based from the current block height
-  state.demandFactoring.periodZeroBlockHeight = (
-    await getCurrentBlock(arweave)
-  ).valueOf();
+  state.demandFactoring.periodZeroBlockHeight = currentBlockHeight.valueOf();
 
   // setup auctions
   state.auctions = {};
 
   // create some records
-  state.records = createRecords();
+  state.records = await createRecords();
 
   // set the owner to the first wallet
   state.owner = owner;
@@ -374,7 +375,25 @@ export async function setupInitialContractState(
   // distributions
   state.distributions = {
     ...state.distributions,
-    epochZeroStartHeight: (await getCurrentBlock(arweave)).valueOf(),
+    epochZeroStartHeight: currentBlockHeight.valueOf(),
+  };
+
+  // prescribed observers
+  state.prescribedObservers = {
+    [state.distributions.epochStartHeight]: Object.keys(state.gateways).map(
+      (gatewayAddress) => ({
+        gatewayAddress,
+        stake: 10000,
+        start: currentBlockHeight.valueOf(),
+        gatewayRewardRatioWeight: 1,
+        observerRewardRatioWeight: 1,
+        tenureWeight: 1,
+        stakeWeight: 1,
+        compositeWeight: 1,
+        normalizedCompositeWeight: 1,
+        observerAddress: state.gateways[gatewayAddress].observerWallet,
+      }),
+    ),
   };
 
   // add some reserved names

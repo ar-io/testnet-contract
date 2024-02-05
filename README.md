@@ -96,6 +96,12 @@ The following tools can be used to perform basic AR.IO Network operations, such 
   yarn ts-node tools/decrease-operator-stake.ts
   ```
 
+- [get-prescribed-observers] - returns the array of prescribed observers for the current epoch and their weights.
+
+  ```shell
+  yarn ts-node tools/get-prescribed-observers.ts
+  ```
+
 - [leave-network] - remove a registered Gateway from the Gateway Address Registry and return all gateway operator stakes. Tokens are put into a vault and then returned to the gateway address after the specified duration.
 
   ```shell

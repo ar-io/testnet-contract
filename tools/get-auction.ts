@@ -1,3 +1,4 @@
+import { IOState } from '../src/types';
 import { getContractManifest, initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
@@ -20,9 +21,11 @@ import { getContractManifest, initialize, warp } from './utilities';
 
   // Read the ArNS Registry Contract
   const contract = await warp
-    .pst(contractTxId)
+    .contract<IOState>(contractTxId)
     .setEvaluationOptions(evaluationOptions)
-    .syncState(`https://api.arns.app/v1/contract/${contractTxId}`);
+    .syncState(`https://api.arns.app/v1/contract/${contractTxId}`, {
+      validity: true,
+    });
 
   const { result } = await contract.viewState({
     function: 'auction',

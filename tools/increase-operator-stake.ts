@@ -1,6 +1,7 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 
+import { IOState } from '../src/types';
 import { keyfile } from './constants';
 import { arweave, initialize, warp } from './utilities';
 
@@ -28,7 +29,7 @@ import { arweave, initialize, warp } from './utilities';
   const walletAddress = await arweave.wallets.getAddress(wallet);
 
   // Read the ANT Registry Contract
-  const contract = warp.pst(contractTxId).connect(wallet);
+  const contract = warp.contract<IOState>(contractTxId).connect(wallet);
 
   const writeInteraction = await contract.writeInteraction(
     {

@@ -31,6 +31,8 @@ import {
   stubbedDelegatedGatewayData,
   stubbedGatewayData,
   stubbedGateways,
+  stubbedPrescribedObserver,
+  stubbedPrescribedObservers,
 } from '../../tests/stubs';
 import {
   Auctions,
@@ -979,23 +981,27 @@ describe('tick', () => {
   });
 
   describe('tickRewardDistribution', () => {
-    it('should not distribute rewards when protocol balance is 0, but should update epoch distribution values and increment gateway performance stats', async () => {
+    it('should not distribute rewards when protocol balance is 0, but should update epoch distribution values and increment gateway performance stats and update prescribed observers', async () => {
       const initialState: IOState = {
         ...getBaselineState(),
         balances: {
           [SmartWeave.contract.id]: 0,
         },
         gateways: stubbedGateways,
+        prescribedObservers: {
+          [0]: stubbedPrescribedObservers,
+        },
       };
-      const { balances, distributions, gateways } =
+      const { balances, distributions, gateways, prescribedObservers } =
         await tickRewardDistribution({
           currentBlockHeight: new BlockHeight(
-            initialState.distributions.epochDistributionHeight,
+            initialState.distributions.nextDistributionHeight,
           ),
           gateways: initialState.gateways,
           balances: initialState.balances,
           distributions: initialState.distributions,
           observations: initialState.observations,
+          prescribedObservers: initialState.prescribedObservers,
         });
       expect(balances).toEqual(initialState.balances);
       expect(distributions).toEqual({
@@ -1003,9 +1009,10 @@ describe('tick', () => {
         epochStartHeight: initialState.distributions.epochEndHeight + 1,
         epochEndHeight:
           initialState.distributions.epochEndHeight + EPOCH_BLOCK_LENGTH,
-        epochDistributionHeight:
-          initialState.distributions.epochDistributionHeight +
+        nextDistributionHeight:
+          initialState.distributions.nextDistributionHeight +
           EPOCH_BLOCK_LENGTH,
+        epochPeriod: initialState.distributions.epochPeriod + 1,
       });
       const expectedGateways = Object.keys(stubbedGateways).reduce(
         (acc: Gateways, gatewayAddress: string) => {
@@ -1024,6 +1031,26 @@ describe('tick', () => {
         {},
       );
       expect(gateways).toEqual(expectedGateways);
+      expect(prescribedObservers).toEqual({
+        [initialState.distributions.epochEndHeight + 1]: Object.keys(
+          stubbedGateways,
+        ).map((gatewayAddress: string) => {
+          return {
+            // updated weights based on the new epoch
+            ...stubbedPrescribedObserver,
+            gatewayAddress,
+            observerAddress: stubbedGateways[gatewayAddress].observerWallet,
+            stake: 100,
+            start: 0,
+            stakeWeight: 10,
+            tenureWeight: 1,
+            gatewayRewardRatioWeight: 1,
+            observerRewardRatioWeight: 1,
+            compositeWeight: 1,
+            normalizedCompositeWeight: 1,
+          };
+        }),
+      });
     });
   });
 
@@ -1262,7 +1289,7 @@ describe('tick', () => {
         },
       };
       const epochDistributionHeight =
-        initialState.distributions.epochDistributionHeight;
+        initialState.distributions.nextDistributionHeight;
       const { balances, distributions, gateways } =
         await tickRewardDistribution({
           currentBlockHeight: new BlockHeight(epochDistributionHeight),
@@ -1270,6 +1297,7 @@ describe('tick', () => {
           balances: initialState.balances,
           distributions: initialState.distributions,
           observations: initialState.observations,
+          prescribedObservers: initialState.prescribedObservers,
         });
       const totalPotentialReward = Math.floor(
         10_000_000 * EPOCH_REWARD_PERCENTAGE,
@@ -1358,8 +1386,9 @@ describe('tick', () => {
         ...initialState.distributions,
         epochStartHeight: expectedNewEpochStartHeight,
         epochEndHeight: expectedNewEpochEndHeight,
-        epochDistributionHeight:
+        nextDistributionHeight:
           expectedNewEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
+        epochPeriod: initialState.distributions.epochPeriod + 1,
       });
     });
   });
@@ -1374,21 +1403,27 @@ describe('tick', () => {
     };
     const { balances, distributions, gateways } = await tickRewardDistribution({
       currentBlockHeight: new BlockHeight(
-        initialState.distributions.epochDistributionHeight - 1,
+        initialState.distributions.epochEndHeight,
       ),
       gateways: initialState.gateways,
       balances: initialState.balances,
       distributions: initialState.distributions,
       observations: initialState.observations,
+      prescribedObservers: initialState.prescribedObservers,
     });
     expect(balances).toEqual(initialState.balances);
     expect(distributions).toEqual(initialState.distributions);
     expect(gateways).toEqual(initialState.gateways);
   });
 
-  it.each([0, EPOCH_DISTRIBUTION_DELAY - 1])(
-    'should not distribute rewards or increment gateway stats and epoch values if the current block height is equal to the last epoch end height + %s blocks',
-    async (blockHeight) => {
+  it.each(
+    // cheap way to dynamically generate all the blocks between the epochEndHeight and epochDistributionHeight
+    Array.from({ length: EPOCH_DISTRIBUTION_DELAY - 1 }, (_, index) => ({
+      index: index + 1,
+    })),
+  )(
+    'should not distribute rewards or increment gateway stats, but epoch values if the current block height is equal to the last epoch end height + %s blocks',
+    async ({ index: blockHeightDiff }) => {
       const initialState: IOState = {
         ...getBaselineState(),
         balances: {
@@ -1396,21 +1431,25 @@ describe('tick', () => {
         },
         gateways: stubbedGateways,
       };
-      const firstEpochEndHeight =
-        initialState.distributions.epochZeroStartHeight +
-        EPOCH_BLOCK_LENGTH -
-        1;
-      const invalidBlockHeight = firstEpochEndHeight + blockHeight;
       const { balances, distributions, gateways } =
         await tickRewardDistribution({
-          currentBlockHeight: new BlockHeight(invalidBlockHeight),
+          currentBlockHeight: new BlockHeight(
+            initialState.distributions.epochEndHeight + blockHeightDiff,
+          ),
           gateways: initialState.gateways,
           balances: initialState.balances,
           distributions: initialState.distributions,
           observations: initialState.observations,
+          prescribedObservers: initialState.prescribedObservers,
         });
       expect(balances).toEqual(initialState.balances);
-      expect(distributions).toEqual(initialState.distributions);
+      expect(distributions).toEqual({
+        ...initialState.distributions,
+        epochPeriod: initialState.distributions.epochPeriod + 1,
+        epochStartHeight: initialState.distributions.epochEndHeight + 1,
+        epochEndHeight:
+          initialState.distributions.epochEndHeight + EPOCH_BLOCK_LENGTH,
+      });
       expect(gateways).toEqual(initialState.gateways);
     },
   );
@@ -1434,6 +1473,7 @@ describe('tick', () => {
       balances: initialState.balances,
       distributions: initialState.distributions,
       observations: initialState.observations,
+      prescribedObservers: initialState.prescribedObservers,
     });
     const expectedNewEpochStartHeight = EPOCH_BLOCK_LENGTH;
     const expectedNewEpochEndHeight =
@@ -1441,15 +1481,16 @@ describe('tick', () => {
     expect(balances).toEqual(initialState.balances);
     expect(distributions).toEqual({
       ...initialState.distributions,
+      epochPeriod: initialState.distributions.epochPeriod + 1,
       epochStartHeight: expectedNewEpochStartHeight,
       epochEndHeight: expectedNewEpochEndHeight,
-      epochDistributionHeight:
+      nextDistributionHeight:
         expectedNewEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
     });
     expect(gateways).toEqual(initialState.gateways);
   });
 
-  it('should not distribute rewards if no observations were submitted, but should update epoch counts for gateways and the distribution epoch values', async () => {
+  it('should not distribute rewards if no observations were submitted, but should update epoch counts for gateways, the distribution epoch values and prescribed observers', async () => {
     const initialState: IOState = {
       ...getBaselineState(),
       balances: {
@@ -1457,15 +1498,19 @@ describe('tick', () => {
       },
       gateways: stubbedGateways,
       observations: {},
+      prescribedObservers: {
+        [0]: stubbedPrescribedObservers,
+      },
     };
     const { balances, distributions, gateways } = await tickRewardDistribution({
       currentBlockHeight: new BlockHeight(
-        initialState.distributions.epochDistributionHeight,
+        initialState.distributions.nextDistributionHeight,
       ),
       gateways: initialState.gateways,
       balances: initialState.balances,
       distributions: initialState.distributions,
       observations: initialState.observations,
+      prescribedObservers: initialState.prescribedObservers,
     });
     expect(balances).toEqual({
       ...initialState.balances,
@@ -1475,9 +1520,10 @@ describe('tick', () => {
       expectedNewEpochStartHeight + EPOCH_BLOCK_LENGTH - 1;
     expect(distributions).toEqual({
       ...initialState.distributions,
+      epochPeriod: initialState.distributions.epochPeriod + 1,
       epochStartHeight: expectedNewEpochStartHeight,
       epochEndHeight: expectedNewEpochEndHeight,
-      epochDistributionHeight:
+      nextDistributionHeight:
         expectedNewEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
     });
     const expectedGateways = Object.keys(stubbedGateways).reduce(
@@ -1499,7 +1545,7 @@ describe('tick', () => {
     expect(gateways).toEqual(expectedGateways);
   });
 
-  it('should distribute rewards to observers who submitted reports and gateways who passed, update distribution epoch values and increment performance stats', async () => {
+  it('should distribute rewards to observers who submitted reports and gateways who passed for the previous epoch, update distribution epoch values and increment performance stats', async () => {
     const initialState: IOState = {
       ...getBaselineState(),
       balances: {
@@ -1522,15 +1568,25 @@ describe('tick', () => {
           },
         },
       },
+      distributions: {
+        ...getBaselineState().distributions,
+        // setting these to next epoch values to validate distributions depend on only the nextDistributionHeight
+        epochEndHeight: SmartWeave.block.height + 2 * EPOCH_BLOCK_LENGTH - 1,
+        epochStartHeight: SmartWeave.block.height + EPOCH_BLOCK_LENGTH - 1,
+      },
+      prescribedObservers: {
+        0: stubbedPrescribedObservers,
+      },
     };
-    const epochDistributionHeight =
-      initialState.distributions.epochDistributionHeight;
+    const nextDistributionHeight =
+      initialState.distributions.nextDistributionHeight;
     const { balances, distributions, gateways } = await tickRewardDistribution({
-      currentBlockHeight: new BlockHeight(epochDistributionHeight),
+      currentBlockHeight: new BlockHeight(nextDistributionHeight),
       gateways: initialState.gateways,
       balances: initialState.balances,
       distributions: initialState.distributions,
       observations: initialState.observations,
+      prescribedObservers: initialState.prescribedObservers,
     });
     const totalRewardsEligible = 10_000_000 * 0.0025;
     const totalObserverReward = totalRewardsEligible * 0.05; // 5% of the total distributions
@@ -1557,9 +1613,10 @@ describe('tick', () => {
       expectedNewEpochStartHeight + EPOCH_BLOCK_LENGTH - 1;
     expect(distributions).toEqual({
       ...initialState.distributions,
+      epochPeriod: initialState.distributions.epochPeriod + 1,
       epochStartHeight: expectedNewEpochStartHeight,
       epochEndHeight: expectedNewEpochEndHeight,
-      epochDistributionHeight:
+      nextDistributionHeight:
         expectedNewEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
     });
     expect(gateways).toEqual({
@@ -1598,34 +1655,37 @@ describe('tick', () => {
   });
 
   // top level tests
-  it('should tick distributions and update gateway performance stats if a the interaction height is equal to the epochDistributionHeight', async () => {
+  it('should tick distributions for the previous epoch, update gateway performance stats and increment the nextDistributionHeight if a the interaction height is equal to the nextDistributionHeight', async () => {
     const initialState: IOState = {
       ...getBaselineState(),
       gateways: stubbedGateways,
+      prescribedObservers: {
+        [0]: stubbedPrescribedObservers,
+      },
     };
 
     // stub the demand factor change
     (updateDemandFactor as jest.Mock).mockReturnValue(initialState);
 
     // update our state
-    SmartWeave.block.height =
-      initialState.distributions.epochDistributionHeight;
+    SmartWeave.block.height = initialState.distributions.nextDistributionHeight;
 
     const { state } = await tick(initialState);
 
     expect(state).toEqual({
       ...initialState,
-      lastTickedHeight: initialState.distributions.epochDistributionHeight,
+      lastTickedHeight: initialState.distributions.nextDistributionHeight,
       distributions: {
-        ...initialState.distributions,
+        epochZeroStartHeight: initialState.distributions.epochZeroStartHeight,
         epochStartHeight:
           initialState.distributions.epochStartHeight + EPOCH_BLOCK_LENGTH,
         epochEndHeight:
           initialState.distributions.epochEndHeight + EPOCH_BLOCK_LENGTH,
-        epochDistributionHeight:
+        nextDistributionHeight:
           initialState.distributions.epochEndHeight +
           EPOCH_BLOCK_LENGTH +
           EPOCH_DISTRIBUTION_DELAY,
+        epochPeriod: initialState.distributions.epochPeriod + 1,
       },
       gateways: {
         ...initialState.gateways,
@@ -1659,6 +1719,26 @@ describe('tick', () => {
             totalEpochParticipationCount: 1,
           },
         },
+      },
+      prescribedObservers: {
+        [initialState.distributions.epochEndHeight + 1]: Object.keys(
+          stubbedGateways,
+        ).map((gatewayAddress: string) => {
+          return {
+            // updated weights based on the new epoch
+            ...stubbedPrescribedObserver,
+            gatewayAddress,
+            observerAddress: stubbedGateways[gatewayAddress].observerWallet,
+            stake: 100,
+            start: 0,
+            stakeWeight: 10,
+            tenureWeight: 1,
+            gatewayRewardRatioWeight: 1,
+            observerRewardRatioWeight: 1,
+            compositeWeight: 1,
+            normalizedCompositeWeight: 1,
+          };
+        }),
       },
     });
   });

@@ -1,5 +1,6 @@
 import {
   EPOCH_BLOCK_LENGTH,
+  EPOCH_DISTRIBUTION_DELAY,
   MAXIMUM_OBSERVERS_PER_EPOCH,
   MAX_TENURE_WEIGHT,
   OBSERVERS_SAMPLED_BLOCKS_COUNT,
@@ -16,7 +17,7 @@ import {
   WeightedObserver,
 } from './types';
 
-export function getEpochBoundariesForHeight({
+export function getEpochDataForHeight({
   currentBlockHeight,
   epochBlockLength = new BlockHeight(EPOCH_BLOCK_LENGTH),
   epochZeroStartHeight,
@@ -27,6 +28,8 @@ export function getEpochBoundariesForHeight({
 }): {
   epochStartHeight: BlockHeight;
   epochEndHeight: BlockHeight;
+  epochDistributionHeight: BlockHeight;
+  epochPeriod: BlockHeight;
 } {
   const epochIndexForCurrentBlockHeight = Math.floor(
     Math.max(
@@ -39,11 +42,14 @@ export function getEpochBoundariesForHeight({
     epochZeroStartHeight.valueOf() +
     epochBlockLength.valueOf() * epochIndexForCurrentBlockHeight;
 
+  const epochEndHeight = epochStartHeight + epochBlockLength.valueOf() - 1;
+  const epochDistributionHeight = epochEndHeight + EPOCH_DISTRIBUTION_DELAY;
+
   return {
     epochStartHeight: new BlockHeight(epochStartHeight),
-    epochEndHeight: new BlockHeight(
-      epochStartHeight + epochBlockLength.valueOf() - 1,
-    ),
+    epochEndHeight: new BlockHeight(epochEndHeight),
+    epochDistributionHeight: new BlockHeight(epochDistributionHeight),
+    epochPeriod: new BlockHeight(epochIndexForCurrentBlockHeight),
   };
 }
 

@@ -1,36 +1,62 @@
 import {
   EPOCH_BLOCK_LENGTH,
   EPOCH_DISTRIBUTION_DELAY,
+  GATEWAY_REGISTRY_SETTINGS,
   TENURE_WEIGHT_PERIOD,
 } from '../../constants';
-import { getBaselineState, stubbedGatewayData } from '../../tests/stubs';
+import {
+  getBaselineState,
+  stubbedGatewayData,
+  stubbedGateways,
+  stubbedPrescribedObservers,
+} from '../../tests/stubs';
 import { getEpoch, getPrescribedObservers } from './observers';
 
 describe('getPrescribedObservers', () => {
-  it('should return the prescribed observers for the current epoch', async () => {
+  it('should return the prescribed observers for the current epoch from state', async () => {
     const state = {
       ...getBaselineState(),
-      gateways: {
-        'a-test-gateway': stubbedGatewayData,
+      gateways: stubbedGateways,
+      prescribedObservers: {
+        [0]: stubbedPrescribedObservers,
       },
       // no distributions
     };
     const { result } = await getPrescribedObservers(state);
-    expect(result).toEqual([
-      {
-        compositeWeight: 1 / TENURE_WEIGHT_PERIOD, // gateway started at the same block as the epoch, so it gets the default value
-        gatewayAddress: 'a-test-gateway',
-        gatewayRewardRatioWeight: 1,
-        normalizedCompositeWeight: 1,
-        observerAddress: 'test-observer-wallet',
-        observerRewardRatioWeight: 1,
-        stake: 10000,
-        stakeWeight: 1,
-        start: 0,
-        tenureWeight: 1 / TENURE_WEIGHT_PERIOD, // gateway started at the same block as the epoch, so it gets the default value
-      },
-    ]);
+    expect(result).toEqual(state.prescribedObservers[0]);
   });
+});
+
+it('should return the current array of prescribed observer if not set in state yet', async () => {
+  const state = {
+    ...getBaselineState(),
+    gateways: {
+      // only this gateway will be prescribed
+      'a-test-gateway': stubbedGatewayData,
+    },
+    prescribedObservers: {
+      // some other epochs prescribed observers
+      [1]: stubbedPrescribedObservers,
+    },
+    // no distributions
+  };
+  const { result } = await getPrescribedObservers(state);
+  expect(result).toEqual([
+    {
+      gatewayAddress: 'a-test-gateway',
+      observerAddress: stubbedGatewayData.observerWallet,
+      gatewayRewardRatioWeight: 1,
+      observerRewardRatioWeight: 1,
+      stake: stubbedGatewayData.operatorStake,
+      start: 0,
+      stakeWeight:
+        stubbedGatewayData.operatorStake /
+        GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
+      tenureWeight: 1 / TENURE_WEIGHT_PERIOD, // the gateway started at the same time as the epoch
+      compositeWeight: 1 / TENURE_WEIGHT_PERIOD,
+      normalizedCompositeWeight: 1,
+    },
+  ]);
 });
 
 describe('getEpoch', () => {
@@ -57,6 +83,7 @@ describe('getEpoch', () => {
     expect(result).toEqual({
       epochStartHeight: 0,
       epochEndHeight: EPOCH_BLOCK_LENGTH - 1,
+      epochPeriod: 0,
       epochDistributionHeight:
         EPOCH_BLOCK_LENGTH + EPOCH_DISTRIBUTION_DELAY - 1,
       epochZeroStartHeight: state.distributions.epochZeroStartHeight,
@@ -69,8 +96,27 @@ describe('getEpoch', () => {
     expect(result).toEqual({
       epochStartHeight: 0,
       epochEndHeight: EPOCH_BLOCK_LENGTH - 1,
+      epochPeriod: 0,
       epochDistributionHeight:
         EPOCH_BLOCK_LENGTH + EPOCH_DISTRIBUTION_DELAY - 1,
+      epochZeroStartHeight: state.distributions.epochZeroStartHeight,
+      epochBlockLength: EPOCH_BLOCK_LENGTH,
+    });
+  });
+
+  it('should return the epoch start and end heights when the height is in the future', async () => {
+    const { result } = await getEpoch(state, {
+      input: { height: SmartWeave.block.height + EPOCH_BLOCK_LENGTH + 1 },
+    });
+    const futureEpochStartHeight = EPOCH_BLOCK_LENGTH;
+    const futureEpochEndHeight =
+      futureEpochStartHeight + EPOCH_BLOCK_LENGTH - 1;
+
+    expect(result).toEqual({
+      epochStartHeight: futureEpochStartHeight,
+      epochEndHeight: futureEpochEndHeight,
+      epochPeriod: 1,
+      epochDistributionHeight: futureEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
       epochZeroStartHeight: state.distributions.epochZeroStartHeight,
       epochBlockLength: EPOCH_BLOCK_LENGTH,
     });

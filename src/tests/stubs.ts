@@ -13,6 +13,7 @@ import {
   Gateway,
   Gateways,
   IOState,
+  WeightedObserver,
 } from '../types';
 
 export const stubbedArweaveTxId = 'thevalidtransactionidthatis43characterslong';
@@ -30,12 +31,12 @@ export const getBaselineState: () => IOState = (): IOState => ({
     epochZeroStartHeight: 0,
     epochStartHeight: 0,
     epochEndHeight: EPOCH_BLOCK_LENGTH - 1,
-    epochDistributionHeight: EPOCH_BLOCK_LENGTH - 1 + EPOCH_DISTRIBUTION_DELAY,
+    epochPeriod: 0,
+    nextDistributionHeight: EPOCH_BLOCK_LENGTH - 1 + EPOCH_DISTRIBUTION_DELAY,
   },
   reserved: {},
   fees: GENESIS_FEES,
   auctions: {},
-
   gateways: {},
   lastTickedHeight: 0,
   observations: {},
@@ -43,6 +44,8 @@ export const getBaselineState: () => IOState = (): IOState => ({
     // intentionally spread as we don't want to reference the object directly
     ...INITIAL_DEMAND_FACTOR_DATA,
   },
+  prescribedObservers: {},
+  settings: undefined,
 });
 
 export const stubbedAuctionData: ArNSLeaseAuctionData = {
@@ -143,3 +146,24 @@ export function createMockDelegates(numDelegates: number) {
   }
   return delegates;
 }
+
+export const stubbedPrescribedObservers = Object.keys(stubbedGateways).map(
+  (gatewayAddress) => ({
+    ...stubbedPrescribedObserver,
+    gatewayAddress,
+    observerAddress: stubbedGateways[gatewayAddress].observerWallet,
+  }),
+);
+
+export const stubbedPrescribedObserver: WeightedObserver = {
+  observerAddress: stubbedGatewayData.observerWallet,
+  gatewayAddress: 'a-gateway',
+  stake: 10000,
+  start: 0,
+  tenureWeight: 0,
+  stakeWeight: 1,
+  gatewayRewardRatioWeight: 0,
+  observerRewardRatioWeight: 0,
+  compositeWeight: 0,
+  normalizedCompositeWeight: 0,
+};

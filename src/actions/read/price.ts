@@ -2,7 +2,7 @@ import {
   calculateAuctionPriceForBlock,
   createAuctionObject,
 } from '../../auctions';
-import { PERMABUY_LEASE_FEE_LENGTH } from '../../constants';
+import { AUCTION_SETTINGS, PERMABUY_LEASE_FEE_LENGTH } from '../../constants';
 import {
   calculateAnnualRenewalFee,
   calculateRegistrationFee,
@@ -67,6 +67,8 @@ export function getPriceForInteraction(
         records: state.records,
         reserved: state.reserved,
         currentBlockTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),
+        type,
+        auction,
       });
       fee = calculateRegistrationFee({
         name,
@@ -79,7 +81,7 @@ export function getPriceForInteraction(
       break;
     }
     case 'submitAuctionBid': {
-      const { name } = new AuctionBid(parsedInput);
+      const { name, type } = new AuctionBid(parsedInput);
       const auction = state.auctions[name];
       assertAvailableRecord({
         caller,
@@ -87,6 +89,8 @@ export function getPriceForInteraction(
         records: state.records,
         reserved: state.reserved,
         currentBlockTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),
+        type,
+        auction: true,
       });
       // return the floor price to start the auction
       if (!auction) {
@@ -110,6 +114,7 @@ export function getPriceForInteraction(
         currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
         startPrice: auction.startPrice,
         floorPrice: auction.floorPrice,
+        auctionSettings: AUCTION_SETTINGS,
       });
       fee = minimumAuctionBid.valueOf();
       break;
