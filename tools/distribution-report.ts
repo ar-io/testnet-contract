@@ -1,12 +1,12 @@
 (async () => {
   const arnsContractTxId = 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
-  const epochStartHeight = 1356460 + 720;
+  const epochStartHeight = 1358620;
   const epochEndHeight = epochStartHeight + 720 - 1;
   const epochDistributionHeight = epochEndHeight + 15;
   const epochPeriod = Math.floor((epochStartHeight - 1350700) / 720);
   const url = `https://api.arns.app/v1/contract/${arnsContractTxId}`;
   const [before, after] = await Promise.all(
-    [epochEndHeight, epochDistributionHeight + 10].map(async (height) => {
+    [epochEndHeight, epochDistributionHeight + 25].map(async (height) => {
       return fetch(`${url}?blockHeight=${height}`).then(
         async (res) => (await res.json()) as { state: any },
       );
@@ -20,10 +20,15 @@
   const eligibleForDistribution = protocolBalanceBefore * 0.0025;
   const protocolBalanceDiff = protocolBalanceBefore - protocolBalanceAfter;
 
-  const totalGateways = Object.keys(before.state.gateways);
+  const eligibleGateways = Object.keys(before.state.gateways).filter(
+    (gateway) => before.state.gateways[gateway].start <= epochStartHeight,
+  );
+  const newGateways = Object.keys(after.state.gateways).filter(
+    (gateway) => before.state.gateways[gateway].start > epochStartHeight,
+  );
   const totalGatewayRewards = eligibleForDistribution * 0.95;
   const perGatewayRewards = Math.floor(
-    totalGatewayRewards / totalGateways.length,
+    totalGatewayRewards / eligibleGateways.length,
   );
 
   const expectedObservationCount = 50;
@@ -52,7 +57,7 @@
   let totalDistributedRewards = 0;
   const failedObservers: string[] = [];
   const failedGateways: string[] = [];
-  const balanceChecks = Object.keys(after.state.gateways).map((address) => {
+  const balanceChecks = eligibleGateways.map((address) => {
     let expectedReward = 0;
     const gateway = after.state.gateways[address];
     const failureCounts = failureSummariesForEpoch[address]?.length || 0;
@@ -132,18 +137,23 @@
   );
 
   console.log('\n****GATEWAYS*****');
-  console.log(`Total gateways: ${totalGateways.length}`);
+  console.log(`Total eligible gateways for epoch: ${eligibleGateways.length}`);
   console.log(
-    `Total gateways passed: ${totalGateways.length - gatewayFailedCount}`,
+    `Total eligible gateways passed: ${
+      eligibleGateways.length - gatewayFailedCount
+    }`,
   );
-  console.log(`Total gateways failed: ${gatewayFailedCount}`);
+  console.log(`Total eligible gateways failed: ${gatewayFailedCount}`);
   console.log(
-    `Total gateways passed %: ${
-      ((totalGateways.length - gatewayFailedCount) / totalGateways.length) * 100
+    `Total eligible gateways passed %: ${
+      ((eligibleGateways.length - gatewayFailedCount) /
+        eligibleGateways.length) *
+      100
     }%`,
   );
   console.log(`Total eligible gateway rewards: ${totalGatewayRewards}`);
   console.log(`Total per gateway reward: ${perGatewayRewards}`);
+  console.log(`Total new gateways during epoch: ${newGateways.length}`);
 
   console.log('\n****OBSERVATIONS*****');
   console.log(`Expected observation count: ${expectedObservationCount}`);
