@@ -22,6 +22,7 @@ describe('Observation', () => {
   const gatewayWalletAddresses: string[] = [];
   let contract: Contract<IOState>;
   let srcContractId: string;
+  let prevState: IOState;
   const wallets: {
     addr: string;
     jwk: JWKInterface;
@@ -57,6 +58,7 @@ describe('Observation', () => {
     ];
   });
   beforeEach(async () => {
+    prevState = (await contract.readState()).cachedValue.state;
     const { result }: { result: WeightedObserver[] } = await contract.viewState(
       {
         function: 'prescribedObservers',
@@ -94,17 +96,17 @@ describe('Observation', () => {
     });
 
     describe('write interactions', () => {
-      it('should save observations in epoch if prescribed observer and the current block height is past the epoch start height + delay period', async () => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
-        const previousState = prevCachedValue.state as IOState;
+      beforeAll(async () => {
+        // ensure that we are past the delay period
         const minimumObservationHeight =
-          previousState.distributions.epochStartHeight +
-          EPOCH_DISTRIBUTION_DELAY;
+          prevState.distributions.epochEndHeight + EPOCH_DISTRIBUTION_DELAY + 1;
         const diffInBlocks =
           minimumObservationHeight - (await getCurrentBlock(arweave)).valueOf();
         if (diffInBlocks > 0) {
           await mineBlocks(arweave, diffInBlocks);
         }
+      });
+      it('should save observations in epoch if prescribed observer and the current block height is past the epoch start height + delay period', async () => {
         const writeInteractions = await Promise.all(
           prescribedObserverWallets.map((wallet) => {
             contract = warp
@@ -146,26 +148,14 @@ describe('Observation', () => {
       });
 
       it('should allow an observer to update their observation with new failures/report if selected as observer and the current block height is past the epoch start height + delay period', async () => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
-        const previousState = prevCachedValue.state as IOState;
         const previousSummary =
-          previousState.observations[currentEpochStartHeight.valueOf()]
+          prevState.observations[currentEpochStartHeight.valueOf()]
             ?.failureSummaries;
         const previousReports =
-          previousState.observations[currentEpochStartHeight.valueOf()]
-            ?.reports;
+          prevState.observations[currentEpochStartHeight.valueOf()]?.reports;
         contract = warp
           .contract<IOState>(srcContractId)
           .connect(prescribedObserverWallets[0].jwk);
-        // ensure that we are past the delay period
-        const minimumObservationHeight =
-          previousState.distributions.epochStartHeight +
-          EPOCH_DISTRIBUTION_DELAY;
-        const diffInBlocks =
-          minimumObservationHeight - (await getCurrentBlock(arweave)).valueOf();
-        if (diffInBlocks > 0) {
-          await mineBlocks(arweave, diffInBlocks);
-        }
         const writeInteraction = await contract.writeInteraction({
           function: 'saveObservations',
           observerReportTxId: EXAMPLE_OBSERVER_REPORT_TX_IDS[1],
@@ -239,8 +229,6 @@ describe('Observation', () => {
     });
 
     it('should update gateways observerReportTxId tx id if gateway is a prescribed observer saves observation again within the same epoch', async () => {
-      const previousObservation = await contract.readState();
-      const prevState = previousObservation.cachedValue.state as IOState;
       const previousReportsAndSummary =
         prevState.observations[currentEpochStartHeight.valueOf()];
       const writeInteractions = await Promise.all(
@@ -282,7 +270,6 @@ describe('Observation', () => {
   describe('non-prescribed observer', () => {
     describe('write interactions', () => {
       it('should not save observation report if not prescribed observer', async () => {
-        const { cachedValue: prevCachedValue } = await contract.readState();
         const nonPrescribedObserver = wallets[8].jwk; // not allowed to observe
         contract = warp
           .contract<IOState>(srcContractId)
@@ -297,12 +284,11 @@ describe('Observation', () => {
         expect(
           newCachedValue.errorMessages[writeInteraction?.originalTxId],
         ).toEqual(INVALID_OBSERVATION_CALLER_MESSAGE);
-        expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        expect(newCachedValue.state).toEqual(prevState);
       });
 
       it('should not save observation report if the caller is not a registered observer', async () => {
         const notJoinedGateway = await createLocalWallet(arweave);
-        const { cachedValue: prevCachedValue } = await contract.readState();
         contract = warp
           .contract<IOState>(srcContractId)
           .connect(notJoinedGateway.wallet);
@@ -316,14 +302,13 @@ describe('Observation', () => {
         expect(
           newCachedValue.errorMessages[writeInteraction?.originalTxId],
         ).toEqual(INVALID_OBSERVATION_CALLER_MESSAGE);
-        expect(newCachedValue.state).toEqual(prevCachedValue.state);
+        expect(newCachedValue.state).toEqual(prevState);
       });
     });
   });
   describe('fast forwarding to the next epoch', () => {
     it('should update the prescribed observers, distributed balances, and increment gateway stats when distribution happens', async () => {
       await mineBlocks(arweave, EPOCH_BLOCK_LENGTH);
-      const { cachedValue: prevCachedValue } = await contract.readState();
       const writeInteraction = await contract
         .connect(wallets[0].jwk)
         .writeInteraction({
@@ -337,39 +322,34 @@ describe('Observation', () => {
       const newState = newCachedValue.state as IOState;
       // updated correctly
       expect(newState.distributions).toEqual({
-        epochZeroStartHeight:
-          prevCachedValue.state.distributions.epochZeroStartHeight,
-        epochPeriod: prevCachedValue.state.distributions.epochPeriod + 1,
-        epochStartHeight:
-          prevCachedValue.state.distributions.epochEndHeight + 1,
+        epochZeroStartHeight: prevState.distributions.epochZeroStartHeight,
+        epochPeriod: prevState.distributions.epochPeriod + 1,
+        epochStartHeight: prevState.distributions.epochEndHeight + 1,
         epochEndHeight:
-          prevCachedValue.state.distributions.epochEndHeight +
-          EPOCH_BLOCK_LENGTH,
+          prevState.distributions.epochEndHeight + EPOCH_BLOCK_LENGTH,
         nextDistributionHeight:
-          prevCachedValue.state.distributions.epochEndHeight +
+          prevState.distributions.epochEndHeight +
           EPOCH_BLOCK_LENGTH +
           EPOCH_DISTRIBUTION_DELAY,
       });
-      const gatewaysAroundDuringEpoch = Object.keys(
-        prevCachedValue.state.gateways,
-      ).filter(
+      const gatewaysAroundDuringEpoch = Object.keys(prevState.gateways).filter(
         (gatewayAddress) =>
-          prevCachedValue.state.gateways[gatewayAddress].start <=
-            prevCachedValue.state.distributions.epochStartHeight &&
-          (prevCachedValue.state.gateways[gatewayAddress].end === 0 ||
-            prevCachedValue.state.gateways[gatewayAddress].end >
-              prevCachedValue.state.distributions.epochEndHeight),
+          prevState.gateways[gatewayAddress].start <=
+            prevState.distributions.epochStartHeight &&
+          (prevState.gateways[gatewayAddress].end === 0 ||
+            prevState.gateways[gatewayAddress].end >
+              prevState.distributions.epochEndHeight),
       );
       const gatewaysExistedButNotStarted = Object.keys(
-        prevCachedValue.state.gateways,
+        prevState.gateways,
       ).reduce((gateways: Gateways, gatewayAddress) => {
         if (
-          prevCachedValue.state.gateways[gatewayAddress].start >
-          prevCachedValue.state.distributions.epochStartHeight
+          prevState.gateways[gatewayAddress].start >
+          prevState.distributions.epochStartHeight
         ) {
           return {
             ...gateways,
-            [gatewayAddress]: prevCachedValue.state.gateways[gatewayAddress],
+            [gatewayAddress]: prevState.gateways[gatewayAddress],
           };
         }
         return gateways;
@@ -378,20 +358,18 @@ describe('Observation', () => {
         ...gatewaysExistedButNotStarted,
         ...gatewaysAroundDuringEpoch.reduce(
           (gateways: Gateways, gatewayAddress) => {
-            const gateway = prevCachedValue.state.gateways[gatewayAddress];
+            const gateway = prevState.gateways[gatewayAddress];
             const didFail =
-              prevCachedValue.state.observations[
-                prevCachedValue.state.distributions.epochStartHeight
-              ]?.failureSummaries[gatewayAddress] ||
+              prevState.observations[prevState.distributions.epochStartHeight]
+                ?.failureSummaries[gatewayAddress] ||
               [].length >
                 prescribedObservers.length * OBSERVATION_FAILURE_THRESHOLD;
             const wasPrescribed = prescribedObservers.some(
               (observer) => observer.observerAddress === gateway.observerWallet,
             );
             const didObserve =
-              prevCachedValue.state.observations[
-                prevCachedValue.state.distributions.epochStartHeight
-              ].reports[gateway.observerWallet] !== undefined;
+              prevState.observations[prevState.distributions.epochStartHeight]
+                .reports[gateway.observerWallet] !== undefined;
             return {
               ...gateways,
               [gatewayAddress]: {
