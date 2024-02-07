@@ -835,7 +835,7 @@ describe('tick', () => {
     });
   });
 
-  it('should not distribute rewards, increment gateway performance stats or update epoch values if the current block height is not greater than the current epoch end height', async () => {
+  it('should not distribute rewards, increment gateway performance stats or update epoch values if the current block height is not the epoch distribution height', async () => {
     const initialState: IOState = {
       ...getBaselineState(),
       balances: {
@@ -864,7 +864,7 @@ describe('tick', () => {
       index: index + 1,
     })),
   )(
-    'should not distribute rewards or increment gateway stats, but epoch values if the current block height is equal to the last epoch end height + %s blocks',
+    'should not distribute rewards or increment gateway stats, update prescribed observers or modify state the current block height is equal to the last epoch end height + %s blocks',
     async ({ index: blockHeightDiff }) => {
       const initialState: IOState = {
         ...getBaselineState(),
@@ -885,13 +885,7 @@ describe('tick', () => {
           prescribedObservers: initialState.prescribedObservers,
         });
       expect(balances).toEqual(initialState.balances);
-      expect(distributions).toEqual({
-        ...initialState.distributions,
-        epochPeriod: initialState.distributions.epochPeriod + 1,
-        epochStartHeight: initialState.distributions.epochEndHeight + 1,
-        epochEndHeight:
-          initialState.distributions.epochEndHeight + EPOCH_BLOCK_LENGTH,
-      });
+      expect(distributions).toEqual(initialState.distributions);
       expect(gateways).toEqual(initialState.gateways);
     },
   );
