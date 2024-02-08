@@ -46,6 +46,12 @@ export function safeDelegateStake({
     throw new ContractError(INVALID_GATEWAY_REGISTERED_MESSAGE);
   }
 
+  if (gateways[fromAddress]) {
+    throw new ContractError(
+      'Caller cannot delegate stake to a gateway they own.',
+    );
+  }
+
   if (gateways[gatewayAddress].status === NETWORK_LEAVING_STATUS) {
     throw new ContractError(
       'This Gateway is in the process of leaving the network and cannot have more stake delegated to it.',
