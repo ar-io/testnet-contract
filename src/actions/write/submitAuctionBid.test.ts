@@ -10,6 +10,7 @@ import {
 } from '../../constants';
 import {
   getBaselineState,
+  stubbedArweaveTxId,
   stubbedAuctionData,
   stubbedAuctionState,
 } from '../../tests/stubs';
@@ -77,7 +78,7 @@ describe('submitAuctionBid', () => {
     const priceForName = 220_000;
     const inputData = {
       ...getBaselineState(),
-      balances: { initiator: priceForName - 1, 'stubbed-contract-id': 0 },
+      balances: { initiator: priceForName - 1, [SmartWeave.contract.id]: 0 },
     };
     expect(() => {
       submitAuctionBid(inputData, {
@@ -97,7 +98,7 @@ describe('submitAuctionBid', () => {
         type: 'lease',
       },
       {
-        contractTxId: 'stubbed-transaction-id',
+        contractTxId: SmartWeave.transaction.id,
         type: 'lease',
       },
     ],
@@ -108,7 +109,7 @@ describe('submitAuctionBid', () => {
         years: 5,
       },
       {
-        contractTxId: 'stubbed-transaction-id',
+        contractTxId: SmartWeave.transaction.id,
         type: 'lease',
       },
     ],
@@ -118,19 +119,18 @@ describe('submitAuctionBid', () => {
         type: 'permabuy',
       },
       {
-        contractTxId: 'stubbed-transaction-id',
+        contractTxId: SmartWeave.transaction.id,
         type: 'permabuy',
       },
     ],
     [
       {
-        contractTxId: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc',
+        contractTxId: stubbedArweaveTxId,
         type: 'permabuy',
       },
       {
-        contractTxId: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc',
+        contractTxId: stubbedArweaveTxId,
         type: 'permabuy',
-        floorPrice: 600000,
       },
     ],
   ])(
@@ -141,7 +141,10 @@ describe('submitAuctionBid', () => {
         type: RegistrationType;
         years?: number;
       },
-      expectedData,
+      expectedData: {
+        contractTxId: string;
+        type: RegistrationType;
+      },
     ) => {
       const baselineState = getBaselineState();
       const expectedFloorPrice =
@@ -197,7 +200,7 @@ describe('submitAuctionBid', () => {
       ...stubbedAuctionState,
       balances: {
         'new-bidder': 0,
-        'stubbed-contract-id': 0,
+        [SmartWeave.contract.id]: 0,
       },
     };
     expect(() => {
@@ -217,7 +220,7 @@ describe('submitAuctionBid', () => {
       ...stubbedAuctionState,
       balances: {
         'new-bidder': 1_000,
-        'stubbed-contract-id': 0,
+        [SmartWeave.contract.id]: 0,
       },
     };
     expect(() => {
@@ -263,13 +266,13 @@ describe('submitAuctionBid', () => {
   it.each([
     [
       {
-        contractTxId: 'stubbed-transaction-id',
+        contractTxId: SmartWeave.transaction.id,
         type: 'lease',
         floorPrice: 100,
         startPrice: 1000,
       },
       {
-        contractTxId: 'stubbed-transaction-id',
+        contractTxId: SmartWeave.transaction.id,
         type: 'lease',
         undernames: 10,
         startTimestamp: 1,
@@ -277,13 +280,13 @@ describe('submitAuctionBid', () => {
     ],
     [
       {
-        contractTxId: 'stubbed-transaction-id',
+        contractTxId: SmartWeave.transaction.id,
         type: 'permabuy',
         floorPrice: 100,
         startPrice: 1000,
       },
       {
-        contractTxId: 'stubbed-transaction-id',
+        contractTxId: SmartWeave.transaction.id,
         type: 'permabuy',
         undernames: 10,
         startTimestamp: 1,
@@ -338,7 +341,7 @@ describe('submitAuctionBid', () => {
         },
         balances: {
           initiator: 200, // return balance back to the initiator
-          'stubbed-contract-id': 1000,
+          [SmartWeave.contract.id]: 1000,
           // removes the new-bidder balance as they now have 0 tokens
         },
       });
@@ -366,7 +369,7 @@ describe('submitAuctionBid', () => {
       auctions: {},
       records: {
         'test-auction-close': {
-          contractTxId: 'stubbed-transaction-id',
+          contractTxId: SmartWeave.transaction.id,
           endTimestamp: SECONDS_IN_A_YEAR + 1,
           type: 'lease',
           startTimestamp: 1,
@@ -380,7 +383,7 @@ describe('submitAuctionBid', () => {
         revenueThisPeriod: 1000,
       },
       balances: {
-        'stubbed-contract-id': 1000,
+        [SmartWeave.contract.id]: 1000,
         // removes initiator balance as they now have 0 tokens
       },
     });
