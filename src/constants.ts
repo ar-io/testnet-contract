@@ -3,6 +3,7 @@ import {
   DemandFactoringData,
   DemandFactoringSettings,
   EpochDistributionData,
+  Fees,
   GatewayPerformanceStats,
   GatewayRegistrySettings,
 } from './types';
@@ -54,7 +55,7 @@ export const UNDERNAME_REGISTRATION_IO_FEE = 1; // 1 IO token per undername
 export const MAX_NAME_LENGTH = 51; // the maximum length of an arns name - gateway sandbox domains are 52 characters, so to prevent overlap we stop 1 character short, where the 52nd character would be an underscore (which sandbox domains do not use) to prevent overlap
 export const MAX_NOTE_LENGTH = 256; // the maximum size of a note field
 export const SECONDS_IN_GRACE_PERIOD = 1_814_400; // Three weeks, 7 days per week, 24 hours per day, sixty minutes per hour, sixty seconds per minute
-export const GENESIS_FEES = {
+export const GENESIS_FEES: Fees = {
   '1': 4218750000,
   '2': 1406250000,
   '3': 468750000,

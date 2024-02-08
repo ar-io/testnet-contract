@@ -1,4 +1,4 @@
-import { SECONDS_IN_A_YEAR } from '../../constants';
+import { GENESIS_FEES, SECONDS_IN_A_YEAR } from '../../constants';
 import { getBaselineState } from '../../tests/stubs';
 import { IOState } from '../../types';
 import { InteractionsWithFee, getPriceForInteraction } from './price';
@@ -18,7 +18,9 @@ describe('getPriceForInteraction', () => {
           type: 'permabuy',
         },
       },
-      500000,
+      GENESIS_FEES['test-buy-record'.length] +
+        // permabuy so 10 year annual renewal fee
+        GENESIS_FEES['test-buy-record'.length] * 10 * 0.2,
     ],
     [
       'should return the correct price for extendRecord',
@@ -139,7 +141,9 @@ describe('getPriceForInteraction', () => {
           name: 'new-auction',
         },
       },
-      540000,
+      GENESIS_FEES['new-auction'.length] +
+        // lease - so 1 year renewal fee
+        GENESIS_FEES['new-auction'.length] * 1 * 0.2,
     ],
   ])(
     '%s',
