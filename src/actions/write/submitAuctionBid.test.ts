@@ -4,6 +4,7 @@ import {
   ARNS_NAME_AUCTION_EXPIRED_MESSAGE,
   AUCTION_SETTINGS,
   INSUFFICIENT_FUNDS_MESSAGE,
+  PERMABUY_LEASE_FEE_LENGTH,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
@@ -12,7 +13,7 @@ import {
   stubbedAuctionData,
   stubbedAuctionState,
 } from '../../tests/stubs';
-import { ArNSAuctionData, IOState } from '../../types';
+import { ArNSAuctionData, IOState, RegistrationType } from '../../types';
 
 describe('submitAuctionBid', () => {
   it.each([
@@ -98,7 +99,6 @@ describe('submitAuctionBid', () => {
       {
         contractTxId: 'stubbed-transaction-id',
         type: 'lease',
-        floorPrice: 240000,
       },
     ],
     [
@@ -110,7 +110,6 @@ describe('submitAuctionBid', () => {
       {
         contractTxId: 'stubbed-transaction-id',
         type: 'lease',
-        floorPrice: 240000,
       },
     ],
     [
@@ -121,7 +120,6 @@ describe('submitAuctionBid', () => {
       {
         contractTxId: 'stubbed-transaction-id',
         type: 'permabuy',
-        floorPrice: 400000,
       },
     ],
     [
@@ -132,21 +130,37 @@ describe('submitAuctionBid', () => {
       {
         contractTxId: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc',
         type: 'permabuy',
-        floorPrice: 400000,
+        floorPrice: 600000,
       },
     ],
   ])(
     'should create a new auction and decrement the initiators balance, vault the floor price in the auction, and remove the reserved name for valid contractTxIds',
-    (interactionInput, expectedData) => {
+    (
+      interactionInput: {
+        contractTxId: string;
+        type: RegistrationType;
+        years?: number;
+      },
+      expectedData,
+    ) => {
+      const baselineState = getBaselineState();
+      const expectedFloorPrice =
+        baselineState.fees['test-new-auction'.length] +
+        baselineState.fees['test-new-auction'.length] *
+          (interactionInput.type === 'permabuy'
+            ? PERMABUY_LEASE_FEE_LENGTH
+            : 1) *
+          0.2;
       const inputData = {
-        ...getBaselineState(),
+        ...baselineState,
         reserved: {
           'test-new-auction': {
             target: 'initiator',
           },
         },
         balances: {
-          initiator: expectedData.floorPrice,
+          // give the caller enough balance to initiate the auction
+          initiator: expectedFloorPrice,
         },
       };
       const { state } = submitAuctionBid(inputData, {
@@ -168,8 +182,8 @@ describe('submitAuctionBid', () => {
             startHeight: 1,
             initiator: 'initiator',
             startPrice:
-              expectedData.floorPrice * AUCTION_SETTINGS.startPriceMultiplier,
-            floorPrice: expectedData.floorPrice,
+              expectedFloorPrice * AUCTION_SETTINGS.startPriceMultiplier,
+            floorPrice: expectedFloorPrice,
             ...(interactionInput.type === 'lease' ? { years: 1 } : {}),
           },
         },

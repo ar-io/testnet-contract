@@ -259,13 +259,19 @@ export function calculatePermabuyFee({
   currentBlockTimestamp: BlockTimestamp;
   demandFactoring: DeepReadonly<DemandFactoringData>;
 }): number {
+  // genesis price
+  const initialNamePurchaseFee = fees[name.length.toString()];
   // calculate the annual fee for the name for default of 10 years
-  const permabuyLeasePrice = calculateAnnualRenewalFee({
-    name,
-    fees,
-    years: PERMABUY_LEASE_FEE_LENGTH,
-  });
-  return demandFactoring.demandFactor * permabuyLeasePrice;
+  const permabuyPrice =
+    demandFactoring.demandFactor *
+    (initialNamePurchaseFee +
+      // total renewal cost pegged to 10 years to purchase name
+      calculateAnnualRenewalFee({
+        name,
+        fees,
+        years: PERMABUY_LEASE_FEE_LENGTH,
+      }));
+  return permabuyPrice;
 }
 
 export function calculateRegistrationFee({
