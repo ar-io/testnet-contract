@@ -52,10 +52,10 @@ export class JoinNetwork {
       protocol,
       properties,
       observerWallet = caller,
-      allowDelegatedStaking,
-      delegateRewardShareRatio,
-      allowedDelegates,
-      minDelegatedStake,
+      allowDelegatedStaking = false,
+      delegateRewardShareRatio = 0,
+      allowedDelegates = [],
+      minDelegatedStake = MIN_DELEGATED_STAKE,
     } = input;
     this.qty = qty;
     this.label = label;
@@ -65,27 +65,10 @@ export class JoinNetwork {
     this.fqdn = fqdn;
     this.note = note;
     this.observerWallet = observerWallet;
-    // TODO clean this up
-    if (allowDelegatedStaking !== undefined) {
-      this.allowDelegatedStaking = allowDelegatedStaking;
-    } else {
-      this.allowDelegatedStaking = false;
-    }
-    if (delegateRewardShareRatio !== undefined) {
-      this.delegateRewardShareRatio = delegateRewardShareRatio;
-    } else {
-      this.delegateRewardShareRatio = 0;
-    }
-    if (allowedDelegates !== undefined) {
-      this.allowedDelegates = allowedDelegates;
-    } else {
-      this.allowedDelegates = [];
-    }
-    if (minDelegatedStake !== undefined) {
-      this.minDelegatedStake = minDelegatedStake;
-    } else {
-      this.minDelegatedStake = MIN_DELEGATED_STAKE;
-    }
+    this.allowDelegatedStaking = allowDelegatedStaking;
+    this.delegateRewardShareRatio = delegateRewardShareRatio;
+    this.minDelegatedStake = minDelegatedStake;
+    this.allowedDelegates = allowedDelegates;
   }
 }
 
