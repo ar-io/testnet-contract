@@ -188,7 +188,7 @@ describe('updateGatewaySettings', () => {
               ...stubbedGatewayData.settings,
               allowDelegatedStaking: true,
             },
-            delegatedStake: stubbedDelegateData.delegatedStake * 2, // there are two delegates staked
+            totalDelegatedStake: stubbedDelegateData.delegatedStake * 2, // there are two delegates staked
             delegates: {
               [stubbedArweaveTxId]: {
                 ...stubbedDelegateData,
@@ -226,7 +226,7 @@ describe('updateGatewaySettings', () => {
           ...stubbedGatewayData.settings,
           allowDelegatedStaking: false,
         },
-        delegatedStake: 0,
+        totalDelegatedStake: 0,
         delegates: {
           [stubbedArweaveTxId]: {
             delegatedStake: 0,

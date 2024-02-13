@@ -248,7 +248,7 @@ describe('joinNetwork', () => {
     });
     expect(state.gateways[stubbedArweaveTxId]).toEqual({
       operatorStake: MIN_OPERATOR_STAKE,
-      delegatedStake: 0,
+      totalDelegatedStake: 0,
       settings: {
         port: 1234,
         protocol: 'https',
@@ -291,7 +291,7 @@ describe('joinNetwork', () => {
     });
     expect(state.gateways[stubbedArweaveTxId]).toEqual({
       operatorStake: MIN_OPERATOR_STAKE,
-      delegatedStake: 0,
+      totalDelegatedStake: 0,
       settings: {
         port: 1234,
         protocol: 'https',
@@ -336,7 +336,7 @@ describe('joinNetwork', () => {
     });
     expect(state.gateways[stubbedArweaveTxId]).toEqual({
       operatorStake: MIN_OPERATOR_STAKE,
-      delegatedStake: 0,
+      totalDelegatedStake: 0,
       settings: {
         port: 1234,
         protocol: 'https',

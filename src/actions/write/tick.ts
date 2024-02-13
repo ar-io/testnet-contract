@@ -760,7 +760,7 @@ export async function tickRewardDistribution({
       );
       const delegateRewardShare = totalGatewayReward - gatewayRewardShare;
       // get reward amount for each delegate
-      const totalDelegatedStake = gateways[gatewayAddress].delegatedStake;
+      const totalDelegatedStake = gateways[gatewayAddress].totalDelegatedStake;
       for (const delegateAddress in gateways[gatewayAddress].delegates) {
         const delegateData =
           gateways[gatewayAddress].delegates[delegateAddress];
@@ -851,7 +851,7 @@ export async function tickRewardDistribution({
 
       // get reward amount for each delegate
       const totalDelegatedStake =
-        gateways[gatewayObservedAndPassed].delegatedStake;
+        gateways[gatewayObservedAndPassed].totalDelegatedStake;
       for (const delegateAddress in gateways[gatewayObservedAndPassed]
         .delegates) {
         const delegateData =

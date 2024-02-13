@@ -77,7 +77,7 @@ describe('safeDelegateStake function', () => {
     );
   });
 
-  it('should throw an error if qty does not meet minimum delegated stake amount for existing staker', () => {
+  it('should throw an error if qty does not meet minimum delegated stake amount for existing staker when their current stake is vaulted', () => {
     expect(() => {
       safeDelegateStake({
         balances: { foo: MIN_DELEGATED_STAKE, bar: 2 },
@@ -245,12 +245,12 @@ describe('safeDelegateStake function', () => {
         ...expectedNewDelegateData,
       },
     });
-    expect(gateways[gatewayAddress].delegatedStake).toEqual(
-      stubbedGatewayData.delegatedStake + MIN_DELEGATED_STAKE,
+    expect(gateways[gatewayAddress].totalDelegatedStake).toEqual(
+      stubbedGatewayData.totalDelegatedStake + MIN_DELEGATED_STAKE,
     );
   });
 
-  it('should delegate stake as new delegate with 0 balance', () => {
+  it('should add to an existing delegates stake when if their existing stake is vaulted', () => {
     const balances = { foo: MIN_DELEGATED_STAKE, bar: 2 };
     const fromAddress = 'foo';
     const gateways = {
@@ -260,7 +260,14 @@ describe('safeDelegateStake function', () => {
           [fromAddress]: {
             delegatedStake: 0,
             start: 0,
-            vaults: {},
+            vaults: {
+              // assume their current stake is vaulted but they want to restake with a new balance
+              'test-vault': {
+                balance: MIN_DELEGATED_STAKE,
+                start: 0,
+                end: DELEGATED_STAKE_UNLOCK_LENGTH,
+              },
+            },
           },
         },
         settings: {
@@ -275,7 +282,13 @@ describe('safeDelegateStake function', () => {
     const expectedNewDelegateData: DelegateData = {
       delegatedStake: qty.valueOf(),
       start: 0,
-      vaults: {},
+      vaults: {
+        'test-vault': {
+          balance: MIN_DELEGATED_STAKE,
+          start: 0,
+          end: DELEGATED_STAKE_UNLOCK_LENGTH,
+        },
+      },
     };
     safeDelegateStake({
       balances,
@@ -290,8 +303,8 @@ describe('safeDelegateStake function', () => {
         ...expectedNewDelegateData,
       },
     });
-    expect(gateways[gatewayAddress].delegatedStake).toEqual(
-      stubbedGatewayData.delegatedStake + MIN_DELEGATED_STAKE,
+    expect(gateways[gatewayAddress].totalDelegatedStake).toEqual(
+      stubbedGatewayData.totalDelegatedStake + MIN_DELEGATED_STAKE,
     );
   });
 
@@ -335,8 +348,8 @@ describe('safeDelegateStake function', () => {
         ...expectedNewDelegateData,
       },
     });
-    expect(gateways[gatewayAddress].delegatedStake).toEqual(
-      stubbedGatewayData.delegatedStake + qty.valueOf(),
+    expect(gateways[gatewayAddress].totalDelegatedStake).toEqual(
+      stubbedGatewayData.totalDelegatedStake + qty.valueOf(),
     );
   });
 });
@@ -448,8 +461,8 @@ describe('safeDelegateDistribution function', () => {
     expect(gateways[gatewayAddress].delegates[delegateAddress]).toEqual({
       ...expectedNewDelegateData,
     });
-    expect(gateways[gatewayAddress].delegatedStake).toEqual(
-      stubbedDelegatedGatewayData.delegatedStake + qty.valueOf(),
+    expect(gateways[gatewayAddress].totalDelegatedStake).toEqual(
+      stubbedDelegatedGatewayData.totalDelegatedStake + qty.valueOf(),
     );
   });
 });
@@ -587,8 +600,8 @@ describe('safeDecreaseDelegateStake function', () => {
         ...expectedNewDelegateData,
       },
     });
-    expect(gateways[gatewayAddress].delegatedStake).toEqual(
-      stubbedGatewayData.delegatedStake - qty.valueOf(),
+    expect(gateways[gatewayAddress].totalDelegatedStake).toEqual(
+      stubbedGatewayData.totalDelegatedStake - qty.valueOf(),
     );
   });
 
@@ -638,8 +651,8 @@ describe('safeDecreaseDelegateStake function', () => {
         ...expectedNewDelegateData,
       },
     });
-    expect(gateways[gatewayAddress].delegatedStake).toEqual(
-      stubbedGatewayData.delegatedStake - qty.valueOf(),
+    expect(gateways[gatewayAddress].totalDelegatedStake).toEqual(
+      stubbedGatewayData.totalDelegatedStake - qty.valueOf(),
     );
   });
 });

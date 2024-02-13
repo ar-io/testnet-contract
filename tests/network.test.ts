@@ -316,7 +316,7 @@ describe('Network', () => {
         );
         expect(newState.gateways[newGatewayOperatorAddress]).toEqual({
           operatorStake: joinGatewayPayload.qty,
-          delegatedStake: 0,
+          totalDelegatedStake: 0,
           status: NETWORK_JOIN_STATUS,
           start: (await getCurrentBlock(arweave)).valueOf(),
           end: 0,

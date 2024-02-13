@@ -42,70 +42,63 @@ export function safeDelegateStake({
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  if (!gateways[gatewayAddress]) {
+  const gateway = gateways[gatewayAddress];
+
+  if (!gateway) {
     throw new ContractError(INVALID_GATEWAY_REGISTERED_MESSAGE);
   }
 
-  if (gateways[fromAddress]) {
+  if (fromAddress === gatewayAddress) {
     throw new ContractError(
       'Caller cannot delegate stake to a gateway they own.',
     );
   }
 
-  if (gateways[gatewayAddress].status === NETWORK_LEAVING_STATUS) {
+  if (gateway.status === NETWORK_LEAVING_STATUS) {
     throw new ContractError(
       'This Gateway is in the process of leaving the network and cannot have more stake delegated to it.',
     );
   }
 
   // TODO: Update the below to allow reservedGateways (once the DeepReadonly is figured out)
-  if (!gateways[gatewayAddress].settings.allowDelegatedStaking) {
+  if (!gateway.settings.allowDelegatedStaking) {
     throw new ContractError(`This Gateway does not allow delegated staking.`);
   }
 
-  // TO DO: Ensure does not go above max delegates for this gateway
-  if (Object.keys(gateways[gatewayAddress].delegates).length > MAX_DELEGATES) {
+  if (Object.keys(gateway.delegates).length > MAX_DELEGATES) {
     throw new ContractError(
       `This Gateway has reached its maximum amount of delegated stakers.`,
     );
   }
 
+  const existingDelegate = gateway.delegates[fromAddress];
+  const minimumStakeForGateway =
+    // it already has a stake
+    existingDelegate && existingDelegate.delegatedStake !== 0
+      ? 1 // delegate must provide at least one additional IO
+      : Math.max(MIN_DELEGATED_STAKE, gateway.settings.minDelegatedStake || 0);
+
+  if (qty.valueOf() < minimumStakeForGateway) {
+    throw new ContractError(
+      `Qty must be greater than the minimum delegated stake amount.`,
+    );
+  }
   // If this delegate has staked before, update its amount, if not, create a new delegated staker
   // The quantity must also be greater than the minimum delegated stake set by the gateway
-  if (!gateways[gatewayAddress].delegates[fromAddress]) {
-    if (
-      qty.valueOf() < MIN_DELEGATED_STAKE ||
-      qty.valueOf() < gateways[gatewayAddress].settings.minDelegatedStake
-    ) {
-      throw new ContractError(
-        `Qty must be greater than the minimum delegated stake amount.`,
-      );
-    }
+  if (!existingDelegate) {
+    // create the new delegate stake
     gateways[gatewayAddress].delegates[fromAddress] = {
       delegatedStake: qty.valueOf(),
       start: startHeight.valueOf(),
       vaults: {},
     };
-  } else if (
-    gateways[gatewayAddress].delegates[fromAddress].delegatedStake === 0
-  ) {
-    if (
-      qty.valueOf() < MIN_DELEGATED_STAKE ||
-      qty.valueOf() < gateways[gatewayAddress].settings.minDelegatedStake
-    ) {
-      throw new ContractError(
-        `Qty must be greater than the minimum delegated stake amount.`,
-      );
-    } else {
-      gateways[gatewayAddress].delegates[fromAddress].delegatedStake +=
-        qty.valueOf();
-    }
   } else {
-    gateways[gatewayAddress].delegates[fromAddress].delegatedStake +=
-      qty.valueOf();
+    // increment the existing delegate's stake
+    existingDelegate.delegatedStake += qty.valueOf();
   }
-  // Increase the gateway's total delegated stake, and then decrement from the caller.
-  gateways[gatewayAddress].delegatedStake += qty.valueOf();
+  // increase the total delegated stake for the gateway - TODO: this could be computed, as opposed to set in state
+  gateways[gatewayAddress].totalDelegatedStake += qty.valueOf();
+  // decrement the caller's balance
   unsafeDecrementBalance(balances, fromAddress, qty.valueOf());
 }
 
@@ -145,7 +138,7 @@ export function safeDelegateDistribution({
     qty.valueOf();
 
   // Increase the gateway's total delegated stake
-  gateways[gatewayAddress].delegatedStake += qty.valueOf();
+  gateways[gatewayAddress].totalDelegatedStake += qty.valueOf();
 
   unsafeDecrementBalance(balances, protocolAddress, qty.valueOf());
 }
@@ -198,5 +191,5 @@ export function safeDecreaseDelegateStake({
   };
 
   // Decrease the gateway's total delegated stake.
-  gateways[gatewayAddress].delegatedStake -= qty.valueOf();
+  gateways[gatewayAddress].totalDelegatedStake -= qty.valueOf();
 }

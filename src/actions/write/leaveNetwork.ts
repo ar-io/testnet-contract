@@ -67,7 +67,7 @@ export const leaveNetwork = async (
     };
 
     // reduce gateway stake and set this delegate stake to 0
-    gateways[caller].delegatedStake -=
+    gateways[caller].totalDelegatedStake -=
       gateways[caller].delegates[address].delegatedStake;
     gateways[caller].delegates[address].delegatedStake = 0;
   }

@@ -107,7 +107,7 @@ export const updateGatewaySettings = async (
       };
 
       // reduce gateway stake and set this delegate stake to 0
-      updatedGateway.delegatedStake -=
+      updatedGateway.totalDelegatedStake -=
         updatedGateway.delegates[address].delegatedStake;
       updatedGateway.delegates[address].delegatedStake = 0;
     }

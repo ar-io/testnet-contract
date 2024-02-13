@@ -121,7 +121,7 @@ function createGateways(wallets: string[]) {
   const gateways: Gateways = {
     [wallets[0]]: {
       operatorStake: 50_000,
-      delegatedStake: 0,
+      totalDelegatedStake: 0,
       start: 0,
       end: 0,
       status: NETWORK_JOIN_STATUS,
@@ -142,7 +142,7 @@ function createGateways(wallets: string[]) {
     },
     [wallets[1]]: {
       operatorStake: 10_000,
-      delegatedStake: 0,
+      totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 0,
       end: 0,
@@ -163,7 +163,7 @@ function createGateways(wallets: string[]) {
     },
     [wallets[2]]: {
       operatorStake: 250_000,
-      delegatedStake: 0,
+      totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 0,
       end: 0,
@@ -184,7 +184,7 @@ function createGateways(wallets: string[]) {
     },
     [wallets[3]]: {
       operatorStake: 15_000,
-      delegatedStake: 0,
+      totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 0,
       end: 0,
@@ -205,7 +205,7 @@ function createGateways(wallets: string[]) {
     },
     [wallets[4]]: {
       operatorStake: 100_000,
-      delegatedStake: 0,
+      totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 0,
       end: 0,
@@ -226,7 +226,7 @@ function createGateways(wallets: string[]) {
     },
     [wallets[5]]: {
       operatorStake: 20_000,
-      delegatedStake: 0,
+      totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 0,
       end: 0,
@@ -247,7 +247,7 @@ function createGateways(wallets: string[]) {
     },
     [wallets[6]]: {
       operatorStake: 20_000,
-      delegatedStake: 0,
+      totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 0,
       end: 0,
@@ -268,7 +268,7 @@ function createGateways(wallets: string[]) {
     },
     [wallets[7]]: {
       operatorStake: 10_000,
-      delegatedStake: 0,
+      totalDelegatedStake: 0,
       status: NETWORK_LEAVING_STATUS,
       start: 0,
       end: 0,
@@ -289,7 +289,7 @@ function createGateways(wallets: string[]) {
     },
     [wallets[8]]: {
       operatorStake: 10_000,
-      delegatedStake: 0,
+      totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 10_000,
       end: 0,
@@ -310,7 +310,7 @@ function createGateways(wallets: string[]) {
     },
     [wallets[9]]: {
       operatorStake: 10_000,
-      delegatedStake: 0,
+      totalDelegatedStake: 0,
       status: NETWORK_LEAVING_STATUS,
       start: 0,
       end: 100,

@@ -69,7 +69,7 @@ export const stubbedAuctionState: Partial<IOState> = {
 
 export const stubbedGatewayData: Gateway = {
   observerWallet: 'test-observer-wallet',
-  delegatedStake: 0,
+  totalDelegatedStake: 0,
   start: 0,
   end: 0,
   vaults: {},
@@ -122,7 +122,7 @@ export const stubbedDelegatedGatewayData: Gateway = {
       ...stubbedDelegateData,
     },
   },
-  delegatedStake: 200,
+  totalDelegatedStake: 200,
   settings: {
     label: 'test-gateway',
     fqdn: 'test.com',

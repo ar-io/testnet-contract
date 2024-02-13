@@ -96,7 +96,7 @@ describe('leaveNetwork', () => {
         gateways: {
           [stubbedArweaveTxId]: {
             ...stubbedGatewayData,
-            delegatedStake: stubbedDelegateData.delegatedStake,
+            totalDelegatedStake: stubbedDelegateData.delegatedStake,
             start: GATEWAY_REGISTRY_SETTINGS.minGatewayJoinLength * -1, // hack to get around minimum join time
             delegates: {
               [stubbedArweaveTxId]: {
@@ -113,7 +113,7 @@ describe('leaveNetwork', () => {
       expect(state.gateways[stubbedArweaveTxId]).toEqual({
         ...stubbedGatewayData,
         operatorStake: 0,
-        delegatedStake: 0,
+        totalDelegatedStake: 0,
         vaults: {
           [SmartWeave.transaction.id]: {
             balance: stubbedGatewayData.operatorStake,
@@ -147,7 +147,7 @@ describe('leaveNetwork', () => {
         gateways: {
           [stubbedArweaveTxId]: {
             ...stubbedGatewayData,
-            delegatedStake: stubbedDelegateData.delegatedStake,
+            totalDelegatedStake: stubbedDelegateData.delegatedStake,
             start: GATEWAY_REGISTRY_SETTINGS.minGatewayJoinLength * -1, // hack to get around minimum join time
             vaults: {
               ['gateway-vault-1']: {
@@ -178,7 +178,7 @@ describe('leaveNetwork', () => {
       expect(state.gateways[stubbedArweaveTxId]).toEqual({
         ...stubbedGatewayData,
         operatorStake: 0,
-        delegatedStake: 0,
+        totalDelegatedStake: 0,
         vaults: {
           ['gateway-vault-1']: {
             balance: 1000,

@@ -125,7 +125,7 @@ export const joinNetwork = async (
   unsafeDecrementBalance(state.balances, caller, qty);
   state.gateways[caller] = {
     operatorStake: qty,
-    delegatedStake: 0, // defaults to no delegated stake
+    totalDelegatedStake: 0, // defaults to no delegated stake
     observerWallet, // defaults to caller
     vaults: {},
     delegates: {},

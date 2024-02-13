@@ -42,7 +42,7 @@ describe('isGatewayJoined function', () => {
             vaults: {},
             delegates: {},
             operatorStake: 10_000,
-            delegatedStake: 0,
+            totalDelegatedStake: 0,
             observerWallet: '',
             settings: {
               // None of these values should be relevant to this test
@@ -88,7 +88,7 @@ describe('isGatewayEligibleToBeRemoved function', () => {
             vaults: {},
             delegates: {},
             operatorStake: Number.NEGATIVE_INFINITY,
-            delegatedStake: 0,
+            totalDelegatedStake: 0,
             observerWallet: '',
             settings: {
               // None of these values should be relevant to this test
@@ -146,7 +146,7 @@ describe('isGatewayEligibleToLeave function', () => {
             vaults: {},
             delegates: {},
             operatorStake: 0,
-            delegatedStake: 0,
+            totalDelegatedStake: 0,
             observerWallet: '',
             settings: {
               // None of these values should be relevant to this test
@@ -326,7 +326,7 @@ describe('resetProtocolBalance function', () => {
           },
           delegates: {},
           operatorStake: 100,
-          delegatedStake: 0,
+          totalDelegatedStake: 0,
           observerWallet: '',
           settings: {
             label: '',

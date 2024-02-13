@@ -320,7 +320,7 @@ describe('tick', () => {
           gateways: {
             'leaving-operator': {
               operatorStake: 100,
-              delegatedStake: 100,
+              totalDelegatedStake: 100,
               observerWallet: 'existing-operator',
               start: 0,
               end: 5,
@@ -368,7 +368,7 @@ describe('tick', () => {
           gateways: {
             'existing-operator': {
               operatorStake: 100,
-              delegatedStake: 100,
+              totalDelegatedStake: 100,
               observerWallet: 'existing-operator',
               start: 0,
               end: 10,
@@ -421,7 +421,7 @@ describe('tick', () => {
           gateways: {
             'existing-operator': {
               operatorStake: 100,
-              delegatedStake: 100,
+              totalDelegatedStake: 100,
               observerWallet: 'existing-operator',
               start: 0,
               end: 10,
@@ -456,7 +456,7 @@ describe('tick', () => {
           gateways: {
             'existing-operator': {
               operatorStake: 100,
-              delegatedStake: 200,
+              totalDelegatedStake: 200,
               observerWallet: 'existing-operator',
               start: 0,
               end: 10,
@@ -509,7 +509,7 @@ describe('tick', () => {
           gateways: {
             'existing-operator': {
               operatorStake: 100,
-              delegatedStake: 200,
+              totalDelegatedStake: 200,
               observerWallet: 'existing-operator',
               start: 0,
               end: 10,
@@ -565,7 +565,7 @@ describe('tick', () => {
           gateways: {
             'existing-operator': {
               operatorStake: 100,
-              delegatedStake: 200,
+              totalDelegatedStake: 200,
               observerWallet: 'existing-operator',
               start: 0,
               end: 10,
@@ -618,7 +618,7 @@ describe('tick', () => {
           gateways: {
             'existing-operator': {
               operatorStake: 100,
-              delegatedStake: 200,
+              totalDelegatedStake: 200,
               observerWallet: 'existing-operator',
               start: 0,
               end: 10,
@@ -1197,7 +1197,7 @@ describe('tick', () => {
         gateways: {
           'a-gateway': {
             ...stubbedGatewayData,
-            delegatedStake: 100,
+            totalDelegatedStake: 100,
             settings: {
               ...stubbedGatewayData.settings,
               allowDelegatedStaking: true,
@@ -1212,7 +1212,7 @@ describe('tick', () => {
           },
           'a-gateway-2': {
             ...stubbedGatewayData,
-            delegatedStake: 200,
+            totalDelegatedStake: 200,
             settings: {
               ...stubbedGatewayData.settings,
               allowDelegatedStaking: true,
@@ -1243,7 +1243,7 @@ describe('tick', () => {
           },
           'a-gateway-5': {
             ...stubbedGatewayData,
-            delegatedStake: 300,
+            totalDelegatedStake: 300,
             settings: {
               ...stubbedGatewayData.settings,
               allowDelegatedStaking: true,
