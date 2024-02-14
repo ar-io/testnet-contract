@@ -1,20 +1,27 @@
 (async () => {
+  const args = process.argv.slice(2);
+  const epochStartHeight = parseInt(args[0]);
+  const showErrors = args[1] === 'true';
   const arnsContractTxId = 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
-  const epochStartHeight = 1358620;
   const epochEndHeight = epochStartHeight + 720 - 1;
   const epochDistributionHeight = epochEndHeight + 15;
   const epochPeriod = Math.floor((epochStartHeight - 1350700) / 720);
   const url = `https://api.arns.app/v1/contract/${arnsContractTxId}`;
+  const prescribedObserversForEpoch = (
+    (await fetch(`${url}?blockHeight=${epochEndHeight}`).then(
+      async (res) => await res.json(),
+    )) as any
+  ).state.prescribedObservers[epochStartHeight];
   const [before, after] = await Promise.all(
-    [epochEndHeight, epochDistributionHeight + 25].map(async (height) => {
-      return fetch(`${url}?blockHeight=${height}`).then(
-        async (res) => (await res.json()) as { state: any },
-      );
-    }),
+    [epochDistributionHeight - 1, epochDistributionHeight + 14].map(
+      async (height) => {
+        return fetch(`${url}?blockHeight=${height}`).then(
+          async (res) => (await res.json()) as { state: any },
+        );
+      },
+    ),
   );
 
-  const prescribedObserversForEpoch =
-    before.state.prescribedObservers[epochStartHeight];
   const protocolBalanceBefore = before.state.balances[arnsContractTxId];
   const protocolBalanceAfter = after.state.balances[arnsContractTxId];
   const eligibleForDistribution = protocolBalanceBefore * 0.0025;
@@ -86,6 +93,7 @@
     } else if (wasPrescribed && didGatewayPass && !didObserve) {
       expectedReward = perGatewayRewards * 0.75;
       totalPenalizedObservers++;
+      totalRewardedGateways++;
     } else if (didGatewayPass && !wasPrescribed) {
       expectedReward = perGatewayRewards;
       totalRewardedGateways++;
@@ -98,7 +106,7 @@
     const gatewayBalanceAfter = after.state.balances[address] || 0;
     const balanceDiff = gatewayBalanceAfter - balanceBefore;
     const balanceUpdatedCorrectly =
-      Math.floor(balanceDiff) === Math.floor(expectedReward);
+      Math.round(balanceDiff) === Math.floor(expectedReward);
 
     // increment our total
     totalDistributedRewards += Math.floor(expectedReward);
@@ -109,7 +117,7 @@
         address,
         balanceBefore,
         gatewayBalanceAfter,
-        balanceDiff: Math.floor(balanceDiff),
+        balanceDiff: Math.round(balanceDiff),
         expectedReward: Math.floor(expectedReward),
       },
     ];
@@ -169,7 +177,53 @@
       (totalPenalizedObservers / expectedObservationCount) * 100
     }%`,
   );
-  console.log('Gateways failed to observer: ', failedObservers);
+  console.log('Gateways failed to observe:\n');
+
+  const failureReasons = await Promise.all(
+    failedObservers.map(async (address) => {
+      let failureReasonsForGateway = [];
+      const { result } = (await fetch(`${url}/state/gateways/${address}`).then(
+        async (res) => await res.json(),
+      )) as { result: any };
+      const {
+        settings: { port, protocol, fqdn },
+        observerWallet,
+      } = result;
+      const constructedURL = `${protocol}://${fqdn}:${port}`;
+      const { wallet: fetchedObserverWallet } = (await fetch(
+        `${constructedURL}/ar-io/observer/info`,
+      )
+        .then(async (res) => await res.json())
+        .catch(() => {
+          failureReasonsForGateway.push(
+            'Observer not running and/or unable to connect',
+          );
+          return { wallet: undefined };
+        })) as { wallet: string | undefined };
+
+      if (fetchedObserverWallet && fetchedObserverWallet !== observerWallet) {
+        const gateway = before.state.gateways[address];
+        const gatewayURL = `${gateway.settings.protocol}://${gateway.settings.fqdn}:${gateway.settings.port}`;
+        failureReasonsForGateway.push(
+          `Observer wallet @ ${gatewayURL}/ar-io/observer/info (${fetchedObserverWallet}) does not match the 'observerWallet' set on the gateway (${observerWallet}) @ ${url}/state/gateways/${address}`,
+        );
+      }
+
+      const balance = await fetch(
+        `https://arweave.net/wallet/${address}/balance`,
+      )
+        .then(async (res) => await res.json())
+        .catch(() => 0);
+      if (balance === 0) {
+        failureReasonsForGateway.push('Observer wallet has no AR');
+      }
+      return `${address} - ${
+        failureReasonsForGateway.join(', ') ||
+        'Uncertain - confirm your OBSERVER_WALLET is set in the `.env` file and corresponding wallet is located in wallets/<address>.json. Once confirmed, restart observer with `sudo docker-compose restart observer`'
+      }`;
+    }),
+  );
+  console.log(failureReasons.join('\n'));
 
   console.log('\n****BALANCES*****');
   console.log(`Observers balances updated correctly: ${balancesMatchExpected}`);
@@ -183,15 +237,17 @@
   );
   console.log('Total gateways that received no reward: ', totalNoRewards);
 
-  console.log('\n****ERRORS*****');
-  const totalErrors = balanceChecks.filter(([_, correct]) => !correct).length;
-  if (totalErrors > 0) {
-    balanceChecks.forEach(([_, balanceUpdatedCorrectly, diff]) => {
-      if (!balanceUpdatedCorrectly) {
-        console.log(diff);
-      }
-    });
-  } else {
-    console.log('NONE!');
+  if (showErrors) {
+    console.log('\n****ERRORS*****');
+    const totalErrors = balanceChecks.filter(([_, correct]) => !correct).length;
+    if (totalErrors > 0) {
+      balanceChecks.forEach(([_, balanceUpdatedCorrectly, diff]) => {
+        if (!balanceUpdatedCorrectly) {
+          console.log(diff);
+        }
+      });
+    } else {
+      console.log('NONE!');
+    }
   }
 })();
