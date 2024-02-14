@@ -2,7 +2,13 @@ import {
   INVALID_GATEWAY_REGISTERED_MESSAGE,
   INVALID_OBSERVER_WALLET,
 } from '../../constants';
-import { ContractWriteResult, IOState, PstAction } from '../../types';
+import {
+  ContractWriteResult,
+  Gateway,
+  IOState,
+  PstAction,
+  WalletAddress,
+} from '../../types';
 import { getInvalidAjvMessage } from '../../utilities';
 import { validateUpdateGateway } from '../../validations';
 
@@ -53,8 +59,10 @@ export const updateGatewaySettings = async (
   }
 
   if (
-    Object.values(gateways).some(
-      (gateway) => gateway.observerWallet === updatedObserverWallet,
+    Object.entries(gateways).some(
+      ([gatewayAddress, gateway]: [WalletAddress, Gateway]) =>
+        gateway.observerWallet === updatedObserverWallet &&
+        gatewayAddress !== caller,
     )
   ) {
     throw new ContractError(INVALID_OBSERVER_WALLET);
