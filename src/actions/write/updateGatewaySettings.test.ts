@@ -17,51 +17,6 @@ import { updateGatewaySettings } from './updateGatewaySettings';
 
 describe('updateGatewaySettings', () => {
   describe('invalid inputs', () => {
-    it('should throw an error if the caller does not have a gateway', async () => {
-      const initialState: IOState = {
-        ...getBaselineState(),
-        gateways: {
-          [stubbedArweaveTxId]: {
-            ...stubbedGatewayData,
-          },
-        },
-      };
-      const error = await updateGatewaySettings(initialState, {
-        caller: 'no-gateway',
-        input: {},
-      }).catch((e) => e);
-      expect(error).toBeInstanceOf(Error);
-      expect(error.message).toEqual(
-        expect.stringContaining(INVALID_GATEWAY_REGISTERED_MESSAGE),
-      );
-    });
-
-    it('should throw an error if the observer wallet exists in the GAR already', async () => {
-      const initialState: IOState = {
-        ...getBaselineState(),
-        gateways: {
-          [stubbedArweaveTxId]: {
-            ...stubbedGatewayData,
-            observerWallet: stubbedArweaveTxId,
-          },
-          ['gateway']: {
-            ...stubbedGatewayData,
-            observerWallet: 'changethis',
-          },
-        },
-      };
-      const error = await updateGatewaySettings(initialState, {
-        caller: 'gateway',
-        input: {
-          observerWallet: stubbedArweaveTxId, // this should match the observer wallet for the other existing gateway
-        },
-      }).catch((e) => e);
-      expect(error).toBeInstanceOf(Error);
-      expect(error.message).toEqual(
-        expect.stringContaining(INVALID_OBSERVER_WALLET),
-      );
-    });
-
     it.each([[0, '', stubbedArweaveTxId.concat(stubbedArweaveTxId), true]])(
       'should throw an error on invalid label',
       async (badLabel: unknown) => {
@@ -109,9 +64,120 @@ describe('updateGatewaySettings', () => {
         );
       },
     );
+
+    it.each([['bad-port', '0', 0, -1, true, Number.MAX_SAFE_INTEGER]])(
+      'should throw an error on invalid qty',
+      async (badQty: unknown) => {
+        const initialState = getBaselineState();
+        const error = await updateGatewaySettings(initialState, {
+          caller: 'test',
+          input: {
+            qty: badQty,
+            settings: {
+              port: badQty,
+            },
+          },
+        }).catch((e) => e);
+        expect(error).toBeInstanceOf(Error);
+        expect(error.message).toEqual(
+          expect.stringContaining(INVALID_INPUT_MESSAGE),
+        );
+      },
+    );
   });
 
   describe('valid inputs', () => {
+    it('should throw an error if the caller does not have a gateway', async () => {
+      const initialState: IOState = {
+        ...getBaselineState(),
+        gateways: {
+          [stubbedArweaveTxId]: {
+            ...stubbedGatewayData,
+          },
+        },
+      };
+      const error = await updateGatewaySettings(initialState, {
+        caller: 'no-gateway',
+        input: {},
+      }).catch((e) => e);
+      expect(error).toBeInstanceOf(Error);
+      expect(error.message).toEqual(
+        expect.stringContaining(INVALID_GATEWAY_REGISTERED_MESSAGE),
+      );
+    });
+
+    it('should throw an error if the observer wallet exists in the GAR already', async () => {
+      const initialState: IOState = {
+        ...getBaselineState(),
+        gateways: {
+          [stubbedArweaveTxId]: {
+            ...stubbedGatewayData,
+            observerWallet: stubbedArweaveTxId,
+          },
+          ['gateway']: {
+            ...stubbedGatewayData,
+            observerWallet: 'changethis',
+          },
+        },
+      };
+      const error = await updateGatewaySettings(initialState, {
+        caller: 'gateway',
+        input: {
+          observerWallet: stubbedArweaveTxId, // this should match the observer wallet for the other existing gateway
+        },
+      }).catch((e) => e);
+      expect(error).toBeInstanceOf(Error);
+      expect(error.message).toEqual(
+        expect.stringContaining(INVALID_OBSERVER_WALLET),
+      );
+    });
+
+    it('should fail if observerWallet is used by another gateway', async () => {
+      const initialState = {
+        ...getBaselineState(),
+        gateways: {
+          'a-gateway': stubbedGatewayData,
+          'a-gateway-2': {
+            ...stubbedGatewayData,
+            observerWallet: stubbedArweaveTxId,
+          },
+        },
+      };
+      const error = await updateGatewaySettings(initialState, {
+        caller: 'a-gateway',
+        input: {
+          observerWallet: stubbedArweaveTxId,
+        },
+      }).catch((e) => e);
+      expect(error).toBeInstanceOf(Error);
+      expect(error.message).toEqual(
+        expect.stringContaining(INVALID_OBSERVER_WALLET),
+      );
+    });
+
+    it('should not fail if observerWallet is used by the caller gateway', async () => {
+      const initialState = {
+        ...getBaselineState(),
+        gateways: {
+          'a-gateway': {
+            ...stubbedGatewayData,
+            observerWallet: stubbedArweaveTxId,
+          },
+          'a-gateway-2': {
+            ...stubbedGatewayData,
+            observerWallet: 'not-the-same-wallet',
+          },
+        },
+      };
+      const { state } = await updateGatewaySettings(initialState, {
+        caller: 'a-gateway',
+        input: {
+          observerWallet: stubbedArweaveTxId,
+        },
+      });
+      expect(state).toEqual(initialState);
+    });
+
     it('should change a single setting', async () => {
       const updatedFqdn = 'updated-fqdn.com';
       const initialState: IOState = {
