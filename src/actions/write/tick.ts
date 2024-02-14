@@ -500,43 +500,15 @@ export async function tickRewardDistribution({
     distributions.nextDistributionHeight,
   );
 
-  // distribution should only happen ONCE on block that is EPOCH_DISTRIBUTION_DELAY after the last completed epoch
+  // distribution should only happen ONCE on block that is EPOCH_DISTRIBUTION_DELAY after the last completed epoch, do nothing if we are not there yet
   if (
     currentBlockHeight.valueOf() !== distributionHeightForLastEpoch.valueOf()
   ) {
-    const {
-      epochStartHeight: nextEpochStartHeight,
-      epochEndHeight: nextEpochEndHeight,
-      epochPeriod: newEpochPeriod,
-    } = getEpochDataForHeight({
-      currentBlockHeight,
-      epochZeroStartHeight: new BlockHeight(distributions.epochZeroStartHeight),
-      epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
-    });
-
-    const updatedPrescribedObservers = await getPrescribedObserversForEpoch({
-      gateways,
-      epochStartHeight: nextEpochStartHeight,
-      epochEndHeight: nextEpochEndHeight,
-      distributions,
-      minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
-    });
-    // increment the epoch variables if we've moved to the next epoch, but DO NOT update the nextDistributionHeight as that will happen below after distributions are complete
-    const updatedEpochData: EpochDistributionData = {
-      epochStartHeight: nextEpochStartHeight.valueOf(),
-      epochEndHeight: nextEpochEndHeight.valueOf(),
-      epochZeroStartHeight: distributions.epochZeroStartHeight,
-      nextDistributionHeight: distributionHeightForLastEpoch.valueOf(), // DON'T UPDATE THIS UNTIL THE DISTRIBUTION OCCURS
-      epochPeriod: newEpochPeriod.valueOf(),
-    };
-
     return {
-      distributions: updatedEpochData,
+      distributions,
       balances,
-      gateways: gateways as Gateways, // TODO: fix array slicing
-      prescribedObservers: {
-        [nextEpochStartHeight.valueOf()]: updatedPrescribedObservers,
-      },
+      gateways,
+      prescribedObservers: prescribedObservers as PrescribedObservers,
     };
   }
 

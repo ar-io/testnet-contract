@@ -13,7 +13,7 @@ describe('buyRecord', () => {
       const initialState = {
         ...getBaselineState(),
         balances: {
-          caller: 10_000_000_000,
+          caller: 100_000_000_000,
         },
         reserved: {
           [reservedName]: {
@@ -41,7 +41,7 @@ describe('buyRecord', () => {
       const initialState = {
         ...getBaselineState(),
         balances: {
-          ['non-reserved-caller']: 10_000_000_000,
+          ['non-reserved-caller']: 100_000_000_000,
         },
         reserved: {
           [reservedName]: {
@@ -69,7 +69,7 @@ describe('buyRecord', () => {
       const initialState = {
         ...getBaselineState(),
         balances: {
-          'non-reserved-caller': 10_000_000_000,
+          'non-reserved-caller': 100_000_000_000,
         },
         reserved: {
           [reservedName]: {

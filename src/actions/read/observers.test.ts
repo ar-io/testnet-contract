@@ -1,9 +1,4 @@
-import {
-  EPOCH_BLOCK_LENGTH,
-  EPOCH_DISTRIBUTION_DELAY,
-  GATEWAY_REGISTRY_SETTINGS,
-  TENURE_WEIGHT_PERIOD,
-} from '../../constants';
+import { EPOCH_BLOCK_LENGTH, EPOCH_DISTRIBUTION_DELAY } from '../../constants';
 import {
   getBaselineState,
   stubbedGatewayData,
@@ -27,7 +22,7 @@ describe('getPrescribedObservers', () => {
   });
 });
 
-it('should return the current array of prescribed observer if not set in state yet', async () => {
+it('should return the an empty array of prescribed observer if not set in state yet', async () => {
   const state = {
     ...getBaselineState(),
     gateways: {
@@ -41,22 +36,7 @@ it('should return the current array of prescribed observer if not set in state y
     // no distributions
   };
   const { result } = await getPrescribedObservers(state);
-  expect(result).toEqual([
-    {
-      gatewayAddress: 'a-test-gateway',
-      observerAddress: stubbedGatewayData.observerWallet,
-      gatewayRewardRatioWeight: 1,
-      observerRewardRatioWeight: 1,
-      stake: stubbedGatewayData.operatorStake,
-      start: 0,
-      stakeWeight:
-        stubbedGatewayData.operatorStake /
-        GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
-      tenureWeight: 1 / TENURE_WEIGHT_PERIOD, // the gateway started at the same time as the epoch
-      compositeWeight: 1 / TENURE_WEIGHT_PERIOD,
-      normalizedCompositeWeight: 1,
-    },
-  ]);
+  expect(result).toEqual([]);
 });
 
 describe('getEpoch', () => {

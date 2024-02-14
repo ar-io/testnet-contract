@@ -4,15 +4,17 @@ import {
   ARNS_NAME_AUCTION_EXPIRED_MESSAGE,
   AUCTION_SETTINGS,
   INSUFFICIENT_FUNDS_MESSAGE,
+  PERMABUY_LEASE_FEE_LENGTH,
   RESERVED_ATOMIC_TX_ID,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
 import {
   getBaselineState,
+  stubbedArweaveTxId,
   stubbedAuctionData,
   stubbedAuctionState,
 } from '../../tests/stubs';
-import { ArNSAuctionData, IOState } from '../../types';
+import { ArNSAuctionData, IOState, RegistrationType } from '../../types';
 
 describe('submitAuctionBid', () => {
   it.each([
@@ -76,7 +78,7 @@ describe('submitAuctionBid', () => {
     const priceForName = 220_000;
     const inputData = {
       ...getBaselineState(),
-      balances: { initiator: priceForName - 1, 'stubbed-contract-id': 0 },
+      balances: { initiator: priceForName - 1, [SmartWeave.contract.id]: 0 },
     };
     expect(() => {
       submitAuctionBid(inputData, {
@@ -96,9 +98,8 @@ describe('submitAuctionBid', () => {
         type: 'lease',
       },
       {
-        contractTxId: 'stubbed-transaction-id',
+        contractTxId: SmartWeave.transaction.id,
         type: 'lease',
-        floorPrice: 240000,
       },
     ],
     [
@@ -108,9 +109,8 @@ describe('submitAuctionBid', () => {
         years: 5,
       },
       {
-        contractTxId: 'stubbed-transaction-id',
+        contractTxId: SmartWeave.transaction.id,
         type: 'lease',
-        floorPrice: 240000,
       },
     ],
     [
@@ -119,34 +119,51 @@ describe('submitAuctionBid', () => {
         type: 'permabuy',
       },
       {
-        contractTxId: 'stubbed-transaction-id',
+        contractTxId: SmartWeave.transaction.id,
         type: 'permabuy',
-        floorPrice: 400000,
       },
     ],
     [
       {
-        contractTxId: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc',
+        contractTxId: stubbedArweaveTxId,
         type: 'permabuy',
       },
       {
-        contractTxId: 'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc',
+        contractTxId: stubbedArweaveTxId,
         type: 'permabuy',
-        floorPrice: 400000,
       },
     ],
   ])(
     'should create a new auction and decrement the initiators balance, vault the floor price in the auction, and remove the reserved name for valid contractTxIds',
-    (interactionInput, expectedData) => {
+    (
+      interactionInput: {
+        contractTxId: string;
+        type: RegistrationType;
+        years?: number;
+      },
+      expectedData: {
+        contractTxId: string;
+        type: RegistrationType;
+      },
+    ) => {
+      const baselineState = getBaselineState();
+      const expectedFloorPrice =
+        baselineState.fees['test-new-auction'.length] +
+        baselineState.fees['test-new-auction'.length] *
+          (interactionInput.type === 'permabuy'
+            ? PERMABUY_LEASE_FEE_LENGTH
+            : 1) *
+          0.2;
       const inputData = {
-        ...getBaselineState(),
+        ...baselineState,
         reserved: {
           'test-new-auction': {
             target: 'initiator',
           },
         },
         balances: {
-          initiator: expectedData.floorPrice,
+          // give the caller enough balance to initiate the auction
+          initiator: expectedFloorPrice,
         },
       };
       const { state } = submitAuctionBid(inputData, {
@@ -168,8 +185,8 @@ describe('submitAuctionBid', () => {
             startHeight: 1,
             initiator: 'initiator',
             startPrice:
-              expectedData.floorPrice * AUCTION_SETTINGS.startPriceMultiplier,
-            floorPrice: expectedData.floorPrice,
+              expectedFloorPrice * AUCTION_SETTINGS.startPriceMultiplier,
+            floorPrice: expectedFloorPrice,
             ...(interactionInput.type === 'lease' ? { years: 1 } : {}),
           },
         },
@@ -183,7 +200,7 @@ describe('submitAuctionBid', () => {
       ...stubbedAuctionState,
       balances: {
         'new-bidder': 0,
-        'stubbed-contract-id': 0,
+        [SmartWeave.contract.id]: 0,
       },
     };
     expect(() => {
@@ -203,7 +220,7 @@ describe('submitAuctionBid', () => {
       ...stubbedAuctionState,
       balances: {
         'new-bidder': 1_000,
-        'stubbed-contract-id': 0,
+        [SmartWeave.contract.id]: 0,
       },
     };
     expect(() => {
@@ -249,13 +266,13 @@ describe('submitAuctionBid', () => {
   it.each([
     [
       {
-        contractTxId: 'stubbed-transaction-id',
+        contractTxId: SmartWeave.transaction.id,
         type: 'lease',
         floorPrice: 100,
         startPrice: 1000,
       },
       {
-        contractTxId: 'stubbed-transaction-id',
+        contractTxId: SmartWeave.transaction.id,
         type: 'lease',
         undernames: 10,
         startTimestamp: 1,
@@ -263,13 +280,13 @@ describe('submitAuctionBid', () => {
     ],
     [
       {
-        contractTxId: 'stubbed-transaction-id',
+        contractTxId: SmartWeave.transaction.id,
         type: 'permabuy',
         floorPrice: 100,
         startPrice: 1000,
       },
       {
-        contractTxId: 'stubbed-transaction-id',
+        contractTxId: SmartWeave.transaction.id,
         type: 'permabuy',
         undernames: 10,
         startTimestamp: 1,
@@ -324,7 +341,7 @@ describe('submitAuctionBid', () => {
         },
         balances: {
           initiator: 200, // return balance back to the initiator
-          'stubbed-contract-id': 1000,
+          [SmartWeave.contract.id]: 1000,
           // removes the new-bidder balance as they now have 0 tokens
         },
       });
@@ -352,7 +369,7 @@ describe('submitAuctionBid', () => {
       auctions: {},
       records: {
         'test-auction-close': {
-          contractTxId: 'stubbed-transaction-id',
+          contractTxId: SmartWeave.transaction.id,
           endTimestamp: SECONDS_IN_A_YEAR + 1,
           type: 'lease',
           startTimestamp: 1,
@@ -366,7 +383,7 @@ describe('submitAuctionBid', () => {
         revenueThisPeriod: 1000,
       },
       balances: {
-        'stubbed-contract-id': 1000,
+        [SmartWeave.contract.id]: 1000,
         // removes initiator balance as they now have 0 tokens
       },
     });

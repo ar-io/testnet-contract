@@ -1,4 +1,4 @@
-import { IOState } from '../src/types';
+import { IOState, WeightedObserver } from '../src/types';
 import { getContractManifest, initialize, warp } from './utilities';
 
 /* eslint-disable no-console */
@@ -26,7 +26,7 @@ import { getContractManifest, initialize, warp } from './utilities';
 
   const { result: prescribed } = await contract.viewState<
     { function: string },
-    any[]
+    WeightedObserver[]
   >({
     function: 'prescribedObservers',
   });
