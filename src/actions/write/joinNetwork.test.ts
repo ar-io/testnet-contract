@@ -86,41 +86,6 @@ describe('joinNetwork', () => {
       },
     ],
     [
-      'should throw an error for invalid allowedDelegates (no array)',
-      {
-        ...validInput,
-        allowedDelegates: stubbedArweaveTxId, // must be in an array
-      },
-    ],
-    [
-      'should throw an error for invalid allowedDelegates (invalid array)',
-      {
-        ...validInput,
-        allowedDelegates: [1, 2, 3], // must be in an array of valid arweave wallets
-      },
-    ],
-    [
-      'should throw an error for invalid allowedDelegates (non-unique wallets',
-      {
-        ...validInput,
-        allowedDelegates: [stubbedArweaveTxId, stubbedArweaveTxId], // must be in an array of valid arweave wallets
-      },
-    ],
-    [
-      'should throw an error for invalid allowedDelegates (invalid wallet in array)',
-      {
-        ...validInput,
-        allowedDelegates: ['&GWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ'], // must be in an array of valid arweave wallets
-      },
-    ],
-    [
-      'should throw an error for invalid allowedDelegates (invalid multi-element array)',
-      {
-        ...validInput,
-        allowedDelegates: [stubbedArweaveTxId, 'woops'], // must be in an array of valid arweave wallets
-      },
-    ],
-    [
       'should throw an error for invalid minDelegatedStake (below minimum delegated stake)',
       {
         ...validInput,
@@ -257,7 +222,6 @@ describe('joinNetwork', () => {
         note: 'test-note',
         properties: stubbedArweaveTxId,
         allowDelegatedStaking: false,
-        allowedDelegates: [],
         minDelegatedStake: MIN_DELEGATED_STAKE,
         delegateRewardShareRatio: 0,
       },
@@ -300,7 +264,6 @@ describe('joinNetwork', () => {
         note: 'test-note',
         properties: stubbedArweaveTxId,
         allowDelegatedStaking: true,
-        allowedDelegates: [],
         minDelegatedStake: MIN_DELEGATED_STAKE,
         delegateRewardShareRatio: Math.floor(
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
@@ -317,7 +280,7 @@ describe('joinNetwork', () => {
     expect(state.balances[stubbedArweaveTxId]).toEqual(undefined);
   });
 
-  it('should add the gateway to the registry and join the network without enabling delegated staking but adding reserved delegates', async () => {
+  it('should add the gateway to the registry and join the network without enabling delegated staking by default', async () => {
     const initialState = {
       ...getBaselineState(),
       balances: {
@@ -331,7 +294,6 @@ describe('joinNetwork', () => {
         delegateRewardShareRatio: Math.floor(
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
         ),
-        allowedDelegates: [stubbedArweaveTxId],
       },
     });
     expect(state.gateways[stubbedArweaveTxId]).toEqual({
@@ -345,7 +307,6 @@ describe('joinNetwork', () => {
         note: 'test-note',
         properties: stubbedArweaveTxId,
         allowDelegatedStaking: false,
-        allowedDelegates: [stubbedArweaveTxId],
         minDelegatedStake: MIN_DELEGATED_STAKE,
         delegateRewardShareRatio: Math.floor(
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,

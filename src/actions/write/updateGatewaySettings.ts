@@ -91,7 +91,7 @@ export const updateGatewaySettings = async (
     },
   };
 
-  // remove all delegated stakes if it is disabled
+  // vault all delegated stakes if it is disabled, we'll return stack at the proper end heights of the vault
   if (
     updatedSettings.allowDelegatedStaking === false &&
     Object.keys(gateway.delegates).length
@@ -111,6 +111,17 @@ export const updateGatewaySettings = async (
         updatedGateway.delegates[address].delegatedStake;
       updatedGateway.delegates[address].delegatedStake = 0;
     }
+  }
+
+  // if allowedDelegates is currently false, and you want to set it to true - you have to wait until all the vaults have been returned
+  if (
+    updatedSettings.allowDelegatedStaking === true &&
+    gateway.settings.allowDelegatedStaking === false &&
+    Object.keys(gateway.delegates).length > 0
+  ) {
+    throw new ContractError(
+      'You cannot enable delegated staking until all delegated stakes have been withdrawn.',
+    );
   }
 
   // update the contract state

@@ -3,7 +3,6 @@ import {
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_GATEWAY_REGISTERED_MESSAGE,
   MAX_DELEGATES,
-  MIN_DELEGATED_STAKE,
   NETWORK_LEAVING_STATUS,
 } from './constants';
 import {
@@ -60,9 +59,11 @@ export function safeDelegateStake({
     );
   }
 
-  // TODO: Update the below to allow reservedGateways (once the DeepReadonly is figured out)
+  // TODO: when allowedDelegates is supported, check if it's in the array of allowed delegates
   if (!gateway.settings.allowDelegatedStaking) {
-    throw new ContractError(`This Gateway does not allow delegated staking.`);
+    throw new ContractError(
+      `This Gateway does not allow delegated staking. Only allowed delegates can delegate stake to this Gateway.`,
+    );
   }
 
   if (Object.keys(gateway.delegates).length > MAX_DELEGATES) {
@@ -71,14 +72,16 @@ export function safeDelegateStake({
     );
   }
 
+  // TODO: some behaviors we could consider - do we require a delegate to only be able to increase stake if they are above the current minimum stake of the operator
+  // Additionally, if you're a delegate and not up to the current minimum, do you get any rewards?
   const existingDelegate = gateway.delegates[fromAddress];
-  const minimumStakeForGateway =
-    // it already has a stake
+  const minimumStakeForGatewayAndDelegate =
+    // it already has a stake that is not zero
     existingDelegate && existingDelegate.delegatedStake !== 0
-      ? 1 // delegate must provide at least one additional IO
-      : Math.max(MIN_DELEGATED_STAKE, gateway.settings.minDelegatedStake || 0);
+      ? 1 // delegate must provide at least one additional IO - we may want to change this to a higher amount. also need to consider if the operator increases the minmimum amount after you've already staked
+      : gateway.settings.minDelegatedStake;
 
-  if (qty.valueOf() < minimumStakeForGateway) {
+  if (qty.valueOf() < minimumStakeForGatewayAndDelegate) {
     throw new ContractError(
       `Qty must be greater than the minimum delegated stake amount.`,
     );
@@ -162,17 +165,18 @@ export function safeDecreaseDelegateStake({
     throw new ContractError(INVALID_GATEWAY_REGISTERED_MESSAGE);
   }
 
-  if (!gateways[gatewayAddress].delegates[fromAddress]) {
+  const gateway = gateways[gatewayAddress];
+  const existingDelegate = gateway.delegates[fromAddress];
+
+  if (!existingDelegate) {
     throw new ContractError('This delegate is not staked at this gateway.');
   }
 
+  const stakeAfterDecrease = existingDelegate.delegatedStake - qty.valueOf();
+
   if (
-    gateways[gatewayAddress].delegates[fromAddress].delegatedStake -
-      qty.valueOf() <
-      MIN_DELEGATED_STAKE &&
-    gateways[gatewayAddress].delegates[fromAddress].delegatedStake -
-      qty.valueOf() !==
-      0 // if zero, we can withdraw completely
+    stakeAfterDecrease < gateway.settings.minDelegatedStake &&
+    stakeAfterDecrease !== 0 // if zero, we can withdraw completely
   ) {
     throw new ContractError(
       `Remaining delegated stake must be greater than the minimum delegated stake amount.`,
@@ -182,7 +186,6 @@ export function safeDecreaseDelegateStake({
   // Withdraw the qty delegate's stake
   gateways[gatewayAddress].delegates[fromAddress].delegatedStake -=
     qty.valueOf();
-
   // Lock the qty in a vault to be unlocked after withdrawal period
   gateways[gatewayAddress].delegates[fromAddress].vaults[id] = {
     balance: qty.valueOf(),

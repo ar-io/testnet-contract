@@ -163,7 +163,7 @@ export type GatewaySettings = {
   allowDelegatedStaking?: boolean; // If true, other token holders can delegate their stake to this gateway
   delegateRewardShareRatio?: number; // Number between 0-100 indicating the percent of gateway and observer rewards given to delegates eg. 30 is 30% distributed to delegates
   // allowedDelegates?: string[]; // A list of allowed arweave wallets that can act as delegates, if empty then anyone can delegate their tokens to this gateway
-  minDelegatedStake?: number; // The minimum delegated stake for this gateway
+  minDelegatedStake: number; // The minimum delegated stake for this gateway - TODO: make this required and set it on joinNetwork
   note?: string; // An additional note (256 character max) the gateway operator can set to indicate things like maintenance or other operational updates.
 };
 

@@ -80,6 +80,8 @@ export const stubbedGatewayData: Gateway = {
     fqdn: 'test.com',
     port: 443,
     protocol: 'https',
+    minDelegatedStake: MIN_DELEGATED_STAKE,
+    allowDelegatedStaking: false,
   },
   status: 'joined',
   stats: {
@@ -130,6 +132,7 @@ export const stubbedDelegatedGatewayData: Gateway = {
     protocol: 'https',
     allowDelegatedStaking: true,
     delegateRewardShareRatio: 5,
+    minDelegatedStake: MIN_DELEGATED_STAKE,
   },
 };
 

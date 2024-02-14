@@ -290,7 +290,7 @@ export function tickGatewayRegistry({
             // return the vault balance to the delegate and do not add back vault
             incrementBalance(updatedBalances, delegateAddress, vault.balance);
           } else {
-            // still an active vault so add it
+            // still an active vault so add it back
             updatedDelegates[delegateAddress].vaults[id] = vault;
           }
         }
@@ -533,7 +533,7 @@ export async function tickRewardDistribution({
     return {
       distributions: updatedEpochData,
       balances,
-      gateways,
+      gateways: gateways as Gateways, // TODO: fix array slicing
       prescribedObservers: {
         [nextEpochStartHeight.valueOf()]: updatedPrescribedObservers,
       },
@@ -744,8 +744,7 @@ export async function tickRewardDistribution({
 
     // Split reward to delegates if applicable
     if (
-      // TODO: move this to a utility function
-      // TODO: we also need to confirm that when an operator disables delegated staking that on updateGatewaySettings that any stakes are immediately returned to delegates
+      // Reminder: if an operator sets allowDelegatedStaking to false all delegates current stake get vaulted, and they cannot change it until those vaults are returned
       rewardedGateway.settings.allowDelegatedStaking &&
       Object.keys(rewardedGateway.delegates).length &&
       rewardedGateway.settings.delegateRewardShareRatio > 0 &&
@@ -779,6 +778,7 @@ export async function tickRewardDistribution({
           qty: new IOToken(rewardForDelegate),
         });
         totalDistributedToDelegates += rewardForDelegate;
+        // we could a breaker if totalDistributedToDelegates + rewardForDelegate > gatewayReward to stop!
       }
       // rounding may cause there to be some left over - make sure it goes to the operator
       const remainingTokensForOperator =
@@ -880,7 +880,7 @@ export async function tickRewardDistribution({
   // update gateways
   const newGateways: Gateways = Object.keys(updatedGateways).length
     ? { ...gateways, ...updatedGateways }
-    : gateways;
+    : (gateways as Gateways);
 
   const {
     epochStartHeight: nextEpochStartHeight,

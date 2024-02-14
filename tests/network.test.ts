@@ -284,8 +284,7 @@ describe('Network', () => {
         expect(newCachedValue.state).toEqual(prevState);
       });
 
-      it('should join the network with correct parameters', async () => {
-        const allowedDelegates: string[] = [];
+      it('should join the network with correct parameters and defaults set', async () => {
         const prevBalance = prevState.balances[newGatewayOperatorAddress];
         const joinGatewayPayload = {
           observerWallet: newGatewayOperatorAddress,
@@ -296,10 +295,6 @@ describe('Network', () => {
           protocol: 'http',
           properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44',
           note: 'Our gateway is the best test gateway. Contact bob@ar.io for more.',
-          allowDelegatedStaking: false,
-          allowedDelegates,
-          delegateRewardShareRatio: 0,
-          minDelegatedStake: MIN_DELEGATED_STAKE,
         };
         const writeInteraction = await contract.writeInteraction({
           function: 'joinNetwork',
@@ -332,7 +327,6 @@ describe('Network', () => {
             properties: joinGatewayPayload.properties,
             note: joinGatewayPayload.note,
             allowDelegatedStaking: false,
-            allowedDelegates,
             delegateRewardShareRatio: 0,
             minDelegatedStake: MIN_DELEGATED_STAKE,
           },

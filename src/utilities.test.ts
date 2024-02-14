@@ -1,5 +1,6 @@
 import {
   DEFAULT_GATEWAY_PERFORMANCE_STATS,
+  MIN_DELEGATED_STAKE,
   TOTAL_IO_SUPPLY,
 } from './constants';
 import { getBaselineState } from './tests/stubs';
@@ -50,6 +51,7 @@ describe('isGatewayJoined function', () => {
               fqdn: '',
               port: Number.NEGATIVE_INFINITY,
               protocol: 'https',
+              minDelegatedStake: MIN_DELEGATED_STAKE,
             },
             stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
           },
@@ -96,6 +98,7 @@ describe('isGatewayEligibleToBeRemoved function', () => {
               fqdn: '',
               port: Number.NEGATIVE_INFINITY,
               protocol: 'https',
+              minDelegatedStake: MIN_DELEGATED_STAKE,
             },
             stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
           },
@@ -154,6 +157,7 @@ describe('isGatewayEligibleToLeave function', () => {
               fqdn: '',
               port: Number.NEGATIVE_INFINITY,
               protocol: 'https',
+              minDelegatedStake: MIN_DELEGATED_STAKE,
             },
             stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
           },
@@ -333,6 +337,7 @@ describe('resetProtocolBalance function', () => {
             fqdn: '',
             port: 1234,
             protocol: 'https',
+            minDelegatedStake: MIN_DELEGATED_STAKE,
           },
           stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
         },

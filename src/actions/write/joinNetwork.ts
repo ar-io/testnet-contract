@@ -54,7 +54,6 @@ export class JoinNetwork {
       observerWallet = caller,
       allowDelegatedStaking = false,
       delegateRewardShareRatio = 0,
-      allowedDelegates = [],
       minDelegatedStake = MIN_DELEGATED_STAKE,
     } = input;
     this.qty = qty;
@@ -68,7 +67,6 @@ export class JoinNetwork {
     this.allowDelegatedStaking = allowDelegatedStaking;
     this.delegateRewardShareRatio = delegateRewardShareRatio;
     this.minDelegatedStake = minDelegatedStake;
-    this.allowedDelegates = allowedDelegates;
   }
 }
 
