@@ -715,6 +715,7 @@ export async function tickRewardDistribution({
 
   // distribute gateway tokens
   for (const gatewayAddress of gatewaysToReward) {
+    const rewardedGateway = gateways[gatewayAddress];
     // add protocol balance if we do not have it
     if (!updatedBalances[SmartWeave.contract.id]) {
       updatedBalances[SmartWeave.contract.id] =
@@ -726,7 +727,7 @@ export async function tickRewardDistribution({
       updatedBalances[gatewayAddress] = balances[gatewayAddress] || 0;
     }
 
-    let totalGatewayReward = perGatewayReward;
+    let gatewayReward = perGatewayReward;
     // if you were prescribed observer but didn't submit a report, you get gateway reward penalized
     if (
       previouslyPrescribedObservers.some(
@@ -736,72 +737,60 @@ export async function tickRewardDistribution({
       !observerGatewaysToReward.includes(gatewayAddress)
     ) {
       // you don't get the full gateway reward if you didn't submit a report
-      totalGatewayReward = Math.floor(
-        totalGatewayReward * (1 - BAD_OBSERVER_GATEWAY_PENALTY),
+      gatewayReward = Math.floor(
+        perGatewayReward * (1 - BAD_OBSERVER_GATEWAY_PENALTY),
       );
     }
 
     // Split reward to delegates if applicable
     if (
-      gateways[gatewayAddress].settings.allowDelegatedStaking === true && // Delegated staking disabled
-      Object.keys(gateways[gatewayAddress].delegates).length && // No delegates to share with
-      gateways[gatewayAddress].settings.delegateRewardShareRatio > 0 // Do not split rewards at all
+      // TODO: move this to a utility function
+      // TODO: we also need to confirm that when an operator disables delegated staking that on updateGatewaySettings that any stakes are immediately returned to delegates
+      rewardedGateway.settings.allowDelegatedStaking &&
+      Object.keys(rewardedGateway.delegates).length &&
+      rewardedGateway.settings.delegateRewardShareRatio > 0 &&
+      rewardedGateway.totalDelegatedStake > 0
     ) {
-      // Track tokens for each delegated staker
-      const tokensForDelegate: Record<WalletAddress, number> = {};
-      let totalDistributed = 0;
+      let totalDistributedToDelegates = 0;
 
       // Calculate the rewards to share between the gateway and delegates
-      const gatewayRewardRatio =
-        (100 - gateways[gatewayAddress].settings.delegateRewardShareRatio) /
-          100 || 0;
-      const gatewayRewardShare = Math.floor(
-        totalGatewayReward * gatewayRewardRatio,
+      const gatewayDelegatesTotalReward = Math.floor(
+        gatewayReward *
+          (rewardedGateway.settings.delegateRewardShareRatio / 100),
       );
-      const delegateRewardShare = totalGatewayReward - gatewayRewardShare;
-      // get reward amount for each delegate
-      const totalDelegatedStake = gateways[gatewayAddress].totalDelegatedStake;
-      for (const delegateAddress in gateways[gatewayAddress].delegates) {
-        const delegateData =
-          gateways[gatewayAddress].delegates[delegateAddress];
-        const delegateShare = delegateData.delegatedStake / totalDelegatedStake;
-        tokensForDelegate[delegateAddress] = Math.floor(
-          delegateRewardShare * delegateShare,
+
+      // transfer tokens to each delegate based on their delegated stake
+      const totalDelegatedStake = rewardedGateway.totalDelegatedStake;
+
+      // key based iteration
+      for (const delegateAddress in rewardedGateway.delegates) {
+        const delegateData = rewardedGateway.delegates[delegateAddress];
+        const rewardForDelegate = Math.floor(
+          (delegateData.delegatedStake / totalDelegatedStake) *
+            gatewayDelegatesTotalReward,
         );
-        totalDistributed += tokensForDelegate[delegateAddress];
-      }
 
-      // Calculate the remaining tokens to distribute due to rounding
-      let remainingTokens = delegateRewardShare - totalDistributed;
-      while (remainingTokens > 0) {
-        for (const delegateAddress in gateways[gatewayAddress].delegates) {
-          if (remainingTokens === 0) {
-            break;
-          }
-          tokensForDelegate[delegateAddress]++;
-          remainingTokens--;
-        }
-      }
-
-      // distribute gateway reward tokens to each delegate to their existing stake on this gateway
-      // ensure the gateway's total delegated stake is updated each time
-      for (const delegateAddress in tokensForDelegate) {
         safeDelegateDistribution({
           balances: updatedBalances,
           gateways: updatedGateways,
           protocolAddress: SmartWeave.contract.id,
           gatewayAddress,
           delegateAddress,
-          qty: new IOToken(tokensForDelegate[delegateAddress]),
+          qty: new IOToken(rewardForDelegate),
         });
+        totalDistributedToDelegates += rewardForDelegate;
       }
+      // rounding may cause there to be some left over - make sure it goes to the operator
+      const remainingTokensForOperator =
+        gatewayReward - totalDistributedToDelegates;
+
       // Give the rest to the gateway operator
       // TO DO: use autoStake setting
       safeTransfer({
         balances: updatedBalances,
         fromAddress: SmartWeave.contract.id,
         toAddress: gatewayAddress,
-        qty: gatewayRewardShare,
+        qty: remainingTokensForOperator,
       });
     } else {
       // gateway receives full reward
@@ -809,12 +798,13 @@ export async function tickRewardDistribution({
         balances: updatedBalances,
         fromAddress: SmartWeave.contract.id,
         toAddress: gatewayAddress,
-        qty: totalGatewayReward,
+        qty: gatewayReward,
       });
     }
   }
   // distribute observer tokens
   for (const gatewayObservedAndPassed of observerGatewaysToReward) {
+    const rewardedGateway = gateways[gatewayObservedAndPassed];
     // add protocol balance if we do not have it
     if (!updatedBalances[SmartWeave.contract.id]) {
       updatedBalances[SmartWeave.contract.id] =
@@ -827,77 +817,53 @@ export async function tickRewardDistribution({
         balances[gatewayObservedAndPassed] || 0;
     }
 
-    // Split reward to delegates if applicable
     if (
-      gateways[gatewayObservedAndPassed].settings.allowDelegatedStaking ===
-        true && // Delegated staking disabled
-      Object.keys(gateways[gatewayObservedAndPassed].delegates).length && // No delegates to share with
-      gateways[gatewayObservedAndPassed].settings.delegateRewardShareRatio > 0 // Do not split rewards at all
+      // TODO: move this to a utility function
+      rewardedGateway.settings.allowDelegatedStaking &&
+      Object.keys(rewardedGateway.delegates).length &&
+      rewardedGateway.settings.delegateRewardShareRatio > 0
     ) {
-      // Track tokens for each delegated staker
-      const tokensForDelegate: Record<WalletAddress, number> = {};
-      let totalDistributed = 0;
+      let totalDistributedToDelegates = 0;
 
       // Calculate the rewards to share between the gateway and delegates
-      const observerRewardRatio =
-        (100 -
-          gateways[gatewayObservedAndPassed].settings
-            .delegateRewardShareRatio) /
-          100 || 0;
-      const observerRewardShare = Math.floor(
-        perObserverReward * observerRewardRatio,
+      const gatewayDelegatesTotalReward = Math.floor(
+        perObserverReward *
+          (rewardedGateway.settings.delegateRewardShareRatio / 100),
       );
-      const delegateRewardShare = perObserverReward - observerRewardShare;
 
-      // get reward amount for each delegate
-      const totalDelegatedStake =
-        gateways[gatewayObservedAndPassed].totalDelegatedStake;
-      for (const delegateAddress in gateways[gatewayObservedAndPassed]
-        .delegates) {
-        const delegateData =
-          gateways[gatewayObservedAndPassed].delegates[delegateAddress];
-        const delegateShare = delegateData.delegatedStake / totalDelegatedStake;
-        tokensForDelegate[delegateAddress] = Math.floor(
-          delegateRewardShare * delegateShare,
+      // transfer tokens to each delegate based on their delegated stake
+      const totalDelegatedStake = rewardedGateway.totalDelegatedStake;
+      // key based iteration
+      for (const delegateAddress in rewardedGateway.delegates) {
+        const delegateData = rewardedGateway.delegates[delegateAddress];
+        const rewardForDelegate = Math.floor(
+          (delegateData.delegatedStake / totalDelegatedStake) *
+            gatewayDelegatesTotalReward,
         );
-        totalDistributed += tokensForDelegate[delegateAddress];
-      }
 
-      // Calculate the remaining tokens to distribute due to rounding
-      let remainingTokens = delegateRewardShare - totalDistributed;
-      while (remainingTokens > 0) {
-        for (const delegateAddress in gateways[gatewayObservedAndPassed]
-          .delegates) {
-          if (remainingTokens === 0) {
-            break;
-          }
-          tokensForDelegate[delegateAddress]++;
-          remainingTokens--;
-        }
-      }
-
-      // distribute observer reward tokens to each delegate to their existing stake on this gateway
-      // ensure the gateway's total delegated stake is updated each time
-      for (const delegateAddress in tokensForDelegate) {
         safeDelegateDistribution({
           balances: updatedBalances,
           gateways: updatedGateways,
           protocolAddress: SmartWeave.contract.id,
           gatewayAddress: gatewayObservedAndPassed,
           delegateAddress,
-          qty: new IOToken(tokensForDelegate[delegateAddress]),
+          qty: new IOToken(rewardForDelegate),
         });
+        totalDistributedToDelegates += rewardForDelegate;
       }
+      const remainingTokensForOperator =
+        perObserverReward - totalDistributedToDelegates;
 
-      // give the rest to the gateway operator
-      // TODO: Use autoStaking setting
+      // Give the rest to the gateway operator
+      // TO DO: use autoStake setting
       safeTransfer({
         balances: updatedBalances,
         fromAddress: SmartWeave.contract.id,
         toAddress: gatewayObservedAndPassed,
-        qty: observerRewardShare,
+        qty: remainingTokensForOperator,
       });
     } else {
+      // gateway receives full reward
       safeTransfer({
         balances: updatedBalances,
         fromAddress: SmartWeave.contract.id,
