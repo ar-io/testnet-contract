@@ -24,7 +24,6 @@ export class GatewaySettings {
     port?: number;
     allowDelegatedStaking: boolean;
     delegateRewardShareRatio: number;
-    allowedDelegates: string[];
     minDelegatedStake: number;
   };
 
@@ -46,7 +45,6 @@ export class GatewaySettings {
       observerWallet,
       allowDelegatedStaking,
       delegateRewardShareRatio,
-      allowedDelegates,
       minDelegatedStake,
     } = input;
     this.settings = {
@@ -60,7 +58,6 @@ export class GatewaySettings {
       ...(delegateRewardShareRatio !== undefined && {
         delegateRewardShareRatio,
       }),
-      ...(allowedDelegates !== undefined && { allowedDelegates }),
       ...(minDelegatedStake !== undefined && { minDelegatedStake }),
     };
     this.observerWallet = observerWallet;

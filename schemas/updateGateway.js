@@ -43,18 +43,6 @@ const updateGatewaySchema = {
       minimum: 0,
       maximum: 100,
     },
-    allowedDelegates: {
-      type: 'array',
-      items: {
-        type: 'string',
-        pattern: '^[a-zA-Z0-9-_]{43}$',
-        description:
-          'The unique list of delegate addresses the that can stake on this gateway',
-      },
-      uniqueItems: true,
-      minItems: 0,
-      maxItems: 10_000,
-    },
     minDelegatedStake: {
       type: 'integer',
       minimum: 100,

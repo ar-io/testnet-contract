@@ -11,7 +11,7 @@ const decreaseDelegateStakeSchema = {
       pattern: '^[a-zA-Z0-9-_]{43}$',
     },
     qty: {
-      type: 'number',
+      type: 'integer',
       minimum: 1,
     },
   },
