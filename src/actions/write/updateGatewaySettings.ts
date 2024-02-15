@@ -118,7 +118,7 @@ export const updateGatewaySettings = async (
     }
   }
 
-  // if allowedDelegates is currently false, and you want to set it to true - you have to wait until all the vaults have been returned
+  // if allowDelegateStaking is currently false, and you want to set it to true - you have to wait until all the vaults have been returned
   if (
     updatedSettings.allowDelegatedStaking === true &&
     gateway.settings.allowDelegatedStaking === false &&

@@ -432,7 +432,6 @@ describe('Network', () => {
     describe('gateway settings', () => {
       it('should modify gateway settings with correct parameters', async () => {
         const observerWallet = 'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA';
-        const allowedDelegates: string[] = [];
         const updatedGatewaySettings = {
           label: 'Updated Label', // friendly label
           port: 80,
@@ -442,7 +441,6 @@ describe('Network', () => {
           note: 'a new note',
           allowDelegatedStaking: true,
           delegateRewardShareRatio: Math.floor((1 - 0.9) * 100),
-          allowedDelegates,
           minDelegatedStake: MIN_DELEGATED_STAKE + 1,
         };
         const writeInteraction = await contract.writeInteraction({
@@ -674,34 +672,6 @@ describe('Network', () => {
             const writeInteraction = await contract.writeInteraction({
               function: 'updateGatewaySettings',
               delegateRewardShareRatio: badProperties,
-            });
-            expect(writeInteraction?.originalTxId).not.toBe(undefined);
-            const { cachedValue: newCachedValue } = await contract.readState();
-            expect(newCachedValue.state).toEqual(prevCachedValue.state);
-          },
-        );
-
-        it.each([
-          1,
-          'string',
-          'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA',
-          ['%KryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA'],
-          [
-            'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA',
-            'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA',
-          ],
-          [
-            'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA',
-            '%KryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA',
-          ],
-          ['iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA', 1],
-        ])(
-          'should not modify gateway settings with invalid allowedDelegates',
-          async (badProperties) => {
-            const { cachedValue: prevCachedValue } = await contract.readState();
-            const writeInteraction = await contract.writeInteraction({
-              function: 'updateGatewaySettings',
-              allowedDelegates: badProperties,
             });
             expect(writeInteraction?.originalTxId).not.toBe(undefined);
             const { cachedValue: newCachedValue } = await contract.readState();

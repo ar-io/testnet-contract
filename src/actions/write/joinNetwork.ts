@@ -32,7 +32,6 @@ export class JoinNetwork {
   observerWallet: string;
   allowDelegatedStaking: boolean;
   delegateRewardShareRatio: number;
-  allowedDelegates: string[];
   minDelegatedStake: number;
 
   constructor(input: any, caller: TransactionId) {
