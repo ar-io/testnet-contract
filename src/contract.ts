@@ -8,7 +8,9 @@ import { getPriceForInteraction } from './actions/read/price';
 import { getRecord } from './actions/read/record';
 import { buyRecord } from './actions/write/buyRecord';
 import { createVault } from './actions/write/createVault';
+import { decreaseDelegateStake } from './actions/write/decreaseDelegateStake';
 import { decreaseOperatorStake } from './actions/write/decreaseOperatorStake';
+import { delegateStake } from './actions/write/delegateStake';
 import { evolve } from './actions/write/evolve';
 import { evolveState } from './actions/write/evolveState';
 import { extendRecord } from './actions/write/extendRecord';
@@ -63,6 +65,10 @@ export async function handle(
       return getGateways(tickedState);
     case 'prescribedObservers':
       return getPrescribedObservers(tickedState);
+    case 'delegateStake':
+      return delegateStake(tickedState, action);
+    case 'decreaseDelegateStake':
+      return decreaseDelegateStake(tickedState, action);
 
     // registry write interactions
     case 'joinNetwork':

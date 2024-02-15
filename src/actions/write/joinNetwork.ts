@@ -5,6 +5,7 @@ import {
   INVALID_GATEWAY_EXISTS_MESSAGE,
   INVALID_GATEWAY_STAKE_AMOUNT_MESSAGE,
   INVALID_OBSERVER_WALLET,
+  MIN_DELEGATED_STAKE,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import {
@@ -29,6 +30,9 @@ export class JoinNetwork {
   protocol: 'http' | 'https';
   port: number;
   observerWallet: string;
+  allowDelegatedStaking: boolean;
+  delegateRewardShareRatio: number;
+  minDelegatedStake: number;
 
   constructor(input: any, caller: TransactionId) {
     // validate using ajv validator
@@ -47,6 +51,9 @@ export class JoinNetwork {
       protocol,
       properties,
       observerWallet = caller,
+      allowDelegatedStaking = false,
+      delegateRewardShareRatio = 0,
+      minDelegatedStake = MIN_DELEGATED_STAKE,
     } = input;
     this.qty = qty;
     this.label = label;
@@ -56,6 +63,9 @@ export class JoinNetwork {
     this.fqdn = fqdn;
     this.note = note;
     this.observerWallet = observerWallet;
+    this.allowDelegatedStaking = allowDelegatedStaking;
+    this.delegateRewardShareRatio = delegateRewardShareRatio;
+    this.minDelegatedStake = minDelegatedStake;
   }
 }
 
@@ -95,8 +105,10 @@ export const joinNetwork = async (
   unsafeDecrementBalance(state.balances, caller, qty);
   state.gateways[caller] = {
     operatorStake: qty,
+    totalDelegatedStake: 0, // defaults to no delegated stake
     observerWallet, // defaults to caller
     vaults: {},
+    delegates: {},
     settings: {
       ...gatewaySettings,
     },

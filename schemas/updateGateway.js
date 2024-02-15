@@ -35,6 +35,18 @@ const updateGatewaySchema = {
       type: 'string',
       pattern: '^(|[a-zA-Z0-9_-]{43})$',
     },
+    allowDelegatedStaking: {
+      type: 'boolean',
+    },
+    delegateRewardShareRatio: {
+      type: 'integer',
+      minimum: 0,
+      maximum: 100,
+    },
+    minDelegatedStake: {
+      type: 'integer',
+      minimum: 100,
+    },
   },
   required: [],
   additionalProperties: false,

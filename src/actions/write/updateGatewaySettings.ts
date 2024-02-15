@@ -1,4 +1,5 @@
 import {
+  DELEGATED_STAKE_UNLOCK_LENGTH,
   INVALID_GATEWAY_REGISTERED_MESSAGE,
   INVALID_OBSERVER_WALLET,
 } from '../../constants';
@@ -21,6 +22,9 @@ export class GatewaySettings {
     properties?: string;
     protocol?: 'http' | 'https';
     port?: number;
+    allowDelegatedStaking: boolean;
+    delegateRewardShareRatio: number;
+    minDelegatedStake: number;
   };
 
   constructor(input: any) {
@@ -31,8 +35,18 @@ export class GatewaySettings {
       );
     }
 
-    const { label, port, fqdn, note, protocol, properties, observerWallet } =
-      input;
+    const {
+      label,
+      port,
+      fqdn,
+      note,
+      protocol,
+      properties,
+      observerWallet,
+      allowDelegatedStaking,
+      delegateRewardShareRatio,
+      minDelegatedStake,
+    } = input;
     this.settings = {
       ...(fqdn !== undefined && { fqdn }),
       ...(label !== undefined && { label }),
@@ -40,6 +54,11 @@ export class GatewaySettings {
       ...(properties !== undefined && { properties }),
       ...(protocol !== undefined && { protocol }),
       ...(port !== undefined && { port }),
+      ...(allowDelegatedStaking !== undefined && { allowDelegatedStaking }),
+      ...(delegateRewardShareRatio !== undefined && {
+        delegateRewardShareRatio,
+      }),
+      ...(minDelegatedStake !== undefined && { minDelegatedStake }),
     };
     this.observerWallet = observerWallet;
   }
@@ -76,6 +95,39 @@ export const updateGatewaySettings = async (
       ...updatedSettings,
     },
   };
+
+  // vault all delegated stakes if it is disabled, we'll return stack at the proper end heights of the vault
+  if (
+    updatedSettings.allowDelegatedStaking === false &&
+    Object.keys(gateway.delegates).length
+  ) {
+    // Add tokens from each delegate to a vault that unlocks after the delegate withdrawal period ends
+    const delegateEndHeight =
+      +SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH;
+    for (const address in updatedGateway.delegates) {
+      updatedGateway.delegates[address].vaults[SmartWeave.transaction.id] = {
+        balance: updatedGateway.delegates[address].delegatedStake,
+        start: +SmartWeave.block.height,
+        end: delegateEndHeight,
+      };
+
+      // reduce gateway stake and set this delegate stake to 0
+      updatedGateway.totalDelegatedStake -=
+        updatedGateway.delegates[address].delegatedStake;
+      updatedGateway.delegates[address].delegatedStake = 0;
+    }
+  }
+
+  // if allowDelegateStaking is currently false, and you want to set it to true - you have to wait until all the vaults have been returned
+  if (
+    updatedSettings.allowDelegatedStaking === true &&
+    gateway.settings.allowDelegatedStaking === false &&
+    Object.keys(gateway.delegates).length > 0
+  ) {
+    throw new ContractError(
+      'You cannot enable delegated staking until all delegated stakes have been withdrawn.',
+    );
+  }
 
   // update the contract state
   state.gateways[caller] = updatedGateway;

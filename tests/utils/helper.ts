@@ -11,6 +11,7 @@ import {
   DEFAULT_UNDERNAME_COUNT,
   GENESIS_FEES,
   INITIAL_STATE,
+  MIN_DELEGATED_STAKE,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
   REGISTRATION_TYPES,
@@ -121,10 +122,12 @@ function createGateways(wallets: string[]) {
   const gateways: Gateways = {
     [wallets[0]]: {
       operatorStake: 50_000,
+      totalDelegatedStake: 0,
       start: 0,
       end: 0,
       status: NETWORK_JOIN_STATUS,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'Arweave Community Gateway', // The friendly name used to label this gateway
         fqdn: 'arweave.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -132,6 +135,7 @@ function createGateways(wallets: string[]) {
         protocol: 'https', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'The friendliest gateway to the whole permaweb',
+        minDelegatedStake: MIN_DELEGATED_STAKE,
       },
       observerWallet: wallets[0],
       stats: {
@@ -140,10 +144,12 @@ function createGateways(wallets: string[]) {
     },
     [wallets[1]]: {
       operatorStake: 10_000,
+      totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 0,
       end: 0,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'Slashme', // The friendly name used to label this gateway
         fqdn: 'slash-this-gateway.io', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -151,6 +157,7 @@ function createGateways(wallets: string[]) {
         protocol: 'https', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'i do bad things',
+        minDelegatedStake: MIN_DELEGATED_STAKE,
       },
       observerWallet: wallets[1],
       stats: {
@@ -159,10 +166,12 @@ function createGateways(wallets: string[]) {
     },
     [wallets[2]]: {
       operatorStake: 250_000,
+      totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 0,
       end: 0,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'Delegateme', // The friendly name used to label this gateway
         fqdn: 'delegate.org', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -170,6 +179,7 @@ function createGateways(wallets: string[]) {
         protocol: 'http', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: '',
+        minDelegatedStake: MIN_DELEGATED_STAKE,
       },
       observerWallet: wallets[2],
       stats: {
@@ -178,10 +188,12 @@ function createGateways(wallets: string[]) {
     },
     [wallets[3]]: {
       operatorStake: 15_000,
+      totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 0,
       end: 0,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'Wack-gateway', // The friendly name used to label this gateway
         fqdn: 'brokeninfra.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -189,6 +201,7 @@ function createGateways(wallets: string[]) {
         protocol: 'https', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: '',
+        minDelegatedStake: MIN_DELEGATED_STAKE,
       },
       observerWallet: wallets[3],
       stats: {
@@ -197,10 +210,12 @@ function createGateways(wallets: string[]) {
     },
     [wallets[4]]: {
       operatorStake: 100_000,
+      totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 0,
       end: 0,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'Observation', // The friendly name used to label this gateway
         fqdn: 'observation.com', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -208,6 +223,7 @@ function createGateways(wallets: string[]) {
         protocol: 'https', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'Observation testing',
+        minDelegatedStake: MIN_DELEGATED_STAKE,
       },
       observerWallet: wallets[4],
       stats: {
@@ -216,10 +232,12 @@ function createGateways(wallets: string[]) {
     },
     [wallets[5]]: {
       operatorStake: 20_000,
+      totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 0,
       end: 0,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'Another Observer', // The friendly name used to label this gateway
         fqdn: 'observation-again.net', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -227,6 +245,7 @@ function createGateways(wallets: string[]) {
         protocol: 'https', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'More observervation testing',
+        minDelegatedStake: MIN_DELEGATED_STAKE,
       },
       observerWallet: wallets[5],
       stats: {
@@ -235,10 +254,12 @@ function createGateways(wallets: string[]) {
     },
     [wallets[6]]: {
       operatorStake: 20_000,
+      totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 0,
       end: 0,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'Leaving', // The friendly name used to label this gateway
         fqdn: 'leaving.io', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -246,6 +267,7 @@ function createGateways(wallets: string[]) {
         protocol: 'https', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'Leaving after epoch 0',
+        minDelegatedStake: MIN_DELEGATED_STAKE,
       },
       observerWallet: wallets[6],
       stats: {
@@ -254,10 +276,12 @@ function createGateways(wallets: string[]) {
     },
     [wallets[7]]: {
       operatorStake: 10_000,
+      totalDelegatedStake: 0,
       status: NETWORK_LEAVING_STATUS,
       start: 0,
       end: 0,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'See Ya Later', // The friendly name used to label this gateway
         fqdn: 'goodbye.com', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -265,6 +289,7 @@ function createGateways(wallets: string[]) {
         protocol: 'https', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'Leaving the network',
+        minDelegatedStake: MIN_DELEGATED_STAKE,
       },
       observerWallet: wallets[7],
       stats: {
@@ -273,10 +298,12 @@ function createGateways(wallets: string[]) {
     },
     [wallets[8]]: {
       operatorStake: 10_000,
+      totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 10_000,
       end: 0,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'See Ya Later', // The friendly name used to label this gateway
         fqdn: 'goodbye.com', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -284,6 +311,7 @@ function createGateways(wallets: string[]) {
         protocol: 'https', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'Leaving the network',
+        minDelegatedStake: MIN_DELEGATED_STAKE,
       },
       observerWallet: wallets[8],
       stats: {
@@ -292,10 +320,12 @@ function createGateways(wallets: string[]) {
     },
     [wallets[9]]: {
       operatorStake: 10_000,
+      totalDelegatedStake: 0,
       status: NETWORK_LEAVING_STATUS,
       start: 0,
       end: 100,
       vaults: {},
+      delegates: {},
       settings: {
         label: 'See Ya Later', // The friendly name used to label this gateway
         fqdn: 'goodbye.com', // the fully qualified domain name this gateway can be reached at. eg arweave.net
@@ -303,6 +333,7 @@ function createGateways(wallets: string[]) {
         protocol: 'https', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'Leaving the network',
+        minDelegatedStake: MIN_DELEGATED_STAKE,
       },
       observerWallet: wallets[9],
       stats: {

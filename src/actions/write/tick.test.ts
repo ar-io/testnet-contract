@@ -12,6 +12,8 @@ import {
   DEFAULT_GATEWAY_PERFORMANCE_STATS,
   EPOCH_BLOCK_LENGTH,
   EPOCH_DISTRIBUTION_DELAY,
+  EPOCH_REWARD_PERCENTAGE,
+  GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
   INITIAL_DEMAND_FACTOR_DATA,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
@@ -25,6 +27,8 @@ import {
   getBaselineState,
   stubbedArweaveTxId,
   stubbedAuctionData,
+  stubbedDelegateData,
+  stubbedDelegatedGatewayData,
   stubbedGatewayData,
   stubbedGateways,
   stubbedPrescribedObserver,
@@ -316,6 +320,7 @@ describe('tick', () => {
           gateways: {
             'leaving-operator': {
               operatorStake: 100,
+              totalDelegatedStake: 100,
               observerWallet: 'existing-operator',
               start: 0,
               end: 5,
@@ -323,22 +328,37 @@ describe('tick', () => {
                 'existing-vault-id': {
                   balance: 100,
                   start: 0,
-                  end: 10,
+                  end: 5,
+                },
+              },
+              delegates: {
+                'existing-delegate': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 5,
+                    },
+                  },
                 },
               },
               status: 'leaving',
-              settings: stubbedGatewayData.settings,
+              settings: stubbedDelegatedGatewayData.settings,
               stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
             },
           },
           balances: {
             'leaving-operator': 0,
+            'existing-delegate': 0,
           },
         },
         {
           gateways: {},
           balances: {
             'leaving-operator': 200,
+            'existing-delegate': 200,
           },
         },
       ],
@@ -348,6 +368,7 @@ describe('tick', () => {
           gateways: {
             'existing-operator': {
               operatorStake: 100,
+              totalDelegatedStake: 100,
               observerWallet: 'existing-operator',
               start: 0,
               end: 10,
@@ -358,6 +379,35 @@ describe('tick', () => {
                   end: 2,
                 },
               },
+              delegates: {
+                'existing-delegate': {
+                  delegatedStake: 0,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 2,
+                    },
+                    'existing-vault-id-2': {
+                      balance: 100,
+                      start: 0,
+                      end: 2,
+                    },
+                  },
+                },
+                'existing-delegate-2': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 20,
+                    },
+                  },
+                },
+              },
               status: 'joined',
               settings: stubbedGatewayData.settings,
               stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
@@ -371,10 +421,24 @@ describe('tick', () => {
           gateways: {
             'existing-operator': {
               operatorStake: 100,
+              totalDelegatedStake: 100,
               observerWallet: 'existing-operator',
               start: 0,
               end: 10,
               vaults: {},
+              delegates: {
+                'existing-delegate-2': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 20,
+                    },
+                  },
+                },
+              },
               status: 'joined',
               settings: stubbedGatewayData.settings,
               stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
@@ -382,6 +446,7 @@ describe('tick', () => {
           },
           balances: {
             'existing-operator': 100,
+            'existing-delegate': 200,
           },
         },
       ],
@@ -391,6 +456,7 @@ describe('tick', () => {
           gateways: {
             'existing-operator': {
               operatorStake: 100,
+              totalDelegatedStake: 200,
               observerWallet: 'existing-operator',
               start: 0,
               end: 10,
@@ -399,6 +465,35 @@ describe('tick', () => {
                   balance: 100,
                   start: 0,
                   end: 10,
+                },
+              },
+              delegates: {
+                'existing-delegate': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 20,
+                    },
+                    'existing-vault-id-2': {
+                      balance: 100,
+                      start: 0,
+                      end: 20,
+                    },
+                  },
+                },
+                'existing-delegate-2': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 20,
+                    },
+                  },
                 },
               },
               status: 'joined',
@@ -414,6 +509,7 @@ describe('tick', () => {
           gateways: {
             'existing-operator': {
               operatorStake: 100,
+              totalDelegatedStake: 200,
               observerWallet: 'existing-operator',
               start: 0,
               end: 10,
@@ -424,6 +520,35 @@ describe('tick', () => {
                   end: 10,
                 },
               },
+              delegates: {
+                'existing-delegate': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 20,
+                    },
+                    'existing-vault-id-2': {
+                      balance: 100,
+                      start: 0,
+                      end: 20,
+                    },
+                  },
+                },
+                'existing-delegate-2': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 20,
+                    },
+                  },
+                },
+              },
               status: 'joined',
               settings: stubbedGatewayData.settings,
               stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
@@ -431,6 +556,100 @@ describe('tick', () => {
           },
           balances: {
             'existing-operator': 0,
+          },
+        },
+      ],
+      [
+        'should keep a gateway that is joined and only return delegate vaults that have expired',
+        {
+          gateways: {
+            'existing-operator': {
+              operatorStake: 100,
+              totalDelegatedStake: 200,
+              observerWallet: 'existing-operator',
+              start: 0,
+              end: 10,
+              vaults: {
+                'existing-vault-id': {
+                  balance: 100,
+                  start: 0,
+                  end: 10,
+                },
+              },
+              delegates: {
+                'existing-delegate': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 2,
+                    },
+                    'existing-vault-id-2': {
+                      balance: 100,
+                      start: 0,
+                      end: 2,
+                    },
+                  },
+                },
+                'existing-delegate-2': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 2,
+                    },
+                  },
+                },
+              },
+              status: 'joined',
+              settings: stubbedGatewayData.settings,
+              stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
+            },
+          },
+          balances: {
+            'existing-operator': 0,
+          },
+        },
+        {
+          gateways: {
+            'existing-operator': {
+              operatorStake: 100,
+              totalDelegatedStake: 200,
+              observerWallet: 'existing-operator',
+              start: 0,
+              end: 10,
+              vaults: {
+                'existing-vault-id': {
+                  balance: 100,
+                  start: 0,
+                  end: 10,
+                },
+              },
+              delegates: {
+                'existing-delegate': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {},
+                },
+                'existing-delegate-2': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {},
+                },
+              },
+              status: 'joined',
+              settings: stubbedGatewayData.settings,
+              stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
+            },
+          },
+          balances: {
+            'existing-operator': 0,
+            'existing-delegate': 200,
+            'existing-delegate-2': 100,
           },
         },
       ],
@@ -831,6 +1050,343 @@ describe('tick', () => {
             normalizedCompositeWeight: 1,
           };
         }),
+      });
+    });
+  });
+
+  describe('tickRewardDistributionWithDelegates', () => {
+    beforeEach(() => {
+      (getPrescribedObserversForEpoch as jest.Mock).mockResolvedValue([
+        {
+          gatewayAddress: 'a-gateway',
+          observerAddress: 'an-observing-gateway',
+          stake: 200,
+          start: 0,
+          stakeWeight: 20,
+          tenureWeight: 1,
+          gatewayRewardRatioWeight: 1,
+          observerRewardRatioWeight: 1,
+          compositeWeight: 1,
+          normalizedCompositeWeight: 1,
+        },
+        {
+          gatewayAddress: 'a-gateway-2',
+          observerAddress: 'an-observing-gateway-2',
+          stake: 300,
+          start: 0,
+          stakeWeight: 30,
+          tenureWeight: 1,
+          gatewayRewardRatioWeight: 1,
+          observerRewardRatioWeight: 1,
+          compositeWeight: 1,
+          normalizedCompositeWeight: 1,
+        },
+        {
+          gatewayAddress: 'a-gateway-3',
+          observerAddress: 'an-observing-gateway-3',
+          stake: 100,
+          start: 0,
+          stakeWeight: 10,
+          tenureWeight: 1,
+          gatewayRewardRatioWeight: 1,
+          observerRewardRatioWeight: 1,
+          compositeWeight: 1,
+          normalizedCompositeWeight: 1,
+        },
+        {
+          gatewayAddress: 'a-gateway-4',
+          observerAddress: 'an-observing-gateway-4',
+          stake: 100,
+          start: 0,
+          stakeWeight: 10,
+          tenureWeight: 1,
+          gatewayRewardRatioWeight: 1,
+          observerRewardRatioWeight: 1,
+          compositeWeight: 1,
+          normalizedCompositeWeight: 1,
+        },
+        {
+          gatewayAddress: 'a-gateway-5',
+          observerAddress: 'an-observing-gateway-5',
+          stake: 400,
+          start: 0,
+          stakeWeight: 20,
+          tenureWeight: 1,
+          gatewayRewardRatioWeight: 1,
+          observerRewardRatioWeight: 1,
+          compositeWeight: 1,
+          normalizedCompositeWeight: 1,
+        },
+      ]);
+      (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({
+        'a-gateway': {
+          ...stubbedGatewayData,
+          delegatedStake: 100,
+          settings: {
+            ...stubbedGatewayData.settings,
+            allowDelegatedStaking: true,
+            delegateRewardShareRatio: 50,
+          },
+          delegates: {
+            ['delegate-1']: {
+              ...stubbedDelegateData,
+            },
+          },
+          observerWallet: 'an-observing-gateway',
+        },
+        'a-gateway-2': {
+          ...stubbedGatewayData,
+          delegatedStake: 200,
+          settings: {
+            ...stubbedGatewayData.settings,
+            allowDelegatedStaking: true,
+            delegateRewardShareRatio: 50,
+          },
+          delegates: {
+            ['delegate-2']: {
+              ...stubbedDelegateData,
+            },
+            ['delegate-3']: {
+              ...stubbedDelegateData,
+            },
+          },
+          observerWallet: 'an-observing-gateway-2',
+        },
+        'a-gateway-3': {
+          ...stubbedDelegatedGatewayData,
+          observerWallet: 'an-observing-gateway-3',
+        },
+        'a-gateway-4': {
+          ...stubbedGatewayData,
+          observerWallet: 'an-observing-gateway-4',
+        },
+        'a-gateway-5': {
+          ...stubbedGatewayData,
+          delegatedStake: 300,
+          settings: {
+            ...stubbedGatewayData.settings,
+            allowDelegatedStaking: true,
+            delegateRewardShareRatio: 50,
+          },
+          delegates: {
+            ['delegate-4']: {
+              ...stubbedDelegateData,
+            },
+            ['delegate-5']: {
+              ...stubbedDelegateData,
+            },
+            ['delegate-6']: {
+              ...stubbedDelegateData,
+            },
+          },
+          observerWallet: 'an-observing-gateway-5',
+        },
+      });
+    });
+
+    afterEach(() => {
+      jest.resetAllMocks();
+    });
+
+    it('should distribute rewards to observers and gateways, along with their delegates', async () => {
+      const initialState: IOState = {
+        ...getBaselineState(),
+        balances: {
+          [SmartWeave.contract.id]: 10_000_000,
+        },
+        gateways: {
+          'a-gateway': {
+            ...stubbedGatewayData,
+            totalDelegatedStake: stubbedDelegateData.delegatedStake,
+            settings: {
+              ...stubbedGatewayData.settings,
+              allowDelegatedStaking: true,
+              delegateRewardShareRatio: 50,
+            },
+            delegates: {
+              ['delegate-1']: {
+                ...stubbedDelegateData,
+              },
+            },
+            observerWallet: 'an-observing-gateway',
+          },
+          'a-gateway-2': {
+            ...stubbedGatewayData,
+            totalDelegatedStake: stubbedDelegateData.delegatedStake * 2,
+            settings: {
+              ...stubbedGatewayData.settings,
+              allowDelegatedStaking: true,
+              delegateRewardShareRatio: 50,
+            },
+            delegates: {
+              ['delegate-2']: {
+                ...stubbedDelegateData,
+              },
+              ['delegate-3']: {
+                ...stubbedDelegateData,
+              },
+            },
+            observerWallet: 'an-observing-gateway-2',
+          },
+          'a-gateway-3': {
+            ...stubbedGatewayData,
+            settings: {
+              ...stubbedGatewayData.settings,
+              allowDelegatedStaking: true,
+              delegateRewardShareRatio: 50,
+            },
+            observerWallet: 'an-observing-gateway-3',
+          },
+          'a-gateway-4': {
+            ...stubbedGatewayData,
+            observerWallet: 'an-observing-gateway-4',
+          },
+          'a-gateway-5': {
+            ...stubbedGatewayData,
+            totalDelegatedStake: stubbedDelegateData.delegatedStake * 3,
+            settings: {
+              ...stubbedGatewayData.settings,
+              allowDelegatedStaking: true,
+              delegateRewardShareRatio: 30,
+            },
+            delegates: {
+              ['delegate-4']: {
+                ...stubbedDelegateData,
+              },
+              ['delegate-5']: {
+                ...stubbedDelegateData,
+              },
+              ['delegate-6']: {
+                ...stubbedDelegateData,
+              },
+            },
+            observerWallet: 'an-observing-gateway-5',
+          },
+        },
+        observations: {
+          // 3 good gateways, 1 good gateway/bad observer, 3 good observers
+          0: {
+            failureSummaries: {
+              // nobody failed a-gateway-1
+              'a-gateway-2': ['an-observing-gateway'],
+              'a-gateway-3': [
+                'an-observing-gateway',
+                'an-observing-gateway-2',
+                'an-observing-gateway-4',
+              ], // a-gateway-3 will not receive a gateway reward
+              'a-gateway-4': ['an-observing-gateway-2'],
+              'a-gateway-5': ['an-observing-gateway'],
+            },
+            // all will get observer reward
+            reports: {
+              'an-observing-gateway': stubbedArweaveTxId,
+              'an-observing-gateway-2': stubbedArweaveTxId,
+              // observer 3 did not submit a report and will not receive an observer reward
+              'an-observing-gateway-4': stubbedArweaveTxId,
+              // observer 5 did not submit a report and will not receive an observer reward
+            },
+          },
+        },
+      };
+      const epochDistributionHeight =
+        initialState.distributions.nextDistributionHeight;
+      const { balances, distributions, gateways } =
+        await tickRewardDistribution({
+          currentBlockHeight: new BlockHeight(epochDistributionHeight),
+          gateways: initialState.gateways,
+          balances: initialState.balances,
+          distributions: initialState.distributions,
+          observations: initialState.observations,
+          prescribedObservers: initialState.prescribedObservers,
+        });
+      const totalPotentialReward = Math.floor(
+        10_000_000 * EPOCH_REWARD_PERCENTAGE,
+      );
+
+      const totalPotentialGatewayReward = Math.floor(
+        totalPotentialReward * GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
+      );
+
+      const perGatewayReward = Math.floor(
+        totalPotentialGatewayReward / Object.keys(initialState.gateways).length,
+      );
+      const totalPotentialObserverReward =
+        totalPotentialReward - totalPotentialGatewayReward;
+      const perObserverReward = Math.floor(
+        totalPotentialObserverReward /
+          Object.keys(initialState.gateways).length,
+      );
+
+      const penalizedGatewayReward = Math.floor(
+        perGatewayReward * (1 - BAD_OBSERVER_GATEWAY_PENALTY),
+      );
+      const totalRewardsDistributed =
+        perObserverReward * 3 + perGatewayReward * 3 + penalizedGatewayReward; // 3 rewards for 3 observers, 3 gateway rewards, 1 penalized gateway reward
+
+      // single delegate
+      for (const delegateAddress of Object.keys(
+        initialState.gateways['a-gateway'].delegates,
+      )) {
+        const delegateBefore =
+          initialState.gateways['a-gateway'].delegates[delegateAddress];
+        const delegateAfter = gateways['a-gateway'].delegates[delegateAddress];
+        expect(delegateAfter.delegatedStake).toEqual(
+          delegateBefore.delegatedStake +
+            Math.floor((perObserverReward + perGatewayReward) * 0.5), // splits the reward fully with the gateway
+        );
+      }
+
+      // 50% distribution to delegates, split evenly (25% each)
+      for (const delegateAddress of Object.keys(
+        initialState.gateways['a-gateway-2'].delegates,
+      )) {
+        const delegateBefore =
+          initialState.gateways['a-gateway-2'].delegates[delegateAddress];
+        const delegateAfter =
+          gateways['a-gateway-2'].delegates[delegateAddress];
+        expect(delegateAfter.delegatedStake).toEqual(
+          delegateBefore.delegatedStake +
+            Math.floor(perGatewayReward * 0.25) + // gets 1/4 of the total reward
+            Math.floor(perObserverReward * 0.25), // gets 1/4 of the total reward, rounded down
+        );
+      }
+
+      // 30% distribution to delegates, split evenly but gateway penalized (10% each)
+      for (const delegateAddress of Object.keys(
+        initialState.gateways['a-gateway-5'].delegates,
+      )) {
+        const delegateBefore =
+          initialState.gateways['a-gateway-5'].delegates[delegateAddress];
+        const delegateAfter =
+          gateways['a-gateway-5'].delegates[delegateAddress];
+        expect(delegateAfter.delegatedStake).toEqual(
+          Math.floor(
+            delegateBefore.delegatedStake +
+              Math.floor(penalizedGatewayReward * 0.1),
+          ),
+        );
+      }
+
+      expect(balances).toEqual({
+        ...initialState.balances,
+        'a-gateway': (perObserverReward + perGatewayReward) * 0.5, // gives 50% of reward to delegate 1
+        'a-gateway-2': (perObserverReward + perGatewayReward) * 0.5 + 2, // splits reward with delegate 2 and 3, gets remaining tokens from rounding
+        'a-gateway-4': perObserverReward + perGatewayReward, // gets full reward (no delegates)
+        'a-gateway-5': Math.ceil(penalizedGatewayReward * 0.7), // split reward with delegates 4, 5, 6
+        // observer three does not get anything!
+        [SmartWeave.contract.id]: 10_000_000 - totalRewardsDistributed,
+      });
+
+      const expectedNewEpochStartHeight = EPOCH_BLOCK_LENGTH;
+      const expectedNewEpochEndHeight =
+        expectedNewEpochStartHeight + EPOCH_BLOCK_LENGTH - 1;
+      expect(distributions).toEqual({
+        ...initialState.distributions,
+        epochStartHeight: expectedNewEpochStartHeight,
+        epochEndHeight: expectedNewEpochEndHeight,
+        nextDistributionHeight:
+          expectedNewEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
+        epochPeriod: initialState.distributions.epochPeriod + 1,
       });
     });
   });

@@ -1,5 +1,6 @@
 import {
   DEFAULT_GATEWAY_PERFORMANCE_STATS,
+  MIN_DELEGATED_STAKE,
   TOTAL_IO_SUPPLY,
 } from './constants';
 import { getBaselineState } from './tests/stubs';
@@ -40,7 +41,9 @@ describe('isGatewayJoined function', () => {
             end: 0,
             status: status as GatewayStatus,
             vaults: {},
+            delegates: {},
             operatorStake: 10_000,
+            totalDelegatedStake: 0,
             observerWallet: '',
             settings: {
               // None of these values should be relevant to this test
@@ -48,6 +51,7 @@ describe('isGatewayJoined function', () => {
               fqdn: '',
               port: Number.NEGATIVE_INFINITY,
               protocol: 'https',
+              minDelegatedStake: MIN_DELEGATED_STAKE,
             },
             stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
           },
@@ -84,7 +88,9 @@ describe('isGatewayEligibleToBeRemoved function', () => {
             end: gatewayEndBlock,
             status: status as GatewayStatus,
             vaults: {},
+            delegates: {},
             operatorStake: Number.NEGATIVE_INFINITY,
+            totalDelegatedStake: 0,
             observerWallet: '',
             settings: {
               // None of these values should be relevant to this test
@@ -92,6 +98,7 @@ describe('isGatewayEligibleToBeRemoved function', () => {
               fqdn: '',
               port: Number.NEGATIVE_INFINITY,
               protocol: 'https',
+              minDelegatedStake: MIN_DELEGATED_STAKE,
             },
             stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
           },
@@ -140,7 +147,9 @@ describe('isGatewayEligibleToLeave function', () => {
             end: gatewayEndBlock,
             status: status as GatewayStatus,
             vaults: {},
+            delegates: {},
             operatorStake: 0,
+            totalDelegatedStake: 0,
             observerWallet: '',
             settings: {
               // None of these values should be relevant to this test
@@ -148,6 +157,7 @@ describe('isGatewayEligibleToLeave function', () => {
               fqdn: '',
               port: Number.NEGATIVE_INFINITY,
               protocol: 'https',
+              minDelegatedStake: MIN_DELEGATED_STAKE,
             },
             stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
           },
@@ -318,13 +328,16 @@ describe('resetProtocolBalance function', () => {
               end: 0,
             },
           },
+          delegates: {},
           operatorStake: 100,
+          totalDelegatedStake: 0,
           observerWallet: '',
           settings: {
             label: '',
             fqdn: '',
             port: 1234,
             protocol: 'https',
+            minDelegatedStake: MIN_DELEGATED_STAKE,
           },
           stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
         },

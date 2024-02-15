@@ -1,16 +1,17 @@
 import {
   DEFAULT_GATEWAY_PERFORMANCE_STATS,
+  GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_GATEWAY_EXISTS_MESSAGE,
   INVALID_GATEWAY_STAKE_AMOUNT_MESSAGE,
   INVALID_INPUT_MESSAGE,
   INVALID_OBSERVER_WALLET,
+  MAX_PORT_NUMBER,
+  MIN_DELEGATED_STAKE,
+  MIN_OPERATOR_STAKE,
 } from '../../constants';
-import {
-  getBaselineState,
-  stubbedArweaveTxId,
-  stubbedGatewayData,
-} from '../../tests/stubs';
+import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
+import { stubbedGatewayData } from '../../tests/stubs';
 import { IOState } from '../../types';
 import { joinNetwork } from './joinNetwork';
 
@@ -36,10 +37,73 @@ describe('joinNetwork', () => {
       },
     ],
     [
-      'should throw an error for invalid observerWallet',
+      'should throw an error for invalid port (cant be a string)',
       {
         ...validInput,
         port: 'bad-port',
+      },
+    ],
+    [
+      'should throw an error for invalid port (cant be too high)',
+      {
+        ...validInput,
+        port: MAX_PORT_NUMBER + 1,
+      },
+    ],
+    [
+      'should throw an error for invalid allowDelegatedStaking (must be boolean)',
+      {
+        ...validInput,
+        allowDelegatedStaking: 0,
+      },
+    ],
+    [
+      'should throw an error for invalid allowDelegatedStaking (must be boolean)',
+      {
+        ...validInput,
+        allowDelegatedStaking: 'boolean-only',
+      },
+    ],
+    [
+      'should throw an error for invalid delegateRewardShareRatio (must be an integer)',
+      {
+        ...validInput,
+        delegateRewardShareRatio: 10.5,
+      },
+    ],
+    [
+      'should throw an error for invalid delegateRewardShareRatio (too high)',
+      {
+        ...validInput,
+        delegateRewardShareRatio: 101,
+      },
+    ],
+    [
+      'should throw an error for invalid delegateRewardShareRatio (cant be a string)',
+      {
+        ...validInput,
+        delegateRewardShareRatio: 'integer-between-1-and-100',
+      },
+    ],
+    [
+      'should throw an error for invalid minDelegatedStake (below minimum delegated stake)',
+      {
+        ...validInput,
+        minDelegatedStake: MIN_DELEGATED_STAKE - 1, // should not be below minimum
+      },
+    ],
+    [
+      'should throw an error for invalid minDelegatedStake (non-integer)',
+      {
+        ...validInput,
+        minDelegatedStake: MIN_DELEGATED_STAKE + 0.1, // integers only
+      },
+    ],
+    [
+      'should throw an error for invalid minDelegatedStake (cant be a string)',
+      {
+        ...validInput,
+        minDelegatedStake: 'numbers-only', // numbers only
       },
     ],
   ])('%s', async (_: string, badInput: any) => {
@@ -134,11 +198,11 @@ describe('joinNetwork', () => {
     expect(error.message).toEqual(INVALID_OBSERVER_WALLET);
   });
 
-  it('should add the gateway to the registry and join the network', async () => {
+  it('should add the gateway to the registry and join the network with no delegated staking', async () => {
     const initialState = {
       ...getBaselineState(),
       balances: {
-        [stubbedArweaveTxId]: 10000,
+        [stubbedArweaveTxId]: MIN_OPERATOR_STAKE,
       },
     };
     const { state } = await joinNetwork(initialState, {
@@ -148,7 +212,8 @@ describe('joinNetwork', () => {
       },
     });
     expect(state.gateways[stubbedArweaveTxId]).toEqual({
-      operatorStake: 10000,
+      operatorStake: MIN_OPERATOR_STAKE,
+      totalDelegatedStake: 0,
       settings: {
         port: 1234,
         protocol: 'https',
@@ -156,10 +221,101 @@ describe('joinNetwork', () => {
         fqdn: 'test.com',
         note: 'test-note',
         properties: stubbedArweaveTxId,
+        allowDelegatedStaking: false,
+        minDelegatedStake: MIN_DELEGATED_STAKE,
+        delegateRewardShareRatio: 0,
       },
       start: SmartWeave.block.height,
       observerWallet: stubbedArweaveTxId,
       vaults: {},
+      delegates: {},
+      status: 'joined',
+      end: 0,
+      stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
+    });
+    expect(state.balances[stubbedArweaveTxId]).toEqual(undefined);
+  });
+
+  it('should add the gateway to the registry and join the network with enabling delegated staking', async () => {
+    const initialState = {
+      ...getBaselineState(),
+      balances: {
+        [stubbedArweaveTxId]: MIN_OPERATOR_STAKE,
+      },
+    };
+    const { state } = await joinNetwork(initialState, {
+      caller: stubbedArweaveTxId,
+      input: {
+        ...validInput,
+        allowDelegatedStaking: true,
+        delegateRewardShareRatio: Math.floor(
+          (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
+        ),
+      },
+    });
+    expect(state.gateways[stubbedArweaveTxId]).toEqual({
+      operatorStake: MIN_OPERATOR_STAKE,
+      totalDelegatedStake: 0,
+      settings: {
+        port: 1234,
+        protocol: 'https',
+        label: 'test',
+        fqdn: 'test.com',
+        note: 'test-note',
+        properties: stubbedArweaveTxId,
+        allowDelegatedStaking: true,
+        minDelegatedStake: MIN_DELEGATED_STAKE,
+        delegateRewardShareRatio: Math.floor(
+          (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
+        ),
+      },
+      start: SmartWeave.block.height,
+      observerWallet: stubbedArweaveTxId,
+      vaults: {},
+      delegates: {},
+      status: 'joined',
+      end: 0,
+      stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
+    });
+    expect(state.balances[stubbedArweaveTxId]).toEqual(undefined);
+  });
+
+  it('should add the gateway to the registry and join the network without enabling delegated staking by default', async () => {
+    const initialState = {
+      ...getBaselineState(),
+      balances: {
+        [stubbedArweaveTxId]: MIN_OPERATOR_STAKE,
+      },
+    };
+    const { state } = await joinNetwork(initialState, {
+      caller: stubbedArweaveTxId,
+      input: {
+        ...validInput,
+        delegateRewardShareRatio: Math.floor(
+          (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
+        ),
+      },
+    });
+    expect(state.gateways[stubbedArweaveTxId]).toEqual({
+      operatorStake: MIN_OPERATOR_STAKE,
+      totalDelegatedStake: 0,
+      settings: {
+        port: 1234,
+        protocol: 'https',
+        label: 'test',
+        fqdn: 'test.com',
+        note: 'test-note',
+        properties: stubbedArweaveTxId,
+        allowDelegatedStaking: false,
+        minDelegatedStake: MIN_DELEGATED_STAKE,
+        delegateRewardShareRatio: Math.floor(
+          (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
+        ),
+      },
+      start: SmartWeave.block.height,
+      observerWallet: stubbedArweaveTxId,
+      vaults: {},
+      delegates: {},
       status: 'joined',
       end: 0,
       stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,

@@ -1,43 +1,43 @@
-import { NETWORK_LEAVING_STATUS } from '../../constants';
+import {
+  INSUFFICIENT_FUNDS_MESSAGE,
+  INVALID_GATEWAY_EXISTS_MESSAGE,
+  INVALID_INPUT_MESSAGE,
+  NETWORK_LEAVING_STATUS,
+} from '../../constants';
 import { ContractWriteResult, IOState, PstAction } from '../../types';
-import { unsafeDecrementBalance } from '../../utilities';
+import {
+  unsafeDecrementBalance,
+  walletHasSufficientBalance,
+} from '../../utilities';
 
 // Locks tokens into a new gateway operator vault
 export const increaseOperatorStake = async (
   state: IOState,
   { caller, input }: PstAction,
 ): Promise<ContractWriteResult> => {
-  const { gateways = {}, balances } = state;
+  const { gateways, balances } = state;
 
-  // TODO: object type validation
-  const { qty } = input as any;
+  const qty = input.qty;
+
+  if (isNaN(qty) || qty <= 0) {
+    throw new ContractError(INVALID_INPUT_MESSAGE);
+  }
 
   if (!(caller in gateways)) {
-    throw new ContractError("This Gateway's wallet is not registered");
+    throw new ContractError(INVALID_GATEWAY_EXISTS_MESSAGE);
   }
 
   if (gateways[caller].status === NETWORK_LEAVING_STATUS) {
     throw new ContractError(
-      'This Gateway is in the process of leaving the network and cannot have its stake adjusted',
+      'Gateway is leaving the network and cannot accept additional stake.',
     );
   }
 
-  if (
-    !balances[caller] ||
-    balances[caller] == undefined ||
-    balances[caller] == null ||
-    isNaN(balances[caller])
-  ) {
-    throw new ContractError(`Caller balance is not defined!`);
+  if (!walletHasSufficientBalance(balances, caller, qty.valueOf())) {
+    throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  if (balances[caller] < qty) {
-    throw new ContractError(
-      `Caller balance not high enough to stake ${qty} token(s)!`,
-    );
-  }
-
-  unsafeDecrementBalance(state.balances, caller, qty);
-  state.gateways[caller].operatorStake += qty;
+  unsafeDecrementBalance(state.balances, caller, qty.valueOf());
+  state.gateways[caller].operatorStake += qty.valueOf();
   return { state };
 };

@@ -4,9 +4,12 @@ import {
   EPOCH_DISTRIBUTION_DELAY,
   GENESIS_FEES,
   INITIAL_DEMAND_FACTOR_DATA,
+  MIN_DELEGATED_STAKE,
 } from '../constants';
 import {
   ArNSLeaseAuctionData,
+  DelegateData,
+  Delegates,
   Gateway,
   Gateways,
   IOState,
@@ -66,15 +69,19 @@ export const stubbedAuctionState: Partial<IOState> = {
 
 export const stubbedGatewayData: Gateway = {
   observerWallet: 'test-observer-wallet',
+  totalDelegatedStake: 0,
   start: 0,
   end: 0,
   vaults: {},
+  delegates: {},
   operatorStake: 10_000,
   settings: {
     label: 'test-gateway',
     fqdn: 'test.com',
     port: 443,
     protocol: 'https',
+    minDelegatedStake: MIN_DELEGATED_STAKE,
+    allowDelegatedStaking: false,
   },
   status: 'joined',
   stats: {
@@ -100,6 +107,48 @@ export const stubbedGateways: Gateways = {
     observerWallet: 'a-gateway-observer-3',
   },
 };
+
+export const stubbedDelegateData: DelegateData = {
+  delegatedStake: 100,
+  start: 0,
+  vaults: {},
+};
+
+export const stubbedDelegatedGatewayData: Gateway = {
+  ...stubbedGatewayData,
+  delegates: {
+    ['delegate-1']: {
+      ...stubbedDelegateData,
+    },
+    ['delegate-2']: {
+      ...stubbedDelegateData,
+    },
+  },
+  totalDelegatedStake: 200,
+  settings: {
+    label: 'test-gateway',
+    fqdn: 'test.com',
+    port: 443,
+    protocol: 'https',
+    allowDelegatedStaking: true,
+    delegateRewardShareRatio: 5,
+    minDelegatedStake: MIN_DELEGATED_STAKE,
+  },
+};
+
+// Helper function to create mock delegates
+export function createMockDelegates(numDelegates: number) {
+  const delegates: Delegates = {};
+  for (let i = 0; i < numDelegates; i++) {
+    const delegateAddress = `delegateAddress${i}`; // Mock unique delegate address
+    delegates[delegateAddress] = {
+      delegatedStake: MIN_DELEGATED_STAKE, // or any mock value you need
+      start: 0, // Mock start block
+      vaults: {}, // Mock vaults data or add as needed
+    };
+  }
+  return delegates;
+}
 
 export const stubbedPrescribedObservers = Object.keys(stubbedGateways).map(
   (gatewayAddress) => ({

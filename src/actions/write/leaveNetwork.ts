@@ -1,4 +1,6 @@
 import {
+  DELEGATED_STAKE_UNLOCK_LENGTH,
+  GATEWAY_LEAVE_BLOCK_LENGTH,
   GATEWAY_REGISTRY_SETTINGS,
   NETWORK_LEAVING_STATUS,
 } from '../../constants';
@@ -20,7 +22,7 @@ export const leaveNetwork = async (
   const currentBlockHeight = new BlockHeight(+SmartWeave.block.height);
 
   if (!gateway) {
-    throw new ContractError('This target is not a registered gateway.');
+    throw new ContractError('The caller does not have a registered gateway.');
   }
 
   if (
@@ -37,28 +39,38 @@ export const leaveNetwork = async (
     );
   }
 
-  const endHeight =
-    +SmartWeave.block.height + GATEWAY_REGISTRY_SETTINGS.gatewayLeaveLength;
+  const gatewayEndHeight =
+    +SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH;
+  const delegateEndHeight =
+    +SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH;
 
-  // Add tokens to a vault that unlocks after the withdrawal period ends
+  // Add tokens to a vault that unlocks after the gateway withdrawal period ends
   gateways[caller].vaults[SmartWeave.transaction.id] = {
     balance: gateways[caller].operatorStake,
     start: +SmartWeave.block.height,
-    end: endHeight,
+    end: gatewayEndHeight,
   };
-
-  // set all the vaults to unlock at the end of the withdrawal period
-  for (const vault of Object.values(gateway.vaults)) {
-    vault.end = endHeight;
-  }
 
   // Remove all tokens from the operator's stake
   gateways[caller].operatorStake = 0;
 
   // Begin leave process by setting end dates to all vaults and the gateway status to leaving network
-  gateways[caller].end =
-    +SmartWeave.block.height + GATEWAY_REGISTRY_SETTINGS.gatewayLeaveLength;
+  gateways[caller].end = gatewayEndHeight;
   gateways[caller].status = NETWORK_LEAVING_STATUS;
+
+  // Add tokens from each delegate to a vault that unlocks after the delegate withdrawal period ends
+  for (const address in gateways[caller].delegates) {
+    gateways[caller].delegates[address].vaults[SmartWeave.transaction.id] = {
+      balance: gateways[caller].delegates[address].delegatedStake,
+      start: +SmartWeave.block.height,
+      end: delegateEndHeight,
+    };
+
+    // reduce gateway stake and set this delegate stake to 0
+    gateways[caller].totalDelegatedStake -=
+      gateways[caller].delegates[address].delegatedStake;
+    gateways[caller].delegates[address].delegatedStake = 0;
+  }
 
   // set state
   state.gateways = gateways;

@@ -1,18 +1,8 @@
 import {
-  EPOCH_BLOCK_LENGTH,
-  GATEWAY_REGISTRY_SETTINGS,
+  MIN_DELEGATED_STAKE,
   NON_CONTRACT_OWNER_MESSAGE,
 } from '../../constants';
-import {
-  getEpochDataForHeight,
-  getPrescribedObserversForEpoch,
-} from '../../observers';
-import {
-  BlockHeight,
-  ContractWriteResult,
-  IOState,
-  PstAction,
-} from '../../types';
+import { ContractWriteResult, Gateway, IOState, PstAction } from '../../types';
 
 // Updates this contract to new source code
 export const evolveState = async (
@@ -25,25 +15,20 @@ export const evolveState = async (
     throw new ContractError(NON_CONTRACT_OWNER_MESSAGE);
   }
 
-  const { epochStartHeight, epochEndHeight } = getEpochDataForHeight({
-    currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
-    epochZeroStartHeight: new BlockHeight(
-      state.distributions.epochZeroStartHeight,
-    ),
-    epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
-  });
-
-  const prescribedObservers = await getPrescribedObserversForEpoch({
-    gateways: state.gateways,
-    distributions: state.distributions,
-    epochStartHeight,
-    epochEndHeight,
-    minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
-  });
-
-  state.prescribedObservers = {
-    [epochStartHeight.valueOf()]: prescribedObservers,
-  };
+  for (const [gatewayAddress, gateway] of Object.entries(state.gateways)) {
+    const updatedGateway: Gateway = {
+      ...gateway,
+      settings: {
+        ...gateway.settings,
+        allowDelegatedStaking: false,
+        minDelegatedStake: MIN_DELEGATED_STAKE,
+        delegateRewardShareRatio: 0,
+      },
+      delegates: {},
+      totalDelegatedStake: 0,
+    };
+    state.gateways[gatewayAddress] = updatedGateway;
+  }
 
   return { state };
 };
