@@ -45,6 +45,17 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
   // The observer wallet public address eg.iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA which is used to upload observation reports
   const observerWallet = '';
 
+  // Enable or disable delegated staking.  If true, other token holders can delegate their stake to this gateway
+  // const allowDelegatedStaking: boolean = true;
+
+  // Number between 0-100 indicating the percent of gateway and observer rewards given to delegates eg. 30 is 30% distributed to delegates
+  // The default is 0
+  // const delegateRewardShareRatio: number = 10;
+
+  // The minimum stake a delegate must use for this for this gateway.  Must be greater than the contracts minimum delegated stake
+  // The default is 100
+  // const minDelegatedStake: number = 200;
+
   // gate the contract txId
   const arnsContractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
@@ -75,6 +86,9 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
       port,
       protocol,
       properties,
+      // allowDelegatedStaking,
+      // delegateRewardShareRatio,
+      // minDelegatedStake,
       note,
     },
     {
