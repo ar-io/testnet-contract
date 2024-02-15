@@ -1,4 +1,4 @@
-import { safeDelegateStake } from '../../delegateStake';
+import { safeDelegateStake } from '../../delegates';
 import {
   BlockHeight,
   ContractWriteResult,

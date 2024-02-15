@@ -9,7 +9,7 @@ import {
   safeDecreaseDelegateStake,
   safeDelegateDistribution,
   safeDelegateStake,
-} from './delegateStake';
+} from './delegates';
 import {
   createMockDelegates,
   stubbedArweaveTxId,

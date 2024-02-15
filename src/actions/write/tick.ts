@@ -11,7 +11,7 @@ import {
   OBSERVATION_FAILURE_THRESHOLD,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
-import { safeDelegateDistribution } from '../../delegateStake';
+import { safeDelegateDistribution } from '../../delegates';
 import {
   getEligibleGatewaysForEpoch,
   getEpochDataForHeight,
