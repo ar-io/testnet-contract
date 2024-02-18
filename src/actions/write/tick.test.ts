@@ -15,6 +15,7 @@ import {
   EPOCH_REWARD_PERCENTAGE,
   GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
   INITIAL_DEMAND_FACTOR_DATA,
+  MIN_DELEGATED_STAKE,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
@@ -1052,6 +1053,499 @@ describe('tick', () => {
         }),
       });
     });
+
+    it('should not distribute rewards, increment gateway performance stats or update epoch values if the current block height is not the epoch distribution height', async () => {
+      const initialState: IOState = {
+        ...getBaselineState(),
+        balances: {
+          [SmartWeave.contract.id]: 10_000_000,
+        },
+        gateways: stubbedGateways,
+      };
+      const { balances, distributions, gateways } =
+        await tickRewardDistribution({
+          currentBlockHeight: new BlockHeight(
+            initialState.distributions.epochEndHeight,
+          ),
+          gateways: initialState.gateways,
+          balances: initialState.balances,
+          distributions: initialState.distributions,
+          observations: initialState.observations,
+          prescribedObservers: initialState.prescribedObservers,
+        });
+      expect(balances).toEqual(initialState.balances);
+      expect(distributions).toEqual(initialState.distributions);
+      expect(gateways).toEqual(initialState.gateways);
+    });
+
+    it.each(
+      // cheap way to dynamically generate all the blocks between the epochEndHeight and epochDistributionHeight
+      Array.from({ length: EPOCH_DISTRIBUTION_DELAY - 1 }, (_, index) => ({
+        index: index + 1,
+      })),
+    )(
+      'should not distribute rewards or increment gateway stats, update prescribed observers or modify state the current block height is equal to the last epoch end height + %s blocks',
+      async ({ index: blockHeightDiff }) => {
+        const initialState: IOState = {
+          ...getBaselineState(),
+          balances: {
+            [SmartWeave.contract.id]: 10_000_000,
+          },
+          gateways: stubbedGateways,
+        };
+        const { balances, distributions, gateways } =
+          await tickRewardDistribution({
+            currentBlockHeight: new BlockHeight(
+              initialState.distributions.epochEndHeight + blockHeightDiff,
+            ),
+            gateways: initialState.gateways,
+            balances: initialState.balances,
+            distributions: initialState.distributions,
+            observations: initialState.observations,
+            prescribedObservers: initialState.prescribedObservers,
+          });
+        expect(balances).toEqual(initialState.balances);
+        expect(distributions).toEqual(initialState.distributions);
+        expect(gateways).toEqual(initialState.gateways);
+      },
+    );
+
+    // TODO: update this
+    it('should not distribute rewards if there are no gateways or observers in the GAR, but update epoch values', async () => {
+      // stub these so they don't return anything
+      (getPrescribedObserversForEpoch as jest.Mock).mockResolvedValue([]);
+      (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({});
+      const initialState: IOState = {
+        ...getBaselineState(),
+        balances: {
+          [SmartWeave.contract.id]: 10_000_000,
+        },
+      };
+      const { balances, distributions, gateways } =
+        await tickRewardDistribution({
+          currentBlockHeight: new BlockHeight(
+            initialState.distributions.epochEndHeight +
+              EPOCH_DISTRIBUTION_DELAY,
+          ),
+          gateways: initialState.gateways,
+          balances: initialState.balances,
+          distributions: initialState.distributions,
+          observations: initialState.observations,
+          prescribedObservers: initialState.prescribedObservers,
+        });
+      const expectedNewEpochStartHeight = EPOCH_BLOCK_LENGTH;
+      const expectedNewEpochEndHeight =
+        expectedNewEpochStartHeight + EPOCH_BLOCK_LENGTH - 1;
+      expect(balances).toEqual(initialState.balances);
+      expect(distributions).toEqual({
+        ...initialState.distributions,
+        epochPeriod: initialState.distributions.epochPeriod + 1,
+        epochStartHeight: expectedNewEpochStartHeight,
+        epochEndHeight: expectedNewEpochEndHeight,
+        nextDistributionHeight:
+          expectedNewEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
+      });
+      expect(gateways).toEqual(initialState.gateways);
+    });
+
+    it('should not distribute rewards if no observations were submitted, but should update epoch counts for gateways, the distribution epoch values and prescribed observers', async () => {
+      const initialState: IOState = {
+        ...getBaselineState(),
+        balances: {
+          [SmartWeave.contract.id]: 10_000_000,
+        },
+        gateways: stubbedGateways,
+        observations: {},
+        prescribedObservers: {
+          [0]: stubbedPrescribedObservers,
+        },
+      };
+      const { balances, distributions, gateways } =
+        await tickRewardDistribution({
+          currentBlockHeight: new BlockHeight(
+            initialState.distributions.nextDistributionHeight,
+          ),
+          gateways: initialState.gateways,
+          balances: initialState.balances,
+          distributions: initialState.distributions,
+          observations: initialState.observations,
+          prescribedObservers: initialState.prescribedObservers,
+        });
+      expect(balances).toEqual({
+        ...initialState.balances,
+      });
+      const expectedNewEpochStartHeight = EPOCH_BLOCK_LENGTH;
+      const expectedNewEpochEndHeight =
+        expectedNewEpochStartHeight + EPOCH_BLOCK_LENGTH - 1;
+      expect(distributions).toEqual({
+        ...initialState.distributions,
+        epochPeriod: initialState.distributions.epochPeriod + 1,
+        epochStartHeight: expectedNewEpochStartHeight,
+        epochEndHeight: expectedNewEpochEndHeight,
+        nextDistributionHeight:
+          expectedNewEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
+      });
+      const expectedGateways = Object.keys(stubbedGateways).reduce(
+        (acc: Gateways, gatewayAddress: string) => {
+          acc[gatewayAddress] = {
+            ...stubbedGateways[gatewayAddress],
+            stats: {
+              submittedEpochCount: 0,
+              passedEpochCount: 0,
+              failedConsecutiveEpochs: 0,
+              totalEpochsPrescribedCount: 1,
+              totalEpochParticipationCount: 1,
+            },
+          };
+          return acc;
+        },
+        {},
+      );
+      expect(gateways).toEqual(expectedGateways);
+    });
+
+    it('should distribute rewards to observers who submitted reports and gateways who passed for the previous epoch, update distribution epoch values and increment performance stats', async () => {
+      const initialState: IOState = {
+        ...getBaselineState(),
+        balances: {
+          [SmartWeave.contract.id]: 10_000_000,
+        },
+        gateways: stubbedGateways,
+        observations: {
+          0: {
+            failureSummaries: {
+              // one failure, but not more than half so still gets the reward, is penalized for not submitting a report
+              'a-gateway-2': ['a-gateway'],
+              // gateway-3 is failing more according to more than half the gateways, no gateway reward
+              'a-gateway-3': ['a-gateway', 'a-gateway-3'],
+            },
+            reports: {
+              // gateway-1 and gateway-3 get a full observer reward
+              [stubbedGateways['a-gateway'].observerWallet]: stubbedArweaveTxId,
+              [stubbedGateways['a-gateway-3'].observerWallet]:
+                stubbedArweaveTxId,
+              // gateway-2 did not submit a report
+            },
+          },
+        },
+        distributions: {
+          ...getBaselineState().distributions,
+          // setting these to next epoch values to validate distributions depend on only the nextDistributionHeight
+          epochEndHeight: SmartWeave.block.height + 2 * EPOCH_BLOCK_LENGTH - 1,
+          epochStartHeight: SmartWeave.block.height + EPOCH_BLOCK_LENGTH - 1,
+        },
+        prescribedObservers: {
+          0: stubbedPrescribedObservers,
+        },
+      };
+      const nextDistributionHeight =
+        initialState.distributions.nextDistributionHeight;
+      const { balances, distributions, gateways } =
+        await tickRewardDistribution({
+          currentBlockHeight: new BlockHeight(nextDistributionHeight),
+          gateways: initialState.gateways,
+          balances: initialState.balances,
+          distributions: initialState.distributions,
+          observations: initialState.observations,
+          prescribedObservers: initialState.prescribedObservers,
+        });
+      const totalRewardsEligible = 10_000_000 * 0.0025;
+      const totalObserverReward = totalRewardsEligible * 0.05; // 5% of the total distributions
+      const totalGatewayReward = totalRewardsEligible - totalObserverReward; // 95% of total distribution
+      const perObserverReward = Math.floor(totalObserverReward / 3); // 3 observers
+      const perGatewayReward = Math.floor(totalGatewayReward / 3); // 3 gateways
+      const goodObserverAndGatewayReward = perObserverReward + perGatewayReward;
+      const goodObserverBadGatewayReward = perObserverReward;
+      const badObserverGoodGatewayReward =
+        perGatewayReward * (1 - BAD_OBSERVER_GATEWAY_PENALTY);
+      const totalRewardsDistributed =
+        goodObserverAndGatewayReward +
+        goodObserverBadGatewayReward +
+        badObserverGoodGatewayReward;
+      expect(balances).toEqual({
+        ...initialState.balances,
+        'a-gateway': 0, // gets observer and gateway reward auto staked
+        'a-gateway-2': badObserverGoodGatewayReward, // gets gateway reward, but penalized for not submitting a report
+        'a-gateway-3': goodObserverBadGatewayReward, // gets observer reward, but no gateway reward
+        [SmartWeave.contract.id]: 10_000_000 - totalRewardsDistributed,
+      });
+      const expectedNewEpochStartHeight = EPOCH_BLOCK_LENGTH;
+      const expectedNewEpochEndHeight =
+        expectedNewEpochStartHeight + EPOCH_BLOCK_LENGTH - 1;
+      expect(distributions).toEqual({
+        ...initialState.distributions,
+        epochPeriod: initialState.distributions.epochPeriod + 1,
+        epochStartHeight: expectedNewEpochStartHeight,
+        epochEndHeight: expectedNewEpochEndHeight,
+        nextDistributionHeight:
+          expectedNewEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
+      });
+      expect(gateways).toEqual({
+        ...initialState.gateways,
+        'a-gateway': {
+          ...initialState.gateways['a-gateway'],
+          operatorStake:
+            initialState.gateways['a-gateway'].operatorStake +
+            goodObserverAndGatewayReward,
+          stats: {
+            totalEpochsPrescribedCount: 1,
+            submittedEpochCount: 1,
+            passedEpochCount: 1,
+            failedConsecutiveEpochs: 0,
+            totalEpochParticipationCount: 1,
+          },
+        },
+        'a-gateway-2': {
+          ...initialState.gateways['a-gateway-2'],
+          stats: {
+            totalEpochsPrescribedCount: 1,
+            submittedEpochCount: 0,
+            passedEpochCount: 1,
+            failedConsecutiveEpochs: 0,
+            totalEpochParticipationCount: 1,
+          },
+        },
+        'a-gateway-3': {
+          ...initialState.gateways['a-gateway-3'],
+          stats: {
+            totalEpochsPrescribedCount: 1,
+            submittedEpochCount: 1,
+            passedEpochCount: 0,
+            failedConsecutiveEpochs: 1,
+            totalEpochParticipationCount: 1,
+          },
+        },
+      });
+    });
+
+    it('should distribute auto staked rewards to observers who submitted reports and gateways who passed for the previous epoch, update distribution epoch values and increment performance stats', async () => {
+      const initialState: IOState = {
+        ...getBaselineState(),
+        balances: {
+          [SmartWeave.contract.id]: 10_000_000,
+        },
+        gateways: {
+          ...stubbedGateways,
+          'a-gateway': {
+            // this gateway has auto staking set to true
+            ...stubbedGatewayData,
+            operatorStake: 100,
+            observerWallet: 'a-gateway-observer',
+            settings: {
+              label: 'test-gateway',
+              fqdn: 'test.com',
+              port: 443,
+              protocol: 'https',
+              minDelegatedStake: MIN_DELEGATED_STAKE + 666,
+              allowDelegatedStaking: false,
+              autoStaking: true,
+            },
+          },
+        },
+        observations: {
+          0: {
+            failureSummaries: {
+              // one failure, but not more than half so still gets the reward, is penalized for not submitting a report
+              'a-gateway-2': ['a-gateway'],
+              // gateway-3 is failing more according to more than half the gateways, no gateway reward
+              'a-gateway-3': ['a-gateway', 'a-gateway-3'],
+            },
+            reports: {
+              // gateway-1 and gateway-3 get a full observer reward
+              [stubbedGateways['a-gateway'].observerWallet]: stubbedArweaveTxId,
+              [stubbedGateways['a-gateway-3'].observerWallet]:
+                stubbedArweaveTxId,
+              // gateway-2 did not submit a report
+            },
+          },
+        },
+        distributions: {
+          ...getBaselineState().distributions,
+          // setting these to next epoch values to validate distributions depend on only the nextDistributionHeight
+          epochEndHeight: SmartWeave.block.height + 2 * EPOCH_BLOCK_LENGTH - 1,
+          epochStartHeight: SmartWeave.block.height + EPOCH_BLOCK_LENGTH - 1,
+        },
+        prescribedObservers: {
+          0: stubbedPrescribedObservers,
+        },
+      };
+      const nextDistributionHeight =
+        initialState.distributions.nextDistributionHeight;
+      const { balances, distributions, gateways } =
+        await tickRewardDistribution({
+          currentBlockHeight: new BlockHeight(nextDistributionHeight),
+          gateways: initialState.gateways,
+          balances: initialState.balances,
+          distributions: initialState.distributions,
+          observations: initialState.observations,
+          prescribedObservers: initialState.prescribedObservers,
+        });
+      const totalRewardsEligible = 10_000_000 * 0.0025;
+      const totalObserverReward = totalRewardsEligible * 0.05; // 5% of the total distributions
+      const totalGatewayReward = totalRewardsEligible - totalObserverReward; // 95% of total distribution
+      const perObserverReward = Math.floor(totalObserverReward / 3); // 3 observers
+      const perGatewayReward = Math.floor(totalGatewayReward / 3); // 3 gateways
+      const goodObserverAndGatewayReward = perObserverReward + perGatewayReward;
+      const goodObserverBadGatewayReward = perObserverReward;
+      const badObserverGoodGatewayReward =
+        perGatewayReward * (1 - BAD_OBSERVER_GATEWAY_PENALTY);
+      const totalRewardsDistributed =
+        goodObserverAndGatewayReward +
+        goodObserverBadGatewayReward +
+        badObserverGoodGatewayReward;
+      expect(balances).toEqual({
+        ...initialState.balances,
+        'a-gateway': 0, // Reward is auto staked
+        'a-gateway-2': badObserverGoodGatewayReward, // gets gateway reward, but penalized for not submitting a report
+        'a-gateway-3': goodObserverBadGatewayReward, // gets observer reward, but no gateway reward
+        [SmartWeave.contract.id]: 10_000_000 - totalRewardsDistributed,
+      });
+      const expectedNewEpochStartHeight = EPOCH_BLOCK_LENGTH;
+      const expectedNewEpochEndHeight =
+        expectedNewEpochStartHeight + EPOCH_BLOCK_LENGTH - 1;
+      expect(distributions).toEqual({
+        ...initialState.distributions,
+        epochPeriod: initialState.distributions.epochPeriod + 1,
+        epochStartHeight: expectedNewEpochStartHeight,
+        epochEndHeight: expectedNewEpochEndHeight,
+        nextDistributionHeight:
+          expectedNewEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
+      });
+      expect(gateways['a-gateway']).toEqual({
+        // this gateway has auto staking set to true
+        ...stubbedGatewayData,
+        observerWallet: 'a-gateway-observer',
+        operatorStake:
+          goodObserverAndGatewayReward +
+          initialState.gateways['a-gateway'].operatorStake,
+        settings: {
+          label: 'test-gateway',
+          fqdn: 'test.com',
+          port: 443,
+          protocol: 'https',
+          minDelegatedStake: MIN_DELEGATED_STAKE,
+          allowDelegatedStaking: false,
+          autoStaking: true,
+        },
+        stats: {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 1,
+          passedEpochCount: 1,
+          failedConsecutiveEpochs: 0,
+          totalEpochParticipationCount: 1,
+        },
+      });
+      expect(gateways['a-gateway-2']).toEqual({
+        ...initialState.gateways['a-gateway-2'],
+        stats: {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 0,
+          passedEpochCount: 1,
+          failedConsecutiveEpochs: 0,
+          totalEpochParticipationCount: 1,
+        },
+      });
+      expect(gateways['a-gateway-3']).toEqual({
+        ...initialState.gateways['a-gateway-3'],
+        stats: {
+          totalEpochsPrescribedCount: 1,
+          submittedEpochCount: 1,
+          passedEpochCount: 0,
+          failedConsecutiveEpochs: 1,
+          totalEpochParticipationCount: 1,
+        },
+      });
+    });
+
+    // top level tests
+    it('should tick distributions for the previous epoch, update gateway performance stats and increment the nextDistributionHeight if a the interaction height is equal to the nextDistributionHeight', async () => {
+      const initialState: IOState = {
+        ...getBaselineState(),
+        gateways: stubbedGateways,
+        prescribedObservers: {
+          [0]: stubbedPrescribedObservers,
+        },
+      };
+
+      // stub the demand factor change
+      (updateDemandFactor as jest.Mock).mockReturnValue(initialState);
+
+      // update our state
+      SmartWeave.block.height =
+        initialState.distributions.nextDistributionHeight;
+
+      const { state } = await tick(initialState);
+
+      expect(state).toEqual({
+        ...initialState,
+        lastTickedHeight: initialState.distributions.nextDistributionHeight,
+        distributions: {
+          epochZeroStartHeight: initialState.distributions.epochZeroStartHeight,
+          epochStartHeight:
+            initialState.distributions.epochStartHeight + EPOCH_BLOCK_LENGTH,
+          epochEndHeight:
+            initialState.distributions.epochEndHeight + EPOCH_BLOCK_LENGTH,
+          nextDistributionHeight:
+            initialState.distributions.epochEndHeight +
+            EPOCH_BLOCK_LENGTH +
+            EPOCH_DISTRIBUTION_DELAY,
+          epochPeriod: initialState.distributions.epochPeriod + 1,
+        },
+        gateways: {
+          ...initialState.gateways,
+          'a-gateway': {
+            ...initialState.gateways['a-gateway'],
+            stats: {
+              totalEpochsPrescribedCount: 1,
+              submittedEpochCount: 0,
+              passedEpochCount: 0,
+              failedConsecutiveEpochs: 0,
+              totalEpochParticipationCount: 1,
+            },
+          },
+          'a-gateway-2': {
+            ...initialState.gateways['a-gateway-2'],
+            stats: {
+              totalEpochsPrescribedCount: 1,
+              submittedEpochCount: 0,
+              passedEpochCount: 0,
+              failedConsecutiveEpochs: 0,
+              totalEpochParticipationCount: 1,
+            },
+          },
+          'a-gateway-3': {
+            ...initialState.gateways['a-gateway-3'],
+            stats: {
+              totalEpochsPrescribedCount: 1,
+              submittedEpochCount: 0,
+              passedEpochCount: 0,
+              failedConsecutiveEpochs: 0,
+              totalEpochParticipationCount: 1,
+            },
+          },
+        },
+        prescribedObservers: {
+          [initialState.distributions.epochEndHeight + 1]: Object.keys(
+            stubbedGateways,
+          ).map((gatewayAddress: string) => {
+            return {
+              // updated weights based on the new epoch
+              ...stubbedPrescribedObserver,
+              gatewayAddress,
+              observerAddress: stubbedGateways[gatewayAddress].observerWallet,
+              stake: 100,
+              start: 0,
+              stakeWeight: 10,
+              tenureWeight: 1,
+              gatewayRewardRatioWeight: 1,
+              observerRewardRatioWeight: 1,
+              compositeWeight: 1,
+              normalizedCompositeWeight: 1,
+            };
+          }),
+        },
+      });
+    });
   });
 
   describe('tickRewardDistributionWithDelegates', () => {
@@ -1388,350 +1882,6 @@ describe('tick', () => {
           expectedNewEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
         epochPeriod: initialState.distributions.epochPeriod + 1,
       });
-    });
-  });
-
-  it('should not distribute rewards, increment gateway performance stats or update epoch values if the current block height is not the epoch distribution height', async () => {
-    const initialState: IOState = {
-      ...getBaselineState(),
-      balances: {
-        [SmartWeave.contract.id]: 10_000_000,
-      },
-      gateways: stubbedGateways,
-    };
-    const { balances, distributions, gateways } = await tickRewardDistribution({
-      currentBlockHeight: new BlockHeight(
-        initialState.distributions.epochEndHeight,
-      ),
-      gateways: initialState.gateways,
-      balances: initialState.balances,
-      distributions: initialState.distributions,
-      observations: initialState.observations,
-      prescribedObservers: initialState.prescribedObservers,
-    });
-    expect(balances).toEqual(initialState.balances);
-    expect(distributions).toEqual(initialState.distributions);
-    expect(gateways).toEqual(initialState.gateways);
-  });
-
-  it.each(
-    // cheap way to dynamically generate all the blocks between the epochEndHeight and epochDistributionHeight
-    Array.from({ length: EPOCH_DISTRIBUTION_DELAY - 1 }, (_, index) => ({
-      index: index + 1,
-    })),
-  )(
-    'should not distribute rewards or increment gateway stats, update prescribed observers or modify state the current block height is equal to the last epoch end height + %s blocks',
-    async ({ index: blockHeightDiff }) => {
-      const initialState: IOState = {
-        ...getBaselineState(),
-        balances: {
-          [SmartWeave.contract.id]: 10_000_000,
-        },
-        gateways: stubbedGateways,
-      };
-      const { balances, distributions, gateways } =
-        await tickRewardDistribution({
-          currentBlockHeight: new BlockHeight(
-            initialState.distributions.epochEndHeight + blockHeightDiff,
-          ),
-          gateways: initialState.gateways,
-          balances: initialState.balances,
-          distributions: initialState.distributions,
-          observations: initialState.observations,
-          prescribedObservers: initialState.prescribedObservers,
-        });
-      expect(balances).toEqual(initialState.balances);
-      expect(distributions).toEqual(initialState.distributions);
-      expect(gateways).toEqual(initialState.gateways);
-    },
-  );
-
-  // TODO: update this
-  it('should not distribute rewards if there are no gateways or observers in the GAR, but update epoch values', async () => {
-    // stub these so they don't return anything
-    (getPrescribedObserversForEpoch as jest.Mock).mockResolvedValue([]);
-    (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({});
-    const initialState: IOState = {
-      ...getBaselineState(),
-      balances: {
-        [SmartWeave.contract.id]: 10_000_000,
-      },
-    };
-    const { balances, distributions, gateways } = await tickRewardDistribution({
-      currentBlockHeight: new BlockHeight(
-        initialState.distributions.epochEndHeight + EPOCH_DISTRIBUTION_DELAY,
-      ),
-      gateways: initialState.gateways,
-      balances: initialState.balances,
-      distributions: initialState.distributions,
-      observations: initialState.observations,
-      prescribedObservers: initialState.prescribedObservers,
-    });
-    const expectedNewEpochStartHeight = EPOCH_BLOCK_LENGTH;
-    const expectedNewEpochEndHeight =
-      expectedNewEpochStartHeight + EPOCH_BLOCK_LENGTH - 1;
-    expect(balances).toEqual(initialState.balances);
-    expect(distributions).toEqual({
-      ...initialState.distributions,
-      epochPeriod: initialState.distributions.epochPeriod + 1,
-      epochStartHeight: expectedNewEpochStartHeight,
-      epochEndHeight: expectedNewEpochEndHeight,
-      nextDistributionHeight:
-        expectedNewEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
-    });
-    expect(gateways).toEqual(initialState.gateways);
-  });
-
-  it('should not distribute rewards if no observations were submitted, but should update epoch counts for gateways, the distribution epoch values and prescribed observers', async () => {
-    const initialState: IOState = {
-      ...getBaselineState(),
-      balances: {
-        [SmartWeave.contract.id]: 10_000_000,
-      },
-      gateways: stubbedGateways,
-      observations: {},
-      prescribedObservers: {
-        [0]: stubbedPrescribedObservers,
-      },
-    };
-    const { balances, distributions, gateways } = await tickRewardDistribution({
-      currentBlockHeight: new BlockHeight(
-        initialState.distributions.nextDistributionHeight,
-      ),
-      gateways: initialState.gateways,
-      balances: initialState.balances,
-      distributions: initialState.distributions,
-      observations: initialState.observations,
-      prescribedObservers: initialState.prescribedObservers,
-    });
-    expect(balances).toEqual({
-      ...initialState.balances,
-    });
-    const expectedNewEpochStartHeight = EPOCH_BLOCK_LENGTH;
-    const expectedNewEpochEndHeight =
-      expectedNewEpochStartHeight + EPOCH_BLOCK_LENGTH - 1;
-    expect(distributions).toEqual({
-      ...initialState.distributions,
-      epochPeriod: initialState.distributions.epochPeriod + 1,
-      epochStartHeight: expectedNewEpochStartHeight,
-      epochEndHeight: expectedNewEpochEndHeight,
-      nextDistributionHeight:
-        expectedNewEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
-    });
-    const expectedGateways = Object.keys(stubbedGateways).reduce(
-      (acc: Gateways, gatewayAddress: string) => {
-        acc[gatewayAddress] = {
-          ...stubbedGateways[gatewayAddress],
-          stats: {
-            submittedEpochCount: 0,
-            passedEpochCount: 0,
-            failedConsecutiveEpochs: 0,
-            totalEpochsPrescribedCount: 1,
-            totalEpochParticipationCount: 1,
-          },
-        };
-        return acc;
-      },
-      {},
-    );
-    expect(gateways).toEqual(expectedGateways);
-  });
-
-  it('should distribute rewards to observers who submitted reports and gateways who passed for the previous epoch, update distribution epoch values and increment performance stats', async () => {
-    const initialState: IOState = {
-      ...getBaselineState(),
-      balances: {
-        [SmartWeave.contract.id]: 10_000_000,
-      },
-      gateways: stubbedGateways,
-      observations: {
-        0: {
-          failureSummaries: {
-            // one failure, but not more than half so still gets the reward, is penalized for not submitting a report
-            'a-gateway-2': ['a-gateway'],
-            // gateway-3 is failing more according to more than half the gateways, no gateway reward
-            'a-gateway-3': ['a-gateway', 'a-gateway-3'],
-          },
-          reports: {
-            // gateway-1 and gateway-3 get a full observer reward
-            [stubbedGateways['a-gateway'].observerWallet]: stubbedArweaveTxId,
-            [stubbedGateways['a-gateway-3'].observerWallet]: stubbedArweaveTxId,
-            // gateway-2 did not submit a report
-          },
-        },
-      },
-      distributions: {
-        ...getBaselineState().distributions,
-        // setting these to next epoch values to validate distributions depend on only the nextDistributionHeight
-        epochEndHeight: SmartWeave.block.height + 2 * EPOCH_BLOCK_LENGTH - 1,
-        epochStartHeight: SmartWeave.block.height + EPOCH_BLOCK_LENGTH - 1,
-      },
-      prescribedObservers: {
-        0: stubbedPrescribedObservers,
-      },
-    };
-    const nextDistributionHeight =
-      initialState.distributions.nextDistributionHeight;
-    const { balances, distributions, gateways } = await tickRewardDistribution({
-      currentBlockHeight: new BlockHeight(nextDistributionHeight),
-      gateways: initialState.gateways,
-      balances: initialState.balances,
-      distributions: initialState.distributions,
-      observations: initialState.observations,
-      prescribedObservers: initialState.prescribedObservers,
-    });
-    const totalRewardsEligible = 10_000_000 * 0.0025;
-    const totalObserverReward = totalRewardsEligible * 0.05; // 5% of the total distributions
-    const totalGatewayReward = totalRewardsEligible - totalObserverReward; // 95% of total distribution
-    const perObserverReward = Math.floor(totalObserverReward / 3); // 3 observers
-    const perGatewayReward = Math.floor(totalGatewayReward / 3); // 3 gateways
-    const goodObserverAndGatewayReward = perObserverReward + perGatewayReward;
-    const goodObserverBadGatewayReward = perObserverReward;
-    const badObserverGoodGatewayReward =
-      perGatewayReward * (1 - BAD_OBSERVER_GATEWAY_PENALTY);
-    const totalRewardsDistributed =
-      goodObserverAndGatewayReward +
-      goodObserverBadGatewayReward +
-      badObserverGoodGatewayReward;
-    expect(balances).toEqual({
-      ...initialState.balances,
-      'a-gateway': goodObserverAndGatewayReward, // gets observer and gateway reward
-      'a-gateway-2': badObserverGoodGatewayReward, // gets gateway reward, but penalized for not submitting a report
-      'a-gateway-3': goodObserverBadGatewayReward, // gets observer reward, but no gateway reward
-      [SmartWeave.contract.id]: 10_000_000 - totalRewardsDistributed,
-    });
-    const expectedNewEpochStartHeight = EPOCH_BLOCK_LENGTH;
-    const expectedNewEpochEndHeight =
-      expectedNewEpochStartHeight + EPOCH_BLOCK_LENGTH - 1;
-    expect(distributions).toEqual({
-      ...initialState.distributions,
-      epochPeriod: initialState.distributions.epochPeriod + 1,
-      epochStartHeight: expectedNewEpochStartHeight,
-      epochEndHeight: expectedNewEpochEndHeight,
-      nextDistributionHeight:
-        expectedNewEpochEndHeight + EPOCH_DISTRIBUTION_DELAY,
-    });
-    expect(gateways).toEqual({
-      ...initialState.gateways,
-      'a-gateway': {
-        ...initialState.gateways['a-gateway'],
-        stats: {
-          totalEpochsPrescribedCount: 1,
-          submittedEpochCount: 1,
-          passedEpochCount: 1,
-          failedConsecutiveEpochs: 0,
-          totalEpochParticipationCount: 1,
-        },
-      },
-      'a-gateway-2': {
-        ...initialState.gateways['a-gateway-2'],
-        stats: {
-          totalEpochsPrescribedCount: 1,
-          submittedEpochCount: 0,
-          passedEpochCount: 1,
-          failedConsecutiveEpochs: 0,
-          totalEpochParticipationCount: 1,
-        },
-      },
-      'a-gateway-3': {
-        ...initialState.gateways['a-gateway-3'],
-        stats: {
-          totalEpochsPrescribedCount: 1,
-          submittedEpochCount: 1,
-          passedEpochCount: 0,
-          failedConsecutiveEpochs: 1,
-          totalEpochParticipationCount: 1,
-        },
-      },
-    });
-  });
-
-  // top level tests
-  it('should tick distributions for the previous epoch, update gateway performance stats and increment the nextDistributionHeight if a the interaction height is equal to the nextDistributionHeight', async () => {
-    const initialState: IOState = {
-      ...getBaselineState(),
-      gateways: stubbedGateways,
-      prescribedObservers: {
-        [0]: stubbedPrescribedObservers,
-      },
-    };
-
-    // stub the demand factor change
-    (updateDemandFactor as jest.Mock).mockReturnValue(initialState);
-
-    // update our state
-    SmartWeave.block.height = initialState.distributions.nextDistributionHeight;
-
-    const { state } = await tick(initialState);
-
-    expect(state).toEqual({
-      ...initialState,
-      lastTickedHeight: initialState.distributions.nextDistributionHeight,
-      distributions: {
-        epochZeroStartHeight: initialState.distributions.epochZeroStartHeight,
-        epochStartHeight:
-          initialState.distributions.epochStartHeight + EPOCH_BLOCK_LENGTH,
-        epochEndHeight:
-          initialState.distributions.epochEndHeight + EPOCH_BLOCK_LENGTH,
-        nextDistributionHeight:
-          initialState.distributions.epochEndHeight +
-          EPOCH_BLOCK_LENGTH +
-          EPOCH_DISTRIBUTION_DELAY,
-        epochPeriod: initialState.distributions.epochPeriod + 1,
-      },
-      gateways: {
-        ...initialState.gateways,
-        'a-gateway': {
-          ...initialState.gateways['a-gateway'],
-          stats: {
-            totalEpochsPrescribedCount: 1,
-            submittedEpochCount: 0,
-            passedEpochCount: 0,
-            failedConsecutiveEpochs: 0,
-            totalEpochParticipationCount: 1,
-          },
-        },
-        'a-gateway-2': {
-          ...initialState.gateways['a-gateway-2'],
-          stats: {
-            totalEpochsPrescribedCount: 1,
-            submittedEpochCount: 0,
-            passedEpochCount: 0,
-            failedConsecutiveEpochs: 0,
-            totalEpochParticipationCount: 1,
-          },
-        },
-        'a-gateway-3': {
-          ...initialState.gateways['a-gateway-3'],
-          stats: {
-            totalEpochsPrescribedCount: 1,
-            submittedEpochCount: 0,
-            passedEpochCount: 0,
-            failedConsecutiveEpochs: 0,
-            totalEpochParticipationCount: 1,
-          },
-        },
-      },
-      prescribedObservers: {
-        [initialState.distributions.epochEndHeight + 1]: Object.keys(
-          stubbedGateways,
-        ).map((gatewayAddress: string) => {
-          return {
-            // updated weights based on the new epoch
-            ...stubbedPrescribedObserver,
-            gatewayAddress,
-            observerAddress: stubbedGateways[gatewayAddress].observerWallet,
-            stake: 100,
-            start: 0,
-            stakeWeight: 10,
-            tenureWeight: 1,
-            gatewayRewardRatioWeight: 1,
-            observerRewardRatioWeight: 1,
-            compositeWeight: 1,
-            normalizedCompositeWeight: 1,
-          };
-        }),
-      },
     });
   });
 });

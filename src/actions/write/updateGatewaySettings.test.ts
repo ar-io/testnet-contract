@@ -217,6 +217,7 @@ describe('updateGatewaySettings', () => {
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
         ),
         minDelegatedStake: MIN_DELEGATED_STAKE + 1,
+        autoStaking: true,
       };
       const initialState: IOState = {
         ...getBaselineState(),
@@ -326,6 +327,58 @@ describe('updateGatewaySettings', () => {
           },
         },
       });
+    });
+
+    it('should not allow reenabling delegated staking with delegates leaving', async () => {
+      const initialState: IOState = {
+        ...getBaselineState(),
+        gateways: {
+          [stubbedArweaveTxId]: {
+            ...stubbedGatewayData,
+            settings: {
+              ...stubbedGatewayData.settings,
+              allowDelegatedStaking: false,
+            },
+            totalDelegatedStake: stubbedDelegateData.delegatedStake * 2, // there are two delegates staked
+            delegates: {
+              [stubbedArweaveTxId]: {
+                delegatedStake: 0,
+                start: 0,
+                vaults: {
+                  ['delegate-vault-1']: {
+                    balance: 1000,
+                    start: 0,
+                    end: 5,
+                  },
+                },
+              },
+              ['another one']: {
+                delegatedStake: 0,
+                start: 0,
+                vaults: {
+                  ['delegate-vault-1']: {
+                    balance: 1000,
+                    start: 0,
+                    end: 5,
+                  },
+                },
+              },
+            },
+          },
+        },
+      };
+      const error = await updateGatewaySettings(initialState, {
+        caller: stubbedArweaveTxId,
+        input: {
+          allowDelegatedStaking: true,
+        },
+      }).catch((e) => e);
+      expect(error).toBeInstanceOf(Error);
+      expect(error.message).toEqual(
+        expect.stringContaining(
+          'You cannot enable delegated staking until all delegated stakes have been withdrawn.',
+        ),
+      );
     });
   });
 });

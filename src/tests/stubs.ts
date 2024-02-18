@@ -82,6 +82,7 @@ export const stubbedGatewayData: Gateway = {
     protocol: 'https',
     minDelegatedStake: MIN_DELEGATED_STAKE,
     allowDelegatedStaking: false,
+    autoStaking: false,
   },
   status: 'joined',
   stats: {
@@ -95,6 +96,10 @@ export const stubbedGateways: Gateways = {
     ...stubbedGatewayData,
     operatorStake: 100,
     observerWallet: 'a-gateway-observer',
+    settings: {
+      ...stubbedGatewayData.settings,
+      autoStaking: true,
+    },
   },
   'a-gateway-2': {
     ...stubbedGatewayData,
@@ -133,6 +138,7 @@ export const stubbedDelegatedGatewayData: Gateway = {
     allowDelegatedStaking: true,
     delegateRewardShareRatio: 5,
     minDelegatedStake: MIN_DELEGATED_STAKE,
+    autoStaking: false,
   },
 };
 

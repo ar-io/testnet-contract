@@ -1,7 +1,4 @@
-import {
-  MIN_DELEGATED_STAKE,
-  NON_CONTRACT_OWNER_MESSAGE,
-} from '../../constants';
+import { NON_CONTRACT_OWNER_MESSAGE } from '../../constants';
 import { ContractWriteResult, Gateway, IOState, PstAction } from '../../types';
 
 // Updates this contract to new source code
@@ -20,12 +17,8 @@ export const evolveState = async (
       ...gateway,
       settings: {
         ...gateway.settings,
-        allowDelegatedStaking: false,
-        minDelegatedStake: MIN_DELEGATED_STAKE,
-        delegateRewardShareRatio: 0,
+        autoStaking: false,
       },
-      delegates: {},
-      totalDelegatedStake: 0,
     };
     state.gateways[gatewayAddress] = updatedGateway;
   }
