@@ -576,9 +576,6 @@ export async function tickRewardDistribution({
     if (!observations[epochStartHeight.valueOf()]?.reports) {
       updatedGateways[gatewayAddress] = {
         ...existingGateway,
-        settings: {
-          ...existingGateway.settings,
-        },
         stats: updatedGatewayStats,
       };
       continue;
@@ -597,9 +594,6 @@ export async function tickRewardDistribution({
       updatedGatewayStats.failedConsecutiveEpochs += 1;
       updatedGateways[gatewayAddress] = {
         ...existingGateway,
-        settings: {
-          ...existingGateway.settings,
-        },
         stats: updatedGatewayStats,
       };
       // TODO: check if over count and remove from GAR!
@@ -615,9 +609,6 @@ export async function tickRewardDistribution({
     // add it to our updated gateways
     updatedGateways[gatewayAddress] = {
       ...existingGateway,
-      settings: {
-        ...existingGateway.settings,
-      },
       stats: updatedGatewayStats,
     };
   }
