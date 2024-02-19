@@ -10,6 +10,7 @@ import {
   GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
   GATEWAY_REGISTRY_SETTINGS,
   INITIAL_EPOCH_DISTRIBUTION_DATA,
+  MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT,
   NETWORK_LEAVING_STATUS,
   OBSERVATION_FAILURE_THRESHOLD,
   SECONDS_IN_A_YEAR,
@@ -313,7 +314,8 @@ export function tickGatewayRegistry({
       // The gateway stake and all delegated stakes are vaulted and returned to their owners
       const updatedGateway: Gateway = { ...gateway };
       if (
-        gateway.stats.failedConsecutiveEpochs > OBSERVATION_FAILURE_THRESHOLD &&
+        gateway.stats.failedConsecutiveEpochs >
+          MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT &&
         gateway.status !== NETWORK_LEAVING_STATUS
       ) {
         // set this gateway to leaving status and vault all gateway and delegate stakes

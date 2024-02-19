@@ -17,8 +17,8 @@ import {
   GATEWAY_LEAVE_BLOCK_LENGTH,
   GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
   INITIAL_DEMAND_FACTOR_DATA,
+  MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT,
   MIN_DELEGATED_STAKE,
-  OBSERVATION_FAILURE_THRESHOLD,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
@@ -674,7 +674,8 @@ describe('tick', () => {
               settings: stubbedGatewayData.settings,
               stats: {
                 ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
-                failedConsecutiveEpochs: OBSERVATION_FAILURE_THRESHOLD + 1,
+                failedConsecutiveEpochs:
+                  MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT + 1,
               },
             },
           },
@@ -702,7 +703,8 @@ describe('tick', () => {
               settings: stubbedGatewayData.settings,
               stats: {
                 ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
-                failedConsecutiveEpochs: OBSERVATION_FAILURE_THRESHOLD + 1,
+                failedConsecutiveEpochs:
+                  MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT + 1,
               },
             },
           },
@@ -761,7 +763,8 @@ describe('tick', () => {
               settings: stubbedGatewayData.settings,
               stats: {
                 ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
-                failedConsecutiveEpochs: OBSERVATION_FAILURE_THRESHOLD + 1,
+                failedConsecutiveEpochs:
+                  MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT + 1,
               },
             },
           },
@@ -819,7 +822,8 @@ describe('tick', () => {
               settings: stubbedGatewayData.settings,
               stats: {
                 ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
-                failedConsecutiveEpochs: OBSERVATION_FAILURE_THRESHOLD + 1,
+                failedConsecutiveEpochs:
+                  MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT + 1,
               },
             },
           },
