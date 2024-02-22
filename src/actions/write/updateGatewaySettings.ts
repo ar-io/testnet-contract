@@ -22,6 +22,7 @@ export class GatewaySettings {
     properties?: string;
     protocol?: 'http' | 'https';
     port?: number;
+    autoStake: boolean;
     allowDelegatedStaking: boolean;
     delegateRewardShareRatio: number;
     minDelegatedStake: number;
@@ -43,6 +44,7 @@ export class GatewaySettings {
       protocol,
       properties,
       observerWallet,
+      autoStake,
       allowDelegatedStaking,
       delegateRewardShareRatio,
       minDelegatedStake,
@@ -54,6 +56,7 @@ export class GatewaySettings {
       ...(properties !== undefined && { properties }),
       ...(protocol !== undefined && { protocol }),
       ...(port !== undefined && { port }),
+      ...(autoStake !== undefined && { autoStake }),
       ...(allowDelegatedStaking !== undefined && { allowDelegatedStaking }),
       ...(delegateRewardShareRatio !== undefined && {
         delegateRewardShareRatio,

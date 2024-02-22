@@ -374,6 +374,9 @@ describe('Observation', () => {
               ...gateways,
               [gatewayAddress]: {
                 ...gateway,
+                operatorStake: newState.gateways[gatewayAddress].operatorStake, // staking happens in other tests, so just ensure it's a number
+                delegates: newState.gateways[gatewayAddress].delegates,
+                // what we care about are the stats being properly incremented for the epoch
                 stats: {
                   failedConsecutiveEpochs: didFail
                     ? gateway.stats.failedConsecutiveEpochs + 1

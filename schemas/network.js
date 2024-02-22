@@ -39,6 +39,9 @@ const joinNetworkSchema = {
       type: 'string',
       pattern: '^[a-zA-Z0-9_-]{43}$',
     },
+    autoStake: {
+      type: 'boolean',
+    },
     allowDelegatedStaking: {
       type: 'boolean',
     },

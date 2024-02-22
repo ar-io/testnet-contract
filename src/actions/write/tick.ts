@@ -11,7 +11,10 @@ import {
   OBSERVATION_FAILURE_THRESHOLD,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
-import { safeDelegateDistribution } from '../../delegates';
+import {
+  safeDelegateDistribution,
+  safeGatewayStakeDistribution,
+} from '../../distributions';
 import {
   getEligibleGatewaysForEpoch,
   getEpochDataForHeight,
@@ -757,21 +760,40 @@ export async function tickRewardDistribution({
         gatewayReward - totalDistributedToDelegates;
 
       // Give the rest to the gateway operator
-      // TO DO: use autoStake setting
-      safeTransfer({
-        balances: updatedBalances,
-        fromAddress: SmartWeave.contract.id,
-        toAddress: gatewayAddress,
-        qty: remainingTokensForOperator,
-      });
+      if (gateways[gatewayAddress].settings.autoStake) {
+        safeGatewayStakeDistribution({
+          balances: updatedBalances,
+          gateways: updatedGateways,
+          protocolAddress: SmartWeave.contract.id,
+          gatewayAddress,
+          qty: new IOToken(remainingTokensForOperator),
+        });
+      } else {
+        safeTransfer({
+          balances: updatedBalances,
+          fromAddress: SmartWeave.contract.id,
+          toAddress: gatewayAddress,
+          qty: remainingTokensForOperator,
+        });
+      }
     } else {
       // gateway receives full reward
-      safeTransfer({
-        balances: updatedBalances,
-        fromAddress: SmartWeave.contract.id,
-        toAddress: gatewayAddress,
-        qty: gatewayReward,
-      });
+      if (gateways[gatewayAddress].settings.autoStake) {
+        safeGatewayStakeDistribution({
+          balances: updatedBalances,
+          gateways: updatedGateways,
+          protocolAddress: SmartWeave.contract.id,
+          gatewayAddress,
+          qty: new IOToken(gatewayReward),
+        });
+      } else {
+        safeTransfer({
+          balances: updatedBalances,
+          fromAddress: SmartWeave.contract.id,
+          toAddress: gatewayAddress,
+          qty: gatewayReward,
+        });
+      }
     }
   }
   // distribute observer tokens
@@ -827,21 +849,40 @@ export async function tickRewardDistribution({
         perObserverReward - totalDistributedToDelegates;
 
       // Give the rest to the gateway operator
-      // TO DO: use autoStake setting
-      safeTransfer({
-        balances: updatedBalances,
-        fromAddress: SmartWeave.contract.id,
-        toAddress: gatewayObservedAndPassed,
-        qty: remainingTokensForOperator,
-      });
+      if (gateways[gatewayObservedAndPassed].settings.autoStake) {
+        safeGatewayStakeDistribution({
+          balances: updatedBalances,
+          gateways: updatedGateways,
+          protocolAddress: SmartWeave.contract.id,
+          gatewayAddress: gatewayObservedAndPassed,
+          qty: new IOToken(remainingTokensForOperator),
+        });
+      } else {
+        safeTransfer({
+          balances: updatedBalances,
+          fromAddress: SmartWeave.contract.id,
+          toAddress: gatewayObservedAndPassed,
+          qty: remainingTokensForOperator,
+        });
+      }
     } else {
       // gateway receives full reward
-      safeTransfer({
-        balances: updatedBalances,
-        fromAddress: SmartWeave.contract.id,
-        toAddress: gatewayObservedAndPassed,
-        qty: perObserverReward,
-      });
+      if (gateways[gatewayObservedAndPassed].settings.autoStake) {
+        safeGatewayStakeDistribution({
+          balances: updatedBalances,
+          gateways: updatedGateways,
+          protocolAddress: SmartWeave.contract.id,
+          gatewayAddress: gatewayObservedAndPassed,
+          qty: new IOToken(perObserverReward),
+        });
+      } else {
+        safeTransfer({
+          balances: updatedBalances,
+          fromAddress: SmartWeave.contract.id,
+          toAddress: gatewayObservedAndPassed,
+          qty: perObserverReward,
+        });
+      }
     }
   }
   // avoids copying balances if not necessary

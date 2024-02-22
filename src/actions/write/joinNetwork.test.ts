@@ -224,9 +224,59 @@ describe('joinNetwork', () => {
         allowDelegatedStaking: false,
         minDelegatedStake: MIN_DELEGATED_STAKE,
         delegateRewardShareRatio: 0,
+        autoStake: false,
       },
       start: SmartWeave.block.height,
       observerWallet: stubbedArweaveTxId,
+      vaults: {},
+      delegates: {},
+      status: 'joined',
+      end: 0,
+      stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
+    });
+    expect(state.balances[stubbedArweaveTxId]).toEqual(undefined);
+  });
+
+  it('should add the gateway to the registry with no observer wallet and join the network with no delegated staking', async () => {
+    const validInputNoObserver = {
+      port: 1234,
+      protocol: 'https',
+      label: 'test',
+      fqdn: 'test.com',
+      note: 'test-note',
+      properties: stubbedArweaveTxId,
+      qty: 10000,
+    };
+
+    const initialState = {
+      ...getBaselineState(),
+      balances: {
+        [stubbedArweaveTxId]: MIN_OPERATOR_STAKE,
+      },
+    };
+    const { state } = await joinNetwork(initialState, {
+      caller: stubbedArweaveTxId,
+      input: {
+        ...validInputNoObserver,
+      },
+    });
+    expect(state.gateways[stubbedArweaveTxId]).toEqual({
+      operatorStake: MIN_OPERATOR_STAKE,
+      totalDelegatedStake: 0,
+      settings: {
+        port: 1234,
+        protocol: 'https',
+        label: 'test',
+        fqdn: 'test.com',
+        note: 'test-note',
+        properties: stubbedArweaveTxId,
+        allowDelegatedStaking: false,
+        minDelegatedStake: MIN_DELEGATED_STAKE,
+        delegateRewardShareRatio: 0,
+        autoStake: false,
+      },
+      observerWallet: stubbedArweaveTxId,
+      start: SmartWeave.block.height,
       vaults: {},
       delegates: {},
       status: 'joined',
@@ -268,6 +318,7 @@ describe('joinNetwork', () => {
         delegateRewardShareRatio: Math.floor(
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
         ),
+        autoStake: false,
       },
       start: SmartWeave.block.height,
       observerWallet: stubbedArweaveTxId,
@@ -311,6 +362,7 @@ describe('joinNetwork', () => {
         delegateRewardShareRatio: Math.floor(
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
         ),
+        autoStake: false,
       },
       start: SmartWeave.block.height,
       observerWallet: stubbedArweaveTxId,

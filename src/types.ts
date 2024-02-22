@@ -160,6 +160,7 @@ export type GatewaySettings = {
   port: number; // The port used by this gateway eg. 443
   protocol: AllowedProtocols; // The protocol used by this gateway, either http or https
   properties?: string; // An Arweave transaction ID containing additional properties of this gateway
+  autoStake: boolean; // If true, rewards that gateways earned will be automatically restaked in their gateway
   allowDelegatedStaking?: boolean; // If true, other token holders can delegate their stake to this gateway
   delegateRewardShareRatio?: number; // Number between 0-100 indicating the percent of gateway and observer rewards given to delegates eg. 30 is 30% distributed to delegates
   // allowedDelegates?: string[]; // A list of allowed arweave wallets that can act as delegates, if empty then anyone can delegate their tokens to this gateway
