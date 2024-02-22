@@ -329,7 +329,7 @@ describe('Network', () => {
             allowDelegatedStaking: false,
             delegateRewardShareRatio: 0,
             minDelegatedStake: MIN_DELEGATED_STAKE,
-            autoStaking: false,
+            autoStake: false,
           },
         });
       });
@@ -443,7 +443,7 @@ describe('Network', () => {
           allowDelegatedStaking: true,
           delegateRewardShareRatio: Math.floor((1 - 0.9) * 100),
           minDelegatedStake: MIN_DELEGATED_STAKE + 1,
-          autoStaking: true,
+          autoStake: true,
         };
         const writeInteraction = await contract.writeInteraction({
           function: 'updateGatewaySettings',

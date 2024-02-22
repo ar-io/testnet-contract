@@ -217,7 +217,7 @@ describe('updateGatewaySettings', () => {
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
         ),
         minDelegatedStake: MIN_DELEGATED_STAKE + 1,
-        autoStaking: true,
+        autoStake: true,
       };
       const initialState: IOState = {
         ...getBaselineState(),

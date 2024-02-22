@@ -136,7 +136,7 @@ function createGateways(wallets: string[]) {
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'The friendliest gateway to the whole permaweb',
         minDelegatedStake: MIN_DELEGATED_STAKE,
-        autoStaking: false,
+        autoStake: false,
       },
       observerWallet: wallets[0],
       stats: {
@@ -159,7 +159,7 @@ function createGateways(wallets: string[]) {
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'i do bad things',
         minDelegatedStake: MIN_DELEGATED_STAKE,
-        autoStaking: false,
+        autoStake: false,
       },
       observerWallet: wallets[1],
       stats: {
@@ -182,7 +182,7 @@ function createGateways(wallets: string[]) {
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: '',
         minDelegatedStake: MIN_DELEGATED_STAKE,
-        autoStaking: false,
+        autoStake: false,
       },
       observerWallet: wallets[2],
       stats: {
@@ -205,7 +205,7 @@ function createGateways(wallets: string[]) {
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: '',
         minDelegatedStake: MIN_DELEGATED_STAKE,
-        autoStaking: false,
+        autoStake: false,
       },
       observerWallet: wallets[3],
       stats: {
@@ -228,7 +228,7 @@ function createGateways(wallets: string[]) {
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'Observation testing',
         minDelegatedStake: MIN_DELEGATED_STAKE,
-        autoStaking: false,
+        autoStake: false,
       },
       observerWallet: wallets[4],
       stats: {
@@ -251,7 +251,7 @@ function createGateways(wallets: string[]) {
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'More observervation testing',
         minDelegatedStake: MIN_DELEGATED_STAKE,
-        autoStaking: false,
+        autoStake: false,
       },
       observerWallet: wallets[5],
       stats: {
@@ -274,7 +274,7 @@ function createGateways(wallets: string[]) {
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'Leaving after epoch 0',
         minDelegatedStake: MIN_DELEGATED_STAKE,
-        autoStaking: false,
+        autoStake: false,
       },
       observerWallet: wallets[6],
       stats: {
@@ -297,7 +297,7 @@ function createGateways(wallets: string[]) {
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'Leaving the network',
         minDelegatedStake: MIN_DELEGATED_STAKE,
-        autoStaking: false,
+        autoStake: false,
       },
       observerWallet: wallets[7],
       stats: {
@@ -320,7 +320,7 @@ function createGateways(wallets: string[]) {
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'Leaving the network',
         minDelegatedStake: MIN_DELEGATED_STAKE,
-        autoStaking: false,
+        autoStake: false,
       },
       observerWallet: wallets[8],
       stats: {
@@ -343,7 +343,7 @@ function createGateways(wallets: string[]) {
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'Leaving the network',
         minDelegatedStake: MIN_DELEGATED_STAKE,
-        autoStaking: false,
+        autoStake: false,
       },
       observerWallet: wallets[9],
       stats: {

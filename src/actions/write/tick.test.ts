@@ -1338,7 +1338,7 @@ describe('tick', () => {
               protocol: 'https',
               minDelegatedStake: MIN_DELEGATED_STAKE + 666,
               allowDelegatedStaking: false,
-              autoStaking: true,
+              autoStake: true,
             },
           },
         },
@@ -1425,7 +1425,7 @@ describe('tick', () => {
           protocol: 'https',
           minDelegatedStake: MIN_DELEGATED_STAKE,
           allowDelegatedStaking: false,
-          autoStaking: true,
+          autoStake: true,
         },
         stats: {
           totalEpochsPrescribedCount: 1,

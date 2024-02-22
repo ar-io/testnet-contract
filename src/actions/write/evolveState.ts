@@ -17,7 +17,7 @@ export const evolveState = async (
       ...gateway,
       settings: {
         ...gateway.settings,
-        autoStaking: false,
+        autoStake: false,
       },
     };
     state.gateways[gatewayAddress] = updatedGateway;

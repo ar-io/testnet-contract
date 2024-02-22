@@ -30,7 +30,7 @@ export class JoinNetwork {
   protocol: 'http' | 'https';
   port: number;
   observerWallet: string;
-  autoStaking: boolean;
+  autoStake: boolean;
   allowDelegatedStaking: boolean;
   delegateRewardShareRatio: number;
   minDelegatedStake: number;
@@ -52,7 +52,7 @@ export class JoinNetwork {
       protocol,
       properties,
       observerWallet = caller,
-      autoStaking = false,
+      autoStake = false,
       allowDelegatedStaking = false,
       delegateRewardShareRatio = 0,
       minDelegatedStake = MIN_DELEGATED_STAKE,
@@ -65,7 +65,7 @@ export class JoinNetwork {
     this.fqdn = fqdn;
     this.note = note;
     this.observerWallet = observerWallet;
-    this.autoStaking = autoStaking;
+    this.autoStake = autoStake;
     this.allowDelegatedStaking = allowDelegatedStaking;
     this.delegateRewardShareRatio = delegateRewardShareRatio;
     this.minDelegatedStake = minDelegatedStake;

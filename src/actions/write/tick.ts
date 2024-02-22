@@ -760,7 +760,7 @@ export async function tickRewardDistribution({
         gatewayReward - totalDistributedToDelegates;
 
       // Give the rest to the gateway operator
-      if (gateways[gatewayAddress].settings.autoStaking) {
+      if (gateways[gatewayAddress].settings.autoStake) {
         safeGatewayStakeDistribution({
           balances: updatedBalances,
           gateways: updatedGateways,
@@ -778,7 +778,7 @@ export async function tickRewardDistribution({
       }
     } else {
       // gateway receives full reward
-      if (gateways[gatewayAddress].settings.autoStaking) {
+      if (gateways[gatewayAddress].settings.autoStake) {
         safeGatewayStakeDistribution({
           balances: updatedBalances,
           gateways: updatedGateways,
@@ -849,7 +849,7 @@ export async function tickRewardDistribution({
         perObserverReward - totalDistributedToDelegates;
 
       // Give the rest to the gateway operator
-      if (gateways[gatewayObservedAndPassed].settings.autoStaking) {
+      if (gateways[gatewayObservedAndPassed].settings.autoStake) {
         safeGatewayStakeDistribution({
           balances: updatedBalances,
           gateways: updatedGateways,
@@ -867,7 +867,7 @@ export async function tickRewardDistribution({
       }
     } else {
       // gateway receives full reward
-      if (gateways[gatewayObservedAndPassed].settings.autoStaking) {
+      if (gateways[gatewayObservedAndPassed].settings.autoStake) {
         safeGatewayStakeDistribution({
           balances: updatedBalances,
           gateways: updatedGateways,
