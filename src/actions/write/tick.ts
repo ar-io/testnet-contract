@@ -727,17 +727,30 @@ export async function tickRewardDistribution({
     ) {
       let totalDistributedToDelegates = 0;
 
+      // transfer tokens to each valid delegate based on their current delegated stake amount
+      // Filter out delegates who joined before the epoch started
+      const eligibleDelegates = Object.fromEntries(
+        Object.entries(rewardedGateway.delegates).filter(
+          ([, delegateData]) =>
+            delegateData.start <= epochStartHeight.valueOf(),
+        ),
+      ) as Delegates;
+
+      // Calculate total amount of delegated stake for this gateway, excluding recently joined delegates
+      let totalDelegatedStake = 0;
+      for (const delegateAddress in eligibleDelegates) {
+        totalDelegatedStake +=
+          eligibleDelegates[delegateAddress].delegatedStake;
+      }
+
       // Calculate the rewards to share between the gateway and delegates
       const gatewayDelegatesTotalReward = Math.floor(
-        gatewayReward *
+        perObserverReward *
           (rewardedGateway.settings.delegateRewardShareRatio / 100),
       );
 
-      // transfer tokens to each delegate based on their delegated stake
-      const totalDelegatedStake = rewardedGateway.totalDelegatedStake;
-
       // key based iteration
-      for (const delegateAddress in rewardedGateway.delegates) {
+      for (const delegateAddress in eligibleDelegates) {
         const delegateData = rewardedGateway.delegates[delegateAddress];
         const rewardForDelegate = Math.floor(
           (delegateData.delegatedStake / totalDelegatedStake) *
@@ -819,16 +832,30 @@ export async function tickRewardDistribution({
     ) {
       let totalDistributedToDelegates = 0;
 
+      // transfer tokens to each valid delegate based on their current delegated stake amount
+      // Filter out delegates who joined before the epoch started
+      const eligibleDelegates = Object.fromEntries(
+        Object.entries(rewardedGateway.delegates).filter(
+          ([, delegateData]) =>
+            delegateData.start <= epochStartHeight.valueOf(),
+        ),
+      ) as Delegates;
+
+      // Calculate total amount of delegated stake for this gateway, excluding recently joined delegates
+      let totalDelegatedStake = 0;
+      for (const delegateAddress in eligibleDelegates) {
+        totalDelegatedStake +=
+          eligibleDelegates[delegateAddress].delegatedStake;
+      }
+
       // Calculate the rewards to share between the gateway and delegates
       const gatewayDelegatesTotalReward = Math.floor(
         perObserverReward *
           (rewardedGateway.settings.delegateRewardShareRatio / 100),
       );
 
-      // transfer tokens to each delegate based on their delegated stake
-      const totalDelegatedStake = rewardedGateway.totalDelegatedStake;
       // key based iteration
-      for (const delegateAddress in rewardedGateway.delegates) {
+      for (const delegateAddress in eligibleDelegates) {
         const delegateData = rewardedGateway.delegates[delegateAddress];
         const rewardForDelegate = Math.floor(
           (delegateData.delegatedStake / totalDelegatedStake) *
