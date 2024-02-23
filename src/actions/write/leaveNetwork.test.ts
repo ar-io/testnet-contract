@@ -2,6 +2,7 @@ import {
   DELEGATED_STAKE_UNLOCK_LENGTH,
   GATEWAY_LEAVE_BLOCK_LENGTH,
   GATEWAY_REGISTRY_SETTINGS,
+  MIN_OPERATOR_STAKE,
 } from '../../constants';
 import {
   getBaselineState,
@@ -59,7 +60,7 @@ describe('leaveNetwork', () => {
   });
 
   describe('valid inputs', () => {
-    it('should leave the network', async () => {
+    it('should leave the network with minimum stake', async () => {
       const initialState: IOState = {
         ...getBaselineState(),
         gateways: {
@@ -77,9 +78,49 @@ describe('leaveNetwork', () => {
         ...stubbedGatewayData,
         operatorStake: 0,
         vaults: {
-          [SmartWeave.transaction.id]: {
+          [stubbedArweaveTxId]: {
             balance: stubbedGatewayData.operatorStake,
             end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
+            start: SmartWeave.block.height,
+          },
+        },
+        status: 'leaving',
+        start: GATEWAY_REGISTRY_SETTINGS.minGatewayJoinLength * -1, // hack to get around minimum join time
+        end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
+      });
+      expect(state.balances['existing-gateway']).toEqual(undefined);
+    });
+
+    it('should leave the network with higher than minimum stake', async () => {
+      const newOperatorStake = 100_000;
+      const initialState: IOState = {
+        ...getBaselineState(),
+        gateways: {
+          [stubbedArweaveTxId]: {
+            ...stubbedGatewayData,
+            operatorStake: newOperatorStake,
+            start: GATEWAY_REGISTRY_SETTINGS.minGatewayJoinLength * -1, // hack to get around minimum join time
+          },
+        },
+      };
+      const { state } = await leaveNetwork(initialState, {
+        caller: stubbedArweaveTxId,
+        input: {},
+      });
+      expect(state.gateways[stubbedArweaveTxId]).toEqual({
+        ...stubbedGatewayData,
+        operatorStake: 0,
+        vaults: {
+          [stubbedArweaveTxId]: {
+            balance: MIN_OPERATOR_STAKE,
+            end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
+            start: SmartWeave.block.height,
+          },
+          [SmartWeave.transaction.id]: {
+            balance: newOperatorStake - MIN_OPERATOR_STAKE,
+            end:
+              SmartWeave.block.height +
+              GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength,
             start: SmartWeave.block.height,
           },
         },
@@ -98,6 +139,7 @@ describe('leaveNetwork', () => {
             ...stubbedGatewayData,
             totalDelegatedStake: stubbedDelegateData.delegatedStake,
             start: GATEWAY_REGISTRY_SETTINGS.minGatewayJoinLength * -1, // hack to get around minimum join time
+            vaults: {},
             delegates: {
               [stubbedArweaveTxId]: {
                 ...stubbedDelegateData,
@@ -115,7 +157,7 @@ describe('leaveNetwork', () => {
         operatorStake: 0,
         totalDelegatedStake: 0,
         vaults: {
-          [SmartWeave.transaction.id]: {
+          [stubbedArweaveTxId]: {
             balance: stubbedGatewayData.operatorStake,
             end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
             start: SmartWeave.block.height,
@@ -142,11 +184,13 @@ describe('leaveNetwork', () => {
     });
 
     it('should leave the network with delegated stakers and existing gateway and delegate vaults', async () => {
+      const newOperatorStake = 100_000;
       const initialState: IOState = {
         ...getBaselineState(),
         gateways: {
           [stubbedArweaveTxId]: {
             ...stubbedGatewayData,
+            operatorStake: newOperatorStake,
             totalDelegatedStake: stubbedDelegateData.delegatedStake,
             start: GATEWAY_REGISTRY_SETTINGS.minGatewayJoinLength * -1, // hack to get around minimum join time
             vaults: {
@@ -185,9 +229,16 @@ describe('leaveNetwork', () => {
             start: 0,
             end: 5,
           },
-          [SmartWeave.transaction.id]: {
-            balance: stubbedGatewayData.operatorStake,
+          [stubbedArweaveTxId]: {
+            balance: MIN_OPERATOR_STAKE,
             end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
+            start: SmartWeave.block.height,
+          },
+          [SmartWeave.transaction.id]: {
+            balance: newOperatorStake - MIN_OPERATOR_STAKE,
+            end:
+              SmartWeave.block.height +
+              GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength,
             start: SmartWeave.block.height,
           },
         },
