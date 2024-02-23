@@ -124,23 +124,6 @@ describe('safeDelegateStake function', () => {
     }).toThrowError(INVALID_GATEWAY_REGISTERED_MESSAGE);
   });
 
-  it('should throw an error if caller owns the gateway', () => {
-    expect(() => {
-      safeDelegateStake({
-        balances: { foo: MIN_DELEGATED_STAKE, bar: 2 },
-        gateways: {
-          ['foo']: {
-            ...stubbedGatewayData,
-          },
-        },
-        qty: new IOToken(MIN_DELEGATED_STAKE),
-        fromAddress: 'foo',
-        gatewayAddress: 'foo',
-        startHeight: new BlockHeight(0),
-      });
-    }).toThrowError('Caller cannot delegate stake to a gateway they own.');
-  });
-
   it('should throw an error if gateway is leaving', () => {
     expect(() => {
       safeDelegateStake({

@@ -1615,7 +1615,7 @@ describe('tick', () => {
       (getEligibleGatewaysForEpoch as jest.Mock).mockReturnValue({
         'a-gateway': {
           ...stubbedGatewayData,
-          delegatedStake: 100,
+          totalDelegatedStake: 200,
           settings: {
             ...stubbedGatewayData.settings,
             allowDelegatedStaking: true,
@@ -1625,12 +1625,16 @@ describe('tick', () => {
             ['delegate-1']: {
               ...stubbedDelegateData,
             },
+            ['filtered-delegate']: {
+              ...stubbedDelegateData,
+              start: 1,
+            },
           },
           observerWallet: 'an-observing-gateway',
         },
         'a-gateway-2': {
           ...stubbedGatewayData,
-          delegatedStake: 200,
+          totalDelegatedStake: 200,
           settings: {
             ...stubbedGatewayData.settings,
             allowDelegatedStaking: true,
@@ -1656,7 +1660,7 @@ describe('tick', () => {
         },
         'a-gateway-5': {
           ...stubbedGatewayData,
-          delegatedStake: 300,
+          totalDelegatedStake: 300,
           settings: {
             ...stubbedGatewayData.settings,
             allowDelegatedStaking: true,
@@ -1682,7 +1686,7 @@ describe('tick', () => {
       jest.resetAllMocks();
     });
 
-    it('should distribute rewards to observers and gateways, along with their delegates', async () => {
+    it('should distribute rewards to observers and gateways, along with their valid delegates', async () => {
       const initialState: IOState = {
         ...getBaselineState(),
         balances: {
@@ -1691,7 +1695,7 @@ describe('tick', () => {
         gateways: {
           'a-gateway': {
             ...stubbedGatewayData,
-            totalDelegatedStake: stubbedDelegateData.delegatedStake,
+            totalDelegatedStake: stubbedDelegateData.delegatedStake * 2,
             settings: {
               ...stubbedGatewayData.settings,
               allowDelegatedStaking: true,
@@ -1700,6 +1704,11 @@ describe('tick', () => {
             delegates: {
               ['delegate-1']: {
                 ...stubbedDelegateData,
+              },
+              ['filtered-delegate']: {
+                // this delegate is ineligible for rewards since it joined after epoch start height
+                ...stubbedDelegateData,
+                start: 1,
               },
             },
             observerWallet: 'an-observing-gateway',
@@ -1817,18 +1826,20 @@ describe('tick', () => {
       const totalRewardsDistributed =
         perObserverReward * 3 + perGatewayReward * 3 + penalizedGatewayReward; // 3 rewards for 3 observers, 3 gateway rewards, 1 penalized gateway reward
 
-      // single delegate
-      for (const delegateAddress of Object.keys(
-        initialState.gateways['a-gateway'].delegates,
-      )) {
-        const delegateBefore =
-          initialState.gateways['a-gateway'].delegates[delegateAddress];
-        const delegateAfter = gateways['a-gateway'].delegates[delegateAddress];
-        expect(delegateAfter.delegatedStake).toEqual(
-          delegateBefore.delegatedStake +
-            Math.floor((perObserverReward + perGatewayReward) * 0.5), // splits the reward fully with the gateway
-        );
-      }
+      // one delegate gets all the reward, the other joined too late
+      expect(
+        gateways['a-gateway'].delegates['delegate-1'].delegatedStake,
+      ).toEqual(
+        initialState.gateways['a-gateway'].delegates['delegate-1']
+          .delegatedStake +
+          Math.floor((perObserverReward + perGatewayReward) * 0.5), // splits the reward fully with the gateway
+      );
+      expect(
+        gateways['a-gateway'].delegates['filtered-delegate'].delegatedStake,
+      ).toEqual(
+        initialState.gateways['a-gateway'].delegates['filtered-delegate']
+          .delegatedStake,
+      );
 
       // 50% distribution to delegates, split evenly (25% each)
       for (const delegateAddress of Object.keys(
