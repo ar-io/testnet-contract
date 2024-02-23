@@ -727,9 +727,10 @@ export async function tickRewardDistribution({
       rewardedGateway.totalDelegatedStake > 0
     ) {
       let totalDistributedToDelegates = 0;
-
+      let totalDelegatedStakeForEpoch = 0;
       // transfer tokens to each valid delegate based on their current delegated stake amount
       // Filter out delegates who joined before the epoch started
+      // Calculate total amount of delegated stake for this gateway, excluding recently joined delegates
       const eligibleDelegates = Object.entries(
         rewardedGateway.delegates,
       ).reduce(
@@ -738,19 +739,13 @@ export async function tickRewardDistribution({
           [address, delegateData]: [WalletAddress, DelegateData],
         ) => {
           if (delegateData.start <= epochStartHeight.valueOf()) {
+            totalDelegatedStakeForEpoch += delegateData.delegatedStake;
             acc[address] = delegateData;
           }
           return acc;
         },
         {},
       );
-
-      // Calculate total amount of delegated stake for this gateway, excluding recently joined delegates
-      const totalDelegatedStakeForEpoch = Object.values(
-        eligibleDelegates,
-      ).reduce((acc, delegateData) => {
-        return acc + delegateData.delegatedStake;
-      }, 0);
       // Calculate the rewards to share between the gateway and delegates
       const gatewayDelegatesTotalReward = Math.floor(
         gatewayReward *
@@ -844,6 +839,8 @@ export async function tickRewardDistribution({
 
       // transfer tokens to each valid delegate based on their current delegated stake amount
       // Filter out delegates who joined before the epoch started
+      // Calculate total amount of delegated stake for this gateway, excluding recently joined delegates
+      let totalDelegatedStakeForEpoch = 0;
       const eligibleDelegates = Object.entries(
         rewardedGateway.delegates,
       ).reduce(
@@ -852,19 +849,13 @@ export async function tickRewardDistribution({
           [address, delegateData]: [WalletAddress, DelegateData],
         ) => {
           if (delegateData.start <= epochStartHeight.valueOf()) {
+            totalDelegatedStakeForEpoch += delegateData.delegatedStake;
             acc[address] = delegateData;
           }
           return acc;
         },
         {},
       );
-
-      // Calculate total amount of delegated stake for this gateway, excluding recently joined delegates
-      const totalDelegatedStakeForEpoch = Object.values(
-        eligibleDelegates,
-      ).reduce((acc, delegateData) => {
-        return acc + delegateData.delegatedStake;
-      }, 0);
 
       // Calculate the rewards to share between the gateway and delegates
       const gatewayDelegatesTotalReward = Math.floor(
