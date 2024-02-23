@@ -34,6 +34,7 @@ import {
   BlockTimestamp,
   ContractWriteResult,
   DeepReadonly,
+  DelegateData,
   Delegates,
   DemandFactoringData,
   EpochDistributionData,
@@ -729,20 +730,27 @@ export async function tickRewardDistribution({
 
       // transfer tokens to each valid delegate based on their current delegated stake amount
       // Filter out delegates who joined before the epoch started
-      const eligibleDelegates = Object.fromEntries(
-        Object.entries(rewardedGateway.delegates).filter(
-          ([, delegateData]) =>
-            delegateData.start <= epochStartHeight.valueOf(),
-        ),
-      ) as Delegates;
+      const eligibleDelegates = Object.entries(
+        rewardedGateway.delegates,
+      ).reduce(
+        (
+          acc: Delegates,
+          [address, delegateData]: [WalletAddress, DelegateData],
+        ) => {
+          if (delegateData.start <= epochStartHeight.valueOf()) {
+            acc[address] = delegateData;
+          }
+          return acc;
+        },
+        {},
+      );
 
       // Calculate total amount of delegated stake for this gateway, excluding recently joined delegates
-      let totalDelegatedStake = 0;
-      for (const delegateAddress in eligibleDelegates) {
-        totalDelegatedStake +=
-          eligibleDelegates[delegateAddress].delegatedStake;
-      }
-
+      const totalDelegatedStakeForEpoch = Object.values(
+        eligibleDelegates,
+      ).reduce((acc, delegateData) => {
+        return acc + delegateData.delegatedStake;
+      }, 0);
       // Calculate the rewards to share between the gateway and delegates
       const gatewayDelegatesTotalReward = Math.floor(
         gatewayReward *
@@ -753,9 +761,11 @@ export async function tickRewardDistribution({
       for (const delegateAddress in eligibleDelegates) {
         const delegateData = rewardedGateway.delegates[delegateAddress];
         const rewardForDelegate = Math.floor(
-          (delegateData.delegatedStake / totalDelegatedStake) *
+          (delegateData.delegatedStake / totalDelegatedStakeForEpoch) *
             gatewayDelegatesTotalReward,
         );
+
+        // TODO: if value less than a certain amount
 
         safeDelegateDistribution({
           balances: updatedBalances,
@@ -834,19 +844,27 @@ export async function tickRewardDistribution({
 
       // transfer tokens to each valid delegate based on their current delegated stake amount
       // Filter out delegates who joined before the epoch started
-      const eligibleDelegates = Object.fromEntries(
-        Object.entries(rewardedGateway.delegates).filter(
-          ([, delegateData]) =>
-            delegateData.start <= epochStartHeight.valueOf(),
-        ),
-      ) as Delegates;
+      const eligibleDelegates = Object.entries(
+        rewardedGateway.delegates,
+      ).reduce(
+        (
+          acc: Delegates,
+          [address, delegateData]: [WalletAddress, DelegateData],
+        ) => {
+          if (delegateData.start <= epochStartHeight.valueOf()) {
+            acc[address] = delegateData;
+          }
+          return acc;
+        },
+        {},
+      );
 
       // Calculate total amount of delegated stake for this gateway, excluding recently joined delegates
-      let totalDelegatedStake = 0;
-      for (const delegateAddress in eligibleDelegates) {
-        totalDelegatedStake +=
-          eligibleDelegates[delegateAddress].delegatedStake;
-      }
+      const totalDelegatedStakeForEpoch = Object.values(
+        eligibleDelegates,
+      ).reduce((acc, delegateData) => {
+        return acc + delegateData.delegatedStake;
+      }, 0);
 
       // Calculate the rewards to share between the gateway and delegates
       const gatewayDelegatesTotalReward = Math.floor(
@@ -858,7 +876,7 @@ export async function tickRewardDistribution({
       for (const delegateAddress in eligibleDelegates) {
         const delegateData = rewardedGateway.delegates[delegateAddress];
         const rewardForDelegate = Math.floor(
-          (delegateData.delegatedStake / totalDelegatedStake) *
+          (delegateData.delegatedStake / totalDelegatedStakeForEpoch) *
             gatewayDelegatesTotalReward,
         );
 
