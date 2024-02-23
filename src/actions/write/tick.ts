@@ -745,7 +745,7 @@ export async function tickRewardDistribution({
 
       // Calculate the rewards to share between the gateway and delegates
       const gatewayDelegatesTotalReward = Math.floor(
-        perObserverReward *
+        gatewayReward *
           (rewardedGateway.settings.delegateRewardShareRatio / 100),
       );
 
