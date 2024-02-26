@@ -1,18 +1,9 @@
 import {
-  EPOCH_BLOCK_LENGTH,
-  GATEWAY_REGISTRY_SETTINGS,
+  DEFAULT_UNDERNAME_COUNT,
   NON_CONTRACT_OWNER_MESSAGE,
+  SECONDS_IN_A_YEAR,
 } from '../../constants';
-import {
-  getEpochDataForHeight,
-  getPrescribedObserversForEpoch,
-} from '../../observers';
-import {
-  BlockHeight,
-  ContractWriteResult,
-  IOState,
-  PstAction,
-} from '../../types';
+import { ContractWriteResult, IOState, PstAction } from '../../types';
 
 // Updates this contract to new source code
 export const evolveState = async (
@@ -25,24 +16,14 @@ export const evolveState = async (
     throw new ContractError(NON_CONTRACT_OWNER_MESSAGE);
   }
 
-  const { epochStartHeight, epochEndHeight } = getEpochDataForHeight({
-    currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
-    epochZeroStartHeight: new BlockHeight(
-      state.distributions.epochZeroStartHeight,
-    ),
-    epochBlockLength: new BlockHeight(EPOCH_BLOCK_LENGTH),
-  });
-
-  const prescribedObservers = await getPrescribedObserversForEpoch({
-    gateways: state.gateways,
-    distributions: state.distributions,
-    epochStartHeight,
-    epochEndHeight,
-    minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
-  });
-
-  state.prescribedObservers = {
-    [epochStartHeight.valueOf()]: prescribedObservers,
+  // expires in one year
+  state.records['bark'] = {
+    contractTxId: 'uxYtKoLadnS-MH1AZ2ORhDNH5vJIbvjSWvXa6QLjzVg',
+    startTimestamp: +SmartWeave.block.timestamp,
+    endTimestamp: +SmartWeave.block.timestamp + SECONDS_IN_A_YEAR,
+    undernames: DEFAULT_UNDERNAME_COUNT,
+    type: 'lease',
+    purchasePrice: 0,
   };
 
   return { state };
