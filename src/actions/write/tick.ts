@@ -321,16 +321,30 @@ export function tickGatewayRegistry({
         // set this gateway to leaving status and vault all gateway and delegate stakes
         const gatewayEndHeight =
           +SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH;
+        const gatewayStakeWithdrawHeight =
+          +SmartWeave.block.height +
+          GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength;
         const delegateEndHeight =
           +SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH;
 
-        // Add tokens to a vault that unlocks after the gateway withdrawal period ends
-        updatedVaults['0'] = {
-          // Is 0 the right id here?
-          balance: gateway.operatorStake,
+        // Add minimum staked tokens to a vault that unlocks after the gateway completely leaves the network
+        updatedVaults[key] = {
+          balance: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
           start: +SmartWeave.block.height,
           end: gatewayEndHeight,
         };
+
+        updatedGateway.operatorStake -=
+          GATEWAY_REGISTRY_SETTINGS.minOperatorStake;
+
+        // If there are tokens remaining, add them to a vault that unlocks after the gateway stake withdrawal time
+        if (updatedGateway.operatorStake > 0) {
+          updatedVaults[SmartWeave.transaction.id] = {
+            balance: updatedGateway.operatorStake,
+            start: +SmartWeave.block.height,
+            end: gatewayStakeWithdrawHeight,
+          };
+        }
 
         // Remove all tokens from the operator's stake
         updatedGateway.operatorStake = 0;
@@ -341,9 +355,7 @@ export function tickGatewayRegistry({
 
         // Add tokens from each delegate to a vault that unlocks after the delegate withdrawal period ends
         for (const address in updatedDelegates) {
-          updatedDelegates[address].vaults[
-            '0' // Is 0 the right id here?
-          ] = {
+          updatedDelegates[address].vaults[SmartWeave.transaction.id] = {
             balance: updatedDelegates[address].delegatedStake,
             start: +SmartWeave.block.height,
             end: delegateEndHeight,

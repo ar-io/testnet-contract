@@ -16,9 +16,11 @@ import {
   EPOCH_REWARD_PERCENTAGE,
   GATEWAY_LEAVE_BLOCK_LENGTH,
   GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
+  GATEWAY_REGISTRY_SETTINGS,
   INITIAL_DEMAND_FACTOR_DATA,
   MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT,
   MIN_DELEGATED_STAKE,
+  MIN_OPERATOR_STAKE,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
@@ -663,7 +665,7 @@ describe('tick', () => {
         {
           gateways: {
             'existing-operator': {
-              operatorStake: 100,
+              operatorStake: MIN_OPERATOR_STAKE,
               totalDelegatedStake: 0,
               observerWallet: 'existing-operator',
               start: 0,
@@ -692,8 +694,8 @@ describe('tick', () => {
               start: 0,
               end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
               vaults: {
-                '0': {
-                  balance: 100,
+                'existing-operator': {
+                  balance: MIN_OPERATOR_STAKE,
                   start: SmartWeave.block.height,
                   end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
                 },
@@ -718,7 +720,7 @@ describe('tick', () => {
         {
           gateways: {
             'existing-operator': {
-              operatorStake: 100,
+              operatorStake: MIN_OPERATOR_STAKE + 100,
               totalDelegatedStake: 200,
               observerWallet: 'existing-operator',
               start: 0,
@@ -786,10 +788,17 @@ describe('tick', () => {
                   start: 0,
                   end: 10,
                 },
-                '0': {
-                  balance: 100,
+                'existing-operator': {
+                  balance: MIN_OPERATOR_STAKE,
                   start: SmartWeave.block.height,
                   end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
+                },
+                [SmartWeave.transaction.id]: {
+                  balance: 100,
+                  start: SmartWeave.block.height,
+                  end:
+                    SmartWeave.block.height +
+                    GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength,
                 },
               },
               delegates: {
@@ -797,7 +806,7 @@ describe('tick', () => {
                   delegatedStake: 0,
                   start: 0,
                   vaults: {
-                    '0': {
+                    [SmartWeave.transaction.id]: {
                       balance: 100,
                       start: SmartWeave.block.height,
                       end:
@@ -809,7 +818,7 @@ describe('tick', () => {
                   delegatedStake: 0,
                   start: 0,
                   vaults: {
-                    '0': {
+                    [SmartWeave.transaction.id]: {
                       balance: 100,
                       start: SmartWeave.block.height,
                       end:
