@@ -11,7 +11,9 @@ import {
   CONTRACT_SETTINGS,
   DEFAULT_GATEWAY_PERFORMANCE_STATS,
   GATEWAY_LEAVE_BLOCK_LENGTH,
+  GATEWAY_REGISTRY_SETTINGS,
   MIN_DELEGATED_STAKE,
+  MIN_OPERATOR_STAKE,
   NETWORK_JOIN_STATUS,
   NETWORK_LEAVING_STATUS,
   WALLET_FUND_AMOUNT,
@@ -342,7 +344,7 @@ describe('Network', () => {
           prevState.gateways[newGatewayOperatorAddress].operatorStake;
         const writeInteraction = await contract.writeInteraction({
           function: 'increaseOperatorStake',
-          qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount,
+          qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount * 2,
         });
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
@@ -351,13 +353,13 @@ describe('Network', () => {
           writeInteraction.originalTxId,
         );
         expect(newState.balances[newGatewayOperatorAddress]).toEqual(
-          prevBalance - CONTRACT_SETTINGS.minNetworkJoinStakeAmount,
+          prevBalance - CONTRACT_SETTINGS.minNetworkJoinStakeAmount * 2,
         );
         expect(
           newState.gateways[newGatewayOperatorAddress].operatorStake,
         ).toEqual(
           prevGatewayOperatorBalance +
-            CONTRACT_SETTINGS.minNetworkJoinStakeAmount,
+            CONTRACT_SETTINGS.minNetworkJoinStakeAmount * 2,
         );
       });
 
@@ -419,7 +421,7 @@ describe('Network', () => {
       it('should not decrease operator stake decrease if it brings the gateway below the minimum', async () => {
         const writeInteraction = await contract.writeInteraction({
           function: 'decreaseOperatorStake',
-          qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount,
+          qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount + 1,
         });
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
@@ -716,6 +718,9 @@ describe('Network', () => {
         const expectedEndBlock =
           (await getCurrentBlock(arweave)).valueOf() +
           GATEWAY_LEAVE_BLOCK_LENGTH;
+        const expectedWithdrawBlock =
+          (await getCurrentBlock(arweave)).valueOf() +
+          GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength;
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
           writeInteraction.originalTxId,
         );
@@ -725,15 +730,24 @@ describe('Network', () => {
         expect(newState.gateways[newGatewayOperatorAddress].end).toEqual(
           expectedEndBlock,
         );
-        // confirm the vault with the operator balance was created
+        // confirm the vault with the remaining operator balance was created
+        expect(
+          newState.gateways[newGatewayOperatorAddress].vaults[
+            newGatewayOperatorAddress
+          ],
+        ).toEqual({
+          balance: MIN_OPERATOR_STAKE,
+          start: expect.any(Number),
+          end: expectedEndBlock,
+        });
         expect(
           newState.gateways[newGatewayOperatorAddress].vaults[
             writeInteraction.originalTxId
           ],
         ).toEqual({
-          balance: prevOperatorStake,
+          balance: prevOperatorStake - MIN_OPERATOR_STAKE,
           start: expect.any(Number),
-          end: expectedEndBlock,
+          end: expectedWithdrawBlock,
         });
       });
     });
