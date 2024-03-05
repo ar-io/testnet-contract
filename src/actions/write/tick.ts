@@ -42,7 +42,6 @@ import {
   Delegates,
   DemandFactoringData,
   EpochDistributionData,
-  Gateway,
   GatewayPerformanceStats,
   Gateways,
   IOState,
@@ -220,7 +219,7 @@ export function tickGatewayRegistry({
   const updatedBalances: Balances = {};
   const updatedRegistry = Object.keys(gateways).reduce(
     (acc: Gateways, key: string) => {
-      const gateway = gateways[key];
+      const gateway = { ...gateways[key] };
 
       // If the gateway is eligible to be removed, all its operator and delegate stakes are returned
       if (
@@ -312,7 +311,6 @@ export function tickGatewayRegistry({
 
       // If the gateway has failed observation beyond the maximum allowable amount, it is marked as leaving
       // The gateway stake and all delegated stakes are vaulted and returned to their owners
-      const updatedGateway: Gateway = { ...gateway };
       if (
         gateway.stats.failedConsecutiveEpochs >
           MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT &&
@@ -334,24 +332,23 @@ export function tickGatewayRegistry({
           end: gatewayEndHeight,
         };
 
-        updatedGateway.operatorStake -=
-          GATEWAY_REGISTRY_SETTINGS.minOperatorStake;
+        gateway.operatorStake -= GATEWAY_REGISTRY_SETTINGS.minOperatorStake;
 
         // If there are tokens remaining, add them to a vault that unlocks after the gateway stake withdrawal time
-        if (updatedGateway.operatorStake > 0) {
+        if (gateway.operatorStake > 0) {
           updatedVaults[SmartWeave.transaction.id] = {
-            balance: updatedGateway.operatorStake,
+            balance: gateway.operatorStake,
             start: +SmartWeave.block.height,
             end: gatewayStakeWithdrawHeight,
           };
         }
 
         // Remove all tokens from the operator's stake
-        updatedGateway.operatorStake = 0;
+        gateway.operatorStake = 0;
 
         // Begin leave process by setting end dates to all vaults and the gateway status to leaving network
-        updatedGateway.end = gatewayEndHeight;
-        updatedGateway.status = NETWORK_LEAVING_STATUS;
+        gateway.end = gatewayEndHeight;
+        gateway.status = NETWORK_LEAVING_STATUS;
 
         // Add tokens from each delegate to a vault that unlocks after the delegate withdrawal period ends
         for (const address in updatedDelegates) {
@@ -362,14 +359,14 @@ export function tickGatewayRegistry({
           };
 
           // reduce gateway stake and set this delegate stake to 0
-          updatedGateway.totalDelegatedStake -=
+          gateway.totalDelegatedStake -=
             updatedDelegates[address].delegatedStake;
           updatedDelegates[address].delegatedStake = 0;
         }
       }
 
       acc[key] = {
-        ...updatedGateway,
+        ...gateway,
         delegates: updatedDelegates,
         vaults: updatedVaults,
       };
