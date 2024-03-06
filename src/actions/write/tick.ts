@@ -2,12 +2,16 @@ import {
   BAD_OBSERVER_GATEWAY_PENALTY,
   DEFAULT_GATEWAY_PERFORMANCE_STATS,
   DEFAULT_UNDERNAME_COUNT,
+  DELEGATED_STAKE_UNLOCK_LENGTH,
   EPOCH_BLOCK_LENGTH,
   EPOCH_DISTRIBUTION_DELAY,
   EPOCH_REWARD_PERCENTAGE,
+  GATEWAY_LEAVE_BLOCK_LENGTH,
   GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
   GATEWAY_REGISTRY_SETTINGS,
   INITIAL_EPOCH_DISTRIBUTION_DATA,
+  MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT,
+  NETWORK_LEAVING_STATUS,
   OBSERVATION_FAILURE_THRESHOLD,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
@@ -215,7 +219,7 @@ export function tickGatewayRegistry({
   const updatedBalances: Balances = {};
   const updatedRegistry = Object.keys(gateways).reduce(
     (acc: Gateways, key: string) => {
-      const gateway = gateways[key];
+      const gateway = { ...gateways[key] };
 
       // If the gateway is eligible to be removed, all its operator and delegate stakes are returned
       if (
@@ -227,8 +231,6 @@ export function tickGatewayRegistry({
         if (!updatedBalances[key]) {
           updatedBalances[key] = balances[key] || 0;
         }
-
-        // TODO: remove gateways that have observation fail count > threshold
 
         for (const vault of Object.values(gateway.vaults)) {
           incrementBalance(updatedBalances, key, vault.balance);
@@ -306,6 +308,63 @@ export function tickGatewayRegistry({
           delete updatedDelegates[delegateAddress];
         }
       }
+
+      // If the gateway has failed observation beyond the maximum allowable amount, it is marked as leaving
+      // The gateway stake and all delegated stakes are vaulted and returned to their owners
+      if (
+        gateway.stats.failedConsecutiveEpochs >
+          MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT &&
+        gateway.status !== NETWORK_LEAVING_STATUS
+      ) {
+        // set this gateway to leaving status and vault all gateway and delegate stakes
+        const gatewayEndHeight =
+          +SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH;
+        const gatewayStakeWithdrawHeight =
+          +SmartWeave.block.height +
+          GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength;
+        const delegateEndHeight =
+          +SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH;
+
+        // Add minimum staked tokens to a vault that unlocks after the gateway completely leaves the network
+        updatedVaults[key] = {
+          balance: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
+          start: +SmartWeave.block.height,
+          end: gatewayEndHeight,
+        };
+
+        gateway.operatorStake -= GATEWAY_REGISTRY_SETTINGS.minOperatorStake;
+
+        // If there are tokens remaining, add them to a vault that unlocks after the gateway stake withdrawal time
+        if (gateway.operatorStake > 0) {
+          updatedVaults[SmartWeave.transaction.id] = {
+            balance: gateway.operatorStake,
+            start: +SmartWeave.block.height,
+            end: gatewayStakeWithdrawHeight,
+          };
+        }
+
+        // Remove all tokens from the operator's stake
+        gateway.operatorStake = 0;
+
+        // Begin leave process by setting end dates to all vaults and the gateway status to leaving network
+        gateway.end = gatewayEndHeight;
+        gateway.status = NETWORK_LEAVING_STATUS;
+
+        // Add tokens from each delegate to a vault that unlocks after the delegate withdrawal period ends
+        for (const address in updatedDelegates) {
+          updatedDelegates[address].vaults[SmartWeave.transaction.id] = {
+            balance: updatedDelegates[address].delegatedStake,
+            start: +SmartWeave.block.height,
+            end: delegateEndHeight,
+          };
+
+          // reduce gateway stake and set this delegate stake to 0
+          gateway.totalDelegatedStake -=
+            updatedDelegates[address].delegatedStake;
+          updatedDelegates[address].delegatedStake = 0;
+        }
+      }
+
       acc[key] = {
         ...gateway,
         delegates: updatedDelegates,

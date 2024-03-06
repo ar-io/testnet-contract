@@ -10,12 +10,17 @@ import {
 import {
   BAD_OBSERVER_GATEWAY_PENALTY,
   DEFAULT_GATEWAY_PERFORMANCE_STATS,
+  DELEGATED_STAKE_UNLOCK_LENGTH,
   EPOCH_BLOCK_LENGTH,
   EPOCH_DISTRIBUTION_DELAY,
   EPOCH_REWARD_PERCENTAGE,
+  GATEWAY_LEAVE_BLOCK_LENGTH,
   GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
+  GATEWAY_REGISTRY_SETTINGS,
   INITIAL_DEMAND_FACTOR_DATA,
+  MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT,
   MIN_DELEGATED_STAKE,
+  MIN_OPERATOR_STAKE,
   SECONDS_IN_A_YEAR,
   SECONDS_IN_GRACE_PERIOD,
 } from '../../constants';
@@ -326,7 +331,8 @@ describe('tick', () => {
               start: 0,
               end: 5,
               vaults: {
-                'existing-vault-id': {
+                '0': {
+                  // If this is 0 that means this gateway was ejected for being failed too many consecutive times
                   balance: 100,
                   start: 0,
                   end: 5,
@@ -645,6 +651,189 @@ describe('tick', () => {
               status: 'joined',
               settings: stubbedGatewayData.settings,
               stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
+            },
+          },
+          balances: {
+            'existing-operator': 0,
+            'existing-delegate': 200,
+            'existing-delegate-2': 100,
+          },
+        },
+      ],
+      [
+        'should mark a gateway as leaving that has past the max count of failures',
+        {
+          gateways: {
+            'existing-operator': {
+              operatorStake: MIN_OPERATOR_STAKE,
+              totalDelegatedStake: 0,
+              observerWallet: 'existing-operator',
+              start: 0,
+              end: 0,
+              vaults: {},
+              delegates: {},
+              status: 'joined',
+              settings: stubbedGatewayData.settings,
+              stats: {
+                ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
+                failedConsecutiveEpochs:
+                  MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT + 1,
+              },
+            },
+          },
+          balances: {
+            'existing-operator': 0,
+          },
+        },
+        {
+          gateways: {
+            'existing-operator': {
+              operatorStake: 0,
+              totalDelegatedStake: 0,
+              observerWallet: 'existing-operator',
+              start: 0,
+              end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
+              vaults: {
+                'existing-operator': {
+                  balance: MIN_OPERATOR_STAKE,
+                  start: SmartWeave.block.height,
+                  end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
+                },
+              },
+              delegates: {},
+              status: 'leaving',
+              settings: stubbedGatewayData.settings,
+              stats: {
+                ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
+                failedConsecutiveEpochs:
+                  MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT + 1,
+              },
+            },
+          },
+          balances: {
+            'existing-operator': 0,
+          },
+        },
+      ],
+      [
+        'should mark a gateway with delegates as leaving that has past the max count of failures',
+        {
+          gateways: {
+            'existing-operator': {
+              operatorStake: MIN_OPERATOR_STAKE + 100,
+              totalDelegatedStake: 200,
+              observerWallet: 'existing-operator',
+              start: 0,
+              end: 0,
+              vaults: {
+                'existing-vault-id': {
+                  balance: 100,
+                  start: 0,
+                  end: 10,
+                },
+              },
+              delegates: {
+                'existing-delegate': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 2,
+                    },
+                    'existing-vault-id-2': {
+                      balance: 100,
+                      start: 0,
+                      end: 2,
+                    },
+                  },
+                },
+                'existing-delegate-2': {
+                  delegatedStake: 100,
+                  start: 0,
+                  vaults: {
+                    'existing-vault-id': {
+                      balance: 100,
+                      start: 0,
+                      end: 2,
+                    },
+                  },
+                },
+              },
+              status: 'joined',
+              settings: stubbedGatewayData.settings,
+              stats: {
+                ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
+                failedConsecutiveEpochs:
+                  MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT + 1,
+              },
+            },
+          },
+          balances: {
+            'existing-operator': 0,
+          },
+        },
+        {
+          gateways: {
+            'existing-operator': {
+              operatorStake: 0,
+              totalDelegatedStake: 0,
+              observerWallet: 'existing-operator',
+              start: 0,
+              end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
+              vaults: {
+                'existing-vault-id': {
+                  balance: 100,
+                  start: 0,
+                  end: 10,
+                },
+                'existing-operator': {
+                  balance: MIN_OPERATOR_STAKE,
+                  start: SmartWeave.block.height,
+                  end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
+                },
+                [SmartWeave.transaction.id]: {
+                  balance: 100,
+                  start: SmartWeave.block.height,
+                  end:
+                    SmartWeave.block.height +
+                    GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength,
+                },
+              },
+              delegates: {
+                'existing-delegate': {
+                  delegatedStake: 0,
+                  start: 0,
+                  vaults: {
+                    [SmartWeave.transaction.id]: {
+                      balance: 100,
+                      start: SmartWeave.block.height,
+                      end:
+                        SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH,
+                    },
+                  },
+                },
+                'existing-delegate-2': {
+                  delegatedStake: 0,
+                  start: 0,
+                  vaults: {
+                    [SmartWeave.transaction.id]: {
+                      balance: 100,
+                      start: SmartWeave.block.height,
+                      end:
+                        SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH,
+                    },
+                  },
+                },
+              },
+              status: 'leaving',
+              settings: stubbedGatewayData.settings,
+              stats: {
+                ...DEFAULT_GATEWAY_PERFORMANCE_STATS,
+                failedConsecutiveEpochs:
+                  MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT + 1,
+              },
             },
           },
           balances: {
