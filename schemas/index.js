@@ -12,7 +12,7 @@ const { saveObservationsSchema } = require('./saveObservations');
 const { updateGatewaySchema } = require('./updateGateway');
 const { delegateStakeSchema } = require('./delegateStake');
 const { decreaseDelegateStakeSchema } = require('./decreaseDelegateStake');
-
+const { decreaseOperatorStakeSchema } = require('./decreaseOperatorStake');
 module.exports = {
   auctionBidSchema,
   buyRecordSchema,
@@ -28,4 +28,5 @@ module.exports = {
   updateGatewaySchema,
   delegateStakeSchema,
   decreaseDelegateStakeSchema,
+  decreaseOperatorStakeSchema,
 };

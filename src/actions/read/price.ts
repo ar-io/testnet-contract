@@ -15,6 +15,7 @@ import {
   ContractReadResult,
   DeepReadonly,
   IOState,
+  mIOToken,
 } from '../../types';
 import { calculateYearsBetweenTimestamps } from '../../utilities';
 import { BuyRecord } from '../write/buyRecord';
@@ -41,12 +42,14 @@ export function getPriceForInteraction(
     input: { interactionName: InteractionsWithFee; [x: string]: unknown };
   },
 ): ContractReadResult {
-  let fee: number;
+  let fee: mIOToken;
   // overwrite function on the input so it does not fail on interaction specific validation
   const { interactionName: _, ...parsedInput } = {
     ...input,
     function: input.interactionName,
   };
+  const interactionTimestamp = new BlockTimestamp(+SmartWeave.block.timestamp);
+  const interactionHeight = new BlockHeight(+SmartWeave.block.height);
   // TODO: move all these to utility functions
   switch (input.interactionName) {
     case 'buyRecord': {
@@ -66,7 +69,7 @@ export function getPriceForInteraction(
         name,
         records: state.records,
         reserved: state.reserved,
-        currentBlockTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),
+        currentBlockTimestamp: interactionTimestamp,
         type,
         auction,
       });
@@ -75,7 +78,7 @@ export function getPriceForInteraction(
         fees: state.fees,
         type,
         years,
-        currentBlockTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),
+        currentBlockTimestamp: interactionTimestamp,
         demandFactoring: state.demandFactoring,
       });
       break;
@@ -88,7 +91,7 @@ export function getPriceForInteraction(
         name,
         records: state.records,
         reserved: state.reserved,
-        currentBlockTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),
+        currentBlockTimestamp: interactionTimestamp,
         type,
         auction: true,
       });
@@ -96,10 +99,8 @@ export function getPriceForInteraction(
       if (!auction) {
         const newAuction = createAuctionObject({
           name,
-          currentBlockTimestamp: new BlockTimestamp(
-            +SmartWeave.block.timestamp,
-          ),
-          currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
+          currentBlockTimestamp: interactionTimestamp,
+          currentBlockHeight: interactionHeight,
           fees: state.fees,
           demandFactoring: state.demandFactoring,
           type: 'lease',
@@ -111,12 +112,12 @@ export function getPriceForInteraction(
       }
       const minimumAuctionBid = calculateAuctionPriceForBlock({
         startHeight: new BlockHeight(auction.startHeight),
-        currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
-        startPrice: auction.startPrice,
-        floorPrice: auction.floorPrice,
+        currentBlockHeight: interactionHeight,
+        startPrice: new mIOToken(auction.startPrice),
+        floorPrice: new mIOToken(auction.floorPrice),
         auctionSettings: AUCTION_SETTINGS,
       });
-      fee = minimumAuctionBid.valueOf();
+      fee = minimumAuctionBid;
       break;
     }
     case 'extendRecord': {
@@ -124,7 +125,7 @@ export function getPriceForInteraction(
       const record = state.records[name];
       assertRecordCanBeExtended({
         record,
-        currentBlockTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),
+        currentBlockTimestamp: interactionTimestamp,
         years,
       });
       fee = calculateAnnualRenewalFee({ name, years, fees: state.fees });
@@ -136,7 +137,7 @@ export function getPriceForInteraction(
       assertRecordCanIncreaseUndernameCount({
         record,
         qty,
-        currentBlockTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),
+        currentBlockTimestamp: interactionTimestamp,
       });
       const { type } = record;
       const endTimestamp = isLeaseRecord(record)
@@ -144,7 +145,7 @@ export function getPriceForInteraction(
         : undefined;
       const yearsRemaining = endTimestamp
         ? calculateYearsBetweenTimestamps({
-            startTimestamp: new BlockTimestamp(+SmartWeave.block.timestamp),
+            startTimestamp: interactionTimestamp,
             endTimestamp: new BlockTimestamp(endTimestamp),
           })
         : PERMABUY_LEASE_FEE_LENGTH;
@@ -168,8 +169,7 @@ export function getPriceForInteraction(
   return {
     result: {
       input,
-      // TODO: make this mIO
-      price: fee,
+      price: fee.valueOf(),
     },
   };
 }

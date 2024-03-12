@@ -135,7 +135,7 @@ function createGateways(wallets: string[]) {
         protocol: 'https', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'The friendliest gateway to the whole permaweb',
-        minDelegatedStake: MIN_DELEGATED_STAKE,
+        minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
         autoStake: false,
       },
       observerWallet: wallets[0],
@@ -158,7 +158,7 @@ function createGateways(wallets: string[]) {
         protocol: 'https', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'i do bad things',
-        minDelegatedStake: MIN_DELEGATED_STAKE,
+        minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
         autoStake: false,
       },
       observerWallet: wallets[1],
@@ -181,7 +181,7 @@ function createGateways(wallets: string[]) {
         protocol: 'http', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: '',
-        minDelegatedStake: MIN_DELEGATED_STAKE,
+        minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
         autoStake: false,
       },
       observerWallet: wallets[2],
@@ -204,7 +204,7 @@ function createGateways(wallets: string[]) {
         protocol: 'https', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: '',
-        minDelegatedStake: MIN_DELEGATED_STAKE,
+        minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
         autoStake: false,
       },
       observerWallet: wallets[3],
@@ -227,7 +227,7 @@ function createGateways(wallets: string[]) {
         protocol: 'https', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'Observation testing',
-        minDelegatedStake: MIN_DELEGATED_STAKE,
+        minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
         autoStake: false,
       },
       observerWallet: wallets[4],
@@ -250,7 +250,7 @@ function createGateways(wallets: string[]) {
         protocol: 'https', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'More observervation testing',
-        minDelegatedStake: MIN_DELEGATED_STAKE,
+        minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
         autoStake: false,
       },
       observerWallet: wallets[5],
@@ -273,7 +273,7 @@ function createGateways(wallets: string[]) {
         protocol: 'https', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'Leaving after epoch 0',
-        minDelegatedStake: MIN_DELEGATED_STAKE,
+        minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
         autoStake: false,
       },
       observerWallet: wallets[6],
@@ -296,7 +296,7 @@ function createGateways(wallets: string[]) {
         protocol: 'https', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'Leaving the network',
-        minDelegatedStake: MIN_DELEGATED_STAKE,
+        minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
         autoStake: false,
       },
       observerWallet: wallets[7],
@@ -319,7 +319,7 @@ function createGateways(wallets: string[]) {
         protocol: 'https', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'Leaving the network',
-        minDelegatedStake: MIN_DELEGATED_STAKE,
+        minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
         autoStake: false,
       },
       observerWallet: wallets[8],
@@ -342,7 +342,7 @@ function createGateways(wallets: string[]) {
         protocol: 'https', // The protocol used by this gateway, either http or https
         properties: 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44', // An arweave transaction ID referencing the properties of this gateway
         note: 'Leaving the network',
-        minDelegatedStake: MIN_DELEGATED_STAKE,
+        minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
         autoStake: false,
       },
       observerWallet: wallets[9],

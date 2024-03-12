@@ -4,6 +4,7 @@ import {
   INVALID_OBSERVER_WALLET,
 } from '../../constants';
 import {
+  BlockHeight,
   ContractWriteResult,
   Gateway,
   IOState,
@@ -104,14 +105,16 @@ export const updateGatewaySettings = async (
     updatedSettings.allowDelegatedStaking === false &&
     Object.keys(gateway.delegates).length
   ) {
+    const interactionHeight = new BlockHeight(+SmartWeave.block.height);
     // Add tokens from each delegate to a vault that unlocks after the delegate withdrawal period ends
-    const delegateEndHeight =
-      +SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH;
+    const delegateEndHeight = interactionHeight.plus(
+      DELEGATED_STAKE_UNLOCK_LENGTH,
+    );
     for (const address in updatedGateway.delegates) {
       updatedGateway.delegates[address].vaults[SmartWeave.transaction.id] = {
         balance: updatedGateway.delegates[address].delegatedStake,
-        start: +SmartWeave.block.height,
-        end: delegateEndHeight,
+        start: interactionHeight.valueOf(),
+        end: delegateEndHeight.valueOf(),
       };
 
       // reduce gateway stake and set this delegate stake to 0

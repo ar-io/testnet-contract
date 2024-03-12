@@ -13,6 +13,7 @@ import {
   MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT,
   NETWORK_LEAVING_STATUS,
   OBSERVATION_FAILURE_THRESHOLD,
+  OBSERVER_PERCENTAGE_OF_EPOCH_REWARD,
   SECONDS_IN_A_YEAR,
 } from '../../constants';
 import {
@@ -45,7 +46,6 @@ import {
   GatewayPerformanceStats,
   Gateways,
   IOState,
-  IOToken,
   Observations,
   PrescribedObservers,
   Records,
@@ -55,6 +55,7 @@ import {
   Vaults,
   WalletAddress,
   WeightedObserver,
+  mIOToken,
 } from '../../types';
 import {
   incrementBalance,
@@ -233,11 +234,15 @@ export function tickGatewayRegistry({
         }
 
         for (const vault of Object.values(gateway.vaults)) {
-          incrementBalance(updatedBalances, key, vault.balance);
+          incrementBalance(updatedBalances, key, new mIOToken(vault.balance));
         }
         // return any remaining operator stake
         if (gateway.operatorStake) {
-          incrementBalance(updatedBalances, key, gateway.operatorStake);
+          incrementBalance(
+            updatedBalances,
+            key,
+            new mIOToken(gateway.operatorStake),
+          );
         }
         // return any delegated stake
         for (const [delegateAddress, delegate] of Object.entries(
@@ -245,14 +250,18 @@ export function tickGatewayRegistry({
         )) {
           for (const vault of Object.values(delegate.vaults)) {
             // return the vault balance to the delegate and do not add back vault
-            incrementBalance(updatedBalances, delegateAddress, vault.balance);
+            incrementBalance(
+              updatedBalances,
+              delegateAddress,
+              new mIOToken(vault.balance),
+            );
           }
           // return any remaining delegate stake
           if (delegate.delegatedStake) {
             incrementBalance(
               updatedBalances,
               delegateAddress,
-              delegate.delegatedStake,
+              new mIOToken(delegate.delegatedStake),
             );
           }
         }
@@ -268,7 +277,7 @@ export function tickGatewayRegistry({
             updatedBalances[key] = balances[key] || 0;
           }
           // return the vault balance to the owner and do not add back vault
-          incrementBalance(updatedBalances, key, vault.balance);
+          incrementBalance(updatedBalances, key, new mIOToken(vault.balance));
         } else {
           // still an active vault
           updatedVaults[id] = vault;
@@ -294,7 +303,11 @@ export function tickGatewayRegistry({
             }
 
             // return the vault balance to the delegate and do not add back vault
-            incrementBalance(updatedBalances, delegateAddress, vault.balance);
+            incrementBalance(
+              updatedBalances,
+              delegateAddress,
+              new mIOToken(vault.balance),
+            );
           } else {
             // still an active vault so add it back
             updatedDelegates[delegateAddress].vaults[id] = vault;
@@ -316,30 +329,37 @@ export function tickGatewayRegistry({
           MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT &&
         gateway.status !== NETWORK_LEAVING_STATUS
       ) {
+        const interactionBlockHeight = new BlockHeight(
+          +SmartWeave.block.height,
+        );
+
         // set this gateway to leaving status and vault all gateway and delegate stakes
-        const gatewayEndHeight =
-          +SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH;
-        const gatewayStakeWithdrawHeight =
-          +SmartWeave.block.height +
-          GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength;
-        const delegateEndHeight =
-          +SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH;
+        const gatewayEndHeight = interactionBlockHeight.plus(
+          GATEWAY_LEAVE_BLOCK_LENGTH,
+        );
+        const gatewayStakeWithdrawHeight = interactionBlockHeight.plus(
+          GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength,
+        );
+        const delegateEndHeight = interactionBlockHeight.plus(
+          DELEGATED_STAKE_UNLOCK_LENGTH,
+        );
 
         // Add minimum staked tokens to a vault that unlocks after the gateway completely leaves the network
         updatedVaults[key] = {
-          balance: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
-          start: +SmartWeave.block.height,
-          end: gatewayEndHeight,
+          balance: GATEWAY_REGISTRY_SETTINGS.minOperatorStake.valueOf(),
+          start: interactionBlockHeight.valueOf(),
+          end: gatewayEndHeight.valueOf(),
         };
 
-        gateway.operatorStake -= GATEWAY_REGISTRY_SETTINGS.minOperatorStake;
+        gateway.operatorStake -=
+          GATEWAY_REGISTRY_SETTINGS.minOperatorStake.valueOf();
 
         // If there are tokens remaining, add them to a vault that unlocks after the gateway stake withdrawal time
         if (gateway.operatorStake > 0) {
           updatedVaults[SmartWeave.transaction.id] = {
             balance: gateway.operatorStake,
-            start: +SmartWeave.block.height,
-            end: gatewayStakeWithdrawHeight,
+            start: interactionBlockHeight.valueOf(),
+            end: gatewayStakeWithdrawHeight.valueOf(),
           };
         }
 
@@ -347,15 +367,15 @@ export function tickGatewayRegistry({
         gateway.operatorStake = 0;
 
         // Begin leave process by setting end dates to all vaults and the gateway status to leaving network
-        gateway.end = gatewayEndHeight;
+        gateway.end = gatewayEndHeight.valueOf();
         gateway.status = NETWORK_LEAVING_STATUS;
 
         // Add tokens from each delegate to a vault that unlocks after the delegate withdrawal period ends
         for (const address in updatedDelegates) {
           updatedDelegates[address].vaults[SmartWeave.transaction.id] = {
             balance: updatedDelegates[address].delegatedStake,
-            start: +SmartWeave.block.height,
-            end: delegateEndHeight,
+            start: interactionBlockHeight.valueOf(),
+            end: delegateEndHeight.valueOf(),
           };
 
           // reduce gateway stake and set this delegate stake to 0
@@ -406,7 +426,11 @@ export function tickVaults({
               updatedBalances[address] = balances[address] || 0;
             }
             // Unlock the vault and update the balance
-            incrementBalance(updatedBalances, address, vault.balance);
+            incrementBalance(
+              updatedBalances,
+              address,
+              new mIOToken(vault.balance),
+            );
             return addressVaults;
           }
           addressVaults[id] = vault;
@@ -499,13 +523,14 @@ export function tickAuctions({
     incrementBalance(
       updatedBalances,
       SmartWeave.contract.id,
-      auction.floorPrice,
+      new mIOToken(auction.floorPrice),
     );
 
     // update the demand factor
+    const floorPrice = new mIOToken(auction.floorPrice);
     updatedDemandFactoring = tallyNamePurchase(
       updatedDemandFactoring,
-      auction.floorPrice,
+      floorPrice,
     );
     // now return the auction object
     return acc;
@@ -720,263 +745,277 @@ export async function tickRewardDistribution({
 
   // prepare for distributions
   // calculate epoch rewards X% of current protocol balance split amongst gateways and observers
-  const totalPotentialReward = Math.floor(
-    currentProtocolBalance * EPOCH_REWARD_PERCENTAGE,
+  const totalPotentialReward = new mIOToken(
+    Math.floor(currentProtocolBalance * EPOCH_REWARD_PERCENTAGE),
   );
 
-  const totalPotentialGatewayReward = Math.floor(
-    totalPotentialReward * GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
+  const totalPotentialGatewayReward = totalPotentialReward.multiply(
+    GATEWAY_PERCENTAGE_OF_EPOCH_REWARD,
   );
 
-  // there may be a delta depending on the number of failures - it calculates this reward based on the number of distributions that should have passed
-  const perGatewayReward = Object.keys(eligibleGateways).length
-    ? Math.floor(
-        totalPotentialGatewayReward / Object.keys(eligibleGateways).length,
-      )
-    : 0;
+  if (Object.keys(eligibleGateways).length > 0) {
+    // there may be a delta depending on the number of failures - it calculates this reward based on the number of distributions that should have passed
+    // TODO: check that eligible gateways is not 0
+    const perGatewayReward = totalPotentialGatewayReward.divide(
+      Object.keys(eligibleGateways).length,
+    );
 
-  // the remaining (i.e. 5%)
-  const totalPotentialObserverReward =
-    totalPotentialReward - totalPotentialGatewayReward;
+    // distribute gateway tokens
+    for (const gatewayAddress of gatewaysToReward) {
+      const rewardedGateway = gateways[gatewayAddress];
+      // add protocol balance if we do not have it
+      if (!updatedBalances[SmartWeave.contract.id]) {
+        updatedBalances[SmartWeave.contract.id] =
+          balances[SmartWeave.contract.id] || 0;
+      }
 
-  const perObserverReward = Object.keys(previouslyPrescribedObservers).length
-    ? Math.floor(
-        totalPotentialObserverReward /
-          Object.keys(previouslyPrescribedObservers).length,
-      )
-    : 0;
+      // add the address if we do not have it
+      if (!updatedBalances[gatewayAddress]) {
+        updatedBalances[gatewayAddress] = balances[gatewayAddress] || 0;
+      }
 
-  // TODO: set thresholds for the perGatewayReward and perObserverReward to be greater than at least 1 mIO
+      let gatewayReward: mIOToken = perGatewayReward;
+      // if you were prescribed observer but didn't submit a report, you get gateway reward penalized
+      if (
+        previouslyPrescribedObservers.some(
+          (prescribed: WeightedObserver) =>
+            prescribed.gatewayAddress === gatewayAddress,
+        ) &&
+        !observerGatewaysToReward.includes(gatewayAddress)
+      ) {
+        // you don't get the full gateway reward if you didn't submit a report
+        gatewayReward = perGatewayReward.multiply(
+          1 - BAD_OBSERVER_GATEWAY_PENALTY,
+        );
+      }
 
-  // distribute gateway tokens
-  for (const gatewayAddress of gatewaysToReward) {
-    const rewardedGateway = gateways[gatewayAddress];
-    // add protocol balance if we do not have it
-    if (!updatedBalances[SmartWeave.contract.id]) {
-      updatedBalances[SmartWeave.contract.id] =
-        balances[SmartWeave.contract.id] || 0;
-    }
-
-    // add the address if we do not have it
-    if (!updatedBalances[gatewayAddress]) {
-      updatedBalances[gatewayAddress] = balances[gatewayAddress] || 0;
-    }
-
-    let gatewayReward = perGatewayReward;
-    // if you were prescribed observer but didn't submit a report, you get gateway reward penalized
-    if (
-      previouslyPrescribedObservers.some(
-        (prescribed: WeightedObserver) =>
-          prescribed.gatewayAddress === gatewayAddress,
-      ) &&
-      !observerGatewaysToReward.includes(gatewayAddress)
-    ) {
-      // you don't get the full gateway reward if you didn't submit a report
-      gatewayReward = Math.floor(
-        perGatewayReward * (1 - BAD_OBSERVER_GATEWAY_PENALTY),
-      );
-    }
-
-    // Split reward to delegates if applicable
-    if (
-      // Reminder: if an operator sets allowDelegatedStaking to false all delegates current stake get vaulted, and they cannot change it until those vaults are returned
-      rewardedGateway.settings.allowDelegatedStaking &&
-      Object.keys(rewardedGateway.delegates).length &&
-      rewardedGateway.settings.delegateRewardShareRatio > 0 &&
-      rewardedGateway.totalDelegatedStake > 0
-    ) {
-      let totalDistributedToDelegates = 0;
-      let totalDelegatedStakeForEpoch = 0;
-      // transfer tokens to each valid delegate based on their current delegated stake amount
-      // Filter out delegates who joined before the epoch started
-      // Calculate total amount of delegated stake for this gateway, excluding recently joined delegates
-      const eligibleDelegates = Object.entries(
-        rewardedGateway.delegates,
-      ).reduce(
-        (
-          acc: Delegates,
-          [address, delegateData]: [WalletAddress, DelegateData],
-        ) => {
-          if (delegateData.start <= epochStartHeight.valueOf()) {
-            totalDelegatedStakeForEpoch += delegateData.delegatedStake;
-            acc[address] = delegateData;
-          }
-          return acc;
-        },
-        {},
-      );
-      // Calculate the rewards to share between the gateway and delegates
-      const gatewayDelegatesTotalReward = Math.floor(
-        gatewayReward *
-          (rewardedGateway.settings.delegateRewardShareRatio / 100),
-      );
-
-      // key based iteration
-      for (const delegateAddress in eligibleDelegates) {
-        const delegateData = rewardedGateway.delegates[delegateAddress];
-        const rewardForDelegate = Math.floor(
-          (delegateData.delegatedStake / totalDelegatedStakeForEpoch) *
-            gatewayDelegatesTotalReward,
+      // Split reward to delegates if applicable
+      if (
+        // Reminder: if an operator sets allowDelegatedStaking to false all delegates current stake get vaulted, and they cannot change it until those vaults are returned
+        rewardedGateway.settings.allowDelegatedStaking &&
+        Object.keys(rewardedGateway.delegates).length &&
+        rewardedGateway.settings.delegateRewardShareRatio > 0 &&
+        rewardedGateway.totalDelegatedStake > 0
+      ) {
+        let totalDistributedToDelegates = new mIOToken(0);
+        let totalDelegatedStakeForEpoch = new mIOToken(0);
+        // transfer tokens to each valid delegate based on their current delegated stake amount
+        // Filter out delegates who joined before the epoch started
+        // Calculate total amount of delegated stake for this gateway, excluding recently joined delegates
+        const eligibleDelegates = Object.entries(
+          rewardedGateway.delegates,
+        ).reduce(
+          (
+            acc: Delegates,
+            [address, delegateData]: [WalletAddress, DelegateData],
+          ) => {
+            if (delegateData.start <= epochStartHeight.valueOf()) {
+              const delegatedStake = new mIOToken(delegateData.delegatedStake);
+              totalDelegatedStakeForEpoch =
+                totalDelegatedStakeForEpoch.plus(delegatedStake);
+              acc[address] = delegateData;
+            }
+            return acc;
+          },
+          {},
         );
 
-        // TODO: if value less than a certain amount
+        // Calculate the rewards to share between the gateway and delegates
+        const gatewayDelegatesTotalReward = gatewayReward.multiply(
+          rewardedGateway.settings.delegateRewardShareRatio / 100,
+        );
 
-        safeDelegateDistribution({
-          balances: updatedBalances,
-          gateways: updatedGateways,
-          protocolAddress: SmartWeave.contract.id,
-          gatewayAddress,
-          delegateAddress,
-          qty: new IOToken(rewardForDelegate),
-        });
-        totalDistributedToDelegates += rewardForDelegate;
-        // we could a breaker if totalDistributedToDelegates + rewardForDelegate > gatewayReward to stop!
-      }
-      // rounding may cause there to be some left over - make sure it goes to the operator
-      const remainingTokensForOperator =
-        gatewayReward - totalDistributedToDelegates;
+        // key based iteration
+        for (const delegateAddress in eligibleDelegates) {
+          const delegateData = rewardedGateway.delegates[delegateAddress];
+          const delegatedStake = new mIOToken(delegateData.delegatedStake);
+          const delegatedStakeRatio =
+            delegatedStake.valueOf() / totalDelegatedStakeForEpoch.valueOf(); // this is a ratio, so do not use mIO
+          const rewardForDelegate =
+            gatewayDelegatesTotalReward.multiply(delegatedStakeRatio);
 
-      // Give the rest to the gateway operator
-      if (gateways[gatewayAddress].settings.autoStake) {
-        safeGatewayStakeDistribution({
-          balances: updatedBalances,
-          gateways: updatedGateways,
-          protocolAddress: SmartWeave.contract.id,
-          gatewayAddress,
-          qty: new IOToken(remainingTokensForOperator),
-        });
+          if (rewardForDelegate.valueOf() < 1) {
+            // if the reward is less than 1, don't bother
+            continue;
+          }
+
+          safeDelegateDistribution({
+            balances: updatedBalances,
+            gateways: updatedGateways,
+            protocolAddress: SmartWeave.contract.id,
+            gatewayAddress,
+            delegateAddress,
+            qty: rewardForDelegate,
+          });
+          totalDistributedToDelegates =
+            totalDistributedToDelegates.plus(rewardForDelegate);
+        }
+        // rounding may cause there to be some left over - make sure it goes to the operator
+        const remainingTokensForOperator = gatewayReward.minus(
+          totalDistributedToDelegates,
+        );
+
+        // Give the rest to the gateway operator
+        if (gateways[gatewayAddress].settings.autoStake) {
+          safeGatewayStakeDistribution({
+            balances: updatedBalances,
+            gateways: updatedGateways,
+            protocolAddress: SmartWeave.contract.id,
+            gatewayAddress,
+            qty: remainingTokensForOperator,
+          });
+        } else {
+          safeTransfer({
+            balances: updatedBalances,
+            fromAddress: SmartWeave.contract.id,
+            toAddress: gatewayAddress,
+            qty: remainingTokensForOperator,
+          });
+        }
       } else {
-        safeTransfer({
-          balances: updatedBalances,
-          fromAddress: SmartWeave.contract.id,
-          toAddress: gatewayAddress,
-          qty: remainingTokensForOperator,
-        });
-      }
-    } else {
-      // gateway receives full reward
-      if (gateways[gatewayAddress].settings.autoStake) {
-        safeGatewayStakeDistribution({
-          balances: updatedBalances,
-          gateways: updatedGateways,
-          protocolAddress: SmartWeave.contract.id,
-          gatewayAddress,
-          qty: new IOToken(gatewayReward),
-        });
-      } else {
-        safeTransfer({
-          balances: updatedBalances,
-          fromAddress: SmartWeave.contract.id,
-          toAddress: gatewayAddress,
-          qty: gatewayReward,
-        });
+        // gateway receives full reward
+        if (gateways[gatewayAddress].settings.autoStake) {
+          safeGatewayStakeDistribution({
+            balances: updatedBalances,
+            gateways: updatedGateways,
+            protocolAddress: SmartWeave.contract.id,
+            gatewayAddress,
+            qty: gatewayReward,
+          });
+        } else {
+          safeTransfer({
+            balances: updatedBalances,
+            fromAddress: SmartWeave.contract.id,
+            toAddress: gatewayAddress,
+            qty: gatewayReward,
+          });
+        }
       }
     }
   }
-  // distribute observer tokens
-  for (const gatewayObservedAndPassed of observerGatewaysToReward) {
-    const rewardedGateway = gateways[gatewayObservedAndPassed];
-    // add protocol balance if we do not have it
-    if (!updatedBalances[SmartWeave.contract.id]) {
-      updatedBalances[SmartWeave.contract.id] =
-        balances[SmartWeave.contract.id] || 0;
-    }
 
-    // add the address if we do not have it
-    if (!updatedBalances[gatewayObservedAndPassed]) {
-      updatedBalances[gatewayObservedAndPassed] =
-        balances[gatewayObservedAndPassed] || 0;
-    }
+  const totalPotentialObserverReward = totalPotentialReward.multiply(
+    OBSERVER_PERCENTAGE_OF_EPOCH_REWARD,
+  );
 
-    if (
-      // TODO: move this to a utility function
-      rewardedGateway.settings.allowDelegatedStaking &&
-      Object.keys(rewardedGateway.delegates).length &&
-      rewardedGateway.settings.delegateRewardShareRatio > 0
-    ) {
-      let totalDistributedToDelegates = 0;
+  if (Object.keys(previouslyPrescribedObservers).length > 0) {
+    // calculate the observer reward
+    const perObserverReward = totalPotentialObserverReward.divide(
+      Object.keys(previouslyPrescribedObservers).length,
+    );
+    // distribute observer tokens
+    for (const gatewayObservedAndPassed of observerGatewaysToReward) {
+      const rewardedGateway = gateways[gatewayObservedAndPassed];
+      // add protocol balance if we do not have it
+      if (!updatedBalances[SmartWeave.contract.id]) {
+        updatedBalances[SmartWeave.contract.id] =
+          balances[SmartWeave.contract.id] || 0;
+      }
 
-      // transfer tokens to each valid delegate based on their current delegated stake amount
-      // Filter out delegates who joined before the epoch started
-      // Calculate total amount of delegated stake for this gateway, excluding recently joined delegates
-      let totalDelegatedStakeForEpoch = 0;
-      const eligibleDelegates = Object.entries(
-        rewardedGateway.delegates,
-      ).reduce(
-        (
-          acc: Delegates,
-          [address, delegateData]: [WalletAddress, DelegateData],
-        ) => {
-          if (delegateData.start <= epochStartHeight.valueOf()) {
-            totalDelegatedStakeForEpoch += delegateData.delegatedStake;
-            acc[address] = delegateData;
-          }
-          return acc;
-        },
-        {},
-      );
+      // add the address if we do not have it
+      if (!updatedBalances[gatewayObservedAndPassed]) {
+        updatedBalances[gatewayObservedAndPassed] =
+          balances[gatewayObservedAndPassed] || 0;
+      }
 
-      // Calculate the rewards to share between the gateway and delegates
-      const gatewayDelegatesTotalReward = Math.floor(
-        perObserverReward *
-          (rewardedGateway.settings.delegateRewardShareRatio / 100),
-      );
+      if (
+        // TODO: move this to a utility function
+        rewardedGateway.settings.allowDelegatedStaking &&
+        Object.keys(rewardedGateway.delegates).length &&
+        rewardedGateway.settings.delegateRewardShareRatio > 0
+      ) {
+        let totalDistributedToDelegates = new mIOToken(0);
 
-      // key based iteration
-      for (const delegateAddress in eligibleDelegates) {
-        const delegateData = rewardedGateway.delegates[delegateAddress];
-        const rewardForDelegate = Math.floor(
-          (delegateData.delegatedStake / totalDelegatedStakeForEpoch) *
-            gatewayDelegatesTotalReward,
+        // transfer tokens to each valid delegate based on their current delegated stake amount
+        // Filter out delegates who joined before the epoch started
+        // Calculate total amount of delegated stake for this gateway, excluding recently joined delegates
+        let totalDelegatedStakeForEpoch = new mIOToken(0);
+        const eligibleDelegates = Object.entries(
+          rewardedGateway.delegates,
+        ).reduce(
+          (
+            acc: Delegates,
+            [address, delegateData]: [WalletAddress, DelegateData],
+          ) => {
+            if (delegateData.start <= epochStartHeight.valueOf()) {
+              const delegatedStake = new mIOToken(delegateData.delegatedStake);
+              totalDelegatedStakeForEpoch =
+                totalDelegatedStakeForEpoch.plus(delegatedStake);
+              acc[address] = delegateData;
+            }
+            return acc;
+          },
+          {},
         );
 
-        safeDelegateDistribution({
-          balances: updatedBalances,
-          gateways: updatedGateways,
-          protocolAddress: SmartWeave.contract.id,
-          gatewayAddress: gatewayObservedAndPassed,
-          delegateAddress,
-          qty: new IOToken(rewardForDelegate),
-        });
-        totalDistributedToDelegates += rewardForDelegate;
-      }
-      const remainingTokensForOperator =
-        perObserverReward - totalDistributedToDelegates;
+        // Calculate the rewards to share between the gateway and delegates
+        const gatewayDelegatesTotalReward = perObserverReward.multiply(
+          rewardedGateway.settings.delegateRewardShareRatio / 100,
+        );
 
-      // Give the rest to the gateway operator
-      if (gateways[gatewayObservedAndPassed].settings.autoStake) {
-        safeGatewayStakeDistribution({
-          balances: updatedBalances,
-          gateways: updatedGateways,
-          protocolAddress: SmartWeave.contract.id,
-          gatewayAddress: gatewayObservedAndPassed,
-          qty: new IOToken(remainingTokensForOperator),
-        });
+        // key based iteration
+        for (const delegateAddress in eligibleDelegates) {
+          const delegateData = rewardedGateway.delegates[delegateAddress];
+          const delegatedStake = new mIOToken(delegateData.delegatedStake);
+          const delegatedStakeRatio =
+            delegatedStake.valueOf() / totalDelegatedStakeForEpoch.valueOf(); // this is a ratio, so do not use mIO
+          const rewardForDelegate =
+            gatewayDelegatesTotalReward.multiply(delegatedStakeRatio);
+
+          if (rewardForDelegate.valueOf() < 1) {
+            continue;
+          }
+
+          safeDelegateDistribution({
+            balances: updatedBalances,
+            gateways: updatedGateways,
+            protocolAddress: SmartWeave.contract.id,
+            gatewayAddress: gatewayObservedAndPassed,
+            delegateAddress,
+            qty: rewardForDelegate,
+          });
+          totalDistributedToDelegates =
+            totalDistributedToDelegates.plus(rewardForDelegate);
+        }
+        const remainingTokensForOperator = perObserverReward.minus(
+          totalDistributedToDelegates,
+        );
+
+        // Give the rest to the gateway operator
+        if (gateways[gatewayObservedAndPassed].settings.autoStake) {
+          safeGatewayStakeDistribution({
+            balances: updatedBalances,
+            gateways: updatedGateways,
+            protocolAddress: SmartWeave.contract.id,
+            gatewayAddress: gatewayObservedAndPassed,
+            qty: remainingTokensForOperator,
+          });
+        } else {
+          safeTransfer({
+            balances: updatedBalances,
+            fromAddress: SmartWeave.contract.id,
+            toAddress: gatewayObservedAndPassed,
+            qty: remainingTokensForOperator,
+          });
+        }
       } else {
-        safeTransfer({
-          balances: updatedBalances,
-          fromAddress: SmartWeave.contract.id,
-          toAddress: gatewayObservedAndPassed,
-          qty: remainingTokensForOperator,
-        });
-      }
-    } else {
-      // gateway receives full reward
-      if (gateways[gatewayObservedAndPassed].settings.autoStake) {
-        safeGatewayStakeDistribution({
-          balances: updatedBalances,
-          gateways: updatedGateways,
-          protocolAddress: SmartWeave.contract.id,
-          gatewayAddress: gatewayObservedAndPassed,
-          qty: new IOToken(perObserverReward),
-        });
-      } else {
-        safeTransfer({
-          balances: updatedBalances,
-          fromAddress: SmartWeave.contract.id,
-          toAddress: gatewayObservedAndPassed,
-          qty: perObserverReward,
-        });
+        // gateway receives full reward
+        if (gateways[gatewayObservedAndPassed].settings.autoStake) {
+          safeGatewayStakeDistribution({
+            balances: updatedBalances,
+            gateways: updatedGateways,
+            protocolAddress: SmartWeave.contract.id,
+            gatewayAddress: gatewayObservedAndPassed,
+            qty: perObserverReward,
+          });
+        } else {
+          safeTransfer({
+            balances: updatedBalances,
+            fromAddress: SmartWeave.contract.id,
+            toAddress: gatewayObservedAndPassed,
+            qty: perObserverReward,
+          });
+        }
       }
     }
   }

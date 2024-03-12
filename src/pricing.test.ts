@@ -14,6 +14,7 @@ import {
   DemandFactoringCriteria,
   DemandFactoringData,
   Fees,
+  mIOToken,
 } from './types';
 
 describe('Pricing functions:', () => {
@@ -78,7 +79,7 @@ describe('Pricing functions:', () => {
             demandFactor: 1,
             consecutivePeriodsWithMinDemandFactor: 0,
           },
-          123,
+          new mIOToken(123),
         ),
       ).toEqual({
         periodZeroBlockHeight: 0,
@@ -102,7 +103,7 @@ describe('Pricing functions:', () => {
             demandFactor: 1,
             consecutivePeriodsWithMinDemandFactor: 0,
           },
-          321,
+          new mIOToken(321),
         ),
       ).toEqual({
         periodZeroBlockHeight: 0,
@@ -126,7 +127,7 @@ describe('Pricing functions:', () => {
             demandFactor: 1.5,
             consecutivePeriodsWithMinDemandFactor: 3,
           },
-          0,
+          new mIOToken(0),
         ),
       ).toEqual({
         periodZeroBlockHeight: 0,

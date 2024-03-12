@@ -60,13 +60,22 @@ describe('leaveNetwork', () => {
   });
 
   describe('valid inputs', () => {
+    beforeAll(() => {
+      SmartWeave.block.height =
+        GATEWAY_REGISTRY_SETTINGS.minGatewayJoinLength.valueOf();
+    });
+
+    afterAll(() => {
+      SmartWeave.block.height = 1;
+    });
+
     it('should leave the network with minimum stake', async () => {
       const initialState: IOState = {
         ...getBaselineState(),
         gateways: {
           [stubbedArweaveTxId]: {
             ...stubbedGatewayData,
-            start: GATEWAY_REGISTRY_SETTINGS.minGatewayJoinLength * -1, // hack to get around minimum join time
+            start: 0,
           },
         },
       };
@@ -85,7 +94,7 @@ describe('leaveNetwork', () => {
           },
         },
         status: 'leaving',
-        start: GATEWAY_REGISTRY_SETTINGS.minGatewayJoinLength * -1, // hack to get around minimum join time
+        start: 0,
         end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
       });
       expect(state.balances['existing-gateway']).toEqual(undefined);
@@ -99,7 +108,7 @@ describe('leaveNetwork', () => {
           [stubbedArweaveTxId]: {
             ...stubbedGatewayData,
             operatorStake: newOperatorStake,
-            start: GATEWAY_REGISTRY_SETTINGS.minGatewayJoinLength * -1, // hack to get around minimum join time
+            start: 0,
           },
         },
       };
@@ -112,12 +121,12 @@ describe('leaveNetwork', () => {
         operatorStake: 0,
         vaults: {
           [stubbedArweaveTxId]: {
-            balance: MIN_OPERATOR_STAKE,
-            end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
+            balance: MIN_OPERATOR_STAKE.valueOf(),
+            end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH.valueOf(),
             start: SmartWeave.block.height,
           },
           [SmartWeave.transaction.id]: {
-            balance: newOperatorStake - MIN_OPERATOR_STAKE,
+            balance: newOperatorStake - MIN_OPERATOR_STAKE.valueOf(),
             end:
               SmartWeave.block.height +
               GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength,
@@ -125,7 +134,7 @@ describe('leaveNetwork', () => {
           },
         },
         status: 'leaving',
-        start: GATEWAY_REGISTRY_SETTINGS.minGatewayJoinLength * -1, // hack to get around minimum join time
+        start: 0,
         end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
       });
       expect(state.balances['existing-gateway']).toEqual(undefined);
@@ -138,7 +147,7 @@ describe('leaveNetwork', () => {
           [stubbedArweaveTxId]: {
             ...stubbedGatewayData,
             totalDelegatedStake: stubbedDelegateData.delegatedStake,
-            start: GATEWAY_REGISTRY_SETTINGS.minGatewayJoinLength * -1, // hack to get around minimum join time
+            start: 0,
             vaults: {},
             delegates: {
               [stubbedArweaveTxId]: {
@@ -159,7 +168,7 @@ describe('leaveNetwork', () => {
         vaults: {
           [stubbedArweaveTxId]: {
             balance: stubbedGatewayData.operatorStake,
-            end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
+            end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH.valueOf(),
             start: SmartWeave.block.height,
           },
         },
@@ -170,14 +179,16 @@ describe('leaveNetwork', () => {
             vaults: {
               [SmartWeave.transaction.id]: {
                 balance: stubbedDelegateData.delegatedStake,
-                end: SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH,
+                end:
+                  SmartWeave.block.height +
+                  DELEGATED_STAKE_UNLOCK_LENGTH.valueOf(),
                 start: SmartWeave.block.height,
               },
             },
           },
         },
         status: 'leaving',
-        start: GATEWAY_REGISTRY_SETTINGS.minGatewayJoinLength * -1, // hack to get around minimum join time
+        start: 0,
         end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
       });
       expect(state.balances['existing-gateway']).toEqual(undefined);
@@ -192,7 +203,7 @@ describe('leaveNetwork', () => {
             ...stubbedGatewayData,
             operatorStake: newOperatorStake,
             totalDelegatedStake: stubbedDelegateData.delegatedStake,
-            start: GATEWAY_REGISTRY_SETTINGS.minGatewayJoinLength * -1, // hack to get around minimum join time
+            start: 0,
             vaults: {
               ['gateway-vault-1']: {
                 balance: 1000,
@@ -230,12 +241,12 @@ describe('leaveNetwork', () => {
             end: 5,
           },
           [stubbedArweaveTxId]: {
-            balance: MIN_OPERATOR_STAKE,
-            end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
+            balance: MIN_OPERATOR_STAKE.valueOf(),
+            end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH.valueOf(),
             start: SmartWeave.block.height,
           },
           [SmartWeave.transaction.id]: {
-            balance: newOperatorStake - MIN_OPERATOR_STAKE,
+            balance: newOperatorStake - MIN_OPERATOR_STAKE.valueOf(),
             end:
               SmartWeave.block.height +
               GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength,
@@ -261,7 +272,7 @@ describe('leaveNetwork', () => {
           },
         },
         status: 'leaving',
-        start: GATEWAY_REGISTRY_SETTINGS.minGatewayJoinLength * -1, // hack to get around minimum join time
+        start: 0,
         end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
       });
       expect(state.balances['existing-gateway']).toEqual(undefined);

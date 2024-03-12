@@ -1,9 +1,9 @@
 import {
   ContractWriteResult,
   IOState,
-  PositiveFiniteInteger,
   PstAction,
   TransactionId,
+  mIOToken,
 } from '../../types';
 import { getInvalidAjvMessage } from '../../utilities';
 import { validateIncreaseVault } from '../../validations';
@@ -12,7 +12,7 @@ import { safeIncreaseVault } from '../../vaults';
 // TODO: use top level class
 export class IncreaseVault {
   id: TransactionId;
-  qty: PositiveFiniteInteger; // TODO: change to IO Token
+  qty: mIOToken; // TODO: change to IO Token
 
   constructor(input: any) {
     if (!validateIncreaseVault(input)) {
@@ -22,7 +22,7 @@ export class IncreaseVault {
     }
     const { id, qty } = input;
     this.id = id;
-    this.qty = new PositiveFiniteInteger(qty);
+    this.qty = new mIOToken(qty);
   }
 }
 

@@ -1,11 +1,11 @@
 import {
   DEFAULT_GATEWAY_PERFORMANCE_STATS,
-  GATEWAY_REGISTRY_SETTINGS,
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_GATEWAY_EXISTS_MESSAGE,
   INVALID_GATEWAY_STAKE_AMOUNT_MESSAGE,
   INVALID_OBSERVER_WALLET,
   MIN_DELEGATED_STAKE,
+  MIN_OPERATOR_STAKE,
   NETWORK_JOIN_STATUS,
 } from '../../constants';
 import {
@@ -13,6 +13,7 @@ import {
   IOState,
   PstAction,
   TransactionId,
+  mIOToken,
 } from '../../types';
 import {
   getInvalidAjvMessage,
@@ -22,7 +23,7 @@ import {
 import { validateJoinNetwork } from '../../validations';
 
 export class JoinNetwork {
-  qty: number;
+  qty: mIOToken;
   fqdn: string;
   label: string;
   note: string;
@@ -33,7 +34,7 @@ export class JoinNetwork {
   autoStake: boolean;
   allowDelegatedStaking: boolean;
   delegateRewardShareRatio: number;
-  minDelegatedStake: number;
+  minDelegatedStake: mIOToken;
 
   constructor(input: any, caller: TransactionId) {
     // validate using ajv validator
@@ -44,7 +45,7 @@ export class JoinNetwork {
     }
 
     const {
-      qty,
+      qty = MIN_OPERATOR_STAKE,
       label,
       port,
       fqdn,
@@ -57,7 +58,7 @@ export class JoinNetwork {
       delegateRewardShareRatio = 0,
       minDelegatedStake = MIN_DELEGATED_STAKE,
     } = input;
-    this.qty = qty;
+    this.qty = new mIOToken(qty); // round down to avoid input errors
     this.label = label;
     this.port = port;
     this.protocol = protocol;
@@ -88,7 +89,7 @@ export const joinNetwork = async (
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
-  if (qty < GATEWAY_REGISTRY_SETTINGS.minOperatorStake) {
+  if (qty.isLessThan(MIN_OPERATOR_STAKE)) {
     throw new ContractError(INVALID_GATEWAY_STAKE_AMOUNT_MESSAGE);
   }
 
@@ -107,13 +108,14 @@ export const joinNetwork = async (
   // Join the network
   unsafeDecrementBalance(state.balances, caller, qty);
   state.gateways[caller] = {
-    operatorStake: qty,
+    operatorStake: qty.valueOf(),
     totalDelegatedStake: 0, // defaults to no delegated stake
     observerWallet, // defaults to caller
     vaults: {},
     delegates: {},
     settings: {
       ...gatewaySettings,
+      minDelegatedStake: gatewaySettings.minDelegatedStake.valueOf(),
     },
     status: NETWORK_JOIN_STATUS,
     start: +SmartWeave.block.height, // TODO: timestamp vs. height

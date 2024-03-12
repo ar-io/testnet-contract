@@ -62,7 +62,7 @@ describe('getPrescribedObserversForEpoch', () => {
 
     expect(observers).toBeDefined();
     const expectedStakeWeight =
-      totalStake / GATEWAY_REGISTRY_SETTINGS.minOperatorStake;
+      totalStake / GATEWAY_REGISTRY_SETTINGS.minOperatorStake.valueOf();
     const expectedTenureWeight = epochStartHeight / TENURE_WEIGHT_PERIOD;
     const expectedCompositeWeight = expectedTenureWeight * expectedStakeWeight;
     expect(observers).toEqual([
@@ -111,7 +111,7 @@ describe('getPrescribedObserversForEpoch', () => {
       const expectedObserverRewardRatioWeight = 1;
       const expectedStakeWeight =
         eligibleGateways[gateway].operatorStake /
-        GATEWAY_REGISTRY_SETTINGS.minOperatorStake;
+        GATEWAY_REGISTRY_SETTINGS.minOperatorStake.valueOf();
       const expectedTenureWeight =
         (epochStartHeight - eligibleGateways[gateway].start) /
         TENURE_WEIGHT_PERIOD;
@@ -208,11 +208,11 @@ describe('isGatewayEligibleForDistribution', () => {
       {
         ...stubbedGatewayData,
         status: 'leaving',
-        end: GATEWAY_LEAVE_BLOCK_LENGTH + 1,
+        end: GATEWAY_LEAVE_BLOCK_LENGTH.plus(new BlockHeight(1)),
         start: 0,
       },
       10,
-      GATEWAY_LEAVE_BLOCK_LENGTH,
+      GATEWAY_LEAVE_BLOCK_LENGTH.valueOf(),
       true,
     ],
     [
@@ -249,10 +249,10 @@ describe('isGatewayEligibleForDistribution', () => {
         ...stubbedGatewayData,
         status: 'leaving',
         start: 10,
-        end: GATEWAY_LEAVE_BLOCK_LENGTH - 1,
+        end: GATEWAY_LEAVE_BLOCK_LENGTH.minus(new BlockHeight(1)),
       },
       10,
-      GATEWAY_LEAVE_BLOCK_LENGTH,
+      GATEWAY_LEAVE_BLOCK_LENGTH.valueOf(),
       false,
     ],
     [

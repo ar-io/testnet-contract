@@ -16,15 +16,16 @@ import {
   Fees,
   IOState,
   RegistrationType,
+  mIOToken,
 } from './types';
 
 export function tallyNamePurchase(
   dfData: DeepReadonly<DemandFactoringData>,
-  revenue: number,
+  revenue: mIOToken,
 ): DemandFactoringData {
   const newDfData = cloneDemandFactoringData(dfData);
   newDfData.purchasesThisPeriod++;
-  newDfData.revenueThisPeriod += revenue;
+  newDfData.revenueThisPeriod += revenue.valueOf();
   return newDfData;
 }
 
@@ -211,21 +212,21 @@ export function calculateLeaseFee({
   years: number;
   currentBlockTimestamp: BlockTimestamp;
   demandFactoring: DeepReadonly<DemandFactoringData>;
-}): number {
+}): mIOToken {
   // Initial cost to register a name
   // TODO: Harden the types here to make fees[name.length] an error
-  const initialNamePurchaseFee = fees[name.length.toString()];
+  const initialNamePurchaseFee = new mIOToken(fees[name.length.toString()]);
+
+  const annualRenewalFees = calculateAnnualRenewalFee({
+    name,
+    fees,
+    years,
+  });
+  const initialFeeWithAnnualRenewal =
+    initialNamePurchaseFee.plus(annualRenewalFees);
 
   // total cost to purchase name
-  return (
-    demandFactoring.demandFactor *
-    (initialNamePurchaseFee +
-      calculateAnnualRenewalFee({
-        name,
-        fees,
-        years,
-      }))
-  );
+  return initialFeeWithAnnualRenewal.multiply(demandFactoring.demandFactor);
 }
 
 export function calculateAnnualRenewalFee({
@@ -236,17 +237,12 @@ export function calculateAnnualRenewalFee({
   name: string;
   fees: Fees;
   years: number;
-}): number {
+}): mIOToken {
   // Determine annual registration price of name
-  const initialNamePurchaseFee = fees[name.length.toString()];
+  const initialNamePurchaseFee = new mIOToken(fees[name.length.toString()]);
 
   // Annual fee is specific % of initial purchase cost
-  const nameAnnualRegistrationFee =
-    initialNamePurchaseFee * ANNUAL_PERCENTAGE_FEE;
-
-  const totalAnnualRenewalCost = nameAnnualRegistrationFee * years;
-
-  return totalAnnualRenewalCost;
+  return initialNamePurchaseFee.multiply(ANNUAL_PERCENTAGE_FEE).multiply(years);
 }
 
 export function calculatePermabuyFee({
@@ -258,20 +254,20 @@ export function calculatePermabuyFee({
   fees: Fees;
   currentBlockTimestamp: BlockTimestamp;
   demandFactoring: DeepReadonly<DemandFactoringData>;
-}): number {
+}): mIOToken {
   // genesis price
-  const initialNamePurchaseFee = fees[name.length.toString()];
-  // calculate the annual fee for the name for default of 10 years
-  const permabuyPrice =
-    demandFactoring.demandFactor *
-    (initialNamePurchaseFee +
-      // total renewal cost pegged to 10 years to purchase name
-      calculateAnnualRenewalFee({
-        name,
-        fees,
-        years: PERMABUY_LEASE_FEE_LENGTH,
-      }));
-  return permabuyPrice;
+  const initialNamePurchaseFee = new mIOToken(fees[name.length.toString()]);
+
+  const annualRenewalFeeForPermabuy = calculateAnnualRenewalFee({
+    name,
+    fees,
+    years: PERMABUY_LEASE_FEE_LENGTH,
+  });
+
+  const initialFeeWithAnnualRenewal = initialNamePurchaseFee.plus(
+    annualRenewalFeeForPermabuy,
+  );
+  return initialFeeWithAnnualRenewal.multiply(demandFactoring.demandFactor);
 }
 
 export function calculateRegistrationFee({
@@ -288,7 +284,7 @@ export function calculateRegistrationFee({
   years: number;
   currentBlockTimestamp: BlockTimestamp;
   demandFactoring: DeepReadonly<DemandFactoringData>;
-}): number {
+}): mIOToken {
   switch (type) {
     case 'lease':
       return calculateLeaseFee({
@@ -322,8 +318,8 @@ export function calculateUndernameCost({
   type: RegistrationType;
   years: number;
   demandFactoring: DeepReadonly<DemandFactoringData>;
-}): number {
-  const initialNameFee = fees[name.length.toString()];
+}): mIOToken {
+  const initialNameFee = new mIOToken(fees[name.length.toString()]);
   const getUndernameFeePercentage = () => {
     switch (type) {
       case 'lease':
@@ -333,7 +329,9 @@ export function calculateUndernameCost({
     }
   };
   const undernamePercentageFee = getUndernameFeePercentage();
-  const totalFeeForQtyAndYears =
-    initialNameFee * undernamePercentageFee * increaseQty * years;
-  return demandFactoring.demandFactor * totalFeeForQtyAndYears;
+  const totalFeeForQtyAndYears = initialNameFee
+    .multiply(undernamePercentageFee)
+    .multiply(increaseQty)
+    .multiply(years);
+  return totalFeeForQtyAndYears.multiply(demandFactoring.demandFactor);
 }

@@ -10,16 +10,20 @@ import {
   ArNSBaseAuctionData,
   ArNSLeaseAuctionData,
   BlockTimestamp,
-  IOToken,
+  mIOToken,
 } from './types';
 import { BlockHeight } from './types';
 
 describe('calculateAuctionPriceForBlock', () => {
   describe('validate AUCTION_SETTINGS used in the contract', () => {
-    const basePrice = 30;
+    const basePrice = new mIOToken(30);
     const allowedThreshold = 0.05; // prices must be within 5% of the expected value
-    const startPrice = basePrice * AUCTION_SETTINGS.startPriceMultiplier;
-    const floorPrice = basePrice * AUCTION_SETTINGS.floorPriceMultiplier;
+    const startPrice = basePrice.multiply(
+      AUCTION_SETTINGS.startPriceMultiplier,
+    );
+    const floorPrice = basePrice.multiply(
+      AUCTION_SETTINGS.floorPriceMultiplier,
+    );
     const startHeight = new BlockHeight(0);
 
     it.each([
@@ -31,12 +35,12 @@ describe('calculateAuctionPriceForBlock', () => {
       [
         'should be half the start price after ~2.5 days (1800 blocks)',
         new BlockHeight(1800),
-        startPrice / 2,
+        startPrice.divide(2),
       ],
       [
         'should twice the floor price after ~11.5 days (8300 blocks)',
         new BlockHeight(8300),
-        floorPrice * 2,
+        floorPrice.multiply(2),
       ],
       [
         'should end at a price larger than the floor price',
@@ -52,20 +56,22 @@ describe('calculateAuctionPriceForBlock', () => {
         auctionSettings: AUCTION_SETTINGS,
       });
       const percentDifference = Math.abs(
-        1 - expectedPrice / priceAtBlock.valueOf(),
+        1 - expectedPrice.valueOf() / priceAtBlock.valueOf(),
       );
-      expect(priceAtBlock.valueOf()).toBeGreaterThanOrEqual(expectedPrice);
+      expect(priceAtBlock.valueOf()).toBeGreaterThanOrEqual(
+        expectedPrice.valueOf(),
+      );
       expect(percentDifference).toBeLessThanOrEqual(allowedThreshold);
     });
 
     it.each([
       [[0, 0], 100],
-      [[0, 1], 99.962007],
-      [[0, 2], 99.924029],
-      [[0, 3], 99.886065],
-      [[0, 1], 99.962007],
-      [[0, 2], 99.924029],
-      [[0, 3], 99.886065],
+      [[0, 1], 99],
+      [[0, 2], 99],
+      [[0, 3], 99],
+      [[0, 1], 99],
+      [[0, 2], 99],
+      [[0, 3], 99],
       // block heights before the start should just return the start price
       [[10, 9], 100],
       [[10, 0], 100],
@@ -74,8 +80,8 @@ describe('calculateAuctionPriceForBlock', () => {
       ([startHeight, currentHeight], expectedPrice) => {
         const calculatedMinimumBid = calculateAuctionPriceForBlock({
           startHeight: new BlockHeight(startHeight),
-          startPrice: 100,
-          floorPrice: 10,
+          startPrice: new mIOToken(100),
+          floorPrice: new mIOToken(10),
           currentBlockHeight: new BlockHeight(currentHeight),
           auctionSettings: AUCTION_SETTINGS,
         });
@@ -88,20 +94,20 @@ describe('calculateAuctionPriceForBlock', () => {
     it('should return the correct prices for all block heights', () => {
       const prices = getAuctionPricesForInterval({
         startHeight: new BlockHeight(0),
-        startPrice: 100,
-        floorPrice: 10,
+        startPrice: new mIOToken(100),
+        floorPrice: new mIOToken(10),
         blocksPerInterval: 1,
         auctionSettings: AUCTION_SETTINGS,
       });
 
       expect(Object.keys(prices).length).toEqual(10081);
       expect(prices[0]).toEqual(100);
-      expect(prices[1000]).toEqual(68.360124);
-      expect(prices[2000]).toEqual(46.695422);
-      expect(prices[3000]).toEqual(31.872273);
-      expect(prices[4000]).toEqual(21.737906);
-      expect(prices[5000]).toEqual(14.814499);
-      expect(prices[6000]).toEqual(10.088334);
+      expect(prices[1000]).toEqual(68);
+      expect(prices[2000]).toEqual(46);
+      expect(prices[3000]).toEqual(31);
+      expect(prices[4000]).toEqual(21);
+      expect(prices[5000]).toEqual(14);
+      expect(prices[6000]).toEqual(10);
       expect(prices[7000]).toEqual(10);
       expect(prices[8000]).toEqual(10);
       expect(prices[9000]).toEqual(10);
@@ -175,8 +181,8 @@ describe('calculateExistingAuctionBidForCaller function', () => {
       calculateExistingAuctionBidForCaller({
         caller: '',
         auction: nihilisticAuction,
-        submittedBid: 1,
-        requiredMinimumBid: new IOToken(2),
+        submittedBid: new mIOToken(1),
+        requiredMinimumBid: new mIOToken(2),
       });
     }).toThrowError(
       'The bid (1 IO) is less than the current required minimum bid of 2 IO.',

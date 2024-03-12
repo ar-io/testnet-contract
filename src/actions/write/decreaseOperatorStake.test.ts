@@ -2,6 +2,7 @@ import {
   GATEWAY_REGISTRY_SETTINGS,
   INVALID_GATEWAY_EXISTS_MESSAGE,
   INVALID_INPUT_MESSAGE,
+  MIN_OPERATOR_STAKE,
 } from '../../constants';
 import {
   getBaselineState,
@@ -46,20 +47,20 @@ describe('decreaseOperatorStake', () => {
         gateways: {
           [stubbedArweaveTxId]: {
             ...stubbedGatewayData,
-            operatorStake: 100,
+            operatorStake: MIN_OPERATOR_STAKE.valueOf(),
           },
         },
       };
       const error = await decreaseOperatorStake(initialState, {
         caller: stubbedArweaveTxId,
         input: {
-          qty: 101,
+          qty: MIN_OPERATOR_STAKE.valueOf() + 1,
         },
       }).catch((e: any) => e);
       expect(error).toBeInstanceOf(Error);
       expect(error.message).toEqual(
         expect.stringContaining(
-          `101 is not enough operator stake to maintain the minimum of ${GATEWAY_REGISTRY_SETTINGS.minOperatorStake}`,
+          `Resulting stake is not enough maintain the minimum operator stake of ${GATEWAY_REGISTRY_SETTINGS.minOperatorStake.valueOf()}`,
         ),
       );
     });
@@ -108,7 +109,8 @@ describe('decreaseOperatorStake', () => {
         gateways: {
           [stubbedArweaveTxId]: {
             ...stubbedGatewayData,
-            operatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake + 1000,
+            operatorStake:
+              GATEWAY_REGISTRY_SETTINGS.minOperatorStake.valueOf() + 1000,
             vaults: {},
           },
         },
@@ -121,14 +123,14 @@ describe('decreaseOperatorStake', () => {
       });
       expect(state.gateways[stubbedArweaveTxId]).toEqual({
         ...stubbedGatewayData,
-        operatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
+        operatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake.valueOf(),
         vaults: {
           [SmartWeave.transaction.id]: {
             balance: 1000,
             start: SmartWeave.block.height,
             end:
               SmartWeave.block.height +
-              GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength,
+              GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength.valueOf(),
           },
         },
       });

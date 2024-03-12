@@ -13,6 +13,7 @@ import {
   DeepReadonly,
   IOState,
   PstAction,
+  mIOToken,
 } from '../../types';
 
 export const getAuction = (
@@ -73,11 +74,15 @@ export const getAuction = (
     return {
       result: {
         name: formattedName,
+        ...auctionObject,
         isActive: false,
         isAvailableForAuction: isAvailableForAuction,
         isRequiredToBeAuctioned: isRequiredToBeAuctioned,
-        currentPrice: auctionObject.floorPrice, // since its not active yet, the minimum bid is the floor price
-        ...auctionObject,
+        startPrice: auctionObject.startPrice.valueOf(),
+        floorPrice: auctionObject.floorPrice.valueOf(),
+        startHeight: auctionObject.startHeight.valueOf(),
+        endHeight: auctionObject.endHeight.valueOf(),
+        currentPrice: auctionObject.floorPrice.valueOf(), // since its not active yet, the minimum bid is the floor price
         prices,
       },
     };
@@ -94,8 +99,8 @@ export const getAuction = (
   // get all the prices for the auction
   const prices = getAuctionPricesForInterval({
     startHeight: new BlockHeight(startHeight),
-    startPrice, // TODO: use IO class class
-    floorPrice,
+    startPrice: new mIOToken(startPrice), // TODO: use IO class class
+    floorPrice: new mIOToken(floorPrice),
     blocksPerInterval: 30, // TODO: this could be an input on the function
     auctionSettings: AUCTION_SETTINGS,
   });
@@ -103,8 +108,8 @@ export const getAuction = (
   // calculate the minimum bid
   const minimumBid = calculateAuctionPriceForBlock({
     startHeight: new BlockHeight(startHeight),
-    startPrice,
-    floorPrice,
+    startPrice: new mIOToken(startPrice), // TODO: use IO class class
+    floorPrice: new mIOToken(floorPrice),
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
     auctionSettings: AUCTION_SETTINGS,
   });

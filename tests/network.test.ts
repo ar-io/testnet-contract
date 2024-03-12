@@ -330,7 +330,7 @@ describe('Network', () => {
             note: joinGatewayPayload.note,
             allowDelegatedStaking: false,
             delegateRewardShareRatio: 0,
-            minDelegatedStake: MIN_DELEGATED_STAKE,
+            minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
             autoStake: false,
           },
         });
@@ -444,7 +444,7 @@ describe('Network', () => {
           note: 'a new note',
           allowDelegatedStaking: true,
           delegateRewardShareRatio: Math.floor((1 - 0.9) * 100),
-          minDelegatedStake: MIN_DELEGATED_STAKE + 1,
+          minDelegatedStake: MIN_DELEGATED_STAKE.plus(new mIOToken(1)),
           autoStake: true,
         };
         const writeInteraction = await contract.writeInteraction({
@@ -715,12 +715,12 @@ describe('Network', () => {
         const { cachedValue: newCachedValue } = await contract.readState();
         const newState = newCachedValue.state as IOState;
         newState.gateways[newGatewayOperatorAddress].vaults;
-        const expectedEndBlock =
-          (await getCurrentBlock(arweave)).valueOf() +
-          GATEWAY_LEAVE_BLOCK_LENGTH;
-        const expectedWithdrawBlock =
-          (await getCurrentBlock(arweave)).valueOf() +
-          GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength;
+        const expectedEndBlock = (await getCurrentBlock(arweave))
+          .plus(GATEWAY_LEAVE_BLOCK_LENGTH)
+          .valueOf();
+        const expectedWithdrawBlock = (await getCurrentBlock(arweave)).plus(
+          GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength,
+        );
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
           writeInteraction.originalTxId,
         );
@@ -736,7 +736,7 @@ describe('Network', () => {
             newGatewayOperatorAddress
           ],
         ).toEqual({
-          balance: MIN_OPERATOR_STAKE,
+          balance: MIN_OPERATOR_STAKE.valueOf(),
           start: expect.any(Number),
           end: expectedEndBlock,
         });
@@ -745,7 +745,7 @@ describe('Network', () => {
             writeInteraction.originalTxId
           ],
         ).toEqual({
-          balance: prevOperatorStake - MIN_OPERATOR_STAKE,
+          balance: prevOperatorStake - MIN_OPERATOR_STAKE.valueOf(),
           start: expect.any(Number),
           end: expectedWithdrawBlock,
         });

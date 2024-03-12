@@ -24,6 +24,7 @@ import {
   PstAction,
   Records,
   RegistrationType,
+  mIOToken,
 } from '../../types';
 import {
   getInvalidAjvMessage,
@@ -36,7 +37,7 @@ import { validateAuctionBid } from '../../validations';
 
 export class AuctionBid {
   name: string;
-  qty?: number;
+  qty?: mIOToken;
   type: RegistrationType;
   contractTxId: string;
   years?: number;
@@ -55,7 +56,7 @@ export class AuctionBid {
       contractTxId = RESERVED_ATOMIC_TX_ID,
     } = input;
     this.name = name.trim().toLowerCase();
-    this.qty = qty;
+    this.qty = qty ? new mIOToken(qty) : undefined; // round it to avoid floating point errors on inputs
     this.type = type;
     this.contractTxId =
       contractTxId === RESERVED_ATOMIC_TX_ID
@@ -139,8 +140,8 @@ function handleBidForExistingAuction({
   // calculate the current bid price and compare it to the floor price set by the initiator
   const currentRequiredMinimumBid = calculateAuctionPriceForBlock({
     startHeight: new BlockHeight(existingAuction.startHeight),
-    startPrice: existingAuction.startPrice,
-    floorPrice: existingAuction.floorPrice,
+    startPrice: new mIOToken(existingAuction.startPrice),
+    floorPrice: new mIOToken(existingAuction.floorPrice),
     currentBlockHeight: currentBlockHeight,
     auctionSettings: AUCTION_SETTINGS,
   });
@@ -161,13 +162,7 @@ function handleBidForExistingAuction({
   });
 
   // throw an error if the wallet doesn't have the balance for the bid
-  if (
-    !walletHasSufficientBalance(
-      state.balances,
-      caller,
-      finalBidForCaller.valueOf(),
-    )
-  ) {
+  if (!walletHasSufficientBalance(state.balances, caller, finalBidForCaller)) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
@@ -208,21 +203,13 @@ function handleBidForExistingAuction({
   incrementBalance(
     updatedBalances,
     SmartWeave.contract.id,
-    currentRequiredMinimumBid.valueOf(),
+    currentRequiredMinimumBid,
   );
-  unsafeDecrementBalance(
-    updatedBalances,
-    caller,
-    finalBidForCaller.valueOf(),
-    false,
-  );
+  unsafeDecrementBalance(updatedBalances, caller, finalBidForCaller, false);
 
   if (caller !== existingAuction.initiator) {
-    incrementBalance(
-      updatedBalances,
-      existingAuction.initiator,
-      existingAuction.floorPrice,
-    );
+    const floorPrice = new mIOToken(existingAuction.floorPrice);
+    incrementBalance(updatedBalances, existingAuction.initiator, floorPrice);
   }
 
   // update the state
@@ -251,7 +238,7 @@ function handleBidForExistingAuction({
     records,
     demandFactoring: tallyNamePurchase(
       state.demandFactoring,
-      currentRequiredMinimumBid.valueOf(),
+      currentRequiredMinimumBid,
     ),
   });
   // return updated state
@@ -288,14 +275,10 @@ function handleBidForNewAuction({
     contractTxId,
   });
 
+  const floorPrice = initialAuctionBid.floorPrice;
+
   // throw an error on invalid balance
-  if (
-    !walletHasSufficientBalance(
-      state.balances,
-      caller,
-      initialAuctionBid.floorPrice,
-    )
-  ) {
+  if (!walletHasSufficientBalance(state.balances, caller, floorPrice)) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
@@ -304,12 +287,7 @@ function handleBidForNewAuction({
     [caller]: state.balances[caller] || 0,
   };
 
-  unsafeDecrementBalance(
-    updatedBalances,
-    caller,
-    initialAuctionBid.floorPrice,
-    false,
-  );
+  unsafeDecrementBalance(updatedBalances, caller, floorPrice, false);
 
   // delete the rename if exists in reserved
   const { [name]: _, ...reserved } = state.reserved;
@@ -317,7 +295,13 @@ function handleBidForNewAuction({
   // update auctions
   const auctions = {
     ...state.auctions,
-    [name]: initialAuctionBid,
+    [name]: {
+      ...initialAuctionBid,
+      startPrice: initialAuctionBid.startPrice.valueOf(),
+      floorPrice: initialAuctionBid.floorPrice.valueOf(),
+      startHeight: currentBlockHeight.valueOf(),
+      endHeight: initialAuctionBid.endHeight.valueOf(),
+    },
   };
 
   // update balances

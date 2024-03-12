@@ -115,7 +115,7 @@ export const buyRecord = async (
         type,
         startTimestamp: +SmartWeave.block.timestamp,
         undernames: DEFAULT_UNDERNAME_COUNT,
-        purchasePrice: totalRegistrationFee,
+        purchasePrice: totalRegistrationFee.valueOf(),
       };
       break;
     case 'lease':
@@ -124,7 +124,7 @@ export const buyRecord = async (
         type,
         startTimestamp: +SmartWeave.block.timestamp,
         undernames: DEFAULT_UNDERNAME_COUNT,
-        purchasePrice: totalRegistrationFee,
+        purchasePrice: totalRegistrationFee.valueOf(),
         // set the end lease period for this based on number of years if it's a lease
         endTimestamp:
           currentBlockTimestamp.valueOf() + SECONDS_IN_A_YEAR * years,
