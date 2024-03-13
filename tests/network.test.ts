@@ -8,7 +8,6 @@ import {
   WeightedObserver,
 } from '../src/types';
 import {
-  CONTRACT_SETTINGS,
   DEFAULT_GATEWAY_PERFORMANCE_STATS,
   GATEWAY_LEAVE_BLOCK_LENGTH,
   GATEWAY_REGISTRY_SETTINGS,
@@ -71,7 +70,7 @@ describe('Network', () => {
         async (badObserverWallet) => {
           const joinGatewayPayload = {
             observerWallet: badObserverWallet,
-            qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
+            qty: MIN_OPERATOR_STAKE.valueOf(), // must meet the minimum
             label: 'Test Gateway', // friendly label
             fqdn: 'jest.io',
             port: '443',
@@ -95,7 +94,7 @@ describe('Network', () => {
         'should fail for invalid ports',
         async (badPort) => {
           const joinGatewayPayload = {
-            qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
+            qty: MIN_OPERATOR_STAKE.valueOf(), // must meet the minimum
             label: 'Test Gateway', // friendly label
             fqdn: 'jest.io',
             port: badPort,
@@ -119,7 +118,7 @@ describe('Network', () => {
         'should fail for invalid protocol',
         async (badProtocol) => {
           const joinGatewayPayload = {
-            qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
+            qty: MIN_OPERATOR_STAKE.valueOf(), // must meet the minimum
             label: 'Test Gateway', // friendly label
             fqdn: 'jest.io',
             port: 3000,
@@ -146,7 +145,7 @@ describe('Network', () => {
         'SUUUUUUUUUUUUUUUUUUUUUUUUUUPER LONG LABEL LONGER THAN 64 CHARS!!!!!!!!!',
       ])('should fail for invalid label', async (badLabel) => {
         const joinGatewayPayload = {
-          qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
+          qty: MIN_OPERATOR_STAKE.valueOf(), // must meet the minimum
           label: badLabel, // friendly label
           fqdn: 'jest.io',
           port: 3000,
@@ -188,7 +187,7 @@ describe('Network', () => {
         '%percent.com',
       ])('should fail for invalid fqdn', async (badFqdn) => {
         const joinGatewayPayload = {
-          qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
+          qty: MIN_OPERATOR_STAKE.valueOf(), // must meet the minimum
           label: 'test gateway', // friendly label
           fqdn: badFqdn,
           port: 3000,
@@ -214,7 +213,7 @@ describe('Network', () => {
         'this note is way too long.  please ignore this very long note. this note is way too long.  please ignore this very long note. this note is way too long.  please ignore this very long note. this note is way too long.  please ignore this very long note. this note is way too long.  please ignore this very long note.',
       ])('should fail for invalid note', async (badNote) => {
         const joinGatewayPayload = {
-          qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
+          qty: MIN_OPERATOR_STAKE.valueOf(), // must meet the minimum
           label: 'test gateway', // friendly label
           fqdn: 'testnet.com',
           port: 3000,
@@ -241,7 +240,7 @@ describe('Network', () => {
         'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY4*',
       ])('should fail for invalid properties', async (badProperties) => {
         const joinGatewayPayload = {
-          qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
+          qty: MIN_OPERATOR_STAKE.valueOf(), // must meet the minimum
           label: 'test gateway', // friendly label
           fqdn: 'testnet.com',
           port: 3000,
@@ -261,10 +260,10 @@ describe('Network', () => {
       });
 
       it.each([
-        CONTRACT_SETTINGS.minNetworkJoinStakeAmount - 1,
+        MIN_OPERATOR_STAKE.valueOf() - 1,
         100000000000000000000,
         -1,
-        CONTRACT_SETTINGS.minNetworkJoinStakeAmount.toString,
+        MIN_OPERATOR_STAKE.valueOf().toString,
       ])('should fail for invalid qty', async (badQty) => {
         const joinGatewayPayload = {
           qty: badQty, // must meet the minimum
@@ -290,7 +289,7 @@ describe('Network', () => {
         const prevBalance = prevState.balances[newGatewayOperatorAddress];
         const joinGatewayPayload = {
           observerWallet: newGatewayOperatorAddress,
-          qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount, // must meet the minimum
+          qty: MIN_OPERATOR_STAKE.valueOf(), // must meet the minimum
           label: 'Test Gateway', // friendly label
           fqdn: 'jest.io',
           port: 3000,
@@ -344,7 +343,7 @@ describe('Network', () => {
           prevState.gateways[newGatewayOperatorAddress].operatorStake;
         const writeInteraction = await contract.writeInteraction({
           function: 'increaseOperatorStake',
-          qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount * 2,
+          qty: MIN_OPERATOR_STAKE.valueOf() * 2,
         });
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
@@ -353,13 +352,12 @@ describe('Network', () => {
           writeInteraction.originalTxId,
         );
         expect(newState.balances[newGatewayOperatorAddress]).toEqual(
-          prevBalance - CONTRACT_SETTINGS.minNetworkJoinStakeAmount * 2,
+          prevBalance - MIN_OPERATOR_STAKE.valueOf() * 2,
         );
         expect(
           newState.gateways[newGatewayOperatorAddress].operatorStake,
         ).toEqual(
-          prevGatewayOperatorBalance +
-            CONTRACT_SETTINGS.minNetworkJoinStakeAmount * 2,
+          prevGatewayOperatorBalance + MIN_OPERATOR_STAKE.valueOf() * 2,
         );
       });
 
@@ -387,16 +385,16 @@ describe('Network', () => {
       });
 
       it('should decrease operator stake and create new vault', async () => {
-        const qty = CONTRACT_SETTINGS.minNetworkJoinStakeAmount; // This vault should still have enough tokens left
+        const qty = MIN_OPERATOR_STAKE.valueOf(); // This vault should still have enough tokens left
         const writeInteraction = await contract.writeInteraction({
           function: 'decreaseOperatorStake',
           qty,
         });
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
-        const expectedStartBlock = (await getCurrentBlock(arweave)).valueOf();
-        const expectedEndBlock =
-          expectedStartBlock.valueOf() +
-          CONTRACT_SETTINGS.operatorStakeWithdrawLength;
+        const expectedStartBlock = await getCurrentBlock(arweave);
+        const expectedEndBlock = expectedStartBlock.plus(
+          GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength,
+        );
         const { cachedValue: newCachedValue } = await contract.readState();
         const newState = newCachedValue.state as IOState;
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
@@ -413,15 +411,15 @@ describe('Network', () => {
           ],
         ).toEqual({
           balance: qty,
-          end: expectedEndBlock,
-          start: expectedStartBlock,
+          end: expectedEndBlock.valueOf(),
+          start: expectedStartBlock.valueOf(),
         });
       });
 
       it('should not decrease operator stake decrease if it brings the gateway below the minimum', async () => {
         const writeInteraction = await contract.writeInteraction({
           function: 'decreaseOperatorStake',
-          qty: CONTRACT_SETTINGS.minNetworkJoinStakeAmount + 1,
+          qty: MIN_OPERATOR_STAKE.valueOf() + 1,
         });
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
@@ -710,7 +708,10 @@ describe('Network', () => {
         const prevState = prevCachedValue.state as IOState;
         const prevOperatorStake =
           prevState.gateways[newGatewayOperatorAddress].operatorStake;
-        await mineBlocks(arweave, CONTRACT_SETTINGS.minGatewayJoinLength);
+        await mineBlocks(
+          arweave,
+          GATEWAY_REGISTRY_SETTINGS.minGatewayJoinLength.valueOf(),
+        );
         const writeInteraction = await contract.writeInteraction({
           function: 'leaveNetwork',
         });
@@ -751,7 +752,7 @@ describe('Network', () => {
         ).toEqual({
           balance: prevOperatorStake - MIN_OPERATOR_STAKE.valueOf(),
           start: expect.any(Number),
-          end: expectedWithdrawBlock,
+          end: expectedWithdrawBlock.valueOf(),
         });
       });
     });

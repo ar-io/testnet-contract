@@ -2,6 +2,7 @@ import {
   DELEGATED_STAKE_UNLOCK_LENGTH,
   INVALID_GATEWAY_REGISTERED_MESSAGE,
   INVALID_OBSERVER_WALLET,
+  MIN_DELEGATED_STAKE,
 } from '../../constants';
 import {
   BlockHeight,
@@ -10,6 +11,7 @@ import {
   IOState,
   PstAction,
   WalletAddress,
+  mIOToken,
 } from '../../types';
 import { getInvalidAjvMessage } from '../../utilities';
 import { validateUpdateGateway } from '../../validations';
@@ -26,7 +28,7 @@ export class GatewaySettings {
     autoStake: boolean;
     allowDelegatedStaking: boolean;
     delegateRewardShareRatio: number;
-    minDelegatedStake: number;
+    minDelegatedStake: mIOToken;
   };
 
   constructor(input: any) {
@@ -62,7 +64,9 @@ export class GatewaySettings {
       ...(delegateRewardShareRatio !== undefined && {
         delegateRewardShareRatio,
       }),
-      ...(minDelegatedStake !== undefined && { minDelegatedStake }),
+      ...(minDelegatedStake !== undefined && {
+        minDelegatedStake: new mIOToken(minDelegatedStake),
+      }),
     };
     this.observerWallet = observerWallet;
   }
@@ -82,6 +86,15 @@ export const updateGatewaySettings = async (
   }
 
   if (
+    updatedSettings.minDelegatedStake &&
+    updatedSettings.minDelegatedStake.isLessThan(MIN_DELEGATED_STAKE)
+  ) {
+    throw new ContractError(
+      `The minimum delegated stake must be at least ${MIN_DELEGATED_STAKE}`,
+    );
+  }
+
+  if (
     Object.entries(gateways).some(
       ([gatewayAddress, gateway]: [WalletAddress, Gateway]) =>
         gateway.observerWallet === updatedObserverWallet &&
@@ -97,6 +110,9 @@ export const updateGatewaySettings = async (
     settings: {
       ...gateway.settings,
       ...updatedSettings,
+      ...(updatedSettings.minDelegatedStake && {
+        minDelegatedStake: updatedSettings.minDelegatedStake.valueOf(),
+      }),
     },
   };
 

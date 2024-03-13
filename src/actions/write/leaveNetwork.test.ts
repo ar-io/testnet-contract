@@ -101,7 +101,7 @@ describe('leaveNetwork', () => {
     });
 
     it('should leave the network with higher than minimum stake', async () => {
-      const newOperatorStake = 100_000;
+      const newOperatorStake = MIN_OPERATOR_STAKE.valueOf() + 10_000;
       const initialState: IOState = {
         ...getBaselineState(),
         gateways: {
@@ -195,13 +195,12 @@ describe('leaveNetwork', () => {
     });
 
     it('should leave the network with delegated stakers and existing gateway and delegate vaults', async () => {
-      const newOperatorStake = 100_000;
       const initialState: IOState = {
         ...getBaselineState(),
         gateways: {
           [stubbedArweaveTxId]: {
             ...stubbedGatewayData,
-            operatorStake: newOperatorStake,
+            operatorStake: MIN_OPERATOR_STAKE.valueOf() + 10_000,
             totalDelegatedStake: stubbedDelegateData.delegatedStake,
             start: 0,
             vaults: {
@@ -246,7 +245,7 @@ describe('leaveNetwork', () => {
             start: SmartWeave.block.height,
           },
           [SmartWeave.transaction.id]: {
-            balance: newOperatorStake - MIN_OPERATOR_STAKE.valueOf(),
+            balance: 10_000,
             end:
               SmartWeave.block.height +
               GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength,
@@ -265,7 +264,9 @@ describe('leaveNetwork', () => {
               },
               [SmartWeave.transaction.id]: {
                 balance: stubbedDelegateData.delegatedStake,
-                end: SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH,
+                end:
+                  SmartWeave.block.height +
+                  DELEGATED_STAKE_UNLOCK_LENGTH.valueOf(),
                 start: SmartWeave.block.height,
               },
             },
