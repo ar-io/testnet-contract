@@ -850,7 +850,7 @@ export async function tickRewardDistribution({
           totalDistributedToDelegates =
             totalDistributedToDelegates.plus(rewardForDelegate);
         }
-        // rounding may cause there to be some left over - make sure it goes to the operator
+        // rounding down distributed tokens may cause there to be some left over - make sure it goes to the operator
         const remainingTokensForOperator = gatewayReward.minus(
           totalDistributedToDelegates,
         );

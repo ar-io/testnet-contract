@@ -25,7 +25,7 @@ export class DecreaseDelegateStake {
     }
     const { target, qty } = input;
     this.target = target;
-    this.qty = new mIOToken(qty); // round to avoid bad user input errors
+    this.qty = new mIOToken(qty);
   }
 }
 

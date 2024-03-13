@@ -58,7 +58,7 @@ export class JoinNetwork {
       delegateRewardShareRatio = 0,
       minDelegatedStake = MIN_DELEGATED_STAKE,
     } = input;
-    this.qty = new mIOToken(qty); // round down to avoid input errors
+    this.qty = new mIOToken(qty);
     this.label = label;
     this.port = port;
     this.protocol = protocol;

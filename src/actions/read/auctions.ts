@@ -99,7 +99,7 @@ export const getAuction = (
   // get all the prices for the auction
   const prices = getAuctionPricesForInterval({
     startHeight: new BlockHeight(startHeight),
-    startPrice: new mIOToken(startPrice), // TODO: use IO class class
+    startPrice: new mIOToken(startPrice),
     floorPrice: new mIOToken(floorPrice),
     blocksPerInterval: 30, // TODO: this could be an input on the function
     auctionSettings: AUCTION_SETTINGS,
@@ -108,7 +108,7 @@ export const getAuction = (
   // calculate the minimum bid
   const minimumBid = calculateAuctionPriceForBlock({
     startHeight: new BlockHeight(startHeight),
-    startPrice: new mIOToken(startPrice), // TODO: use IO class class
+    startPrice: new mIOToken(startPrice),
     floorPrice: new mIOToken(floorPrice),
     currentBlockHeight: new BlockHeight(+SmartWeave.block.height),
     auctionSettings: AUCTION_SETTINGS,

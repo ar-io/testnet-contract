@@ -29,7 +29,7 @@ export class DecreaseOperatorStake {
       );
     }
     const { qty } = input;
-    this.qty = new mIOToken(qty); // round to avoid bad user input errors
+    this.qty = new mIOToken(qty);
   }
 }
 

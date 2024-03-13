@@ -56,7 +56,7 @@ export class AuctionBid {
       contractTxId = RESERVED_ATOMIC_TX_ID,
     } = input;
     this.name = name.trim().toLowerCase();
-    this.qty = qty ? new mIOToken(qty) : undefined; // round it to avoid floating point errors on inputs
+    this.qty = qty ? new mIOToken(qty) : undefined;
     this.type = type;
     this.contractTxId =
       contractTxId === RESERVED_ATOMIC_TX_ID
