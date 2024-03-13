@@ -12,7 +12,7 @@ import { safeIncreaseVault } from '../../vaults';
 // TODO: use top level class
 export class IncreaseVault {
   id: TransactionId;
-  qty: mIOToken; // TODO: change to IO Token
+  qty: mIOToken;
 
   constructor(input: any) {
     if (!validateIncreaseVault(input)) {
