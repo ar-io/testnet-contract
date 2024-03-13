@@ -111,15 +111,15 @@ describe('Records', () => {
       contractTxId: ANT_CONTRACT_IDS[0],
       endTimestamp: expect.any(Number),
       startTimestamp: expect.any(Number),
-      purchasePrice: expectedPurchasePrice,
+      purchasePrice: expectedPurchasePrice.valueOf(),
       undernames: DEFAULT_UNDERNAME_COUNT,
       type: 'lease',
     });
     expect(balances[nonContractOwnerAddress]).toEqual(
-      prevBalance - expectedPurchasePrice,
+      prevBalance - expectedPurchasePrice.valueOf(),
     );
     expect(balances[srcContractId]).toEqual(
-      prevState.balances[srcContractId] + expectedPurchasePrice,
+      prevState.balances[srcContractId] + expectedPurchasePrice.valueOf(),
     );
   });
 
@@ -161,14 +161,14 @@ describe('Records', () => {
       endTimestamp: expect.any(Number),
       startTimestamp: expect.any(Number),
       undernames: DEFAULT_UNDERNAME_COUNT,
-      purchasePrice: expectedPurchasePrice,
+      purchasePrice: expectedPurchasePrice.valueOf(),
       type: 'lease',
     });
     expect(balances[nonContractOwnerAddress]).toEqual(
-      prevBalance - expectedPurchasePrice,
+      prevBalance - expectedPurchasePrice.valueOf(),
     );
     expect(balances[srcContractId]).toEqual(
-      prevState.balances[srcContractId] + expectedPurchasePrice,
+      prevState.balances[srcContractId] + expectedPurchasePrice.valueOf(),
     );
   });
 
@@ -209,13 +209,13 @@ describe('Records', () => {
       type: 'permabuy',
       startTimestamp: expect.any(Number),
       undernames: DEFAULT_UNDERNAME_COUNT,
-      purchasePrice: expectedPurchasePrice,
+      purchasePrice: expectedPurchasePrice.valueOf(),
     });
     expect(balances[nonContractOwnerAddress]).toEqual(
-      prevBalance - expectedPurchasePrice,
+      prevBalance - expectedPurchasePrice.valueOf(),
     );
     expect(balances[srcContractId]).toEqual(
-      prevState.balances[srcContractId] + expectedPurchasePrice,
+      prevState.balances[srcContractId] + expectedPurchasePrice.valueOf(),
     );
   });
 
@@ -521,7 +521,7 @@ describe('Records', () => {
       endTimestamp: expect.any(Number),
       startTimestamp: expect.any(Number),
       undernames: DEFAULT_UNDERNAME_COUNT,
-      purchasePrice: expectedPurchasePrice,
+      purchasePrice: expectedPurchasePrice.valueOf(),
       type: 'lease',
     });
     expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toBe(
@@ -529,10 +529,11 @@ describe('Records', () => {
     );
     expect(reserved[namePurchase.name.toLowerCase()]).toEqual(undefined);
     expect(balances[nonContractOwnerAddress]).toEqual(
-      prevState.balances[nonContractOwnerAddress] - expectedPurchasePrice,
+      prevState.balances[nonContractOwnerAddress] -
+        expectedPurchasePrice.valueOf(),
     );
     expect(balances[srcContractId]).toEqual(
-      prevState.balances[srcContractId] + expectedPurchasePrice,
+      prevState.balances[srcContractId] + expectedPurchasePrice.valueOf(),
     );
   });
 

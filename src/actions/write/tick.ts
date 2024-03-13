@@ -11,6 +11,7 @@ import {
   GATEWAY_REGISTRY_SETTINGS,
   INITIAL_EPOCH_DISTRIBUTION_DATA,
   MAXIMUM_OBSERVER_CONSECUTIVE_FAIL_COUNT,
+  MIN_OPERATOR_STAKE,
   NETWORK_LEAVING_STATUS,
   OBSERVATION_FAILURE_THRESHOLD,
   OBSERVER_PERCENTAGE_OF_EPOCH_REWARD,
@@ -346,13 +347,12 @@ export function tickGatewayRegistry({
 
         // Add minimum staked tokens to a vault that unlocks after the gateway completely leaves the network
         updatedVaults[key] = {
-          balance: GATEWAY_REGISTRY_SETTINGS.minOperatorStake.valueOf(),
+          balance: MIN_OPERATOR_STAKE.valueOf(),
           start: interactionBlockHeight.valueOf(),
           end: gatewayEndHeight.valueOf(),
         };
 
-        gateway.operatorStake -=
-          GATEWAY_REGISTRY_SETTINGS.minOperatorStake.valueOf();
+        gateway.operatorStake -= MIN_OPERATOR_STAKE.valueOf();
 
         // If there are tokens remaining, add them to a vault that unlocks after the gateway stake withdrawal time
         if (gateway.operatorStake > 0) {
@@ -633,7 +633,7 @@ export async function tickRewardDistribution({
       epochStartHeight,
       epochEndHeight,
       distributions,
-      minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
+      minOperatorStake: MIN_OPERATOR_STAKE,
     }));
 
   // TODO: consider having this be a set, gateways can not run on the same wallet
@@ -1055,7 +1055,7 @@ export async function tickRewardDistribution({
     epochStartHeight: nextEpochStartHeight,
     epochEndHeight: nextEpochEndHeight,
     distributions: updatedEpochData,
-    minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
+    minOperatorStake: MIN_OPERATOR_STAKE,
   });
 
   return {

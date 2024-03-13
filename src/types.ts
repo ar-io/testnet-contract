@@ -1,11 +1,5 @@
 import { PstState } from 'warp-contracts';
 
-import {
-  MAX_ALLOWED_DECIMALS,
-  NETWORK_JOIN_STATUS,
-  NETWORK_LEAVING_STATUS,
-} from './constants';
-
 export type WalletAddress = string;
 export type TransactionId = string;
 export type DemandFactoringData = {
@@ -138,7 +132,7 @@ export type DelegateData = {
   vaults: Vaults; // the locked tokens staked by this gateway operator
 };
 
-const gatewayStatus = [NETWORK_JOIN_STATUS, NETWORK_LEAVING_STATUS] as const;
+const gatewayStatus = ['joined', 'leaving'] as const;
 export type GatewayStatus = (typeof gatewayStatus)[number];
 
 export type Gateway = {
@@ -433,12 +427,12 @@ export type DeepReadonly<Type> = Type extends Exclude<Builtin, Error>
   : Readonly<Type>;
 
 // TODO: extend this class and use it for all balance/IO token logic
-const maxAllowedPrecision = Math.pow(10, MAX_ALLOWED_DECIMALS);
+const maxAllowedPrecision = Math.pow(10, 6);
 export class IOToken {
   protected value: number;
   constructor(value: number) {
     // do some big number casting for allowed decimals
-    this.value = +value.toFixed(MAX_ALLOWED_DECIMALS);
+    this.value = +value.toFixed(6);
   }
 
   valueOf(): number {

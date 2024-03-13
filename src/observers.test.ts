@@ -3,9 +3,9 @@ import { createHash } from 'node:crypto';
 import {
   EPOCH_BLOCK_LENGTH,
   GATEWAY_LEAVE_BLOCK_LENGTH,
-  GATEWAY_REGISTRY_SETTINGS,
   INITIAL_EPOCH_DISTRIBUTION_DATA,
   MAXIMUM_OBSERVERS_PER_EPOCH,
+  MIN_OPERATOR_STAKE,
   TENURE_WEIGHT_PERIOD,
 } from './constants';
 import {
@@ -57,12 +57,11 @@ describe('getPrescribedObserversForEpoch', () => {
       distributions: INITIAL_EPOCH_DISTRIBUTION_DATA,
       epochStartHeight: new BlockHeight(epochStartHeight),
       epochEndHeight: new BlockHeight(epochStartHeight + 10),
-      minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
+      minOperatorStake: MIN_OPERATOR_STAKE,
     });
 
     expect(observers).toBeDefined();
-    const expectedStakeWeight =
-      totalStake / GATEWAY_REGISTRY_SETTINGS.minOperatorStake.valueOf();
+    const expectedStakeWeight = totalStake / MIN_OPERATOR_STAKE.valueOf();
     const expectedTenureWeight = epochStartHeight / TENURE_WEIGHT_PERIOD;
     const expectedCompositeWeight = expectedTenureWeight * expectedStakeWeight;
     expect(observers).toEqual([
@@ -101,7 +100,7 @@ describe('getPrescribedObserversForEpoch', () => {
       distributions: INITIAL_EPOCH_DISTRIBUTION_DATA,
       epochStartHeight: new BlockHeight(epochStartHeight),
       epochEndHeight: new BlockHeight(epochStartHeight + 10),
-      minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
+      minOperatorStake: MIN_OPERATOR_STAKE,
     });
     expect(observers).toBeDefined();
     expect(observers.length).toBe(MAXIMUM_OBSERVERS_PER_EPOCH);
@@ -110,8 +109,7 @@ describe('getPrescribedObserversForEpoch', () => {
       const expectedGatewayRewardRatioWeight = 1;
       const expectedObserverRewardRatioWeight = 1;
       const expectedStakeWeight =
-        eligibleGateways[gateway].operatorStake /
-        GATEWAY_REGISTRY_SETTINGS.minOperatorStake.valueOf();
+        eligibleGateways[gateway].operatorStake / MIN_OPERATOR_STAKE.valueOf();
       const expectedTenureWeight =
         (epochStartHeight - eligibleGateways[gateway].start) /
         TENURE_WEIGHT_PERIOD;
@@ -168,7 +166,7 @@ describe('getPrescribedObserversForEpoch', () => {
     const observers = await getPrescribedObserversForEpoch({
       gateways: extendedStubbedGateways,
       distributions: INITIAL_EPOCH_DISTRIBUTION_DATA,
-      minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
+      minOperatorStake: MIN_OPERATOR_STAKE,
       epochStartHeight: new BlockHeight(epochStartHeight),
       epochEndHeight: new BlockHeight(epochStartHeight + EPOCH_BLOCK_LENGTH),
     });

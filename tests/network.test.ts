@@ -444,7 +444,7 @@ describe('Network', () => {
           note: 'a new note',
           allowDelegatedStaking: true,
           delegateRewardShareRatio: Math.floor((1 - 0.9) * 100),
-          minDelegatedStake: MIN_DELEGATED_STAKE.plus(new mIOToken(1)),
+          minDelegatedStake: MIN_DELEGATED_STAKE.valueOf() + 1,
           autoStake: true,
         };
         const writeInteraction = await contract.writeInteraction({
@@ -683,7 +683,11 @@ describe('Network', () => {
           },
         );
 
-        it.each([MIN_DELEGATED_STAKE - 1, '1000', MIN_DELEGATED_STAKE + 0.1])(
+        it.each([
+          MIN_DELEGATED_STAKE.valueOf() - 1,
+          '1000',
+          MIN_DELEGATED_STAKE.valueOf() + 0.1,
+        ])(
           'should not modify gateway settings with invalid minDelegatedStake',
           async (badProperties) => {
             const { cachedValue: prevCachedValue } = await contract.readState();

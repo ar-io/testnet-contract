@@ -60,7 +60,7 @@ describe('decreaseOperatorStake', () => {
       expect(error).toBeInstanceOf(Error);
       expect(error.message).toEqual(
         expect.stringContaining(
-          `Resulting stake is not enough maintain the minimum operator stake of ${GATEWAY_REGISTRY_SETTINGS.minOperatorStake.valueOf()}`,
+          `Resulting stake is not enough maintain the minimum operator stake of ${MIN_OPERATOR_STAKE.valueOf()}`,
         ),
       );
     });
@@ -109,8 +109,7 @@ describe('decreaseOperatorStake', () => {
         gateways: {
           [stubbedArweaveTxId]: {
             ...stubbedGatewayData,
-            operatorStake:
-              GATEWAY_REGISTRY_SETTINGS.minOperatorStake.valueOf() + 1000,
+            operatorStake: MIN_OPERATOR_STAKE.valueOf() + 1000,
             vaults: {},
           },
         },
@@ -123,7 +122,7 @@ describe('decreaseOperatorStake', () => {
       });
       expect(state.gateways[stubbedArweaveTxId]).toEqual({
         ...stubbedGatewayData,
-        operatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake.valueOf(),
+        operatorStake: MIN_OPERATOR_STAKE.valueOf(),
         vaults: {
           [SmartWeave.transaction.id]: {
             balance: 1000,

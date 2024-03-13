@@ -15,7 +15,7 @@ import {
   MINIMUM_ALLOWED_NAME_LENGTH,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../src/constants';
-import { ArNSAuctionData, BlockHeight, IOState } from '../src/types';
+import { ArNSAuctionData, BlockHeight, IOState, mIOToken } from '../src/types';
 import { ANT_CONTRACT_IDS } from './utils/constants';
 import {
   getCurrentBlock,
@@ -265,8 +265,8 @@ describe('Auctions', () => {
               }
               const winningBidQty = calculateAuctionPriceForBlock({
                 startHeight: new BlockHeight(auctionObj.startHeight),
-                startPrice: auctionObj.startPrice,
-                floorPrice: auctionObj.floorPrice,
+                startPrice: new mIOToken(auctionObj.startPrice),
+                floorPrice: new mIOToken(auctionObj.floorPrice),
                 currentBlockHeight: await getCurrentBlock(arweave),
                 auctionSettings: AUCTION_SETTINGS,
               }).valueOf();
@@ -287,8 +287,8 @@ describe('Auctions', () => {
               });
               const pricePaidForBlock = calculateAuctionPriceForBlock({
                 startHeight: new BlockHeight(auctionObj.startHeight),
-                startPrice: auctionObj.startPrice,
-                floorPrice: auctionObj.floorPrice,
+                startPrice: new mIOToken(auctionObj.startPrice),
+                floorPrice: new mIOToken(auctionObj.floorPrice),
                 currentBlockHeight: await getCurrentBlock(arweave),
                 auctionSettings: AUCTION_SETTINGS,
               }).valueOf();
@@ -504,8 +504,8 @@ describe('Auctions', () => {
         await mineBlocks(arweave, 5);
         const winningBidQty = calculateAuctionPriceForBlock({
           startHeight: new BlockHeight(auctionObj.startHeight),
-          startPrice: auctionObj.startPrice,
-          floorPrice: auctionObj.floorPrice,
+          startPrice: new mIOToken(auctionObj.startPrice),
+          floorPrice: new mIOToken(auctionObj.floorPrice),
           currentBlockHeight: await getCurrentBlock(arweave),
           auctionSettings: AUCTION_SETTINGS,
         }).valueOf();
@@ -524,8 +524,8 @@ describe('Auctions', () => {
         });
         const pricePaidForBlock = calculateAuctionPriceForBlock({
           startHeight: new BlockHeight(auctionObj.startHeight),
-          startPrice: auctionObj.startPrice,
-          floorPrice: auctionObj.floorPrice,
+          startPrice: new mIOToken(auctionObj.startPrice),
+          floorPrice: new mIOToken(auctionObj.floorPrice),
           currentBlockHeight: await getCurrentBlock(arweave),
           auctionSettings: AUCTION_SETTINGS,
         }).valueOf();
@@ -604,8 +604,8 @@ describe('Auctions', () => {
         await mineBlocks(arweave, 5);
         const winningBidQty = calculateAuctionPriceForBlock({
           startHeight: new BlockHeight(auctionObj.startHeight),
-          startPrice: auctionObj.startPrice,
-          floorPrice: auctionObj.floorPrice,
+          startPrice: new mIOToken(auctionObj.startPrice),
+          floorPrice: new mIOToken(auctionObj.floorPrice),
           currentBlockHeight: await getCurrentBlock(arweave),
           auctionSettings: AUCTION_SETTINGS,
         }).valueOf();
@@ -621,8 +621,8 @@ describe('Auctions', () => {
         // we always take the lesser of the submitted and the cost of auction at a given block
         const pricePaidForBlock = calculateAuctionPriceForBlock({
           startHeight: new BlockHeight(auctionObj.startHeight),
-          startPrice: auctionObj.startPrice,
-          floorPrice: auctionObj.floorPrice,
+          startPrice: new mIOToken(auctionObj.startPrice),
+          floorPrice: new mIOToken(auctionObj.floorPrice),
           currentBlockHeight: await getCurrentBlock(arweave),
           auctionSettings: AUCTION_SETTINGS,
         }).valueOf();

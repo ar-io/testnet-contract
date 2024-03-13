@@ -2,6 +2,7 @@ import {
   DELEGATED_STAKE_UNLOCK_LENGTH,
   GATEWAY_LEAVE_BLOCK_LENGTH,
   GATEWAY_REGISTRY_SETTINGS,
+  MIN_OPERATOR_STAKE,
   NETWORK_LEAVING_STATUS,
 } from '../../constants';
 import {
@@ -49,13 +50,12 @@ export const leaveNetwork = async (
 
   // Add minimum staked tokens to a vault that unlocks after the gateway completely leaves the network
   gateways[caller].vaults[caller] = {
-    balance: GATEWAY_REGISTRY_SETTINGS.minOperatorStake.valueOf(),
+    balance: MIN_OPERATOR_STAKE.valueOf(),
     start: interactionHeight.valueOf(),
     end: gatewayEndHeight.valueOf(),
   };
 
-  gateways[caller].operatorStake -=
-    GATEWAY_REGISTRY_SETTINGS.minOperatorStake.valueOf();
+  gateways[caller].operatorStake -= MIN_OPERATOR_STAKE.valueOf();
 
   // If there are tokens remaining, add them to a vault that unlocks after the gateway stake withdrawal time
   if (gateways[caller].operatorStake > 0) {
