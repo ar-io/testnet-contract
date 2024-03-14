@@ -8,6 +8,7 @@ import {
   stubbedArweaveTxId,
   stubbedGatewayData,
 } from '../../tests/stubs';
+import { IOToken } from '../../types';
 import { delegateStake } from './delegateStake';
 
 describe('delegateStake', () => {
@@ -63,13 +64,13 @@ describe('delegateStake', () => {
       const initialState = {
         ...getBaselineState(),
         balances: {
-          test: 99,
+          test: new IOToken(99).toMIO().valueOf(),
         },
       };
       const error = await delegateStake(initialState, {
         caller: 'test',
         input: {
-          qty: 100,
+          qty: new IOToken(100).valueOf(),
           target: stubbedArweaveTxId,
         },
       }).catch((e) => e);
@@ -86,13 +87,13 @@ describe('delegateStake', () => {
           [stubbedArweaveTxId]: stubbedGatewayData,
         },
         balances: {
-          test: 10_000,
+          test: new IOToken(10_000).toMIO().valueOf(),
         },
       };
       const error = await delegateStake(initialState, {
         caller: 'test',
         input: {
-          qty: 100,
+          qty: new IOToken(100).valueOf(),
           target: stubbedArweaveTxId,
         },
       }).catch((e) => e);
@@ -123,7 +124,7 @@ describe('delegateStake', () => {
       const { state } = await delegateStake(initialState, {
         caller: 'test',
         input: {
-          qty: MIN_DELEGATED_STAKE.valueOf(),
+          qty: MIN_DELEGATED_STAKE.toIO().valueOf(),
           target: stubbedArweaveTxId,
         },
       });

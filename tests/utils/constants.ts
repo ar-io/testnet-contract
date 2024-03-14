@@ -1,3 +1,4 @@
+import { IOToken } from '../../src/types';
 import initialContractState from './initial-state.json';
 
 export enum REGISTRATION_TYPES {
@@ -18,7 +19,7 @@ export const WALLETS_TO_CREATE = 17; // The first 15 are joined to the network.
 export const SECONDS_IN_A_YEAR = 31_536_000;
 export const WALLET_FUND_AMOUNT = 1_000_000_000_000_000;
 export const INITIAL_STATE = initialContractState;
-export const TRANSFER_QTY = 100_000;
+export const TRANSFER_QTY = new IOToken(100_000);
 export const EXAMPLE_OBSERVER_REPORT_TX_IDS = [
   'U35xQUnop2Oq1NwhpzRfTeXVSjC0M8H50MVlmo_cTJc',
   'TtXk8kqgGYVqTQeHaJzst3toA2qz9UO0AGX1lUeuxvc',

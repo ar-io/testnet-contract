@@ -35,13 +35,13 @@ describe('Vaults', () => {
       const prevOwnerBalance = prevState.balances[ownerAddress];
       const writeInteraction = await contract.writeInteraction({
         function: 'createVault',
-        qty: TRANSFER_QTY,
+        qty: TRANSFER_QTY.valueOf(),
         lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
       });
 
       const currentBlock = (await getCurrentBlock(arweave)).valueOf();
       const expectedVault = {
-        balance: TRANSFER_QTY,
+        balance: TRANSFER_QTY.toMIO().valueOf(),
         start: currentBlock,
         end: currentBlock + MIN_TOKEN_LOCK_BLOCK_LENGTH,
       };
@@ -53,7 +53,7 @@ describe('Vaults', () => {
         writeInteraction?.originalTxId,
       );
       expect(newState.balances[ownerAddress]).toEqual(
-        prevOwnerBalance - TRANSFER_QTY,
+        prevOwnerBalance - TRANSFER_QTY.toMIO().valueOf(),
       );
       expect(
         newState.vaults[ownerAddress][writeInteraction?.originalTxId],
@@ -66,13 +66,13 @@ describe('Vaults', () => {
       const prevOwnerBalance = prevState.balances[ownerAddress];
       const currentBlock = (await getCurrentBlock(arweave)).valueOf();
       const expectedVault = {
-        balance: TRANSFER_QTY,
+        balance: TRANSFER_QTY.toMIO().valueOf(),
         start: currentBlock + 1,
         end: currentBlock + MIN_TOKEN_LOCK_BLOCK_LENGTH + 1,
       };
       const writeInteraction = await contract.writeInteraction({
         function: 'createVault',
-        qty: TRANSFER_QTY,
+        qty: TRANSFER_QTY.valueOf(),
         lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
       });
 
@@ -83,7 +83,7 @@ describe('Vaults', () => {
         writeInteraction?.originalTxId,
       );
       expect(newState.balances[ownerAddress]).toEqual(
-        prevOwnerBalance - TRANSFER_QTY,
+        prevOwnerBalance - TRANSFER_QTY.toMIO().valueOf(),
       );
       expect(
         newState.vaults[ownerAddress][writeInteraction?.originalTxId],
@@ -102,7 +102,7 @@ describe('Vaults', () => {
         const { cachedValue: prevCachedValue } = await contract.readState();
         const writeInteraction = await contract.writeInteraction({
           function: 'createVault',
-          qty: TRANSFER_QTY,
+          qty: TRANSFER_QTY.valueOf(),
           lockLength: badLockLength,
         });
 
@@ -144,7 +144,7 @@ describe('Vaults', () => {
       const { cachedValue: prevCachedValue } = await contract.readState();
       const writeInteraction = await contract.writeInteraction({
         function: 'createVault',
-        qty: Math.pow(TRANSFER_QTY, 10),
+        qty: Math.pow(TRANSFER_QTY.valueOf(), 10),
         lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
       });
 
@@ -248,7 +248,7 @@ describe('Vaults', () => {
       const existingVaultId = Object.keys(prevState.vaults[ownerAddress])[0];
       const writeInteraction = await contract.writeInteraction({
         function: 'increaseVault',
-        qty: TRANSFER_QTY,
+        qty: TRANSFER_QTY.valueOf(),
         id: existingVaultId,
       });
 
@@ -259,10 +259,11 @@ describe('Vaults', () => {
         writeInteraction?.originalTxId,
       );
       expect(newState.balances[ownerAddress]).toEqual(
-        prevOwnerBalance - TRANSFER_QTY,
+        prevOwnerBalance - TRANSFER_QTY.toMIO().valueOf(),
       );
       expect(newState.vaults[ownerAddress][existingVaultId].balance).toEqual(
-        prevState.vaults[ownerAddress][existingVaultId].balance + TRANSFER_QTY,
+        prevState.vaults[ownerAddress][existingVaultId].balance +
+          TRANSFER_QTY.toMIO().valueOf(),
       );
     });
 
@@ -296,7 +297,7 @@ describe('Vaults', () => {
       const existingVaultId = Object.keys(prevState.vaults[ownerAddress])[0];
       const writeInteraction = await contract.writeInteraction({
         function: 'increaseVault',
-        qty: Math.pow(TRANSFER_QTY, 10),
+        qty: Math.pow(TRANSFER_QTY.valueOf(), 10),
         id: existingVaultId,
       });
 
@@ -343,13 +344,13 @@ describe('Vaults', () => {
       const writeInteraction = await contract.writeInteraction({
         function: 'vaultedTransfer',
         target: targetAddress,
-        qty: TRANSFER_QTY,
+        qty: TRANSFER_QTY.valueOf(),
         lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
       });
 
       const currentBlock = (await getCurrentBlock(arweave)).valueOf();
       const expectedVault = {
-        balance: TRANSFER_QTY,
+        balance: TRANSFER_QTY.toMIO().valueOf(),
         start: currentBlock,
         end: currentBlock + MIN_TOKEN_LOCK_BLOCK_LENGTH,
       };
@@ -361,7 +362,7 @@ describe('Vaults', () => {
         writeInteraction?.originalTxId,
       );
       expect(newState.balances[ownerAddress]).toEqual(
-        prevOwnerBalance - TRANSFER_QTY,
+        prevOwnerBalance - TRANSFER_QTY.toMIO().valueOf(),
       );
       expect(newState.balances[targetAddress]).toEqual(prevTargetBalance);
       expect(
@@ -379,13 +380,13 @@ describe('Vaults', () => {
       const writeInteraction = await contract.writeInteraction({
         function: 'vaultedTransfer',
         target: srcContractId, // The smartweave contract id acts as the protocol balance
-        qty: TRANSFER_QTY,
+        qty: TRANSFER_QTY.valueOf(),
         lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
       });
 
       const currentBlock = (await getCurrentBlock(arweave)).valueOf();
       const expectedVault = {
-        balance: TRANSFER_QTY,
+        balance: TRANSFER_QTY.toMIO().valueOf(),
         start: currentBlock,
         end: currentBlock + MIN_TOKEN_LOCK_BLOCK_LENGTH,
       };
@@ -397,7 +398,7 @@ describe('Vaults', () => {
         writeInteraction?.originalTxId,
       );
       expect(newState.balances[ownerAddress]).toEqual(
-        prevOwnerBalance - TRANSFER_QTY,
+        prevOwnerBalance - TRANSFER_QTY.toMIO().valueOf(),
       );
       expect(newState.balances[srcContractId]).toEqual(prevTargetBalance);
       expect(
@@ -412,7 +413,7 @@ describe('Vaults', () => {
       const writeInteraction = await contract.writeInteraction({
         function: 'vaultedTransfer',
         target: targetAddress,
-        qty: Math.pow(TRANSFER_QTY, 10),
+        qty: Math.pow(TRANSFER_QTY.valueOf(), 10),
         lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
       });
 
@@ -434,13 +435,13 @@ describe('Vaults', () => {
       const writeInteraction = await contract.writeInteraction({
         function: 'vaultedTransfer',
         target: ownerAddress,
-        qty: TRANSFER_QTY,
+        qty: TRANSFER_QTY.valueOf(),
         lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
       });
 
       const currentBlock = (await getCurrentBlock(arweave)).valueOf();
       const expectedVault = {
-        balance: TRANSFER_QTY,
+        balance: TRANSFER_QTY.toMIO().valueOf(),
         start: currentBlock,
         end: currentBlock + MIN_TOKEN_LOCK_BLOCK_LENGTH,
       };
@@ -452,7 +453,7 @@ describe('Vaults', () => {
         writeInteraction?.originalTxId,
       );
       expect(newState.balances[ownerAddress]).toEqual(
-        prevOwnerBalance - TRANSFER_QTY,
+        prevOwnerBalance - TRANSFER_QTY.toMIO().valueOf(),
       );
       expect(
         newState.vaults[ownerAddress][writeInteraction?.originalTxId],

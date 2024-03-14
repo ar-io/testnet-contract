@@ -1,4 +1,4 @@
-import { ContractReadResult, IOState, PstAction } from '../../types';
+import { ContractReadResult, IOState, PstAction, mIOToken } from '../../types';
 
 export const balance = async (
   state: IOState,
@@ -14,10 +14,13 @@ export const balance = async (
     throw new ContractError('Cannot get balance, target does not exist');
   }
 
+  // TODO: we could return IO here
+  const balance = new mIOToken(balances[target]);
+
   return {
     result: {
       target,
-      balance: balances[target],
+      balance: balance.valueOf(),
     },
   };
 };

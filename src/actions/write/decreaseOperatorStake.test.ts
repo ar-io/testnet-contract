@@ -9,7 +9,7 @@ import {
   stubbedArweaveTxId,
   stubbedGatewayData,
 } from '../../tests/stubs';
-import { GatewayStatus } from '../../types';
+import { GatewayStatus, IOToken } from '../../types';
 import { decreaseOperatorStake } from './decreaseOperatorStake';
 
 describe('decreaseOperatorStake', () => {
@@ -60,7 +60,7 @@ describe('decreaseOperatorStake', () => {
       expect(error).toBeInstanceOf(Error);
       expect(error.message).toEqual(
         expect.stringContaining(
-          `Resulting stake is not enough maintain the minimum operator stake of ${MIN_OPERATOR_STAKE.valueOf()}`,
+          `Resulting stake is not enough maintain the minimum operator stake of ${MIN_OPERATOR_STAKE.toIO().valueOf()} IO`,
         ),
       );
     });
@@ -109,7 +109,8 @@ describe('decreaseOperatorStake', () => {
         gateways: {
           [stubbedArweaveTxId]: {
             ...stubbedGatewayData,
-            operatorStake: MIN_OPERATOR_STAKE.valueOf() + 1000,
+            operatorStake:
+              MIN_OPERATOR_STAKE.valueOf() + new IOToken(100).toMIO().valueOf(),
             vaults: {},
           },
         },
@@ -117,7 +118,7 @@ describe('decreaseOperatorStake', () => {
       const { state } = await decreaseOperatorStake(initialState, {
         caller: stubbedArweaveTxId,
         input: {
-          qty: 1000,
+          qty: new IOToken(100).valueOf(),
         },
       });
       expect(state.gateways[stubbedArweaveTxId]).toEqual({
@@ -125,7 +126,7 @@ describe('decreaseOperatorStake', () => {
         operatorStake: MIN_OPERATOR_STAKE.valueOf(),
         vaults: {
           [SmartWeave.transaction.id]: {
-            balance: 1000,
+            balance: new IOToken(100).toMIO().valueOf(),
             start: SmartWeave.block.height,
             end:
               SmartWeave.block.height +

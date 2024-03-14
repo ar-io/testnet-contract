@@ -185,7 +185,7 @@ describe('calculateExistingAuctionBidForCaller function', () => {
         requiredMinimumBid: new mIOToken(2),
       });
     }).toThrowError(
-      'The bid (1 IO) is less than the current required minimum bid of 2 IO.',
+      'The bid (0.000001 IO) is less than the current required minimum bid of 0.000002 IO.',
     );
   });
 });

@@ -12,7 +12,7 @@ import {
   stubbedDelegateData,
   stubbedGatewayData,
 } from '../../tests/stubs';
-import { IOState } from '../../types';
+import { IOState, IOToken } from '../../types';
 import { updateGatewaySettings } from './updateGatewaySettings';
 
 describe('updateGatewaySettings', () => {
@@ -216,7 +216,8 @@ describe('updateGatewaySettings', () => {
         delegateRewardShareRatio: Math.floor(
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
         ),
-        minDelegatedStake: MIN_DELEGATED_STAKE.valueOf() + 1,
+        minDelegatedStake:
+          MIN_DELEGATED_STAKE.toIO().valueOf() + new IOToken(1).valueOf(),
         autoStake: true,
       };
       const initialState: IOState = {
@@ -239,6 +240,9 @@ describe('updateGatewaySettings', () => {
         observerWallet: observerWallet,
         settings: {
           ...updatedGatewaySettings,
+          minDelegatedStake:
+            // should be converted to mIO
+            MIN_DELEGATED_STAKE.valueOf() + new IOToken(1).toMIO().valueOf(),
         },
       });
     });

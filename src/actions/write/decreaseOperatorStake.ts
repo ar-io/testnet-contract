@@ -9,6 +9,7 @@ import {
   ContractWriteResult,
   Gateway,
   IOState,
+  IOToken,
   PstAction,
   mIOToken,
 } from '../../types';
@@ -29,7 +30,7 @@ export class DecreaseOperatorStake {
       );
     }
     const { qty } = input;
-    this.qty = new mIOToken(qty);
+    this.qty = new IOToken(qty).toMIO();
   }
 }
 
@@ -56,7 +57,7 @@ export const decreaseOperatorStake = async (
 
   if (qty.isGreaterThan(maxWithdraw)) {
     throw new ContractError(
-      `Resulting stake is not enough maintain the minimum operator stake of ${MIN_OPERATOR_STAKE.valueOf()}`,
+      `Resulting stake is not enough maintain the minimum operator stake of ${MIN_OPERATOR_STAKE.toIO().valueOf()} IO`,
     );
   }
 

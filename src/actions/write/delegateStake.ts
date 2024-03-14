@@ -3,6 +3,7 @@ import {
   BlockHeight,
   ContractWriteResult,
   IOState,
+  IOToken,
   PstAction,
   mIOToken,
 } from '../../types';
@@ -21,7 +22,7 @@ export class DelegateStake {
     }
     const { target, qty } = input;
     this.target = target;
-    this.qty = new mIOToken(qty);
+    this.qty = new IOToken(qty).toMIO();
   }
 }
 

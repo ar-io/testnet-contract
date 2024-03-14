@@ -5,6 +5,7 @@ import {
   MIN_TOKEN_LOCK_BLOCK_LENGTH,
 } from '../../constants';
 import { getBaselineState } from '../../tests/stubs';
+import { IOToken } from '../../types';
 import { createVault } from './createVault';
 
 describe('createVault', () => {
@@ -79,7 +80,7 @@ describe('createVault', () => {
       const initialState = {
         ...getBaselineState(),
         balances: {
-          test: 10_000,
+          test: new IOToken(10_000).toMIO().valueOf(),
         },
       };
       const { state } = await createVault(initialState, {
@@ -94,14 +95,14 @@ describe('createVault', () => {
         vaults: {
           test: {
             [SmartWeave.transaction.id]: {
-              balance: 100,
+              balance: new IOToken(100).toMIO().valueOf(),
               end: SmartWeave.block.height + MIN_TOKEN_LOCK_BLOCK_LENGTH,
               start: SmartWeave.block.height,
             },
           },
         },
         balances: {
-          test: 9_900,
+          test: new IOToken(9900).toMIO().valueOf(),
         },
       });
     });

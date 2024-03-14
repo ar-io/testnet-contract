@@ -3,6 +3,7 @@ import { Contract, JWKInterface } from 'warp-contracts';
 import {
   Gateway,
   IOState,
+  IOToken,
   ObserverWeights,
   WalletAddress,
   WeightedObserver,
@@ -70,7 +71,7 @@ describe('Network', () => {
         async (badObserverWallet) => {
           const joinGatewayPayload = {
             observerWallet: badObserverWallet,
-            qty: MIN_OPERATOR_STAKE.valueOf(), // must meet the minimum
+            qty: MIN_OPERATOR_STAKE.toIO().valueOf(), // must meet the minimum
             label: 'Test Gateway', // friendly label
             fqdn: 'jest.io',
             port: '443',
@@ -94,7 +95,7 @@ describe('Network', () => {
         'should fail for invalid ports',
         async (badPort) => {
           const joinGatewayPayload = {
-            qty: MIN_OPERATOR_STAKE.valueOf(), // must meet the minimum
+            qty: MIN_OPERATOR_STAKE.toIO().valueOf(), // must meet the minimum
             label: 'Test Gateway', // friendly label
             fqdn: 'jest.io',
             port: badPort,
@@ -118,7 +119,7 @@ describe('Network', () => {
         'should fail for invalid protocol',
         async (badProtocol) => {
           const joinGatewayPayload = {
-            qty: MIN_OPERATOR_STAKE.valueOf(), // must meet the minimum
+            qty: MIN_OPERATOR_STAKE.toIO().valueOf(), // must meet the minimum
             label: 'Test Gateway', // friendly label
             fqdn: 'jest.io',
             port: 3000,
@@ -145,7 +146,7 @@ describe('Network', () => {
         'SUUUUUUUUUUUUUUUUUUUUUUUUUUPER LONG LABEL LONGER THAN 64 CHARS!!!!!!!!!',
       ])('should fail for invalid label', async (badLabel) => {
         const joinGatewayPayload = {
-          qty: MIN_OPERATOR_STAKE.valueOf(), // must meet the minimum
+          qty: MIN_OPERATOR_STAKE.toIO().valueOf(), // must meet the minimum
           label: badLabel, // friendly label
           fqdn: 'jest.io',
           port: 3000,
@@ -187,7 +188,7 @@ describe('Network', () => {
         '%percent.com',
       ])('should fail for invalid fqdn', async (badFqdn) => {
         const joinGatewayPayload = {
-          qty: MIN_OPERATOR_STAKE.valueOf(), // must meet the minimum
+          qty: MIN_OPERATOR_STAKE.toIO().valueOf(), // must meet the minimum
           label: 'test gateway', // friendly label
           fqdn: badFqdn,
           port: 3000,
@@ -213,7 +214,7 @@ describe('Network', () => {
         'this note is way too long.  please ignore this very long note. this note is way too long.  please ignore this very long note. this note is way too long.  please ignore this very long note. this note is way too long.  please ignore this very long note. this note is way too long.  please ignore this very long note.',
       ])('should fail for invalid note', async (badNote) => {
         const joinGatewayPayload = {
-          qty: MIN_OPERATOR_STAKE.valueOf(), // must meet the minimum
+          qty: MIN_OPERATOR_STAKE.toIO().valueOf(), // must meet the minimum
           label: 'test gateway', // friendly label
           fqdn: 'testnet.com',
           port: 3000,
@@ -240,7 +241,7 @@ describe('Network', () => {
         'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY4*',
       ])('should fail for invalid properties', async (badProperties) => {
         const joinGatewayPayload = {
-          qty: MIN_OPERATOR_STAKE.valueOf(), // must meet the minimum
+          qty: MIN_OPERATOR_STAKE.toIO().valueOf(), // must meet the minimum
           label: 'test gateway', // friendly label
           fqdn: 'testnet.com',
           port: 3000,
@@ -260,10 +261,10 @@ describe('Network', () => {
       });
 
       it.each([
-        MIN_OPERATOR_STAKE.valueOf() - 1,
-        100000000000000000000,
+        MIN_OPERATOR_STAKE.toIO().valueOf() - 1,
+        false,
         -1,
-        MIN_OPERATOR_STAKE.valueOf().toString,
+        MIN_OPERATOR_STAKE.toIO().valueOf().toString(),
       ])('should fail for invalid qty', async (badQty) => {
         const joinGatewayPayload = {
           qty: badQty, // must meet the minimum
@@ -289,7 +290,7 @@ describe('Network', () => {
         const prevBalance = prevState.balances[newGatewayOperatorAddress];
         const joinGatewayPayload = {
           observerWallet: newGatewayOperatorAddress,
-          qty: MIN_OPERATOR_STAKE.valueOf(), // must meet the minimum
+          qty: MIN_OPERATOR_STAKE.toIO().valueOf(), // must meet the minimum
           label: 'Test Gateway', // friendly label
           fqdn: 'jest.io',
           port: 3000,
@@ -308,10 +309,10 @@ describe('Network', () => {
           writeInteraction?.originalTxId,
         );
         expect(newState.balances[newGatewayOperatorAddress]).toEqual(
-          prevBalance - joinGatewayPayload.qty,
+          prevBalance - MIN_OPERATOR_STAKE.valueOf(),
         );
         expect(newState.gateways[newGatewayOperatorAddress]).toEqual({
-          operatorStake: joinGatewayPayload.qty,
+          operatorStake: MIN_OPERATOR_STAKE.valueOf(),
           totalDelegatedStake: 0,
           status: NETWORK_JOIN_STATUS,
           start: (await getCurrentBlock(arweave)).valueOf(),
@@ -343,7 +344,7 @@ describe('Network', () => {
           prevState.gateways[newGatewayOperatorAddress].operatorStake;
         const writeInteraction = await contract.writeInteraction({
           function: 'increaseOperatorStake',
-          qty: MIN_OPERATOR_STAKE.valueOf() * 2,
+          qty: MIN_OPERATOR_STAKE.toIO().valueOf() * 2,
         });
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const { cachedValue: newCachedValue } = await contract.readState();
@@ -385,10 +386,9 @@ describe('Network', () => {
       });
 
       it('should decrease operator stake and create new vault', async () => {
-        const qty = MIN_OPERATOR_STAKE.valueOf(); // This vault should still have enough tokens left
         const writeInteraction = await contract.writeInteraction({
           function: 'decreaseOperatorStake',
-          qty,
+          qty: MIN_OPERATOR_STAKE.toIO().valueOf(),
         });
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
         const expectedStartBlock = await getCurrentBlock(arweave);
@@ -403,14 +403,15 @@ describe('Network', () => {
         expect(
           newState.gateways[newGatewayOperatorAddress].operatorStake,
         ).toEqual(
-          prevState.gateways[newGatewayOperatorAddress].operatorStake - qty,
+          prevState.gateways[newGatewayOperatorAddress].operatorStake -
+            MIN_OPERATOR_STAKE.valueOf(),
         );
         expect(
           newState.gateways[newGatewayOperatorAddress].vaults[
             writeInteraction?.originalTxId
           ],
         ).toEqual({
-          balance: qty,
+          balance: MIN_OPERATOR_STAKE.valueOf(),
           end: expectedEndBlock.valueOf(),
           start: expectedStartBlock.valueOf(),
         });
@@ -442,7 +443,7 @@ describe('Network', () => {
           note: 'a new note',
           allowDelegatedStaking: true,
           delegateRewardShareRatio: Math.floor((1 - 0.9) * 100),
-          minDelegatedStake: MIN_DELEGATED_STAKE.valueOf() + 1,
+          minDelegatedStake: MIN_DELEGATED_STAKE.toIO().valueOf() + 1,
           autoStake: true,
         };
         const writeInteraction = await contract.writeInteraction({
@@ -456,9 +457,11 @@ describe('Network', () => {
         expect(Object.keys(newCachedValue.errorMessages)).not.toContain(
           writeInteraction?.originalTxId,
         );
-        expect(newState.gateways[newGatewayOperatorAddress].settings).toEqual(
-          updatedGatewaySettings,
-        );
+        expect(newState.gateways[newGatewayOperatorAddress].settings).toEqual({
+          ...updatedGatewaySettings,
+          minDelegatedStake:
+            MIN_DELEGATED_STAKE.valueOf() + new IOToken(1).toMIO().valueOf(),
+        });
         expect(
           newState.gateways[newGatewayOperatorAddress].observerWallet,
         ).toEqual(observerWallet);
@@ -682,9 +685,9 @@ describe('Network', () => {
         );
 
         it.each([
-          MIN_DELEGATED_STAKE.valueOf() - 1,
+          MIN_DELEGATED_STAKE.toIO().valueOf() - 1,
           '1000',
-          MIN_DELEGATED_STAKE.valueOf() + 0.1,
+          MIN_DELEGATED_STAKE.toIO().valueOf() + 0.1,
         ])(
           'should not modify gateway settings with invalid minDelegatedStake',
           async (badProperties) => {
