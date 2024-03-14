@@ -1,7 +1,6 @@
 import {
   ANNUAL_PERCENTAGE_FEE,
   DEMAND_FACTORING_SETTINGS,
-  ONE_MIO,
   PERMABUY_LEASE_FEE_LENGTH,
   UNDERNAME_LEASE_FEE_PERCENTAGE,
   UNDERNAME_PERMABUY_FEE_PERCENTAGE,
@@ -79,9 +78,13 @@ export function updateDemandFactor(
       // Rebase fees on their values at the minimum demand factor
       updatedFees = Object.keys(fees).reduce(
         (acc: Fees, nameLength: string) => {
+          const updatedFee = new mIOToken(fees[nameLength]).multiply(
+            DEMAND_FACTORING_SETTINGS.demandFactorMin,
+          );
+          // set the minimum value to 1 MIO
           acc[nameLength] = Math.max(
-            fees[nameLength] * DEMAND_FACTORING_SETTINGS.demandFactorMin,
-            ONE_MIO,
+            updatedFee.valueOf(),
+            new mIOToken(1).valueOf(),
           );
           return acc;
         },

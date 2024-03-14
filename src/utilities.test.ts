@@ -341,7 +341,8 @@ describe('resetProtocolBalance function', () => {
       },
     };
     const totalNonProtocolBalances = 900;
-    const expectedProtocolBalance = TOTAL_IO_SUPPLY - totalNonProtocolBalances;
+    const expectedProtocolBalance =
+      TOTAL_IO_SUPPLY.valueOf() - totalNonProtocolBalances;
     const { balances: updatedBalances } = resetProtocolBalance(testingState);
     expect(updatedBalances).toEqual({
       ...testingState.balances,

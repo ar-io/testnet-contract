@@ -428,6 +428,7 @@ export type DeepReadonly<Type> = Type extends Exclude<Builtin, Error>
 
 // TODO: extend this class and use it for all balance/IO token logic
 const maxAllowedPrecision = Math.pow(10, 6);
+const mIOPerIO = 1_000_000;
 export class IOToken {
   protected value: number;
   constructor(value: number) {
@@ -437,6 +438,10 @@ export class IOToken {
 
   valueOf(): number {
     return this.value;
+  }
+
+  toMIO(): mIOToken {
+    return new mIOToken(Math.floor(this.value * mIOPerIO));
   }
 }
 

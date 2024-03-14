@@ -84,10 +84,12 @@ export function resetProtocolBalance({
     0,
   );
 
+  // TODO: add in vaults, delegates, and stakes
+
   const totalContractIO =
     totalBalances + totalGatewayStaked + totalAuctionStake + totalVaultedStake;
 
-  const diff = TOTAL_IO_SUPPLY - totalContractIO;
+  const diff = TOTAL_IO_SUPPLY.valueOf() - totalContractIO;
 
   if (diff > 0) {
     updatedBalances[SmartWeave.contract.id] =

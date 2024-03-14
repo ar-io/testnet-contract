@@ -6,18 +6,16 @@ import {
   EpochDistributionData,
   Fees,
   GatewayPerformanceStats,
-  mIOToken,
+  IOToken,
 } from './types';
 
 /**
  * BASE CONTROLS
  */
-export const TOTAL_IO_SUPPLY = 1_000_000_000; // 1 billion IO tokens
+export const TOTAL_IO_SUPPLY = new IOToken(1_000_000_000).toMIO(); // 1 billion IO tokens
 export const SECONDS_IN_A_YEAR = 31_536_000; // 52 weeks, 7 days per week, 24 hours per day, sixty minutes per hour, sixty seconds per minute
 export const MAX_ALLOWED_DECIMALS = 6; // the maximum allowed decimals for the IO Token
 export const BLOCKS_PER_DAY = 720;
-export const MIO_PER_IO = 1_000_000;
-export const ONE_MIO = 1 / MIO_PER_IO;
 
 /**
  * GATEWAY REGISTRY CONTROLS
@@ -32,7 +30,7 @@ export const MIN_TOKEN_LOCK_BLOCK_LENGTH = 14 * BLOCKS_PER_DAY; // The minimum a
 export const MINIMUM_ALLOWED_NAME_LENGTH = 5; // names less than 5 characters are reserved for auction
 export const NETWORK_JOIN_STATUS = 'joined';
 export const NETWORK_LEAVING_STATUS = 'leaving';
-export const MIN_OPERATOR_STAKE = new mIOToken(10_000 * MIO_PER_IO); // The minimum amount of tokens needed to stake to join a gateway to the network.
+export const MIN_OPERATOR_STAKE = new IOToken(10_000).toMIO();
 export const DELEGATED_STAKE_UNLOCK_LENGTH = new BlockHeight(
   30 * BLOCKS_PER_DAY,
 ); // 30 DAYS
