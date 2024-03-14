@@ -9,9 +9,9 @@ import {
   Balances,
   BlockHeight,
   Gateways,
-  IOToken,
   TransactionId,
   WalletAddress,
+  mIOToken,
 } from './types';
 import {
   unsafeDecrementBalance,
@@ -30,14 +30,14 @@ export function safeDelegateStake({
   gateways: Gateways;
   fromAddress: WalletAddress;
   gatewayAddress: WalletAddress;
-  qty: IOToken;
+  qty: mIOToken;
   startHeight: BlockHeight;
 }): void {
   if (balances[fromAddress] === null || isNaN(balances[fromAddress])) {
     throw new ContractError(`Caller balance is not defined!`);
   }
 
-  if (!walletHasSufficientBalance(balances, fromAddress, qty.valueOf())) {
+  if (!walletHasSufficientBalance(balances, fromAddress, qty)) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
@@ -96,7 +96,7 @@ export function safeDelegateStake({
   // increase the total delegated stake for the gateway - TODO: this could be computed, as opposed to set in state
   gateways[gatewayAddress].totalDelegatedStake += qty.valueOf();
   // decrement the caller's balance
-  unsafeDecrementBalance(balances, fromAddress, qty.valueOf());
+  unsafeDecrementBalance(balances, fromAddress, qty);
 }
 
 export function safeDecreaseDelegateStake({
@@ -110,7 +110,7 @@ export function safeDecreaseDelegateStake({
   gateways: Gateways;
   fromAddress: WalletAddress;
   gatewayAddress: WalletAddress;
-  qty: IOToken;
+  qty: mIOToken;
   id: TransactionId;
   startHeight: BlockHeight;
 }): void {
@@ -125,12 +125,10 @@ export function safeDecreaseDelegateStake({
     throw new ContractError('This delegate is not staked at this gateway.');
   }
 
-  const stakeAfterDecrease = existingDelegate.delegatedStake - qty.valueOf();
-
-  if (
-    stakeAfterDecrease < gateway.settings.minDelegatedStake &&
-    stakeAfterDecrease !== 0 // if zero, we can withdraw completely
-  ) {
+  const existingStake = new mIOToken(existingDelegate.delegatedStake);
+  const requiredMinimumStake = new mIOToken(gateway.settings.minDelegatedStake);
+  const maxAllowedToWithdraw = existingStake.minus(requiredMinimumStake);
+  if (maxAllowedToWithdraw.isLessThan(qty) && !qty.equals(existingStake)) {
     throw new ContractError(
       `Remaining delegated stake must be greater than the minimum delegated stake amount.`,
     );
@@ -143,7 +141,7 @@ export function safeDecreaseDelegateStake({
   gateways[gatewayAddress].delegates[fromAddress].vaults[id] = {
     balance: qty.valueOf(),
     start: startHeight.valueOf(),
-    end: startHeight.valueOf() + DELEGATED_STAKE_UNLOCK_LENGTH,
+    end: startHeight.plus(DELEGATED_STAKE_UNLOCK_LENGTH).valueOf(),
   };
 
   // Decrease the gateway's total delegated stake.

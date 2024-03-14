@@ -8,11 +8,11 @@ import {
 import {
   Balances,
   BlockHeight,
-  IOToken,
   RegistryVaults,
   TransactionId,
   VaultData,
   WalletAddress,
+  mIOToken,
 } from './types';
 import {
   incrementBalance,
@@ -29,10 +29,10 @@ export function safeTransfer({
   balances: Balances;
   fromAddress: WalletAddress;
   toAddress: WalletAddress;
-  qty: number; // TODO: use IOToken
+  qty: mIOToken;
 }): void {
   // do not do anything if the transfer quantity is less than 1
-  if (qty < 1) {
+  if (qty.valueOf() < 1) {
     return;
   }
   if (fromAddress === toAddress) {
@@ -43,7 +43,7 @@ export function safeTransfer({
     throw new ContractError(`Caller balance is not defined!`);
   }
 
-  if (!walletHasSufficientBalance(balances, fromAddress, qty.valueOf())) {
+  if (!walletHasSufficientBalance(balances, fromAddress, qty)) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
@@ -66,11 +66,11 @@ export function safeVaultedTransfer({
   fromAddress: WalletAddress;
   toAddress: WalletAddress;
   id: TransactionId;
-  qty: IOToken;
+  qty: mIOToken;
   startHeight: BlockHeight;
   lockLength: BlockHeight;
 }): void {
-  if (!walletHasSufficientBalance(balances, fromAddress, qty.valueOf())) {
+  if (!walletHasSufficientBalance(balances, fromAddress, qty)) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
@@ -97,5 +97,5 @@ export function safeVaultedTransfer({
     [id]: newVault,
   };
 
-  unsafeDecrementBalance(balances, fromAddress, qty.valueOf());
+  unsafeDecrementBalance(balances, fromAddress, qty);
 }

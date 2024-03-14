@@ -11,7 +11,7 @@ import { arweave as arweaveLocal, warp as warpLocal } from './utils/services';
 
 const testnetContractTxId =
   process.env.ARNS_CONTRACT_TX_ID ??
-  '_NctcA2sRy1-J4OmIQZbYFPM17piNcbdBPH2ncX2RL8';
+  'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
 describe('evolving', () => {
   let localContractOwnerJWK: JWKInterface;
@@ -31,7 +31,9 @@ describe('evolving', () => {
     const testnetContract = await warpMainnet
       .contract<IOState>(testnetContractTxId)
       .setEvaluationOptions(evaluationOptions)
-      .syncState(`https://api.arns.app/v1/contract/${testnetContractTxId}`);
+      .syncState(`https://api.arns.app/v1/contract/${testnetContractTxId}`, {
+        validity: true,
+      });
     const { cachedValue } = await testnetContract.readState();
 
     const ownerAddress = await arweaveLocal.wallets.jwkToAddress(
@@ -60,10 +62,22 @@ describe('evolving', () => {
   // if this test fails, it means that we are going to lose our ability to evolve after the next contract update - VERY IMPORTANT to ensure this test is not modified or removed without thorough review
   it('should be able evolve a newly deployed arns contract with a forked state using the new contract source', async () => {
     const writeInteraction = await newForkedContract.evolve(localSourceCodeId);
-    expect(writeInteraction.originalTxId).not.toBeUndefined();
+    expect(writeInteraction?.originalTxId).not.toBeUndefined();
     const { cachedValue } = await newForkedContract.readState();
     expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-      writeInteraction.originalTxId,
+      writeInteraction?.originalTxId,
+    );
+    expect(cachedValue.state.evolve).toBe(localSourceCodeId);
+  });
+
+  it('should be able to run evolve state on the new contract', async () => {
+    const writeInteraction = await newForkedContract.writeInteraction({
+      function: 'evolveState',
+    });
+    expect(writeInteraction?.originalTxId).not.toBeUndefined();
+    const { cachedValue } = await newForkedContract.readState();
+    expect(Object.keys(cachedValue.errorMessages)).not.toContain(
+      writeInteraction?.originalTxId,
     );
     expect(cachedValue.state.evolve).toBe(localSourceCodeId);
   });

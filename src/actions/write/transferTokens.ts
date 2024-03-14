@@ -1,12 +1,12 @@
 import { safeTransfer } from '../../transfer';
-import { ContractWriteResult, IOState, PstAction } from '../../types';
+import { ContractWriteResult, IOState, PstAction, mIOToken } from '../../types';
 import { getInvalidAjvMessage } from '../../utilities';
 import { validateTransferToken } from '../../validations';
 
 // TODO: use top level class
 export class TransferToken {
   target: string;
-  qty: number;
+  qty: mIOToken;
 
   constructor(input: any) {
     if (!validateTransferToken(input)) {
@@ -16,7 +16,7 @@ export class TransferToken {
     }
     const { target, qty } = input;
     this.target = target;
-    this.qty = qty;
+    this.qty = new mIOToken(qty);
   }
 }
 

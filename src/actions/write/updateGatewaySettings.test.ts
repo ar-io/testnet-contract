@@ -216,7 +216,7 @@ describe('updateGatewaySettings', () => {
         delegateRewardShareRatio: Math.floor(
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
         ),
-        minDelegatedStake: MIN_DELEGATED_STAKE + 1,
+        minDelegatedStake: MIN_DELEGATED_STAKE.valueOf() + 1,
         autoStake: true,
       };
       const initialState: IOState = {
@@ -304,7 +304,9 @@ describe('updateGatewaySettings', () => {
               },
               [SmartWeave.transaction.id]: {
                 balance: stubbedDelegateData.delegatedStake,
-                end: SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH,
+                end:
+                  SmartWeave.block.height +
+                  DELEGATED_STAKE_UNLOCK_LENGTH.valueOf(),
                 start: SmartWeave.block.height,
               },
             },
@@ -320,7 +322,9 @@ describe('updateGatewaySettings', () => {
               },
               [SmartWeave.transaction.id]: {
                 balance: stubbedDelegateData.delegatedStake,
-                end: SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH,
+                end:
+                  SmartWeave.block.height +
+                  DELEGATED_STAKE_UNLOCK_LENGTH.valueOf(),
                 start: SmartWeave.block.height,
               },
             },

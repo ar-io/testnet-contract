@@ -1,11 +1,5 @@
 import { PstState } from 'warp-contracts';
 
-import {
-  MAX_ALLOWED_DECIMALS,
-  NETWORK_JOIN_STATUS,
-  NETWORK_LEAVING_STATUS,
-} from './constants';
-
 export type WalletAddress = string;
 export type TransactionId = string;
 export type DemandFactoringData = {
@@ -49,6 +43,7 @@ export interface IOState extends PstState {
   distributions: EpochDistributionData;
   vaults: RegistryVaults;
   prescribedObservers: PrescribedObservers;
+  decimals: number; // the number of decimal places the token can be divided into
 }
 
 export type GatewayPerformanceStats = {
@@ -138,7 +133,7 @@ export type DelegateData = {
   vaults: Vaults; // the locked tokens staked by this gateway operator
 };
 
-const gatewayStatus = [NETWORK_JOIN_STATUS, NETWORK_LEAVING_STATUS] as const;
+const gatewayStatus = ['joined', 'leaving'] as const;
 export type GatewayStatus = (typeof gatewayStatus)[number];
 
 export type Gateway = {
@@ -326,6 +321,18 @@ export class PositiveFiniteInteger implements Equatable<PositiveFiniteInteger> {
     );
   }
 
+  isLessThan(positiveFiniteInteger: PositiveFiniteInteger): boolean {
+    return (
+      this.positiveFiniteInteger < positiveFiniteInteger.positiveFiniteInteger
+    );
+  }
+
+  isLessThanOrEqualTo(positiveFiniteInteger: PositiveFiniteInteger): boolean {
+    return (
+      this.positiveFiniteInteger <= positiveFiniteInteger.positiveFiniteInteger
+    );
+  }
+
   toString(): string {
     return `${this.positiveFiniteInteger}`;
   }
@@ -348,6 +355,16 @@ export class BlockHeight extends PositiveFiniteInteger {
   readonly type = 'BlockHeight';
   constructor(blockHeight: number) {
     super(blockHeight);
+  }
+
+  plus(blockHeight: BlockHeight): BlockHeight {
+    const result = super.plus(blockHeight);
+    return new BlockHeight(result.valueOf());
+  }
+
+  minus(blockHeight: BlockHeight): BlockHeight {
+    const result = super.minus(blockHeight);
+    return new BlockHeight(result.valueOf());
   }
 }
 
@@ -411,20 +428,55 @@ export type DeepReadonly<Type> = Type extends Exclude<Builtin, Error>
   : Readonly<Type>;
 
 // TODO: extend this class and use it for all balance/IO token logic
+const mIOPerIO = 1_000_000;
 export class IOToken {
   protected value: number;
   constructor(value: number) {
     // do some big number casting for allowed decimals
-    this.value = +value.toFixed(MAX_ALLOWED_DECIMALS);
+    this.value = +value.toFixed(6);
   }
 
   valueOf(): number {
     return this.value;
+  }
+
+  toMIO(): mIOToken {
+    return new mIOToken(Math.floor(this.value * mIOPerIO));
   }
 }
 
 export class mIOToken extends PositiveFiniteInteger {
   constructor(value: number) {
     super(value);
+  }
+
+  multiply(multiplier: mIOToken | number): mIOToken {
+    // always round down on multiplication and division
+    const result = Math.floor(this.valueOf() * multiplier.valueOf());
+    return new mIOToken(result);
+  }
+
+  divide(divisor: mIOToken | number): mIOToken {
+    if (divisor.valueOf() === 0) {
+      // TODO: how should we handle this
+      throw new ContractError('Cannot divide by zero');
+    }
+    // always round down on multiplication and division
+    const result = Math.floor(this.valueOf() / divisor.valueOf());
+    return new mIOToken(result);
+  }
+
+  plus(addend: mIOToken): mIOToken {
+    const result = super.plus(addend);
+    return new mIOToken(result.valueOf());
+  }
+
+  minus(subtractHend: mIOToken): mIOToken {
+    const result = super.minus(subtractHend);
+    return new mIOToken(result.valueOf());
+  }
+
+  toIO(): IOToken {
+    return new IOToken(this.valueOf() / mIOPerIO);
   }
 }

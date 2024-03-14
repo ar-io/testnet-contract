@@ -1,4 +1,4 @@
-import { EPOCH_BLOCK_LENGTH, GATEWAY_REGISTRY_SETTINGS } from '../../constants';
+import { EPOCH_BLOCK_LENGTH, MIN_OPERATOR_STAKE } from '../../constants';
 import {
   getEpochDataForHeight,
   getObserverWeightsForEpoch,
@@ -35,7 +35,7 @@ export const getGateway = async (
   const observerWeights = getObserverWeightsForEpoch({
     gateways,
     epochStartHeight,
-    minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
+    minOperatorStake: MIN_OPERATOR_STAKE,
   }).find(
     (observer: WeightedObserver) =>
       observer.gatewayAddress === target || observer.observerAddress === target,
@@ -75,7 +75,7 @@ export const getGateways = async (
   const allObserverWeights = getObserverWeightsForEpoch({
     gateways,
     epochStartHeight,
-    minOperatorStake: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
+    minOperatorStake: MIN_OPERATOR_STAKE,
   });
 
   const gatewaysWithWeights = Object.keys(gateways).reduce(

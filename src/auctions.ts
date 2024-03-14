@@ -7,7 +7,6 @@ import {
 } from './records';
 import {
   ArNSAuctionData,
-  ArNSBaseAuctionData,
   ArNSNameData,
   AuctionSettings,
   BlockHeight,
@@ -15,9 +14,9 @@ import {
   DeepReadonly,
   DemandFactoringData,
   Fees,
-  IOToken,
   RegistrationType,
   ReservedNameData,
+  mIOToken,
 } from './types';
 
 export function calculateAuctionPriceForBlock({
@@ -28,20 +27,23 @@ export function calculateAuctionPriceForBlock({
   auctionSettings = AUCTION_SETTINGS,
 }: {
   startHeight: BlockHeight;
-  startPrice: number;
-  floorPrice: number;
+  startPrice: mIOToken;
+  floorPrice: mIOToken;
   currentBlockHeight: BlockHeight;
   auctionSettings: AuctionSettings;
-}): IOToken {
+}): mIOToken {
   const blocksSinceStart = currentBlockHeight.valueOf() - startHeight.valueOf();
   const decaySinceStart =
     auctionSettings.exponentialDecayRate * blocksSinceStart;
-  const dutchAuctionBid =
-    startPrice * Math.pow(1 - decaySinceStart, auctionSettings.scalingExponent);
-  // TODO: we shouldn't be rounding like this, use a separate class to handle the number of allowed decimals for IO values and use them here
-  return new IOToken(
-    Math.min(startPrice, Math.max(floorPrice, dutchAuctionBid)),
+  const dutchAuctionBid = startPrice.multiply(
+    Math.pow(1 - decaySinceStart, auctionSettings.scalingExponent),
   );
+  const defaultMinimumBid = floorPrice.isGreaterThan(dutchAuctionBid)
+    ? floorPrice
+    : dutchAuctionBid;
+  return startPrice.isLessThan(defaultMinimumBid)
+    ? startPrice
+    : defaultMinimumBid;
 }
 
 export function getAuctionPricesForInterval({
@@ -52,8 +54,8 @@ export function getAuctionPricesForInterval({
   auctionSettings = AUCTION_SETTINGS,
 }: {
   startHeight: BlockHeight;
-  startPrice: number;
-  floorPrice: number;
+  startPrice: mIOToken;
+  floorPrice: mIOToken;
   blocksPerInterval: number;
   auctionSettings: AuctionSettings;
 }): Record<number, number> {
@@ -94,7 +96,16 @@ export function createAuctionObject({
   type: RegistrationType;
   initiator: string;
   demandFactoring: DeepReadonly<DemandFactoringData>;
-}): ArNSAuctionData {
+}): {
+  startPrice: mIOToken;
+  floorPrice: mIOToken;
+  startHeight: BlockHeight;
+  endHeight: BlockHeight;
+  type: RegistrationType;
+  years?: number;
+  initiator: string;
+  contractTxId: string;
+} {
   const initialRegistrationFee = calculateRegistrationFee({
     name,
     fees,
@@ -103,20 +114,23 @@ export function createAuctionObject({
     currentBlockTimestamp,
     demandFactoring,
   });
-  const calculatedFloorPrice =
-    initialRegistrationFee * AUCTION_SETTINGS.floorPriceMultiplier;
-  const startPrice =
-    calculatedFloorPrice * AUCTION_SETTINGS.startPriceMultiplier;
-  const endHeight =
-    currentBlockHeight.valueOf() + AUCTION_SETTINGS.auctionDuration;
+  const calculatedFloorPrice = initialRegistrationFee.multiply(
+    AUCTION_SETTINGS.floorPriceMultiplier,
+  );
+  const startPrice = calculatedFloorPrice.multiply(
+    AUCTION_SETTINGS.startPriceMultiplier,
+  );
+  const endHeight = currentBlockHeight.plus(
+    new BlockHeight(AUCTION_SETTINGS.auctionDuration),
+  );
 
-  const baseAuctionData: ArNSBaseAuctionData = {
+  const baseAuctionData = {
     initiator, // the balance that the floor price is decremented from
     contractTxId,
-    startPrice,
+    startPrice: startPrice,
     floorPrice: calculatedFloorPrice, // this is decremented from the initiators wallet, and could be higher than the precalculated floor
-    startHeight: currentBlockHeight.valueOf(), // auction starts right away
-    endHeight, // auction ends after the set duration
+    startHeight: currentBlockHeight, // auction starts right away
+    endHeight: endHeight, // auction ends after the set duration
     type,
   };
   switch (type) {
@@ -163,23 +177,19 @@ export function calculateExistingAuctionBidForCaller({
 }: {
   caller: string;
   auction: ArNSAuctionData;
-  submittedBid: number | undefined; // TODO: change to IOToken
-  requiredMinimumBid: IOToken; // TODO: change to IOToken
-}): IOToken {
-  if (submittedBid && submittedBid < requiredMinimumBid.valueOf()) {
+  submittedBid: mIOToken | undefined;
+  requiredMinimumBid: mIOToken;
+}): mIOToken {
+  if (submittedBid && submittedBid.isLessThan(requiredMinimumBid)) {
     throw new ContractError(
       `The bid (${submittedBid} IO) is less than the current required minimum bid of ${requiredMinimumBid.valueOf()} IO.`,
     );
   }
-
-  let finalBid = submittedBid
-    ? Math.min(submittedBid, requiredMinimumBid.valueOf())
-    : requiredMinimumBid.valueOf();
-
   if (caller === auction.initiator) {
-    finalBid -= auction.floorPrice;
+    const floorPrice = new mIOToken(auction.floorPrice);
+    return requiredMinimumBid.minus(floorPrice);
   }
-  return new IOToken(finalBid);
+  return requiredMinimumBid;
 }
 
 export function isNameAvailableForAuction({

@@ -15,7 +15,7 @@ import {
   MINIMUM_ALLOWED_NAME_LENGTH,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../src/constants';
-import { ArNSAuctionData, BlockHeight, IOState } from '../src/types';
+import { ArNSAuctionData, BlockHeight, IOState, mIOToken } from '../src/types';
 import { ANT_CONTRACT_IDS } from './utils/constants';
 import {
   getCurrentBlock,
@@ -87,10 +87,10 @@ describe('Auctions', () => {
           expect(writeInteraction?.originalTxId).not.toBe(undefined);
           const { cachedValue } = await contract.readState();
           expect(Object.keys(cachedValue.errorMessages)).toContain(
-            writeInteraction.originalTxId,
+            writeInteraction?.originalTxId,
           );
           expect(
-            cachedValue.errorMessages[writeInteraction.originalTxId],
+            cachedValue.errorMessages[writeInteraction?.originalTxId],
           ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
           expect(cachedValue.state).toEqual(prevState);
         },
@@ -129,10 +129,10 @@ describe('Auctions', () => {
           expect(writeInteraction?.originalTxId).not.toBe(undefined);
           const { cachedValue } = await contract.readState();
           expect(Object.keys(cachedValue.errorMessages)).toContain(
-            writeInteraction.originalTxId,
+            writeInteraction?.originalTxId,
           );
           expect(
-            cachedValue.errorMessages[writeInteraction.originalTxId],
+            cachedValue.errorMessages[writeInteraction?.originalTxId],
           ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
           expect(cachedValue.state).toEqual(prevState);
         },
@@ -171,10 +171,10 @@ describe('Auctions', () => {
           expect(writeInteraction?.originalTxId).not.toBe(undefined);
           const { cachedValue } = await contract.readState();
           expect(Object.keys(cachedValue.errorMessages)).toContain(
-            writeInteraction.originalTxId,
+            writeInteraction?.originalTxId,
           );
           expect(
-            cachedValue.errorMessages[writeInteraction.originalTxId],
+            cachedValue.errorMessages[writeInteraction?.originalTxId],
           ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
           expect(cachedValue.state).toEqual(prevState);
         },
@@ -220,7 +220,7 @@ describe('Auctions', () => {
             );
             // for the remaining tests
             auctionObj = auctions[auctionBid.name];
-            auctionTxId = writeInteraction.originalTxId;
+            auctionTxId = writeInteraction?.originalTxId;
             // TODO: Check for incremented state
           });
 
@@ -241,10 +241,10 @@ describe('Auctions', () => {
               expect(writeInteraction?.originalTxId).not.toBeUndefined();
               const { cachedValue } = await contract.readState();
               expect(Object.keys(cachedValue.errorMessages)).toContain(
-                writeInteraction.originalTxId,
+                writeInteraction?.originalTxId,
               );
               expect(
-                cachedValue.errorMessages[writeInteraction.originalTxId],
+                cachedValue.errorMessages[writeInteraction?.originalTxId],
               ).toEqual(
                 expect.stringContaining(
                   `The bid (${100} IO) is less than the current required minimum bid`,
@@ -265,8 +265,8 @@ describe('Auctions', () => {
               }
               const winningBidQty = calculateAuctionPriceForBlock({
                 startHeight: new BlockHeight(auctionObj.startHeight),
-                startPrice: auctionObj.startPrice,
-                floorPrice: auctionObj.floorPrice,
+                startPrice: new mIOToken(auctionObj.startPrice),
+                floorPrice: new mIOToken(auctionObj.floorPrice),
                 currentBlockHeight: await getCurrentBlock(arweave),
                 auctionSettings: AUCTION_SETTINGS,
               }).valueOf();
@@ -287,8 +287,8 @@ describe('Auctions', () => {
               });
               const pricePaidForBlock = calculateAuctionPriceForBlock({
                 startHeight: new BlockHeight(auctionObj.startHeight),
-                startPrice: auctionObj.startPrice,
-                floorPrice: auctionObj.floorPrice,
+                startPrice: new mIOToken(auctionObj.startPrice),
+                floorPrice: new mIOToken(auctionObj.floorPrice),
                 currentBlockHeight: await getCurrentBlock(arweave),
                 auctionSettings: AUCTION_SETTINGS,
               }).valueOf();
@@ -338,10 +338,10 @@ describe('Auctions', () => {
             const { cachedValue } = await contract.readState();
             const { auctions, balances } = cachedValue.state as IOState;
             expect(Object.keys(cachedValue.errorMessages)).toContain(
-              writeInteraction.originalTxId,
+              writeInteraction?.originalTxId,
             );
             expect(
-              cachedValue.errorMessages[writeInteraction.originalTxId],
+              cachedValue.errorMessages[writeInteraction?.originalTxId],
             ).toEqual(ARNS_NON_EXPIRED_NAME_MESSAGE);
             expect(auctions[auctionBid.name]).toBeUndefined();
             expect(balances).toEqual(prevState.balances);
@@ -360,10 +360,10 @@ describe('Auctions', () => {
             const { cachedValue } = await contract.readState();
             const { auctions, balances } = cachedValue.state as IOState;
             expect(Object.keys(cachedValue.errorMessages)).toContain(
-              writeInteraction.originalTxId,
+              writeInteraction?.originalTxId,
             );
             expect(
-              cachedValue.errorMessages[writeInteraction.originalTxId],
+              cachedValue.errorMessages[writeInteraction?.originalTxId],
             ).toEqual(ARNS_NAME_RESERVED_MESSAGE);
             expect(auctions[auctionBid.name]).toBeUndefined();
             expect(balances).toEqual(prevState.balances);
@@ -382,10 +382,10 @@ describe('Auctions', () => {
             const { cachedValue } = await contract.readState();
             const { auctions, balances } = cachedValue.state as IOState;
             expect(Object.keys(cachedValue.errorMessages)).toContain(
-              writeInteraction.originalTxId,
+              writeInteraction?.originalTxId,
             );
             expect(
-              cachedValue.errorMessages[writeInteraction.originalTxId],
+              cachedValue.errorMessages[writeInteraction?.originalTxId],
             ).toEqual(
               `Name is less than ${MINIMUM_ALLOWED_NAME_LENGTH} characters. It will be available for auction after ${SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP}.`,
             );
@@ -409,10 +409,10 @@ describe('Auctions', () => {
             const { cachedValue } = await contract.readState();
             const { auctions, balances } = cachedValue.state as IOState;
             expect(Object.keys(cachedValue.errorMessages)).toContain(
-              writeInteraction.originalTxId,
+              writeInteraction?.originalTxId,
             );
             expect(
-              cachedValue.errorMessages[writeInteraction.originalTxId],
+              cachedValue.errorMessages[writeInteraction?.originalTxId],
             ).toEqual(ARNS_NAME_RESERVED_MESSAGE);
             expect(auctions[auctionBid.name]).toBeUndefined();
             expect(balances).toEqual(prevState.balances);
@@ -432,7 +432,7 @@ describe('Auctions', () => {
             const { auctions, balances, reserved } =
               cachedValue.state as IOState;
             expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-              writeInteraction.originalTxId,
+              writeInteraction?.originalTxId,
             );
             expect(auctions[auctionBid.name]).toEqual({
               floorPrice: expect.any(Number),
@@ -491,7 +491,7 @@ describe('Auctions', () => {
         );
         // for the remaining tests
         auctionObj = auctions[auctionBid.name];
-        auctionTxId = writeInteraction.originalTxId;
+        auctionTxId = writeInteraction?.originalTxId;
         // TODO: Check that number of purchases is incremented
       });
 
@@ -504,8 +504,8 @@ describe('Auctions', () => {
         await mineBlocks(arweave, 5);
         const winningBidQty = calculateAuctionPriceForBlock({
           startHeight: new BlockHeight(auctionObj.startHeight),
-          startPrice: auctionObj.startPrice,
-          floorPrice: auctionObj.floorPrice,
+          startPrice: new mIOToken(auctionObj.startPrice),
+          floorPrice: new mIOToken(auctionObj.floorPrice),
           currentBlockHeight: await getCurrentBlock(arweave),
           auctionSettings: AUCTION_SETTINGS,
         }).valueOf();
@@ -524,8 +524,8 @@ describe('Auctions', () => {
         });
         const pricePaidForBlock = calculateAuctionPriceForBlock({
           startHeight: new BlockHeight(auctionObj.startHeight),
-          startPrice: auctionObj.startPrice,
-          floorPrice: auctionObj.floorPrice,
+          startPrice: new mIOToken(auctionObj.startPrice),
+          floorPrice: new mIOToken(auctionObj.floorPrice),
           currentBlockHeight: await getCurrentBlock(arweave),
           auctionSettings: AUCTION_SETTINGS,
         }).valueOf();
@@ -596,7 +596,7 @@ describe('Auctions', () => {
         );
         // for the remaining tests
         auctionObj = auctions[auctionBid.name];
-        auctionTxId = writeInteraction.originalTxId;
+        auctionTxId = writeInteraction?.originalTxId;
       });
 
       it('should update the records when the caller is the initiator, and only withdraw the difference of the current bid to the original floor price that was already withdrawn from the initiator', async () => {
@@ -604,8 +604,8 @@ describe('Auctions', () => {
         await mineBlocks(arweave, 5);
         const winningBidQty = calculateAuctionPriceForBlock({
           startHeight: new BlockHeight(auctionObj.startHeight),
-          startPrice: auctionObj.startPrice,
-          floorPrice: auctionObj.floorPrice,
+          startPrice: new mIOToken(auctionObj.startPrice),
+          floorPrice: new mIOToken(auctionObj.floorPrice),
           currentBlockHeight: await getCurrentBlock(arweave),
           auctionSettings: AUCTION_SETTINGS,
         }).valueOf();
@@ -621,8 +621,8 @@ describe('Auctions', () => {
         // we always take the lesser of the submitted and the cost of auction at a given block
         const pricePaidForBlock = calculateAuctionPriceForBlock({
           startHeight: new BlockHeight(auctionObj.startHeight),
-          startPrice: auctionObj.startPrice,
-          floorPrice: auctionObj.floorPrice,
+          startPrice: new mIOToken(auctionObj.startPrice),
+          floorPrice: new mIOToken(auctionObj.floorPrice),
           currentBlockHeight: await getCurrentBlock(arweave),
           auctionSettings: AUCTION_SETTINGS,
         }).valueOf();

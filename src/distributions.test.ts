@@ -13,7 +13,7 @@ import {
   stubbedDelegatedGatewayData,
   stubbedGateways,
 } from './tests/stubs';
-import { DelegateData, IOToken } from './types';
+import { DelegateData, mIOToken } from './types';
 
 describe('safeDelegateDistribution function', () => {
   it.each([
@@ -32,7 +32,7 @@ describe('safeDelegateDistribution function', () => {
               ...stubbedDelegatedGatewayData,
             },
           },
-          qty: new IOToken(1),
+          qty: new mIOToken(1),
           protocolAddress,
           gatewayAddress: 'a-gateway',
           delegateAddress: 'delegate-1',
@@ -51,7 +51,7 @@ describe('safeDelegateDistribution function', () => {
             ...stubbedDelegatedGatewayData,
           },
         },
-        qty: new IOToken(2),
+        qty: new mIOToken(2),
         protocolAddress: 'foo',
         gatewayAddress: 'a-gateway',
         delegateAddress: 'delegate-1',
@@ -69,7 +69,7 @@ describe('safeDelegateDistribution function', () => {
             ...stubbedDelegatedGatewayData,
           },
         },
-        qty: new IOToken(1),
+        qty: new mIOToken(1),
         protocolAddress: 'foo',
         gatewayAddress: 'doesnt-exist',
         delegateAddress: 'delegate-1',
@@ -87,7 +87,7 @@ describe('safeDelegateDistribution function', () => {
             ...stubbedDelegatedGatewayData,
           },
         },
-        qty: new IOToken(1),
+        qty: new mIOToken(1),
         protocolAddress: 'foo',
         gatewayAddress: 'a-gateway',
         delegateAddress: 'doesnt-exist',
@@ -96,13 +96,13 @@ describe('safeDelegateDistribution function', () => {
   });
 
   it('should distribute stake to delegate', () => {
-    const balances = { foo: MIN_DELEGATED_STAKE, bar: 2 };
+    const balances = { foo: MIN_DELEGATED_STAKE.valueOf(), bar: 2 };
     const gateways = {
       [stubbedArweaveTxId]: {
         ...stubbedDelegatedGatewayData,
       },
     };
-    const qty = new IOToken(1);
+    const qty = new mIOToken(1);
     const protocolAddress = 'foo';
     const gatewayAddress = stubbedArweaveTxId;
     const delegateAddress = 'delegate-1';
@@ -145,7 +145,7 @@ describe('safeGatewayStakeDistribution function', () => {
               ...stubbedDelegatedGatewayData,
             },
           },
-          qty: new IOToken(1),
+          qty: new mIOToken(1),
           protocolAddress,
           gatewayAddress: 'a-gateway',
         });
@@ -163,7 +163,7 @@ describe('safeGatewayStakeDistribution function', () => {
             ...stubbedDelegatedGatewayData,
           },
         },
-        qty: new IOToken(2),
+        qty: new mIOToken(2),
         protocolAddress: 'foo',
         gatewayAddress: 'a-gateway',
       });
@@ -180,7 +180,7 @@ describe('safeGatewayStakeDistribution function', () => {
             ...stubbedDelegatedGatewayData,
           },
         },
-        qty: new IOToken(1),
+        qty: new mIOToken(1),
         protocolAddress: 'foo',
         gatewayAddress: 'doesnt-exist',
       });
@@ -188,13 +188,13 @@ describe('safeGatewayStakeDistribution function', () => {
   });
 
   it('should distribute stake to gateway', () => {
-    const balances = { foo: MIN_DELEGATED_STAKE, bar: 2 };
+    const balances = { foo: MIN_DELEGATED_STAKE.valueOf(), bar: 2 };
     const gateways = {
       [stubbedArweaveTxId]: {
         ...stubbedDelegatedGatewayData,
       },
     };
-    const qty = new IOToken(1);
+    const qty = new mIOToken(1);
     const protocolAddress = 'foo';
     const gatewayAddress = stubbedArweaveTxId;
     const expectedNewQty =

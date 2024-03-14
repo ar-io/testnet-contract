@@ -1,6 +1,7 @@
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_INPUT_MESSAGE,
+  MIN_DELEGATED_STAKE,
 } from '../../constants';
 import {
   getBaselineState,
@@ -116,13 +117,13 @@ describe('delegateStake', () => {
           },
         },
         balances: {
-          test: 10_000,
+          test: MIN_DELEGATED_STAKE.valueOf() + 1000,
         },
       };
       const { state } = await delegateStake(initialState, {
         caller: 'test',
         input: {
-          qty: 100,
+          qty: MIN_DELEGATED_STAKE.valueOf(),
           target: stubbedArweaveTxId,
         },
       });
@@ -135,10 +136,10 @@ describe('delegateStake', () => {
               ...stubbedGatewayData.settings,
               allowDelegatedStaking: true,
             },
-            totalDelegatedStake: 100,
+            totalDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
             delegates: {
               test: {
-                delegatedStake: 100,
+                delegatedStake: MIN_DELEGATED_STAKE.valueOf(),
                 start: SmartWeave.block.height,
                 vaults: {},
               },
@@ -146,7 +147,7 @@ describe('delegateStake', () => {
           },
         },
         balances: {
-          test: 9_900,
+          test: 1000,
         },
       });
     });

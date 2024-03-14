@@ -1,6 +1,7 @@
 import {
   DELEGATED_STAKE_UNLOCK_LENGTH,
   INVALID_INPUT_MESSAGE,
+  MIN_DELEGATED_STAKE,
 } from '../../constants';
 import {
   getBaselineState,
@@ -66,7 +67,7 @@ describe('decreaseDelegateStake', () => {
             ...stubbedGatewayData,
             delegates: {
               ['existing-delegate']: {
-                delegatedStake: 1000,
+                delegatedStake: MIN_DELEGATED_STAKE.valueOf() + 500,
                 start: 0,
                 vaults: {},
               },
@@ -82,7 +83,7 @@ describe('decreaseDelegateStake', () => {
         },
       });
       const expectedDecreasedDelegateData = {
-        delegatedStake: 500,
+        delegatedStake: MIN_DELEGATED_STAKE.valueOf(),
         start: 0,
         vaults: {
           [SmartWeave.transaction.id]: {
@@ -106,7 +107,7 @@ describe('decreaseDelegateStake', () => {
           ...stubbedGatewayData,
           delegates: {
             ['existing-delegate']: {
-              delegatedStake: 1000,
+              delegatedStake: MIN_DELEGATED_STAKE.valueOf(),
               start: 0,
               vaults: {},
             },
@@ -137,7 +138,7 @@ describe('decreaseDelegateStake', () => {
           ...stubbedGatewayData,
           delegates: {
             ['existing-delegate']: {
-              delegatedStake: 1000,
+              delegatedStake: MIN_DELEGATED_STAKE.valueOf(),
               start: 0,
               vaults: {},
             },
@@ -149,7 +150,7 @@ describe('decreaseDelegateStake', () => {
       caller: 'existing-delegate',
       input: {
         target: stubbedArweaveTxId,
-        qty: 1000,
+        qty: MIN_DELEGATED_STAKE.valueOf(),
       },
     });
     const expectedDecreasedDelegateData = {
@@ -157,9 +158,10 @@ describe('decreaseDelegateStake', () => {
       start: 0,
       vaults: {
         [SmartWeave.transaction.id]: {
-          balance: 1000,
+          balance: MIN_DELEGATED_STAKE.valueOf(),
           start: SmartWeave.block.height,
-          end: SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH,
+          end:
+            SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH.valueOf(),
         },
       },
     };

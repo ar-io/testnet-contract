@@ -12,7 +12,7 @@ import {
 } from '../../constants';
 import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
 import { stubbedGatewayData } from '../../tests/stubs';
-import { IOState } from '../../types';
+import { IOState, mIOToken } from '../../types';
 import { joinNetwork } from './joinNetwork';
 
 const validInput = {
@@ -23,7 +23,7 @@ const validInput = {
   fqdn: 'test.com',
   note: 'test-note',
   properties: stubbedArweaveTxId,
-  qty: 10000,
+  qty: MIN_OPERATOR_STAKE.valueOf(),
 };
 
 describe('joinNetwork', () => {
@@ -89,14 +89,14 @@ describe('joinNetwork', () => {
       'should throw an error for invalid minDelegatedStake (below minimum delegated stake)',
       {
         ...validInput,
-        minDelegatedStake: MIN_DELEGATED_STAKE - 1, // should not be below minimum
+        minDelegatedStake: MIN_DELEGATED_STAKE.minus(new mIOToken(1)), // should not be below minimum
       },
     ],
     [
       'should throw an error for invalid minDelegatedStake (non-integer)',
       {
         ...validInput,
-        minDelegatedStake: MIN_DELEGATED_STAKE + 0.1, // integers only
+        minDelegatedStake: MIN_DELEGATED_STAKE.valueOf() + 0.1, // integers only
       },
     ],
     [
@@ -138,7 +138,7 @@ describe('joinNetwork', () => {
     const initialState = {
       ...getBaselineState(),
       balances: {
-        'a-gateway-with-balance': 100000,
+        'a-gateway-with-balance': MIN_OPERATOR_STAKE.valueOf(),
       },
     };
     const error = await joinNetwork(initialState, {
@@ -156,7 +156,7 @@ describe('joinNetwork', () => {
     const initialState = {
       ...getBaselineState(),
       balances: {
-        'existing-gateway': 10000,
+        'existing-gateway': MIN_OPERATOR_STAKE.valueOf(),
       },
       gateways: {
         'existing-gateway': {
@@ -178,8 +178,8 @@ describe('joinNetwork', () => {
     const initialState = {
       ...getBaselineState(),
       balances: {
-        'existing-gateway': 10000,
-        'a-new-gateway': 10000,
+        'existing-gateway': MIN_OPERATOR_STAKE.valueOf(),
+        'a-new-gateway': MIN_OPERATOR_STAKE.valueOf(),
       },
       gateways: {
         'existing-gateway': {
@@ -202,7 +202,7 @@ describe('joinNetwork', () => {
     const initialState = {
       ...getBaselineState(),
       balances: {
-        [stubbedArweaveTxId]: MIN_OPERATOR_STAKE,
+        [stubbedArweaveTxId]: MIN_OPERATOR_STAKE.valueOf(),
       },
     };
     const { state } = await joinNetwork(initialState, {
@@ -212,7 +212,7 @@ describe('joinNetwork', () => {
       },
     });
     expect(state.gateways[stubbedArweaveTxId]).toEqual({
-      operatorStake: MIN_OPERATOR_STAKE,
+      operatorStake: MIN_OPERATOR_STAKE.valueOf(),
       totalDelegatedStake: 0,
       settings: {
         port: 1234,
@@ -222,7 +222,7 @@ describe('joinNetwork', () => {
         note: 'test-note',
         properties: stubbedArweaveTxId,
         allowDelegatedStaking: false,
-        minDelegatedStake: MIN_DELEGATED_STAKE,
+        minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
         delegateRewardShareRatio: 0,
         autoStake: false,
       },
@@ -245,13 +245,13 @@ describe('joinNetwork', () => {
       fqdn: 'test.com',
       note: 'test-note',
       properties: stubbedArweaveTxId,
-      qty: 10000,
+      qty: MIN_OPERATOR_STAKE.valueOf(),
     };
 
     const initialState = {
       ...getBaselineState(),
       balances: {
-        [stubbedArweaveTxId]: MIN_OPERATOR_STAKE,
+        [stubbedArweaveTxId]: MIN_OPERATOR_STAKE.valueOf(),
       },
     };
     const { state } = await joinNetwork(initialState, {
@@ -261,7 +261,7 @@ describe('joinNetwork', () => {
       },
     });
     expect(state.gateways[stubbedArweaveTxId]).toEqual({
-      operatorStake: MIN_OPERATOR_STAKE,
+      operatorStake: MIN_OPERATOR_STAKE.valueOf(),
       totalDelegatedStake: 0,
       settings: {
         port: 1234,
@@ -271,7 +271,7 @@ describe('joinNetwork', () => {
         note: 'test-note',
         properties: stubbedArweaveTxId,
         allowDelegatedStaking: false,
-        minDelegatedStake: MIN_DELEGATED_STAKE,
+        minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
         delegateRewardShareRatio: 0,
         autoStake: false,
       },
@@ -290,7 +290,7 @@ describe('joinNetwork', () => {
     const initialState = {
       ...getBaselineState(),
       balances: {
-        [stubbedArweaveTxId]: MIN_OPERATOR_STAKE,
+        [stubbedArweaveTxId]: MIN_OPERATOR_STAKE.valueOf(),
       },
     };
     const { state } = await joinNetwork(initialState, {
@@ -304,7 +304,7 @@ describe('joinNetwork', () => {
       },
     });
     expect(state.gateways[stubbedArweaveTxId]).toEqual({
-      operatorStake: MIN_OPERATOR_STAKE,
+      operatorStake: MIN_OPERATOR_STAKE.valueOf(),
       totalDelegatedStake: 0,
       settings: {
         port: 1234,
@@ -314,7 +314,7 @@ describe('joinNetwork', () => {
         note: 'test-note',
         properties: stubbedArweaveTxId,
         allowDelegatedStaking: true,
-        minDelegatedStake: MIN_DELEGATED_STAKE,
+        minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
         delegateRewardShareRatio: Math.floor(
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
         ),
@@ -335,7 +335,7 @@ describe('joinNetwork', () => {
     const initialState = {
       ...getBaselineState(),
       balances: {
-        [stubbedArweaveTxId]: MIN_OPERATOR_STAKE,
+        [stubbedArweaveTxId]: MIN_OPERATOR_STAKE.valueOf(),
       },
     };
     const { state } = await joinNetwork(initialState, {
@@ -348,7 +348,7 @@ describe('joinNetwork', () => {
       },
     });
     expect(state.gateways[stubbedArweaveTxId]).toEqual({
-      operatorStake: MIN_OPERATOR_STAKE,
+      operatorStake: MIN_OPERATOR_STAKE.valueOf(),
       totalDelegatedStake: 0,
       settings: {
         port: 1234,
@@ -358,7 +358,7 @@ describe('joinNetwork', () => {
         note: 'test-note',
         properties: stubbedArweaveTxId,
         allowDelegatedStaking: false,
-        minDelegatedStake: MIN_DELEGATED_STAKE,
+        minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
         delegateRewardShareRatio: Math.floor(
           (1 - GATEWAY_PERCENTAGE_OF_EPOCH_REWARD) * 100,
         ),

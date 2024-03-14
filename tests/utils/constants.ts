@@ -19,14 +19,6 @@ export const SECONDS_IN_A_YEAR = 31_536_000;
 export const WALLET_FUND_AMOUNT = 1_000_000_000_000_000;
 export const INITIAL_STATE = initialContractState;
 export const TRANSFER_QTY = 100_000;
-export const CONTRACT_SETTINGS = {
-  gatewayLeaveLength: 3600,
-  maxLockLength: 788400,
-  minGatewayJoinLength: 3600,
-  minLockLength: 720,
-  minNetworkJoinStakeAmount: 10000,
-  operatorStakeWithdrawLength: 3600,
-};
 export const EXAMPLE_OBSERVER_REPORT_TX_IDS = [
   'U35xQUnop2Oq1NwhpzRfTeXVSjC0M8H50MVlmo_cTJc',
   'TtXk8kqgGYVqTQeHaJzst3toA2qz9UO0AGX1lUeuxvc',

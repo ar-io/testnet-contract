@@ -5,6 +5,7 @@ import {
   GENESIS_FEES,
   INITIAL_DEMAND_FACTOR_DATA,
   MIN_DELEGATED_STAKE,
+  MIN_OPERATOR_STAKE,
 } from '../constants';
 import {
   ArNSLeaseAuctionData,
@@ -27,6 +28,7 @@ export const getBaselineState: () => IOState = (): IOState => ({
   records: {},
   balances: {},
   vaults: {},
+  decimals: 6,
   distributions: {
     epochZeroStartHeight: 0,
     epochStartHeight: 0,
@@ -74,13 +76,13 @@ export const stubbedGatewayData: Gateway = {
   end: 0,
   vaults: {},
   delegates: {},
-  operatorStake: 10_000,
+  operatorStake: MIN_OPERATOR_STAKE.valueOf(),
   settings: {
     label: 'test-gateway',
     fqdn: 'test.com',
     port: 443,
     protocol: 'https',
-    minDelegatedStake: MIN_DELEGATED_STAKE,
+    minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
     allowDelegatedStaking: false,
     autoStake: false,
   },
@@ -137,7 +139,7 @@ export const stubbedDelegatedGatewayData: Gateway = {
     protocol: 'https',
     allowDelegatedStaking: true,
     delegateRewardShareRatio: 5,
-    minDelegatedStake: MIN_DELEGATED_STAKE,
+    minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
     autoStake: false,
   },
 };
@@ -148,7 +150,7 @@ export function createMockDelegates(numDelegates: number) {
   for (let i = 0; i < numDelegates; i++) {
     const delegateAddress = `delegateAddress${i}`; // Mock unique delegate address
     delegates[delegateAddress] = {
-      delegatedStake: MIN_DELEGATED_STAKE, // or any mock value you need
+      delegatedStake: MIN_DELEGATED_STAKE.valueOf(), // or any mock value you need
       start: 0, // Mock start block
       vaults: {}, // Mock vaults data or add as needed
     };

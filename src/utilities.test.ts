@@ -4,7 +4,13 @@ import {
   TOTAL_IO_SUPPLY,
 } from './constants';
 import { getBaselineState } from './tests/stubs';
-import { BlockHeight, BlockTimestamp, GatewayStatus, IOState } from './types';
+import {
+  BlockHeight,
+  BlockTimestamp,
+  GatewayStatus,
+  IOState,
+  mIOToken,
+} from './types';
 import {
   calculateYearsBetweenTimestamps,
   incrementBalance,
@@ -51,7 +57,7 @@ describe('isGatewayJoined function', () => {
               fqdn: '',
               port: Number.NEGATIVE_INFINITY,
               protocol: 'https',
-              minDelegatedStake: MIN_DELEGATED_STAKE,
+              minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
               autoStake: false,
             },
             stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
@@ -99,7 +105,7 @@ describe('isGatewayEligibleToBeRemoved function', () => {
               fqdn: '',
               port: Number.NEGATIVE_INFINITY,
               protocol: 'https',
-              minDelegatedStake: MIN_DELEGATED_STAKE,
+              minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
               autoStake: false,
             },
             stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
@@ -159,7 +165,7 @@ describe('isGatewayEligibleToLeave function', () => {
               fqdn: '',
               port: Number.NEGATIVE_INFINITY,
               protocol: 'https',
-              minDelegatedStake: MIN_DELEGATED_STAKE,
+              minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
               autoStake: false,
             },
             stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
@@ -227,57 +233,44 @@ describe('calculateYearsBetweenTimestamps function', () => {
 });
 
 describe('unsafeDecrementBalance function', () => {
-  it('should not throw an error if quantity is negative', () => {
-    const balances = { foo: 1, bar: 2 };
-    expect(() => {
-      unsafeDecrementBalance(balances, 'foo', -1);
-    }).not.toThrow();
-    expect(balances).toEqual({ foo: 2, bar: 2 });
-  });
-
   it('should not throw an error if address does not exist', () => {
     const balances = { foo: 1, bar: 2 };
     expect(() => {
-      unsafeDecrementBalance(balances, 'baz', 1);
+      unsafeDecrementBalance(balances, 'baz', new mIOToken(1));
     }).not.toThrow();
     expect(balances).toEqual({ foo: 1, bar: 2, baz: Number.NaN });
   });
 
   it('should decrement balance of address if it exists', () => {
     const balances = { foo: 1, bar: 2 };
-    unsafeDecrementBalance(balances, 'foo', 1);
+    unsafeDecrementBalance(balances, 'foo', new mIOToken(balances.foo));
     expect(balances).toEqual({ bar: 2 });
   });
 
   it('should decrement and remove balance of address if it exists and is fully drained', () => {
     const balances = { foo: 1, bar: 2 };
-    unsafeDecrementBalance(balances, 'foo', 1);
+    unsafeDecrementBalance(balances, 'foo', new mIOToken(balances.foo));
     expect(balances).toEqual({ bar: 2 });
   });
 
   it('should decrement and not remove balance of address if it exists and is fully drained when removeIfZero is false', () => {
     const balances = { foo: 1, bar: 2 };
-    unsafeDecrementBalance(balances, 'foo', 1, false);
+    unsafeDecrementBalance(balances, 'foo', new mIOToken(balances.foo), false);
     expect(balances).toEqual({ foo: 0, bar: 2 });
   });
 });
 
 describe('incrementBalance function', () => {
-  it('should throw an error if quantity is negative', () => {
-    expect(() => {
-      incrementBalance({ foo: 1, bar: 2 }, 'foo', -1);
-    }).toThrowError('Amount must be positive');
-  });
-
   it('should add and increment balance of address if it does not yet exist', () => {
     const balances = { foo: 1, bar: 2 };
-    incrementBalance(balances, 'baz', 1);
+    incrementBalance(balances, 'baz', new mIOToken(1));
     expect(balances).toEqual({ foo: 1, bar: 2, baz: 1 });
   });
 
   it('should increment balance of address if it already exists', () => {
     const balances = { foo: 1, bar: 2 };
-    incrementBalance(balances, 'foo', 1);
+    const balanceFoo = new mIOToken(balances.foo);
+    incrementBalance(balances, 'foo', balanceFoo);
     expect(balances).toEqual({ foo: 2, bar: 2 });
   });
 });
@@ -340,7 +333,7 @@ describe('resetProtocolBalance function', () => {
             fqdn: '',
             port: 1234,
             protocol: 'https',
-            minDelegatedStake: MIN_DELEGATED_STAKE,
+            minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
             autoStake: false,
           },
           stats: DEFAULT_GATEWAY_PERFORMANCE_STATS,
@@ -348,7 +341,8 @@ describe('resetProtocolBalance function', () => {
       },
     };
     const totalNonProtocolBalances = 900;
-    const expectedProtocolBalance = TOTAL_IO_SUPPLY - totalNonProtocolBalances;
+    const expectedProtocolBalance =
+      TOTAL_IO_SUPPLY.valueOf() - totalNonProtocolBalances;
     const { balances: updatedBalances } = resetProtocolBalance(testingState);
     expect(updatedBalances).toEqual({
       ...testingState.balances,

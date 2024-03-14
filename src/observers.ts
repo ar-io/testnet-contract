@@ -15,6 +15,7 @@ import {
   Gateways,
   WalletAddress,
   WeightedObserver,
+  mIOToken,
 } from './types';
 
 export function getEpochDataForHeight({
@@ -148,23 +149,26 @@ export function getObserverWeightsForEpoch({
 }: {
   gateways: DeepReadonly<Gateways>;
   epochStartHeight: BlockHeight;
-  minOperatorStake: number;
+  minOperatorStake: mIOToken;
 }): WeightedObserver[] {
   const weightedObservers: WeightedObserver[] = [];
   let totalCompositeWeight = 0;
   // Get all eligible observers and assign weights
   for (const [address, gateway] of Object.entries(gateways)) {
-    const stake = gateway.operatorStake + gateway.totalDelegatedStake; // e.g. 100 - no cap to this
-    const stakeWeight = stake / minOperatorStake; // this is always greater than 1 as the minOperatorStake is always less than the stake
+    const stake = new mIOToken(
+      gateway.operatorStake + gateway.totalDelegatedStake,
+    ); // e.g. 100 - no cap to this
+    const stakeWeightRatio = stake.valueOf() / minOperatorStake.valueOf(); // this is always greater than 1 as the minOperatorStake is always less than the stake
     // the percentage of the epoch the gateway was joined for before this epoch, if the gateway starts in the future this will be 0
-    const totalBlocksForGateway = epochStartHeight.valueOf() - gateway.start;
+    const gatewayStart = new BlockHeight(gateway.start);
     // TODO: should we increment by one here or are observers that join at the epoch start not eligible to be selected as an observer
-    const calculatedTenureWeightForGateway =
-      totalBlocksForGateway < 0
-        ? 0
-        : totalBlocksForGateway
-        ? totalBlocksForGateway / TENURE_WEIGHT_PERIOD
-        : 1 / TENURE_WEIGHT_PERIOD;
+    const calculatedTenureWeightForGateway = gatewayStart.isGreaterThan(
+      epochStartHeight,
+    )
+      ? 0
+      : epochStartHeight.minus(gatewayStart).valueOf() === 0
+      ? 1 / TENURE_WEIGHT_PERIOD
+      : epochStartHeight.minus(gatewayStart).valueOf() / TENURE_WEIGHT_PERIOD;
     // max of 4, which implies after 2 years, you are considered a mature gateway and this number stops increasing
     const gatewayTenureWeight = Math.min(
       calculatedTenureWeightForGateway,
@@ -188,7 +192,7 @@ export function getObserverWeightsForEpoch({
 
     // calculate composite weight based on sub weights
     const compositeWeight =
-      stakeWeight *
+      stakeWeightRatio *
       gatewayTenureWeight *
       gatewayRewardRatioWeight *
       observerRewardRatioWeight;
@@ -196,9 +200,9 @@ export function getObserverWeightsForEpoch({
     weightedObservers.push({
       gatewayAddress: address,
       observerAddress: gateway.observerWallet,
-      stake,
+      stake: stake.valueOf(),
       start: gateway.start,
-      stakeWeight,
+      stakeWeight: stakeWeightRatio,
       tenureWeight: gatewayTenureWeight,
       gatewayRewardRatioWeight,
       observerRewardRatioWeight,
@@ -228,7 +232,7 @@ export async function getPrescribedObserversForEpoch({
   distributions: DeepReadonly<EpochDistributionData>;
   epochStartHeight: BlockHeight;
   epochEndHeight: BlockHeight;
-  minOperatorStake: number;
+  minOperatorStake: mIOToken;
 }): Promise<WeightedObserver[]> {
   const eligibleGateways = getEligibleGatewaysForEpoch({
     epochStartHeight,

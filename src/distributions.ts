@@ -2,7 +2,7 @@ import {
   INSUFFICIENT_FUNDS_MESSAGE,
   INVALID_GATEWAY_REGISTERED_MESSAGE,
 } from './constants';
-import { Balances, Gateways, IOToken, WalletAddress } from './types';
+import { Balances, Gateways, WalletAddress, mIOToken } from './types';
 import {
   unsafeDecrementBalance,
   walletHasSufficientBalance,
@@ -21,13 +21,13 @@ export function safeDelegateDistribution({
   protocolAddress: WalletAddress;
   gatewayAddress: WalletAddress;
   delegateAddress: WalletAddress;
-  qty: IOToken;
+  qty: mIOToken;
 }): void {
   if (balances[protocolAddress] === null || isNaN(balances[protocolAddress])) {
     throw new ContractError(`Caller balance is not defined!`);
   }
 
-  if (!walletHasSufficientBalance(balances, protocolAddress, qty.valueOf())) {
+  if (!walletHasSufficientBalance(balances, protocolAddress, qty)) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
@@ -46,7 +46,7 @@ export function safeDelegateDistribution({
   // Increase the gateway's total delegated stake
   gateways[gatewayAddress].totalDelegatedStake += qty.valueOf();
 
-  unsafeDecrementBalance(balances, protocolAddress, qty.valueOf());
+  unsafeDecrementBalance(balances, protocolAddress, qty);
 }
 
 export function safeGatewayStakeDistribution({
@@ -60,13 +60,13 @@ export function safeGatewayStakeDistribution({
   gateways: Gateways;
   protocolAddress: WalletAddress;
   gatewayAddress: WalletAddress;
-  qty: IOToken;
+  qty: mIOToken;
 }): void {
   if (balances[protocolAddress] === null || isNaN(balances[protocolAddress])) {
     throw new ContractError(`Caller balance is not defined!`);
   }
 
-  if (!walletHasSufficientBalance(balances, protocolAddress, qty.valueOf())) {
+  if (!walletHasSufficientBalance(balances, protocolAddress, qty)) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
@@ -77,5 +77,5 @@ export function safeGatewayStakeDistribution({
   // Increase the gateway's total delegated stake
   gateways[gatewayAddress].operatorStake += qty.valueOf();
 
-  unsafeDecrementBalance(balances, protocolAddress, qty.valueOf());
+  unsafeDecrementBalance(balances, protocolAddress, qty);
 }
