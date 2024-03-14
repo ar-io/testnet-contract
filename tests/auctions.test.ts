@@ -87,10 +87,10 @@ describe('Auctions', () => {
           expect(writeInteraction?.originalTxId).not.toBe(undefined);
           const { cachedValue } = await contract.readState();
           expect(Object.keys(cachedValue.errorMessages)).toContain(
-            writeInteraction.originalTxId,
+            writeInteraction?.originalTxId,
           );
           expect(
-            cachedValue.errorMessages[writeInteraction.originalTxId],
+            cachedValue.errorMessages[writeInteraction?.originalTxId],
           ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
           expect(cachedValue.state).toEqual(prevState);
         },
@@ -129,10 +129,10 @@ describe('Auctions', () => {
           expect(writeInteraction?.originalTxId).not.toBe(undefined);
           const { cachedValue } = await contract.readState();
           expect(Object.keys(cachedValue.errorMessages)).toContain(
-            writeInteraction.originalTxId,
+            writeInteraction?.originalTxId,
           );
           expect(
-            cachedValue.errorMessages[writeInteraction.originalTxId],
+            cachedValue.errorMessages[writeInteraction?.originalTxId],
           ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
           expect(cachedValue.state).toEqual(prevState);
         },
@@ -171,10 +171,10 @@ describe('Auctions', () => {
           expect(writeInteraction?.originalTxId).not.toBe(undefined);
           const { cachedValue } = await contract.readState();
           expect(Object.keys(cachedValue.errorMessages)).toContain(
-            writeInteraction.originalTxId,
+            writeInteraction?.originalTxId,
           );
           expect(
-            cachedValue.errorMessages[writeInteraction.originalTxId],
+            cachedValue.errorMessages[writeInteraction?.originalTxId],
           ).toEqual(expect.stringContaining(INVALID_INPUT_MESSAGE));
           expect(cachedValue.state).toEqual(prevState);
         },
@@ -220,7 +220,7 @@ describe('Auctions', () => {
             );
             // for the remaining tests
             auctionObj = auctions[auctionBid.name];
-            auctionTxId = writeInteraction.originalTxId;
+            auctionTxId = writeInteraction?.originalTxId;
             // TODO: Check for incremented state
           });
 
@@ -241,10 +241,10 @@ describe('Auctions', () => {
               expect(writeInteraction?.originalTxId).not.toBeUndefined();
               const { cachedValue } = await contract.readState();
               expect(Object.keys(cachedValue.errorMessages)).toContain(
-                writeInteraction.originalTxId,
+                writeInteraction?.originalTxId,
               );
               expect(
-                cachedValue.errorMessages[writeInteraction.originalTxId],
+                cachedValue.errorMessages[writeInteraction?.originalTxId],
               ).toEqual(
                 expect.stringContaining(
                   `The bid (${100} IO) is less than the current required minimum bid`,
@@ -338,10 +338,10 @@ describe('Auctions', () => {
             const { cachedValue } = await contract.readState();
             const { auctions, balances } = cachedValue.state as IOState;
             expect(Object.keys(cachedValue.errorMessages)).toContain(
-              writeInteraction.originalTxId,
+              writeInteraction?.originalTxId,
             );
             expect(
-              cachedValue.errorMessages[writeInteraction.originalTxId],
+              cachedValue.errorMessages[writeInteraction?.originalTxId],
             ).toEqual(ARNS_NON_EXPIRED_NAME_MESSAGE);
             expect(auctions[auctionBid.name]).toBeUndefined();
             expect(balances).toEqual(prevState.balances);
@@ -360,10 +360,10 @@ describe('Auctions', () => {
             const { cachedValue } = await contract.readState();
             const { auctions, balances } = cachedValue.state as IOState;
             expect(Object.keys(cachedValue.errorMessages)).toContain(
-              writeInteraction.originalTxId,
+              writeInteraction?.originalTxId,
             );
             expect(
-              cachedValue.errorMessages[writeInteraction.originalTxId],
+              cachedValue.errorMessages[writeInteraction?.originalTxId],
             ).toEqual(ARNS_NAME_RESERVED_MESSAGE);
             expect(auctions[auctionBid.name]).toBeUndefined();
             expect(balances).toEqual(prevState.balances);
@@ -382,10 +382,10 @@ describe('Auctions', () => {
             const { cachedValue } = await contract.readState();
             const { auctions, balances } = cachedValue.state as IOState;
             expect(Object.keys(cachedValue.errorMessages)).toContain(
-              writeInteraction.originalTxId,
+              writeInteraction?.originalTxId,
             );
             expect(
-              cachedValue.errorMessages[writeInteraction.originalTxId],
+              cachedValue.errorMessages[writeInteraction?.originalTxId],
             ).toEqual(
               `Name is less than ${MINIMUM_ALLOWED_NAME_LENGTH} characters. It will be available for auction after ${SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP}.`,
             );
@@ -409,10 +409,10 @@ describe('Auctions', () => {
             const { cachedValue } = await contract.readState();
             const { auctions, balances } = cachedValue.state as IOState;
             expect(Object.keys(cachedValue.errorMessages)).toContain(
-              writeInteraction.originalTxId,
+              writeInteraction?.originalTxId,
             );
             expect(
-              cachedValue.errorMessages[writeInteraction.originalTxId],
+              cachedValue.errorMessages[writeInteraction?.originalTxId],
             ).toEqual(ARNS_NAME_RESERVED_MESSAGE);
             expect(auctions[auctionBid.name]).toBeUndefined();
             expect(balances).toEqual(prevState.balances);
@@ -432,7 +432,7 @@ describe('Auctions', () => {
             const { auctions, balances, reserved } =
               cachedValue.state as IOState;
             expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-              writeInteraction.originalTxId,
+              writeInteraction?.originalTxId,
             );
             expect(auctions[auctionBid.name]).toEqual({
               floorPrice: expect.any(Number),
@@ -491,7 +491,7 @@ describe('Auctions', () => {
         );
         // for the remaining tests
         auctionObj = auctions[auctionBid.name];
-        auctionTxId = writeInteraction.originalTxId;
+        auctionTxId = writeInteraction?.originalTxId;
         // TODO: Check that number of purchases is incremented
       });
 
@@ -596,7 +596,7 @@ describe('Auctions', () => {
         );
         // for the remaining tests
         auctionObj = auctions[auctionBid.name];
-        auctionTxId = writeInteraction.originalTxId;
+        auctionTxId = writeInteraction?.originalTxId;
       });
 
       it('should update the records when the caller is the initiator, and only withdraw the difference of the current bid to the original floor price that was already withdrawn from the initiator', async () => {

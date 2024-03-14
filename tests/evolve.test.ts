@@ -62,10 +62,10 @@ describe('evolving', () => {
   // if this test fails, it means that we are going to lose our ability to evolve after the next contract update - VERY IMPORTANT to ensure this test is not modified or removed without thorough review
   it('should be able evolve a newly deployed arns contract with a forked state using the new contract source', async () => {
     const writeInteraction = await newForkedContract.evolve(localSourceCodeId);
-    expect(writeInteraction.originalTxId).not.toBeUndefined();
+    expect(writeInteraction?.originalTxId).not.toBeUndefined();
     const { cachedValue } = await newForkedContract.readState();
     expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-      writeInteraction.originalTxId,
+      writeInteraction?.originalTxId,
     );
     expect(cachedValue.state.evolve).toBe(localSourceCodeId);
   });
@@ -74,10 +74,10 @@ describe('evolving', () => {
     const writeInteraction = await newForkedContract.writeInteraction({
       function: 'evolveState',
     });
-    expect(writeInteraction.originalTxId).not.toBeUndefined();
+    expect(writeInteraction?.originalTxId).not.toBeUndefined();
     const { cachedValue } = await newForkedContract.readState();
     expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-      writeInteraction.originalTxId,
+      writeInteraction?.originalTxId,
     );
     expect(cachedValue.state.evolve).toBe(localSourceCodeId);
   });

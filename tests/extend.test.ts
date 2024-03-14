@@ -60,12 +60,12 @@ describe('Extend', () => {
       years: extendYears,
     });
 
-    expect(writeInteraction.originalTxId).not.toBe(undefined);
+    expect(writeInteraction?.originalTxId).not.toBe(undefined);
     const { cachedValue } = await contract.readState();
     expect(Object.keys(cachedValue.errorMessages)).toContain(
-      writeInteraction.originalTxId,
+      writeInteraction?.originalTxId,
     );
-    expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toEqual(
+    expect(cachedValue.errorMessages[writeInteraction?.originalTxId]).toEqual(
       INSUFFICIENT_FUNDS_MESSAGE,
     );
     expect(cachedValue.state).toEqual(prevState);
@@ -82,12 +82,12 @@ describe('Extend', () => {
         years: extendYears,
       });
 
-      expect(writeInteraction.originalTxId).not.toBe(undefined);
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       expect(Object.keys(cachedValue.errorMessages)).toContain(
-        writeInteraction.originalTxId,
+        writeInteraction?.originalTxId,
       );
-      expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toEqual(
+      expect(cachedValue.errorMessages[writeInteraction?.originalTxId]).toEqual(
         expect.stringContaining(INVALID_INPUT_MESSAGE),
       );
       expect(cachedValue.state).toEqual(prevState);
@@ -104,12 +104,12 @@ describe('Extend', () => {
       years: extendYears,
     });
 
-    expect(writeInteraction.originalTxId).not.toBe(undefined);
+    expect(writeInteraction?.originalTxId).not.toBe(undefined);
     const { cachedValue } = await contract.readState();
     expect(Object.keys(cachedValue.errorMessages)).toContain(
-      writeInteraction.originalTxId,
+      writeInteraction?.originalTxId,
     );
-    expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toEqual(
+    expect(cachedValue.errorMessages[writeInteraction?.originalTxId]).toEqual(
       expect.stringContaining(INVALID_INPUT_MESSAGE),
     );
     expect(cachedValue.state).toEqual(prevState);
@@ -126,12 +126,12 @@ describe('Extend', () => {
       years: extendYears,
     });
 
-    expect(writeInteraction.originalTxId).not.toBe(undefined);
+    expect(writeInteraction?.originalTxId).not.toBe(undefined);
     const { cachedValue } = await contract.readState();
     expect(Object.keys(cachedValue.errorMessages)).toContain(
-      writeInteraction.originalTxId,
+      writeInteraction?.originalTxId,
     );
-    expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toEqual(
+    expect(cachedValue.errorMessages[writeInteraction?.originalTxId]).toEqual(
       ARNS_NAME_DOES_NOT_EXIST_MESSAGE,
     );
   });
@@ -147,12 +147,12 @@ describe('Extend', () => {
       years: extendYears,
     });
 
-    expect(writeInteraction.originalTxId).not.toBe(undefined);
+    expect(writeInteraction?.originalTxId).not.toBe(undefined);
     const { cachedValue } = await contract.readState();
     expect(Object.keys(cachedValue.errorMessages)).toContain(
-      writeInteraction.originalTxId,
+      writeInteraction?.originalTxId,
     );
-    expect(cachedValue.errorMessages[writeInteraction.originalTxId]).toEqual(
+    expect(cachedValue.errorMessages[writeInteraction?.originalTxId]).toEqual(
       ARNS_INVALID_EXTENSION_MESSAGE,
     );
     expect(cachedValue.state).toEqual(prevState);
@@ -182,12 +182,12 @@ describe('Extend', () => {
         years: years,
       });
 
-      expect(writeInteraction.originalTxId).not.toBe(undefined);
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       const state = cachedValue.state as IOState;
 
       expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-        writeInteraction.originalTxId,
+        writeInteraction?.originalTxId,
       );
       const record = state.records[name] as ArNSLeaseData;
       expect(record.endTimestamp).toEqual(
@@ -224,11 +224,11 @@ describe('Extend', () => {
         years: years,
       });
 
-      expect(writeInteraction.originalTxId).not.toBe(undefined);
+      expect(writeInteraction?.originalTxId).not.toBe(undefined);
       const { cachedValue } = await contract.readState();
       const state = cachedValue.state as IOState;
       expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-        writeInteraction.originalTxId,
+        writeInteraction?.originalTxId,
       );
       const record = state.records[name] as ArNSLeaseData;
       expect(record.endTimestamp).toEqual(
