@@ -51,9 +51,24 @@ export function resetProtocolBalance({
     (totalGatewaysStake: number, gateway: Gateway) => {
       const gatewayStake =
         gateway.operatorStake +
+        gateway.totalDelegatedStake +
         Object.values(gateway.vaults).reduce(
           (totalVaulted: number, currentVault: VaultData) =>
             totalVaulted + currentVault.balance,
+          0,
+        ) +
+        Object.values(gateway.delegates).reduce(
+          (totalDelegated: number, delegate) => {
+            return (
+              totalDelegated +
+              Object.values(delegate.vaults).reduce(
+                (totalVaulted: number, currentVault: VaultData) => {
+                  return totalVaulted + currentVault.balance;
+                },
+                0,
+              )
+            );
+          },
           0,
         );
       return totalGatewaysStake + gatewayStake;

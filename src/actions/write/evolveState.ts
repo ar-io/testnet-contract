@@ -1,11 +1,7 @@
+import { resetProtocolBalance } from 'src/utilities';
+
 import { NON_CONTRACT_OWNER_MESSAGE } from '../../constants';
-import {
-  ContractWriteResult,
-  Gateway,
-  IOState,
-  PstAction,
-  mIOToken,
-} from '../../types';
+import { ContractWriteResult, IOState, PstAction } from '../../types';
 
 // Updates this contract to new source code
 export const evolveState = async (
@@ -19,13 +15,9 @@ export const evolveState = async (
   }
 
   // convert all gateway stakes and delegates to mIO
-  for (const [gatewayAddress, gateway] of Object.entries(state.gateways)) {
-    const updatedGateway: Gateway = {
-      totalDelegatedStake: new mIOToken(0).valueOf(),
-      ...gateway,
-    };
-    state.gateways[gatewayAddress] = updatedGateway;
-  }
+  const { balances } = resetProtocolBalance(state);
+
+  state.balances = balances;
 
   return { state };
 };
