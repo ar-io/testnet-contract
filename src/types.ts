@@ -43,6 +43,7 @@ export interface IOState extends PstState {
   distributions: EpochDistributionData;
   vaults: RegistryVaults;
   prescribedObservers: PrescribedObservers;
+  decimals: number; // the number of decimal places the token can be divided into
 }
 
 export type GatewayPerformanceStats = {

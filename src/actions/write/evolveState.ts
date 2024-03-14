@@ -204,5 +204,8 @@ export const evolveState = async (
       .valueOf();
   }
 
+  // set the decimals in the state
+  state.decimals = 6;
+
   return { state };
 };
