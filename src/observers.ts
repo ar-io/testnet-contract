@@ -161,14 +161,18 @@ export function getObserverWeightsForEpoch({
     const stakeWeightRatio = stake.valueOf() / minOperatorStake.valueOf(); // this is always greater than 1 as the minOperatorStake is always less than the stake
     // the percentage of the epoch the gateway was joined for before this epoch, if the gateway starts in the future this will be 0
     const gatewayStart = new BlockHeight(gateway.start);
-    // TODO: should we increment by one here or are observers that join at the epoch start not eligible to be selected as an observer
-    const calculatedTenureWeightForGateway = gatewayStart.isGreaterThan(
-      epochStartHeight,
+    const totalBlocksForGateway = epochStartHeight.isGreaterThanOrEqualTo(
+      gatewayStart,
     )
-      ? 0
-      : epochStartHeight.minus(gatewayStart).valueOf() === 0
-      ? 1 / TENURE_WEIGHT_PERIOD
-      : epochStartHeight.minus(gatewayStart).valueOf() / TENURE_WEIGHT_PERIOD;
+      ? epochStartHeight.minus(gatewayStart).valueOf()
+      : -1;
+    // TODO: should we increment by one here or are observers that join at the epoch start not eligible to be selected as an observer
+    const calculatedTenureWeightForGateway =
+      totalBlocksForGateway < 0
+        ? 0
+        : totalBlocksForGateway
+        ? totalBlocksForGateway / TENURE_WEIGHT_PERIOD
+        : 1 / TENURE_WEIGHT_PERIOD;
     // max of 4, which implies after 2 years, you are considered a mature gateway and this number stops increasing
     const gatewayTenureWeight = Math.min(
       calculatedTenureWeightForGateway,
