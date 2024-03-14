@@ -28,6 +28,7 @@ export const getBaselineState: () => IOState = (): IOState => ({
   records: {},
   balances: {},
   vaults: {},
+  decimals: 6,
   distributions: {
     epochZeroStartHeight: 0,
     epochStartHeight: 0,

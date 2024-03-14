@@ -30,12 +30,12 @@ export const MIN_TOKEN_LOCK_BLOCK_LENGTH = 14 * BLOCKS_PER_DAY; // The minimum a
 export const MINIMUM_ALLOWED_NAME_LENGTH = 5; // names less than 5 characters are reserved for auction
 export const NETWORK_JOIN_STATUS = 'joined';
 export const NETWORK_LEAVING_STATUS = 'leaving';
-export const MIN_OPERATOR_STAKE = new IOToken(10_000).toMIO();
+export const MIN_OPERATOR_STAKE = new IOToken(10_000).toMIO(); // Minimum amount of tokens needed to join the network as a gateway operator
+export const MIN_DELEGATED_STAKE = new IOToken(100).toMIO(); // The minimum amount of tokens needed to delegate to another gateway on the network - mainnet will be 500
 export const DELEGATED_STAKE_UNLOCK_LENGTH = new BlockHeight(
   30 * BLOCKS_PER_DAY,
 ); // 30 DAYS
 export const MAX_DELEGATES = 10_000; // The maximum number of delegated stakers for a single gateway. TODO: Consider ramifications of many delegated stakers
-export const MIN_DELEGATED_STAKE = MIN_OPERATOR_STAKE.multiply(0.01); // The minimum amount of tokens needed to delegate to another gateway on the network
 export const GATEWAY_REGISTRY_SETTINGS = {
   gatewayLeaveLength: new BlockHeight(3600), // approximately 5 days
   maxLockLength: new BlockHeight(788400),
