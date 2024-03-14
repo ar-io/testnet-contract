@@ -681,7 +681,6 @@ export async function tickRewardDistribution({
         ...existingGateway,
         stats: updatedGatewayStats,
       };
-      // TODO: check if over count and remove from GAR!
       continue;
     }
 
@@ -755,7 +754,6 @@ export async function tickRewardDistribution({
 
   if (Object.keys(eligibleGateways).length > 0) {
     // there may be a delta depending on the number of failures - it calculates this reward based on the number of distributions that should have passed
-    // TODO: check that eligible gateways is not 0
     const perGatewayReward = totalPotentialGatewayReward.divide(
       Object.keys(eligibleGateways).length,
     );
