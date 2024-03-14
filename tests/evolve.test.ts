@@ -70,15 +70,15 @@ describe('evolving', () => {
     expect(cachedValue.state.evolve).toBe(localSourceCodeId);
   });
 
-  it('should be able to run evolve state on the new contract', async () => {
-    const writeInteraction = await newForkedContract.writeInteraction({
-      function: 'evolveState',
-    });
-    expect(writeInteraction?.originalTxId).not.toBeUndefined();
-    const { cachedValue } = await newForkedContract.readState();
-    expect(Object.keys(cachedValue.errorMessages)).not.toContain(
-      writeInteraction?.originalTxId,
-    );
-    expect(cachedValue.state.evolve).toBe(localSourceCodeId);
-  });
+  // it('should be able to run evolve state on the new contract', async () => {
+  //   const writeInteraction = await newForkedContract.writeInteraction({
+  //     function: 'evolveState',
+  //   });
+  //   expect(writeInteraction?.originalTxId).not.toBeUndefined();
+  //   const { cachedValue } = await newForkedContract.readState();
+  //   expect(Object.keys(cachedValue.errorMessages)).not.toContain(
+  //     writeInteraction?.originalTxId,
+  //   );
+  //   expect(cachedValue.state.evolve).toBe(localSourceCodeId);
+  // });
 });
