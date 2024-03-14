@@ -508,8 +508,8 @@ describe('Pricing functions:', () => {
             consecutivePeriodsWithMinDemandFactor: 2,
           },
           inputFees: {
-            '1': 1 / 1_000_000,
-            '2': 1 / 1_000_000,
+            '1': new mIOToken(0).valueOf(),
+            '2': new mIOToken(0).valueOf(),
           },
         },
         {
@@ -518,8 +518,8 @@ describe('Pricing functions:', () => {
             demandFactor: 1,
           },
           expectedFeesOverrides: {
-            '1': 1 / 1_000_000,
-            '2': 1 / 1_000_000,
+            '1': new mIOToken(1).valueOf(),
+            '2': new mIOToken(1).valueOf(),
           },
         },
       ],
