@@ -88,10 +88,12 @@ export const evolveState = async (
       delegates: gateway.delegates || {},
       settings: {
         ...gateway.settings,
-        allowDelegatedStaking: false,
-        delegateRewardShareRatio: 0,
-        minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
-        autoStake: false,
+        allowDelegatedStaking: gateway.settings.allowDelegatedStaking || false,
+        delegateRewardShareRatio:
+          gateway.settings.delegateRewardShareRatio || 0,
+        minDelegatedStake:
+          gateway.settings.minDelegatedStake || MIN_DELEGATED_STAKE.valueOf(),
+        autoStake: gateway.settings.autoStake || false,
       },
     };
     totalOutstandingTokens = totalOutstandingTokens.plus(operatorStake);
