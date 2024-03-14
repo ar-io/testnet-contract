@@ -1,6 +1,6 @@
 import { GENESIS_FEES, SECONDS_IN_A_YEAR } from '../../constants';
 import { getBaselineState } from '../../tests/stubs';
-import { IOState } from '../../types';
+import { IOState, mIOToken } from '../../types';
 import { InteractionsWithFee, getPriceForInteraction } from './price';
 
 describe('getPriceForInteraction', () => {
@@ -18,9 +18,14 @@ describe('getPriceForInteraction', () => {
           type: 'permabuy',
         },
       },
-      GENESIS_FEES['test-buy-record'.length] +
-        // permabuy so 10 year annual renewal fee
-        GENESIS_FEES['test-buy-record'.length] * 10 * 0.2,
+      new mIOToken(GENESIS_FEES['test-buy-record'.length]).plus(
+        new mIOToken(
+          // permabuy so 10 year annual renewal fee
+          GENESIS_FEES['test-buy-record'.length],
+        )
+          .multiply(10)
+          .multiply(0.2),
+      ),
     ],
     [
       'should return the correct price for extendRecord',
@@ -45,7 +50,7 @@ describe('getPriceForInteraction', () => {
           years: 1,
         },
       },
-      50_000,
+      new mIOToken(50_000),
     ],
     [
       'should return the correct price for increaseUndernameCount',
@@ -70,7 +75,7 @@ describe('getPriceForInteraction', () => {
           qty: 5,
         },
       },
-      1250,
+      new mIOToken(1250),
     ],
     [
       'should return the correct price for increaseUndernameCount',
@@ -94,7 +99,7 @@ describe('getPriceForInteraction', () => {
           qty: 5,
         },
       },
-      62500,
+      new mIOToken(62500),
     ],
     [
       'should return the current bid for an existing auction and submitAuctionBid',
@@ -127,7 +132,7 @@ describe('getPriceForInteraction', () => {
           name: 'existing-auction',
         },
       },
-      999.620072,
+      new mIOToken(999),
     ],
     [
       'should return the floor price a new auction and submitAuctionBid',
@@ -141,9 +146,10 @@ describe('getPriceForInteraction', () => {
           name: 'new-auction',
         },
       },
-      GENESIS_FEES['new-auction'.length] +
+      new mIOToken(GENESIS_FEES['new-auction'.length]).plus(
         // lease - so 1 year renewal fee
-        GENESIS_FEES['new-auction'.length] * 1 * 0.2,
+        new mIOToken(GENESIS_FEES['new-auction'.length]).multiply(0.2),
+      ),
     ],
   ])(
     '%s',
@@ -154,11 +160,13 @@ describe('getPriceForInteraction', () => {
         caller: string;
         input: { interactionName: InteractionsWithFee; [x: string]: unknown };
       },
-      expectedResult: number,
+      expectedResult: mIOToken,
     ) => {
-      const { result } = getPriceForInteraction(inputState, inputData);
-      expect((result as any).price).toEqual(expectedResult);
-      expect((result as any).input).toEqual(inputData.input);
+      const { result } = getPriceForInteraction(inputState, inputData) as {
+        result: { price: number; input: unknown };
+      };
+      expect(result.price).toEqual(expectedResult.valueOf());
+      expect(result.input).toEqual(inputData.input);
     },
   );
 });

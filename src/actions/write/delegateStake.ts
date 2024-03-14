@@ -3,15 +3,15 @@ import {
   BlockHeight,
   ContractWriteResult,
   IOState,
-  IOToken,
   PstAction,
+  mIOToken,
 } from '../../types';
 import { getInvalidAjvMessage } from '../../utilities';
 import { validateDelegateStake } from '../../validations';
 
 export class DelegateStake {
   target: string;
-  qty: IOToken;
+  qty: mIOToken;
 
   constructor(input: any) {
     if (!validateDelegateStake(input)) {
@@ -21,7 +21,7 @@ export class DelegateStake {
     }
     const { target, qty } = input;
     this.target = target;
-    this.qty = new IOToken(qty);
+    this.qty = new mIOToken(qty);
   }
 }
 

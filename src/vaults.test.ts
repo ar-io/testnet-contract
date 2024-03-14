@@ -4,7 +4,7 @@ import {
   MAX_TOKEN_LOCK_BLOCK_LENGTH,
   MIN_TOKEN_LOCK_BLOCK_LENGTH,
 } from './constants';
-import { BlockHeight, PositiveFiniteInteger, RegistryVaults } from './types';
+import { BlockHeight, RegistryVaults, mIOToken } from './types';
 import { safeCreateVault, safeExtendVault, safeIncreaseVault } from './vaults';
 
 describe('safeCreateVault function', () => {
@@ -18,7 +18,7 @@ describe('safeCreateVault function', () => {
       expect(() => {
         safeCreateVault({
           balances,
-          qty: new PositiveFiniteInteger(1),
+          qty: new mIOToken(1),
           address: fromAddr,
           vaults: {},
           id: 'new-vault-id',
@@ -33,7 +33,7 @@ describe('safeCreateVault function', () => {
     expect(() => {
       safeCreateVault({
         balances: { foo: 1, bar: 2 },
-        qty: new PositiveFiniteInteger(2),
+        qty: new mIOToken(2),
         address: 'foo',
         vaults: {},
         id: 'new-vault-id',
@@ -47,7 +47,7 @@ describe('safeCreateVault function', () => {
     expect(() => {
       safeCreateVault({
         balances: { foo: 1 },
-        qty: new PositiveFiniteInteger(1),
+        qty: new mIOToken(1),
         address: 'foo',
         vaults: {
           foo: {
@@ -74,7 +74,7 @@ describe('safeCreateVault function', () => {
       const balances = { foo: 2, bar: 2 };
       safeCreateVault({
         balances,
-        qty: new PositiveFiniteInteger(1),
+        qty: new mIOToken(1),
         address: 'foo',
         vaults: {},
         lockLength: new BlockHeight(lockLength),
@@ -87,7 +87,7 @@ describe('safeCreateVault function', () => {
   it('should create vault in address with qty and lock length, and decrement address, by qty in balances object', () => {
     const balances = { foo: 2, bar: 2 };
     const vaults: RegistryVaults = {};
-    const qty = new PositiveFiniteInteger(1);
+    const qty = new mIOToken(1);
     const address = 'foo';
     const id = 'new-vault-id';
     safeCreateVault({
@@ -120,7 +120,7 @@ describe('safeCreateVault function', () => {
         },
       },
     };
-    const qty = new PositiveFiniteInteger(1);
+    const qty = new mIOToken(1);
     const address = 'bar';
     const expectedNewVault = {
       balance: qty.valueOf(),
@@ -142,7 +142,7 @@ describe('safeCreateVault function', () => {
 
   it('should create a second vault in address with qty and lock length, and decrement address, by qty in balances object', () => {
     const balances = { foo: 2, bar: 2 };
-    const qty = new PositiveFiniteInteger(1);
+    const qty = new mIOToken(1);
     const address = 'foo';
     const vaults: RegistryVaults = {
       [address]: {
@@ -173,7 +173,7 @@ describe('safeCreateVault function', () => {
 
   it('should create a third vault in address with qty and lockLength, and decrement address, by qty in balances object', () => {
     const balances = { foo: 4, bar: 2 };
-    const qty = new PositiveFiniteInteger(3);
+    const qty = new mIOToken(3);
     const address = 'foo';
 
     const vaults: RegistryVaults = {
@@ -211,7 +211,7 @@ describe('safeCreateVault function', () => {
   it('should create vault in address with qty and lockLength and remove fully decremented address balance', () => {
     const balances = { foo: 1, bar: 2 };
     const vaults: RegistryVaults = {};
-    const qty = new PositiveFiniteInteger(1);
+    const qty = new mIOToken(1);
     const address = 'foo';
     const newVaultData = {
       balance: qty.valueOf(),
@@ -390,7 +390,7 @@ describe('safeIncreaseVault function', () => {
       safeIncreaseVault({
         balances: { foo: 1, bar: 2 },
         id: 'existing-vault-id',
-        qty: new PositiveFiniteInteger(2),
+        qty: new mIOToken(2),
         address,
         vaults,
       });
@@ -414,7 +414,7 @@ describe('safeIncreaseVault function', () => {
         vaults,
         address: 'bar',
         id: 'existing-vault-id',
-        qty: new PositiveFiniteInteger(1),
+        qty: new mIOToken(1),
       });
     }).toThrowError('Invalid vault ID.');
   });
@@ -427,7 +427,7 @@ describe('safeIncreaseVault function', () => {
         vaults,
         address: 'bar',
         id: 'vault-does-not-exist',
-        qty: new PositiveFiniteInteger(1),
+        qty: new mIOToken(1),
       });
     }).toThrowError('Invalid vault ID.');
   });
@@ -449,7 +449,7 @@ describe('safeIncreaseVault function', () => {
         vaults,
         address,
         id: 'non-existent-vault-id',
-        qty: new PositiveFiniteInteger(1),
+        qty: new mIOToken(1),
       });
     }).toThrowError('Invalid vault ID.');
   });
@@ -471,7 +471,7 @@ describe('safeIncreaseVault function', () => {
         vaults,
         address,
         id: 'existing-vault-id',
-        qty: new PositiveFiniteInteger(1),
+        qty: new mIOToken(1),
       });
     }).toThrowError('This vault has ended.');
   });
@@ -497,7 +497,7 @@ describe('safeIncreaseVault function', () => {
       balances,
       vaults,
       id: 'existing-vault-id',
-      qty: new PositiveFiniteInteger(1),
+      qty: new mIOToken(1),
       address,
     });
     expect(balances).toEqual({ foo: 1, bar: 1 });

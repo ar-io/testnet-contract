@@ -2,13 +2,16 @@ import {
   DELEGATED_STAKE_UNLOCK_LENGTH,
   INVALID_GATEWAY_REGISTERED_MESSAGE,
   INVALID_OBSERVER_WALLET,
+  MIN_DELEGATED_STAKE,
 } from '../../constants';
 import {
+  BlockHeight,
   ContractWriteResult,
   Gateway,
   IOState,
   PstAction,
   WalletAddress,
+  mIOToken,
 } from '../../types';
 import { getInvalidAjvMessage } from '../../utilities';
 import { validateUpdateGateway } from '../../validations';
@@ -25,7 +28,7 @@ export class GatewaySettings {
     autoStake: boolean;
     allowDelegatedStaking: boolean;
     delegateRewardShareRatio: number;
-    minDelegatedStake: number;
+    minDelegatedStake: mIOToken;
   };
 
   constructor(input: any) {
@@ -61,7 +64,9 @@ export class GatewaySettings {
       ...(delegateRewardShareRatio !== undefined && {
         delegateRewardShareRatio,
       }),
-      ...(minDelegatedStake !== undefined && { minDelegatedStake }),
+      ...(minDelegatedStake !== undefined && {
+        minDelegatedStake: new mIOToken(minDelegatedStake),
+      }),
     };
     this.observerWallet = observerWallet;
   }
@@ -81,6 +86,15 @@ export const updateGatewaySettings = async (
   }
 
   if (
+    updatedSettings.minDelegatedStake &&
+    updatedSettings.minDelegatedStake.isLessThan(MIN_DELEGATED_STAKE)
+  ) {
+    throw new ContractError(
+      `The minimum delegated stake must be at least ${MIN_DELEGATED_STAKE}`,
+    );
+  }
+
+  if (
     Object.entries(gateways).some(
       ([gatewayAddress, gateway]: [WalletAddress, Gateway]) =>
         gateway.observerWallet === updatedObserverWallet &&
@@ -96,6 +110,9 @@ export const updateGatewaySettings = async (
     settings: {
       ...gateway.settings,
       ...updatedSettings,
+      ...(updatedSettings.minDelegatedStake && {
+        minDelegatedStake: updatedSettings.minDelegatedStake.valueOf(),
+      }),
     },
   };
 
@@ -104,14 +121,16 @@ export const updateGatewaySettings = async (
     updatedSettings.allowDelegatedStaking === false &&
     Object.keys(gateway.delegates).length
   ) {
+    const interactionHeight = new BlockHeight(+SmartWeave.block.height);
     // Add tokens from each delegate to a vault that unlocks after the delegate withdrawal period ends
-    const delegateEndHeight =
-      +SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH;
+    const delegateEndHeight = interactionHeight.plus(
+      DELEGATED_STAKE_UNLOCK_LENGTH,
+    );
     for (const address in updatedGateway.delegates) {
       updatedGateway.delegates[address].vaults[SmartWeave.transaction.id] = {
         balance: updatedGateway.delegates[address].delegatedStake,
-        start: +SmartWeave.block.height,
-        end: delegateEndHeight,
+        start: interactionHeight.valueOf(),
+        end: delegateEndHeight.valueOf(),
       };
 
       // reduce gateway stake and set this delegate stake to 0

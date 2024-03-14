@@ -82,13 +82,13 @@ export const extendRecord = async (
   });
 
   const demandFactor = state.demandFactoring.demandFactor;
-  const totalExtensionAnnualFee =
-    demandFactor *
-    calculateAnnualRenewalFee({
-      name,
-      fees,
-      years,
-    });
+  const annualRenewalFee = calculateAnnualRenewalFee({
+    name,
+    fees,
+    years,
+  });
+
+  const totalExtensionAnnualFee = annualRenewalFee.multiply(demandFactor);
 
   if (!walletHasSufficientBalance(balances, caller, totalExtensionAnnualFee)) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);

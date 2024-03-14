@@ -19,6 +19,7 @@ const {
   updateGatewaySchema,
   delegateStakeSchema,
   decreaseDelegateStakeSchema,
+  decreaseOperatorStakeSchema,
 } = require('./schemas');
 
 // build our validation source code
@@ -37,6 +38,7 @@ const ajv = new Ajv({
     saveObservationsSchema,
     updateGatewaySchema,
     delegateStakeSchema,
+    decreaseOperatorStakeSchema,
     decreaseDelegateStakeSchema,
   ],
   code: { source: true, esm: true },
@@ -58,6 +60,7 @@ const moduleCode = standaloneCode(ajv, {
   validateUpdateGateway: '#/definitions/updateGateway',
   validateDelegateStake: '#/definitions/delegateStake',
   validateDecreaseDelegateStake: '#/definitions/decreaseDelegateStake',
+  validateDecreaseOperatorStake: '#/definitions/decreaseOperatorStake',
 });
 
 // Now you can write the module code to file

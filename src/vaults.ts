@@ -12,6 +12,7 @@ import {
   TransactionId,
   VaultData,
   WalletAddress,
+  mIOToken,
 } from './types';
 import {
   unsafeDecrementBalance,
@@ -31,11 +32,11 @@ export function safeCreateVault({
   vaults: RegistryVaults;
   id: TransactionId;
   address: WalletAddress;
-  qty: PositiveFiniteInteger;
+  qty: mIOToken;
   lockLength: BlockHeight;
   startHeight: BlockHeight;
 }): void {
-  if (!walletHasSufficientBalance(balances, address, qty.valueOf())) {
+  if (!walletHasSufficientBalance(balances, address, qty)) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
@@ -60,7 +61,7 @@ export function safeCreateVault({
     ...vaults[address],
     [id]: newVault,
   };
-  unsafeDecrementBalance(balances, address, qty.valueOf());
+  unsafeDecrementBalance(balances, address, qty);
 }
 
 export function safeExtendVault({
@@ -108,9 +109,9 @@ export function safeIncreaseVault({
   vaults: RegistryVaults;
   address: WalletAddress;
   id: TransactionId;
-  qty: PositiveFiniteInteger;
+  qty: mIOToken;
 }): void {
-  if (!walletHasSufficientBalance(balances, address, qty.valueOf())) {
+  if (!walletHasSufficientBalance(balances, address, qty)) {
     throw new ContractError(INSUFFICIENT_FUNDS_MESSAGE);
   }
 
@@ -123,5 +124,5 @@ export function safeIncreaseVault({
   }
 
   vaults[address][id].balance += qty.valueOf();
-  unsafeDecrementBalance(balances, address, qty.valueOf());
+  unsafeDecrementBalance(balances, address, qty);
 }

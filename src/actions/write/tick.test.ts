@@ -51,6 +51,7 @@ import {
   Records,
   RegistryVaults,
   ReservedNames,
+  mIOToken,
 } from '../../types';
 
 jest.mock('../../observers', () => ({
@@ -665,7 +666,7 @@ describe('tick', () => {
         {
           gateways: {
             'existing-operator': {
-              operatorStake: MIN_OPERATOR_STAKE,
+              operatorStake: MIN_OPERATOR_STAKE.valueOf(),
               totalDelegatedStake: 0,
               observerWallet: 'existing-operator',
               start: 0,
@@ -695,7 +696,7 @@ describe('tick', () => {
               end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
               vaults: {
                 'existing-operator': {
-                  balance: MIN_OPERATOR_STAKE,
+                  balance: MIN_OPERATOR_STAKE.valueOf(),
                   start: SmartWeave.block.height,
                   end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
                 },
@@ -720,7 +721,7 @@ describe('tick', () => {
         {
           gateways: {
             'existing-operator': {
-              operatorStake: MIN_OPERATOR_STAKE + 100,
+              operatorStake: MIN_OPERATOR_STAKE.valueOf() + 100,
               totalDelegatedStake: 200,
               observerWallet: 'existing-operator',
               start: 0,
@@ -789,7 +790,7 @@ describe('tick', () => {
                   end: 10,
                 },
                 'existing-operator': {
-                  balance: MIN_OPERATOR_STAKE,
+                  balance: MIN_OPERATOR_STAKE.valueOf(),
                   start: SmartWeave.block.height,
                   end: SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH,
                 },
@@ -1525,7 +1526,9 @@ describe('tick', () => {
               fqdn: 'test.com',
               port: 443,
               protocol: 'https',
-              minDelegatedStake: MIN_DELEGATED_STAKE + 666,
+              minDelegatedStake: MIN_DELEGATED_STAKE.plus(
+                new mIOToken(666),
+              ).valueOf(),
               allowDelegatedStaking: false,
               autoStake: true,
             },
@@ -1612,7 +1615,7 @@ describe('tick', () => {
           fqdn: 'test.com',
           port: 443,
           protocol: 'https',
-          minDelegatedStake: MIN_DELEGATED_STAKE,
+          minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
           allowDelegatedStaking: false,
           autoStake: true,
         },

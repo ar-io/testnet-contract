@@ -12,7 +12,7 @@ import {
   stubbedGatewayData,
   stubbedGateways,
 } from './tests/stubs';
-import { BlockHeight, DelegateData, IOToken } from './types';
+import { BlockHeight, DelegateData, mIOToken } from './types';
 
 describe('safeDelegateStake function', () => {
   it.each([
@@ -26,7 +26,7 @@ describe('safeDelegateStake function', () => {
         safeDelegateStake({
           balances,
           gateways: stubbedGateways,
-          qty: new IOToken(MIN_DELEGATED_STAKE),
+          qty: MIN_DELEGATED_STAKE,
           fromAddress: fromAddr,
           gatewayAddress: stubbedArweaveTxId,
           startHeight: new BlockHeight(0),
@@ -40,7 +40,7 @@ describe('safeDelegateStake function', () => {
       safeDelegateStake({
         balances: { foo: 1, bar: 2 },
         gateways: stubbedGateways,
-        qty: new IOToken(MIN_DELEGATED_STAKE),
+        qty: MIN_DELEGATED_STAKE,
         fromAddress: 'foo',
         gatewayAddress: stubbedArweaveTxId,
         startHeight: new BlockHeight(0),
@@ -51,7 +51,7 @@ describe('safeDelegateStake function', () => {
   it('should throw an error if qty does not meet minimum delegated stake amount', () => {
     expect(() => {
       safeDelegateStake({
-        balances: { foo: MIN_DELEGATED_STAKE, bar: 2 },
+        balances: { foo: MIN_DELEGATED_STAKE.valueOf(), bar: 2 },
         gateways: {
           [stubbedArweaveTxId]: {
             ...stubbedGatewayData,
@@ -61,7 +61,7 @@ describe('safeDelegateStake function', () => {
             },
           },
         },
-        qty: new IOToken(MIN_DELEGATED_STAKE - 1),
+        qty: MIN_DELEGATED_STAKE.minus(new mIOToken(1)),
         fromAddress: 'foo',
         gatewayAddress: stubbedArweaveTxId,
         startHeight: new BlockHeight(0),
@@ -74,7 +74,7 @@ describe('safeDelegateStake function', () => {
   it('should throw an error if qty does not meet minimum delegated stake amount for existing staker when their current stake is vaulted', () => {
     expect(() => {
       safeDelegateStake({
-        balances: { foo: MIN_DELEGATED_STAKE, bar: 2 },
+        balances: { foo: MIN_DELEGATED_STAKE.valueOf(), bar: 2 },
         gateways: {
           [stubbedArweaveTxId]: {
             ...stubbedGatewayData,
@@ -88,16 +88,16 @@ describe('safeDelegateStake function', () => {
                 start: 0,
                 vaults: {
                   ['vault']: {
-                    balance: MIN_DELEGATED_STAKE,
+                    balance: MIN_DELEGATED_STAKE.valueOf(),
                     start: 0,
-                    end: DELEGATED_STAKE_UNLOCK_LENGTH,
+                    end: DELEGATED_STAKE_UNLOCK_LENGTH.valueOf(),
                   },
                 },
               },
             },
           },
         },
-        qty: new IOToken(MIN_DELEGATED_STAKE - 1),
+        qty: MIN_DELEGATED_STAKE.minus(new mIOToken(1)),
         fromAddress: 'foo',
         gatewayAddress: stubbedArweaveTxId,
         startHeight: new BlockHeight(0),
@@ -110,13 +110,13 @@ describe('safeDelegateStake function', () => {
   it('should throw an error if gateway does not exist', () => {
     expect(() => {
       safeDelegateStake({
-        balances: { foo: MIN_DELEGATED_STAKE, bar: 2 },
+        balances: { foo: MIN_DELEGATED_STAKE.valueOf(), bar: 2 },
         gateways: {
           [stubbedArweaveTxId]: {
             ...stubbedGatewayData,
           },
         },
-        qty: new IOToken(MIN_DELEGATED_STAKE),
+        qty: MIN_DELEGATED_STAKE,
         fromAddress: 'foo',
         gatewayAddress: 'bar',
         startHeight: new BlockHeight(0),
@@ -127,14 +127,14 @@ describe('safeDelegateStake function', () => {
   it('should throw an error if gateway is leaving', () => {
     expect(() => {
       safeDelegateStake({
-        balances: { foo: MIN_DELEGATED_STAKE, bar: 2 },
+        balances: { foo: MIN_DELEGATED_STAKE.valueOf(), bar: 2 },
         gateways: {
           [stubbedArweaveTxId]: {
             ...stubbedGatewayData,
             status: 'leaving',
           },
         },
-        qty: new IOToken(MIN_DELEGATED_STAKE),
+        qty: MIN_DELEGATED_STAKE,
         fromAddress: 'foo',
         gatewayAddress: stubbedArweaveTxId,
         startHeight: new BlockHeight(0),
@@ -147,7 +147,7 @@ describe('safeDelegateStake function', () => {
   it('should throw an error if gateway does not allow delegated staking', () => {
     expect(() => {
       safeDelegateStake({
-        balances: { foo: MIN_DELEGATED_STAKE, bar: 2 },
+        balances: { foo: MIN_DELEGATED_STAKE.valueOf(), bar: 2 },
         gateways: {
           [stubbedArweaveTxId]: {
             ...stubbedGatewayData,
@@ -156,7 +156,7 @@ describe('safeDelegateStake function', () => {
             },
           },
         },
-        qty: new IOToken(MIN_DELEGATED_STAKE),
+        qty: MIN_DELEGATED_STAKE,
         fromAddress: 'foo',
         gatewayAddress: stubbedArweaveTxId,
         startHeight: new BlockHeight(0),
@@ -168,7 +168,7 @@ describe('safeDelegateStake function', () => {
     const mockDelegates = createMockDelegates(MAX_DELEGATES + 1);
     expect(() => {
       safeDelegateStake({
-        balances: { foo: MIN_DELEGATED_STAKE },
+        balances: { foo: MIN_DELEGATED_STAKE.valueOf() },
         gateways: {
           [stubbedArweaveTxId]: {
             ...stubbedGatewayData,
@@ -179,7 +179,7 @@ describe('safeDelegateStake function', () => {
             },
           },
         },
-        qty: new IOToken(MIN_DELEGATED_STAKE),
+        qty: MIN_DELEGATED_STAKE,
         fromAddress: 'foo',
         gatewayAddress: stubbedArweaveTxId,
         startHeight: new BlockHeight(0),
@@ -190,7 +190,7 @@ describe('safeDelegateStake function', () => {
   });
 
   it('should delegate stake as new delegate', () => {
-    const balances = { foo: MIN_DELEGATED_STAKE, bar: 2 };
+    const balances = { foo: MIN_DELEGATED_STAKE.valueOf(), bar: 2 };
     const gateways = {
       [stubbedArweaveTxId]: {
         ...stubbedGatewayData,
@@ -200,7 +200,7 @@ describe('safeDelegateStake function', () => {
         },
       },
     };
-    const qty = new IOToken(MIN_DELEGATED_STAKE);
+    const qty = MIN_DELEGATED_STAKE;
     const fromAddress = 'foo';
     const gatewayAddress = stubbedArweaveTxId;
     const startHeight = new BlockHeight(0);
@@ -223,12 +223,12 @@ describe('safeDelegateStake function', () => {
       },
     });
     expect(gateways[gatewayAddress].totalDelegatedStake).toEqual(
-      stubbedGatewayData.totalDelegatedStake + MIN_DELEGATED_STAKE,
+      stubbedGatewayData.totalDelegatedStake + MIN_DELEGATED_STAKE.valueOf(),
     );
   });
 
   it('should add to an existing delegates stake when if their existing stake is vaulted', () => {
-    const balances = { foo: MIN_DELEGATED_STAKE, bar: 2 };
+    const balances = { foo: MIN_DELEGATED_STAKE.valueOf(), bar: 2 };
     const fromAddress = 'foo';
     const gateways = {
       [stubbedArweaveTxId]: {
@@ -240,9 +240,9 @@ describe('safeDelegateStake function', () => {
             vaults: {
               // assume their current stake is vaulted but they want to restake with a new balance
               'test-vault': {
-                balance: MIN_DELEGATED_STAKE,
+                balance: MIN_DELEGATED_STAKE.valueOf(),
                 start: 0,
-                end: DELEGATED_STAKE_UNLOCK_LENGTH,
+                end: DELEGATED_STAKE_UNLOCK_LENGTH.valueOf(),
               },
             },
           },
@@ -253,7 +253,7 @@ describe('safeDelegateStake function', () => {
         },
       },
     };
-    const qty = new IOToken(MIN_DELEGATED_STAKE);
+    const qty = MIN_DELEGATED_STAKE;
     const gatewayAddress = stubbedArweaveTxId;
     const startHeight = new BlockHeight(0);
     const expectedNewDelegateData: DelegateData = {
@@ -261,9 +261,9 @@ describe('safeDelegateStake function', () => {
       start: 0,
       vaults: {
         'test-vault': {
-          balance: MIN_DELEGATED_STAKE,
+          balance: MIN_DELEGATED_STAKE.valueOf(),
           start: 0,
-          end: DELEGATED_STAKE_UNLOCK_LENGTH,
+          end: DELEGATED_STAKE_UNLOCK_LENGTH.valueOf(),
         },
       },
     };
@@ -281,7 +281,7 @@ describe('safeDelegateStake function', () => {
       },
     });
     expect(gateways[gatewayAddress].totalDelegatedStake).toEqual(
-      stubbedGatewayData.totalDelegatedStake + MIN_DELEGATED_STAKE,
+      stubbedGatewayData.totalDelegatedStake + MIN_DELEGATED_STAKE.valueOf(),
     );
   });
 
@@ -297,18 +297,18 @@ describe('safeDelegateStake function', () => {
         },
         delegates: {
           [fromAddress]: {
-            delegatedStake: MIN_DELEGATED_STAKE,
+            delegatedStake: MIN_DELEGATED_STAKE.valueOf(),
             start: 0,
             vaults: {},
           },
         },
       },
     };
-    const qty = new IOToken(5);
+    const qty = new mIOToken(5);
     const gatewayAddress = stubbedArweaveTxId;
     const startHeight = new BlockHeight(0);
     const expectedNewDelegateData: DelegateData = {
-      delegatedStake: MIN_DELEGATED_STAKE + qty.valueOf(),
+      delegatedStake: MIN_DELEGATED_STAKE.plus(qty).valueOf(),
       start: 0,
       vaults: {},
     };
@@ -340,7 +340,7 @@ describe('safeDecreaseDelegateStake function', () => {
             ...stubbedGatewayData,
           },
         },
-        qty: new IOToken(1),
+        qty: new mIOToken(1),
         fromAddress: 'foo',
         gatewayAddress: 'bar',
         id: 'unlocked',
@@ -357,7 +357,7 @@ describe('safeDecreaseDelegateStake function', () => {
             ...stubbedGatewayData,
           },
         },
-        qty: new IOToken(1),
+        qty: new mIOToken(1),
         fromAddress: 'bar',
         gatewayAddress: stubbedArweaveTxId,
         id: 'unlocked',
@@ -374,14 +374,14 @@ describe('safeDecreaseDelegateStake function', () => {
             ...stubbedGatewayData,
             delegates: {
               ['bar']: {
-                delegatedStake: MIN_DELEGATED_STAKE * 2,
+                delegatedStake: MIN_DELEGATED_STAKE.multiply(2).valueOf(),
                 start: 0,
                 vaults: {},
               },
             },
           },
         },
-        qty: new IOToken(MIN_DELEGATED_STAKE + 1),
+        qty: MIN_DELEGATED_STAKE.plus(new mIOToken(1)),
         fromAddress: 'bar',
         gatewayAddress: stubbedArweaveTxId,
         id: 'unlocked',
@@ -400,14 +400,14 @@ describe('safeDecreaseDelegateStake function', () => {
             ...stubbedGatewayData,
             delegates: {
               ['bar']: {
-                delegatedStake: MIN_DELEGATED_STAKE,
+                delegatedStake: MIN_DELEGATED_STAKE.valueOf(),
                 start: 0,
                 vaults: {},
               },
             },
           },
         },
-        qty: new IOToken(MIN_DELEGATED_STAKE + 1),
+        qty: MIN_DELEGATED_STAKE.plus(new mIOToken(1)),
         fromAddress: 'bar',
         gatewayAddress: stubbedArweaveTxId,
         id: 'unlocked',
@@ -429,7 +429,7 @@ describe('safeDecreaseDelegateStake function', () => {
         },
         delegates: {
           [fromAddress]: {
-            delegatedStake: MIN_DELEGATED_STAKE * 2,
+            delegatedStake: MIN_DELEGATED_STAKE.multiply(2).valueOf(),
             start: 0,
             vaults: {},
           },
@@ -437,17 +437,17 @@ describe('safeDecreaseDelegateStake function', () => {
       },
     };
     const id = 'unlocked';
-    const qty = new IOToken(MIN_DELEGATED_STAKE);
+    const qty = MIN_DELEGATED_STAKE;
     const gatewayAddress = stubbedArweaveTxId;
     const startHeight = new BlockHeight(0);
     const expectedNewDelegateData: DelegateData = {
-      delegatedStake: MIN_DELEGATED_STAKE,
+      delegatedStake: MIN_DELEGATED_STAKE.valueOf(),
       start: 0,
       vaults: {
         [id]: {
           balance: qty.valueOf(),
           start: 0,
-          end: DELEGATED_STAKE_UNLOCK_LENGTH,
+          end: DELEGATED_STAKE_UNLOCK_LENGTH.valueOf(),
         },
       },
     };
@@ -480,7 +480,7 @@ describe('safeDecreaseDelegateStake function', () => {
         },
         delegates: {
           [fromAddress]: {
-            delegatedStake: MIN_DELEGATED_STAKE * 2,
+            delegatedStake: MIN_DELEGATED_STAKE.multiply(2).valueOf(),
             start: 0,
             vaults: {},
           },
@@ -488,7 +488,7 @@ describe('safeDecreaseDelegateStake function', () => {
       },
     };
     const id = 'unlocked';
-    const qty = new IOToken(MIN_DELEGATED_STAKE * 2);
+    const qty = MIN_DELEGATED_STAKE.multiply(2);
     const gatewayAddress = stubbedArweaveTxId;
     const startHeight = new BlockHeight(0);
     const expectedNewDelegateData: DelegateData = {
@@ -498,7 +498,7 @@ describe('safeDecreaseDelegateStake function', () => {
         [id]: {
           balance: qty.valueOf(),
           start: 0,
-          end: DELEGATED_STAKE_UNLOCK_LENGTH,
+          end: DELEGATED_STAKE_UNLOCK_LENGTH.valueOf(),
         },
       },
     };

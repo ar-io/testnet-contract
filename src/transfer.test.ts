@@ -5,14 +5,14 @@ import {
   MIN_TOKEN_LOCK_BLOCK_LENGTH,
 } from './constants';
 import { safeTransfer, safeVaultedTransfer } from './transfer';
-import { BlockHeight, IOToken, RegistryVaults, VaultData } from './types';
+import { BlockHeight, RegistryVaults, VaultData, mIOToken } from './types';
 
 describe('safeTransfer function', () => {
   it('should throw an error if fromAddress is the same as toAddress', () => {
     expect(() => {
       safeTransfer({
         balances: { foo: 1, bar: 2 },
-        qty: 1,
+        qty: new mIOToken(1),
         fromAddress: 'foo',
         toAddress: 'foo',
       });
@@ -29,7 +29,7 @@ describe('safeTransfer function', () => {
       expect(() => {
         safeTransfer({
           balances,
-          qty: 1,
+          qty: new mIOToken(1),
           fromAddress,
           toAddress: 'biz',
         });
@@ -41,7 +41,7 @@ describe('safeTransfer function', () => {
     expect(() => {
       safeTransfer({
         balances: { foo: 1, bar: 2 },
-        qty: 2,
+        qty: new mIOToken(2),
         fromAddress: 'foo',
         toAddress: 'bar',
       });
@@ -54,7 +54,7 @@ describe('safeTransfer function', () => {
     const toAddress = 'bar';
     safeTransfer({
       balances,
-      qty: 1,
+      qty: new mIOToken(1),
       fromAddress,
       toAddress,
     });
@@ -67,7 +67,7 @@ describe('safeTransfer function', () => {
     const toAddress = 'bar';
     safeTransfer({
       balances,
-      qty: 1,
+      qty: new mIOToken(1),
       fromAddress,
       toAddress,
     });
@@ -80,7 +80,7 @@ describe('safeTransfer function', () => {
     const toAddress = 'bar';
     safeTransfer({
       balances,
-      qty: 1,
+      qty: new mIOToken(1),
       fromAddress,
       toAddress,
     });
@@ -100,7 +100,7 @@ describe('safeVaultedTransfer function', () => {
         safeVaultedTransfer({
           balances,
           vaults: {},
-          qty: new IOToken(1),
+          qty: new mIOToken(1),
           fromAddress,
           id: 'new-vaulted-transfer',
           toAddress: 'biz',
@@ -116,7 +116,7 @@ describe('safeVaultedTransfer function', () => {
       safeVaultedTransfer({
         balances: { foo: 0 },
         vaults: {},
-        qty: new IOToken(1),
+        qty: new mIOToken(1),
         fromAddress: 'foo',
         id: 'new-vaulted-transfer',
         toAddress: 'biz',
@@ -134,7 +134,7 @@ describe('safeVaultedTransfer function', () => {
         safeVaultedTransfer({
           balances,
           vaults: {},
-          qty: new IOToken(1),
+          qty: new mIOToken(1),
           fromAddress: 'foo',
           id: 'new-vaulted-transfer',
           toAddress: 'biz',
@@ -159,7 +159,7 @@ describe('safeVaultedTransfer function', () => {
     safeVaultedTransfer({
       balances,
       vaults: vaults,
-      qty: new IOToken(1),
+      qty: new mIOToken(1),
       fromAddress,
       id: 'new-vaulted-transfer',
       toAddress,
@@ -193,7 +193,7 @@ describe('safeVaultedTransfer function', () => {
     };
     safeVaultedTransfer({
       balances,
-      qty: new IOToken(1),
+      qty: new mIOToken(1),
       fromAddress,
       toAddress,
       vaults,
@@ -215,7 +215,7 @@ describe('safeVaultedTransfer function', () => {
     const toAddress = 'bar';
     safeVaultedTransfer({
       balances,
-      qty: new IOToken(1),
+      qty: new mIOToken(1),
       fromAddress,
       toAddress,
       vaults,
@@ -242,7 +242,7 @@ describe('safeVaultedTransfer function', () => {
     const toAddress = fromAddress;
     safeVaultedTransfer({
       balances,
-      qty: new IOToken(1),
+      qty: new mIOToken(1),
       fromAddress,
       toAddress,
       vaults,
@@ -277,7 +277,7 @@ describe('safeVaultedTransfer function', () => {
     expect(() =>
       safeVaultedTransfer({
         balances,
-        qty: new IOToken(1),
+        qty: new mIOToken(1),
         fromAddress,
         toAddress,
         vaults,

@@ -17,14 +17,15 @@ import {
   VaultData,
   Vaults,
   WalletAddress,
+  mIOToken,
 } from './types';
 
 export function walletHasSufficientBalance(
   balances: DeepReadonly<Balances>,
   wallet: string,
-  qty: number, // TODO: change to IOToken
+  qty: mIOToken,
 ): boolean {
-  return !!balances[wallet] && balances[wallet] >= qty;
+  return !!balances[wallet] && balances[wallet] >= qty.valueOf();
 }
 
 export function resetProtocolBalance({
@@ -83,10 +84,12 @@ export function resetProtocolBalance({
     0,
   );
 
+  // TODO: add in vaults, delegates, and stakes
+
   const totalContractIO =
     totalBalances + totalGatewayStaked + totalAuctionStake + totalVaultedStake;
 
-  const diff = TOTAL_IO_SUPPLY - totalContractIO;
+  const diff = TOTAL_IO_SUPPLY.valueOf() - totalContractIO;
 
   if (diff > 0) {
     updatedBalances[SmartWeave.contract.id] =
@@ -175,10 +178,10 @@ export function calculateYearsBetweenTimestamps({
 export function unsafeDecrementBalance(
   balances: Balances,
   address: WalletAddress,
-  amount: number, // TODO: change to IOToken
+  amount: mIOToken,
   removeIfZero = true,
 ): void {
-  balances[address] -= amount;
+  balances[address] -= amount.valueOf();
   if (removeIfZero && balances[address] === 0) {
     delete balances[address];
   }
@@ -187,14 +190,16 @@ export function unsafeDecrementBalance(
 export function incrementBalance(
   balances: Balances,
   address: WalletAddress,
-  amount: number, // TODO: change to IO token
+  amount: mIOToken,
 ): void {
-  if (amount < 1) {
+  if (amount.valueOf() < 1) {
     throw new ContractError(`"Amount must be positive`);
   }
   if (address in balances) {
-    balances[address] += amount;
+    const prevBalance = new mIOToken(balances[address]);
+    const newBalance = prevBalance.plus(amount);
+    balances[address] = newBalance.valueOf();
   } else {
-    balances[address] = amount;
+    balances[address] = amount.valueOf();
   }
 }

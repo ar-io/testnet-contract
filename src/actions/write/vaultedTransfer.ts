@@ -3,8 +3,8 @@ import {
   BlockHeight,
   ContractWriteResult,
   IOState,
-  IOToken,
   PstAction,
+  mIOToken,
 } from '../../types';
 import { getInvalidAjvMessage } from '../../utilities';
 import { validateTransferTokensLocked } from '../../validations';
@@ -12,7 +12,7 @@ import { validateTransferTokensLocked } from '../../validations';
 // TODO: use top level class
 export class TransferTokensLocked {
   target: string;
-  qty: IOToken;
+  qty: mIOToken;
   lockLength: BlockHeight;
 
   constructor(input: any) {
@@ -27,7 +27,7 @@ export class TransferTokensLocked {
     }
     const { target, qty, lockLength } = input;
     this.target = target;
-    this.qty = new IOToken(qty);
+    this.qty = new mIOToken(qty);
     this.lockLength = new BlockHeight(lockLength);
   }
 }

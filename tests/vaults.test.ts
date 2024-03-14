@@ -365,7 +365,7 @@ describe('Vaults', () => {
       );
       expect(newState.balances[targetAddress]).toEqual(prevTargetBalance);
       expect(
-        newState.vaults[targetAddress][writeInteraction.originalTxId],
+        newState.vaults[targetAddress][writeInteraction?.originalTxId],
       ).toEqual(expectedVault);
     });
 

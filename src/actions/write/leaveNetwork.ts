@@ -2,6 +2,7 @@ import {
   DELEGATED_STAKE_UNLOCK_LENGTH,
   GATEWAY_LEAVE_BLOCK_LENGTH,
   GATEWAY_REGISTRY_SETTINGS,
+  MIN_OPERATOR_STAKE,
   NETWORK_LEAVING_STATUS,
 } from '../../constants';
 import {
@@ -29,9 +30,7 @@ export const leaveNetwork = async (
     !isGatewayEligibleToLeave({
       gateway,
       currentBlockHeight,
-      minimumGatewayJoinLength: new BlockHeight(
-        GATEWAY_REGISTRY_SETTINGS.minGatewayJoinLength,
-      ),
+      minimumGatewayJoinLength: GATEWAY_REGISTRY_SETTINGS.minGatewayJoinLength,
     })
   ) {
     throw new ContractError(
@@ -39,29 +38,31 @@ export const leaveNetwork = async (
     );
   }
 
-  const gatewayEndHeight =
-    +SmartWeave.block.height + GATEWAY_LEAVE_BLOCK_LENGTH;
-  const gatewayStakeWithdrawHeight =
-    +SmartWeave.block.height +
-    GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength;
-  const delegateEndHeight =
-    +SmartWeave.block.height + DELEGATED_STAKE_UNLOCK_LENGTH;
+  const interactionHeight = new BlockHeight(+SmartWeave.block.height);
+
+  const gatewayEndHeight = interactionHeight.plus(GATEWAY_LEAVE_BLOCK_LENGTH);
+  const gatewayStakeWithdrawHeight = interactionHeight.plus(
+    GATEWAY_REGISTRY_SETTINGS.operatorStakeWithdrawLength,
+  );
+  const delegateEndHeight = interactionHeight.plus(
+    DELEGATED_STAKE_UNLOCK_LENGTH,
+  );
 
   // Add minimum staked tokens to a vault that unlocks after the gateway completely leaves the network
   gateways[caller].vaults[caller] = {
-    balance: GATEWAY_REGISTRY_SETTINGS.minOperatorStake,
-    start: +SmartWeave.block.height,
-    end: gatewayEndHeight,
+    balance: MIN_OPERATOR_STAKE.valueOf(),
+    start: interactionHeight.valueOf(),
+    end: gatewayEndHeight.valueOf(),
   };
 
-  gateways[caller].operatorStake -= GATEWAY_REGISTRY_SETTINGS.minOperatorStake;
+  gateways[caller].operatorStake -= MIN_OPERATOR_STAKE.valueOf();
 
   // If there are tokens remaining, add them to a vault that unlocks after the gateway stake withdrawal time
   if (gateways[caller].operatorStake > 0) {
     gateways[caller].vaults[SmartWeave.transaction.id] = {
       balance: gateways[caller].operatorStake,
-      start: +SmartWeave.block.height,
-      end: gatewayStakeWithdrawHeight,
+      start: interactionHeight.valueOf(),
+      end: gatewayStakeWithdrawHeight.valueOf(),
     };
   }
 
@@ -69,15 +70,15 @@ export const leaveNetwork = async (
   gateways[caller].operatorStake = 0;
 
   // Begin leave process by setting end dates to all vaults and the gateway status to leaving network
-  gateways[caller].end = gatewayEndHeight;
+  gateways[caller].end = gatewayEndHeight.valueOf();
   gateways[caller].status = NETWORK_LEAVING_STATUS;
 
   // Add tokens from each delegate to a vault that unlocks after the delegate withdrawal period ends
   for (const address in gateways[caller].delegates) {
     gateways[caller].delegates[address].vaults[SmartWeave.transaction.id] = {
       balance: gateways[caller].delegates[address].delegatedStake,
-      start: +SmartWeave.block.height,
-      end: delegateEndHeight,
+      start: interactionHeight.valueOf(),
+      end: delegateEndHeight.valueOf(),
     };
 
     // reduce gateway stake and set this delegate stake to 0

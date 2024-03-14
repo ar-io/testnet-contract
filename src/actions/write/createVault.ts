@@ -2,8 +2,8 @@ import {
   BlockHeight,
   ContractWriteResult,
   IOState,
-  PositiveFiniteInteger,
   PstAction,
+  mIOToken,
 } from '../../types';
 import { getInvalidAjvMessage } from '../../utilities';
 import { validateCreateVault } from '../../validations';
@@ -11,7 +11,7 @@ import { safeCreateVault } from '../../vaults';
 
 // TODO: use top level class
 export class CreateVault {
-  qty: PositiveFiniteInteger; // TODO: use IOToken
+  qty: mIOToken;
   lockLength: BlockHeight;
 
   constructor(input: any) {
@@ -21,7 +21,7 @@ export class CreateVault {
       );
     }
     const { qty, lockLength } = input;
-    this.qty = new PositiveFiniteInteger(qty);
+    this.qty = new mIOToken(qty); // to avoid any issue with user provided decimals
     this.lockLength = new BlockHeight(lockLength);
   }
 }
