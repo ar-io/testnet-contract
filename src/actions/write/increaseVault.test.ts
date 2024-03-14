@@ -4,7 +4,7 @@ import {
   MIN_TOKEN_LOCK_BLOCK_LENGTH,
 } from '../../constants';
 import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
-import { IOState } from '../../types';
+import { IOState, IOToken } from '../../types';
 import { increaseVault } from './increaseVault';
 
 describe('increaseVault', () => {
@@ -41,14 +41,14 @@ describe('increaseVault', () => {
     const initialState: IOState = {
       ...getBaselineState(),
       balances: {
-        test: 100,
+        test: new IOToken(100).toMIO().valueOf(),
       },
     };
     const error = await increaseVault(initialState, {
       caller: 'test',
       input: {
         id: stubbedArweaveTxId,
-        qty: 50,
+        qty: new IOToken(50).valueOf(),
       },
     }).catch((e) => e);
     expect(error).toBeInstanceOf(Error);
@@ -59,12 +59,12 @@ describe('increaseVault', () => {
     const initialState = {
       ...getBaselineState(),
       balances: {
-        test: 99,
+        test: new IOToken(99).toMIO().valueOf(),
       },
       vaults: {
         test: {
           [stubbedArweaveTxId]: {
-            balance: 100,
+            balance: new IOToken(100).toMIO().valueOf(),
             end: SmartWeave.block.height + MIN_TOKEN_LOCK_BLOCK_LENGTH,
             start: SmartWeave.block.height,
           },
@@ -75,7 +75,7 @@ describe('increaseVault', () => {
       caller: 'test',
       input: {
         id: stubbedArweaveTxId,
-        qty: 100,
+        qty: new IOToken(100).valueOf(),
       },
     }).catch((e) => e);
     expect(error).toBeInstanceOf(Error);
@@ -86,12 +86,12 @@ describe('increaseVault', () => {
     const initialState: IOState = {
       ...getBaselineState(),
       balances: {
-        test: 100,
+        test: new IOToken(100).toMIO().valueOf(),
       },
       vaults: {
         test: {
           [stubbedArweaveTxId]: {
-            balance: 100,
+            balance: new IOToken(100).toMIO().valueOf(),
             end: SmartWeave.block.height + MIN_TOKEN_LOCK_BLOCK_LENGTH,
             start: SmartWeave.block.height,
           },
@@ -102,18 +102,18 @@ describe('increaseVault', () => {
       caller: 'test',
       input: {
         id: stubbedArweaveTxId,
-        qty: 50,
+        qty: new IOToken(50).valueOf(),
       },
     });
     expect(state).toEqual({
       ...initialState,
       balances: {
-        test: 50,
+        test: new IOToken(50).toMIO().valueOf(),
       },
       vaults: {
         test: {
           [stubbedArweaveTxId]: {
-            balance: 150,
+            balance: new IOToken(150).toMIO().valueOf(),
             end: SmartWeave.block.height + MIN_TOKEN_LOCK_BLOCK_LENGTH,
             start: SmartWeave.block.height,
           },

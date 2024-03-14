@@ -3,6 +3,7 @@ import {
   INVALID_INPUT_MESSAGE,
 } from '../../constants';
 import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
+import { IOToken } from '../../types';
 import { transferTokens } from './transferTokens';
 
 describe('transferTokens', () => {
@@ -32,7 +33,7 @@ describe('transferTokens', () => {
         const error = await transferTokens(initialState, {
           caller: 'test',
           input: {
-            qty: 100,
+            qty: new IOToken(100).toMIO().valueOf(),
             target: badTarget,
           },
         }).catch((e) => e);
@@ -47,13 +48,13 @@ describe('transferTokens', () => {
       const initialState = {
         ...getBaselineState(),
         balances: {
-          test: 99,
+          test: new IOToken(99).toMIO().valueOf(),
         },
       };
       const error = await transferTokens(initialState, {
         caller: 'test',
         input: {
-          qty: 100,
+          qty: new IOToken(100).toMIO().valueOf(),
           target: stubbedArweaveTxId,
         },
       }).catch((e) => e);
@@ -67,21 +68,21 @@ describe('transferTokens', () => {
       const initialState = {
         ...getBaselineState(),
         balances: {
-          test: 10_000,
+          test: new IOToken(10_000).toMIO().valueOf(),
         },
       };
       const { state } = await transferTokens(initialState, {
         caller: 'test',
         input: {
-          qty: 100,
+          qty: new IOToken(100).valueOf(),
           target: stubbedArweaveTxId,
         },
       });
       expect(state).toEqual({
         ...initialState,
         balances: {
-          test: 9_900,
-          [stubbedArweaveTxId]: 100,
+          test: new IOToken(9900).toMIO().valueOf(),
+          [stubbedArweaveTxId]: new IOToken(100).toMIO().valueOf(),
         },
       });
     });

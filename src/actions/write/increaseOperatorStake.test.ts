@@ -8,7 +8,7 @@ import {
   stubbedArweaveTxId,
   stubbedGatewayData,
 } from '../../tests/stubs';
-import { GatewayStatus } from '../../types';
+import { GatewayStatus, IOToken } from '../../types';
 import { increaseOperatorStake } from './increaseOperatorStake';
 
 describe('increaseOperatorStake', () => {
@@ -22,7 +22,7 @@ describe('increaseOperatorStake', () => {
             [stubbedArweaveTxId]: stubbedGatewayData,
           },
           balances: {
-            [stubbedArweaveTxId]: 10000,
+            [stubbedArweaveTxId]: new IOToken(10000).toMIO().valueOf(),
           },
         };
         const error = await increaseOperatorStake(initialState, {
@@ -106,22 +106,22 @@ describe('increaseOperatorStake', () => {
         gateways: {
           [stubbedArweaveTxId]: {
             ...stubbedGatewayData,
-            operatorStake: 100,
+            operatorStake: new IOToken(100).toMIO().valueOf(),
           },
         },
         balances: {
-          [stubbedArweaveTxId]: 1000,
+          [stubbedArweaveTxId]: new IOToken(1000).toMIO().valueOf(),
         },
       };
       const { state } = await increaseOperatorStake(initialState, {
         caller: stubbedArweaveTxId,
         input: {
-          qty: 1000,
+          qty: new IOToken(1000).valueOf(),
         },
       });
       expect(state.gateways[stubbedArweaveTxId]).toEqual({
         ...stubbedGatewayData,
-        operatorStake: 1100,
+        operatorStake: new IOToken(1100).toMIO().valueOf(),
       });
     });
   });

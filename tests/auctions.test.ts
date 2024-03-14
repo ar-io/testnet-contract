@@ -15,7 +15,13 @@ import {
   MINIMUM_ALLOWED_NAME_LENGTH,
   SHORT_NAME_RESERVATION_UNLOCK_TIMESTAMP,
 } from '../src/constants';
-import { ArNSAuctionData, BlockHeight, IOState, mIOToken } from '../src/types';
+import {
+  ArNSAuctionData,
+  BlockHeight,
+  IOState,
+  IOToken,
+  mIOToken,
+} from '../src/types';
 import { ANT_CONTRACT_IDS } from './utils/constants';
 import {
   getCurrentBlock,
@@ -228,7 +234,7 @@ describe('Auctions', () => {
             it('should throw an error when the bid does not meet the minimum required', async () => {
               const auctionBid = {
                 name: 'apple',
-                qty: 100, // not going to win it
+                qty: new IOToken(100).valueOf(), // not going to win it
                 contractTxId: ANT_CONTRACT_IDS[0],
               };
               // connect using another wallet

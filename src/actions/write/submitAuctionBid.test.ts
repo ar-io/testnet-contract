@@ -14,7 +14,12 @@ import {
   stubbedAuctionData,
   stubbedAuctionState,
 } from '../../tests/stubs';
-import { ArNSAuctionData, IOState, RegistrationType } from '../../types';
+import {
+  ArNSAuctionData,
+  IOState,
+  IOToken,
+  RegistrationType,
+} from '../../types';
 
 describe('submitAuctionBid', () => {
   it.each([
@@ -219,7 +224,7 @@ describe('submitAuctionBid', () => {
       ...getBaselineState(),
       ...stubbedAuctionState,
       balances: {
-        'new-bidder': 1_000,
+        'new-bidder': new IOToken(1000).valueOf(),
         [SmartWeave.contract.id]: 0,
       },
     };
@@ -229,12 +234,12 @@ describe('submitAuctionBid', () => {
         input: {
           name: 'test-auction-close',
           contractTxId: 'atomic',
-          qty: 999,
+          qty: new IOToken(0.000999).valueOf(),
         },
       });
     }).toThrowError(
       new Error(
-        `The bid (${999} IO) is less than the current required minimum bid of ${1_000} IO.`,
+        `The bid (${0.000999} IO) is less than the current required minimum bid of ${0.001} IO.`,
       ),
     );
   });
@@ -249,7 +254,7 @@ describe('submitAuctionBid', () => {
         },
       },
       balances: {
-        'new-bidder': 1_000,
+        'new-bidder': new IOToken(1000).valueOf(),
       },
     };
     expect(() => {
@@ -268,8 +273,8 @@ describe('submitAuctionBid', () => {
       {
         contractTxId: SmartWeave.transaction.id,
         type: 'lease',
-        floorPrice: 100,
-        startPrice: 1000,
+        floorPrice: new IOToken(100).valueOf(),
+        startPrice: new IOToken(1000).valueOf(),
       },
       {
         contractTxId: SmartWeave.transaction.id,
@@ -282,8 +287,8 @@ describe('submitAuctionBid', () => {
       {
         contractTxId: SmartWeave.transaction.id,
         type: 'permabuy',
-        floorPrice: 100,
-        startPrice: 1000,
+        floorPrice: new IOToken(100).valueOf(),
+        startPrice: new IOToken(1000).valueOf(),
       },
       {
         contractTxId: SmartWeave.transaction.id,
@@ -331,17 +336,17 @@ describe('submitAuctionBid', () => {
             type: expectedData.type,
             startTimestamp: expectedData.startTimestamp,
             undernames: expectedData.undernames,
-            purchasePrice: 1000,
+            purchasePrice: new IOToken(1000).valueOf(),
           },
         },
         demandFactoring: {
           ...initialState.demandFactoring,
           purchasesThisPeriod: 1,
-          revenueThisPeriod: 1000,
+          revenueThisPeriod: new IOToken(1000).valueOf(),
         },
         balances: {
-          initiator: 200, // return balance back to the initiator
-          [SmartWeave.contract.id]: 1000,
+          initiator: new IOToken(200).valueOf(), // return balance back to the initiator
+          [SmartWeave.contract.id]: new IOToken(1000).valueOf(),
           // removes the new-bidder balance as they now have 0 tokens
         },
       });

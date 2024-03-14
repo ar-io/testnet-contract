@@ -4,6 +4,7 @@ import {
   MIN_TOKEN_LOCK_BLOCK_LENGTH,
 } from '../../constants';
 import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
+import { IOToken } from '../../types';
 import { vaultedTransfer } from './vaultedTransfer';
 
 describe('vaultedTransfer', () => {
@@ -34,7 +35,7 @@ describe('vaultedTransfer', () => {
         const error = await vaultedTransfer(initialState, {
           caller: 'test',
           input: {
-            qty: 100,
+            qty: new IOToken(100).valueOf(),
             target: badTarget,
             lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
           },
@@ -50,13 +51,13 @@ describe('vaultedTransfer', () => {
       const initialState = {
         ...getBaselineState(),
         balances: {
-          test: 99,
+          test: new IOToken(99).toMIO().valueOf(),
         },
       };
       const error = await vaultedTransfer(initialState, {
         caller: 'test',
         input: {
-          qty: 100,
+          qty: new IOToken(100).valueOf(),
           target: stubbedArweaveTxId,
           lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         },
@@ -71,13 +72,13 @@ describe('vaultedTransfer', () => {
       const initialState = {
         ...getBaselineState(),
         balances: {
-          test: 10_000,
+          test: new IOToken(10000).toMIO().valueOf(),
         },
       };
       const { state } = await vaultedTransfer(initialState, {
         caller: 'test',
         input: {
-          qty: 100,
+          qty: new IOToken(100).valueOf(),
           target: stubbedArweaveTxId,
           lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         },
@@ -85,12 +86,12 @@ describe('vaultedTransfer', () => {
       expect(state).toEqual({
         ...initialState,
         balances: {
-          test: 9_900,
+          test: new IOToken(9900).toMIO().valueOf(),
         },
         vaults: {
           [stubbedArweaveTxId]: {
             [SmartWeave.transaction.id]: {
-              balance: 100,
+              balance: new IOToken(100).toMIO().valueOf(),
               start: 1,
               end: MIN_TOKEN_LOCK_BLOCK_LENGTH + 1,
             },
@@ -103,12 +104,12 @@ describe('vaultedTransfer', () => {
       const initialState = {
         ...getBaselineState(),
         balances: {
-          test: 10_000,
+          test: new IOToken(10_000).toMIO().valueOf(),
         },
         vaults: {
           test: {
             'existing-vault-id': {
-              balance: 10,
+              balance: new IOToken(10).toMIO().valueOf(),
               start: 0,
               end: MIN_TOKEN_LOCK_BLOCK_LENGTH,
             },
@@ -118,7 +119,7 @@ describe('vaultedTransfer', () => {
       const { state } = await vaultedTransfer(initialState, {
         caller: 'test',
         input: {
-          qty: 100,
+          qty: new IOToken(100).valueOf(),
           target: stubbedArweaveTxId,
           lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         },
@@ -126,19 +127,19 @@ describe('vaultedTransfer', () => {
       expect(state).toEqual({
         ...initialState,
         balances: {
-          test: 9_900,
+          test: new IOToken(9900).toMIO().valueOf(),
         },
         vaults: {
           [stubbedArweaveTxId]: {
             [SmartWeave.transaction.id]: {
-              balance: 100,
+              balance: new IOToken(100).toMIO().valueOf(),
               start: 1,
               end: MIN_TOKEN_LOCK_BLOCK_LENGTH + 1,
             },
           },
           test: {
             'existing-vault-id': {
-              balance: 10,
+              balance: new IOToken(10).toMIO().valueOf(),
               start: 0,
               end: MIN_TOKEN_LOCK_BLOCK_LENGTH,
             },
@@ -151,13 +152,13 @@ describe('vaultedTransfer', () => {
       const initialState = {
         ...getBaselineState(),
         balances: {
-          test: 10_000,
+          test: new IOToken(10_000).toMIO().valueOf(),
         },
       };
       const { state } = await vaultedTransfer(initialState, {
         caller: 'test',
         input: {
-          qty: 100,
+          qty: new IOToken(100).valueOf(),
           target: stubbedArweaveTxId,
           lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         },
@@ -165,12 +166,12 @@ describe('vaultedTransfer', () => {
       expect(state).toEqual({
         ...initialState,
         balances: {
-          test: 9_900,
+          test: new IOToken(9900).toMIO().valueOf(),
         },
         vaults: {
           [stubbedArweaveTxId]: {
             [SmartWeave.transaction.id]: {
-              balance: 100,
+              balance: new IOToken(100).toMIO().valueOf(),
               start: 1,
               end: MIN_TOKEN_LOCK_BLOCK_LENGTH + 1,
             },
@@ -183,12 +184,12 @@ describe('vaultedTransfer', () => {
       const initialState = {
         ...getBaselineState(),
         balances: {
-          [stubbedArweaveTxId]: 10_000,
+          [stubbedArweaveTxId]: new IOToken(10_000).toMIO().valueOf(),
         },
         vaults: {
           [stubbedArweaveTxId]: {
             'existing-vault-id': {
-              balance: 10,
+              balance: new IOToken(10).toMIO().valueOf(),
               start: 0,
               end: MIN_TOKEN_LOCK_BLOCK_LENGTH,
             },
@@ -198,7 +199,7 @@ describe('vaultedTransfer', () => {
       const { state } = await vaultedTransfer(initialState, {
         caller: stubbedArweaveTxId,
         input: {
-          qty: 100,
+          qty: new IOToken(100).valueOf(),
           target: stubbedArweaveTxId,
           lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         },
@@ -206,17 +207,17 @@ describe('vaultedTransfer', () => {
       expect(state).toEqual({
         ...initialState,
         balances: {
-          [stubbedArweaveTxId]: 9_900,
+          [stubbedArweaveTxId]: new IOToken(9900).toMIO().valueOf(),
         },
         vaults: {
           [stubbedArweaveTxId]: {
             [SmartWeave.transaction.id]: {
-              balance: 100,
+              balance: new IOToken(100).toMIO().valueOf(),
               start: 1,
               end: MIN_TOKEN_LOCK_BLOCK_LENGTH + 1,
             },
             'existing-vault-id': {
-              balance: 10,
+              balance: new IOToken(10).toMIO().valueOf(),
               start: 0,
               end: MIN_TOKEN_LOCK_BLOCK_LENGTH,
             },

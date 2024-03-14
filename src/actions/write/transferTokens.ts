@@ -1,5 +1,11 @@
 import { safeTransfer } from '../../transfer';
-import { ContractWriteResult, IOState, PstAction, mIOToken } from '../../types';
+import {
+  ContractWriteResult,
+  IOState,
+  IOToken,
+  PstAction,
+  mIOToken,
+} from '../../types';
 import { getInvalidAjvMessage } from '../../utilities';
 import { validateTransferToken } from '../../validations';
 
@@ -16,7 +22,7 @@ export class TransferToken {
     }
     const { target, qty } = input;
     this.target = target;
-    this.qty = new mIOToken(qty);
+    this.qty = new IOToken(qty).toMIO();
   }
 }
 

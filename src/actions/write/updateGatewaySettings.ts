@@ -9,6 +9,7 @@ import {
   ContractWriteResult,
   Gateway,
   IOState,
+  IOToken,
   PstAction,
   WalletAddress,
   mIOToken,
@@ -65,7 +66,7 @@ export class GatewaySettings {
         delegateRewardShareRatio,
       }),
       ...(minDelegatedStake !== undefined && {
-        minDelegatedStake: new mIOToken(minDelegatedStake),
+        minDelegatedStake: new IOToken(minDelegatedStake).toMIO(),
       }),
     };
     this.observerWallet = observerWallet;
@@ -90,7 +91,7 @@ export const updateGatewaySettings = async (
     updatedSettings.minDelegatedStake.isLessThan(MIN_DELEGATED_STAKE)
   ) {
     throw new ContractError(
-      `The minimum delegated stake must be at least ${MIN_DELEGATED_STAKE}`,
+      `The minimum delegated stake must be at least ${MIN_DELEGATED_STAKE.toIO()} IO`,
     );
   }
 

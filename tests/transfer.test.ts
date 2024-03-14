@@ -42,7 +42,7 @@ describe('Transfers', () => {
       const writeInteraction = await contract.writeInteraction({
         function: 'transfer',
         target: targetAddress,
-        qty: TRANSFER_QTY,
+        qty: TRANSFER_QTY.valueOf(),
       });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -52,10 +52,10 @@ describe('Transfers', () => {
         writeInteraction?.originalTxId,
       );
       expect(newState.balances[ownerAddress]).toEqual(
-        prevOwnerBalance - TRANSFER_QTY,
+        prevOwnerBalance - TRANSFER_QTY.toMIO().valueOf(),
       );
       expect(newState.balances[targetAddress]).toEqual(
-        prevTargetBalance + TRANSFER_QTY,
+        prevTargetBalance + TRANSFER_QTY.toMIO().valueOf(),
       );
     });
 
@@ -68,7 +68,7 @@ describe('Transfers', () => {
       const writeInteraction = await contract.writeInteraction({
         function: 'transfer',
         target: srcContractId, // The smartweave contract id acts as the protocol balance
-        qty: TRANSFER_QTY,
+        qty: TRANSFER_QTY.valueOf(),
       });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -78,10 +78,10 @@ describe('Transfers', () => {
         writeInteraction?.originalTxId,
       );
       expect(newState.balances[ownerAddress]).toEqual(
-        prevOwnerBalance - TRANSFER_QTY,
+        prevOwnerBalance - TRANSFER_QTY.toMIO().valueOf(),
       );
       expect(newState.balances[srcContractId]).toEqual(
-        prevTargetBalance + TRANSFER_QTY,
+        prevTargetBalance + TRANSFER_QTY.toMIO().valueOf(),
       );
     });
 
@@ -92,7 +92,7 @@ describe('Transfers', () => {
       const writeInteraction = await contract.writeInteraction({
         function: 'transfer',
         target: targetAddress,
-        qty: Math.pow(TRANSFER_QTY, 10),
+        qty: Math.pow(TRANSFER_QTY.valueOf(), 10),
       });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -112,7 +112,7 @@ describe('Transfers', () => {
       const writeInteraction = await contract.writeInteraction({
         function: 'transfer',
         target: ownerAddress,
-        qty: TRANSFER_QTY,
+        qty: TRANSFER_QTY.valueOf(),
       });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -133,7 +133,7 @@ describe('Transfers', () => {
         const writeInteraction = await contract.writeInteraction({
           function: 'transfer',
           target: badWallet,
-          qty: TRANSFER_QTY,
+          qty: TRANSFER_QTY.valueOf(),
         });
 
         expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -170,7 +170,7 @@ describe('Transfers', () => {
       const writeInteraction = await contract.writeInteraction({
         function: 'transfer',
         target: targetAddress,
-        qty: TRANSFER_QTY,
+        qty: TRANSFER_QTY.valueOf(),
       });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -180,10 +180,10 @@ describe('Transfers', () => {
         writeInteraction?.originalTxId,
       );
       expect(newState.balances[callerAddress]).toEqual(
-        prevOwnerBalance - TRANSFER_QTY,
+        prevOwnerBalance - TRANSFER_QTY.toMIO().valueOf(),
       );
       expect(newState.balances[targetAddress]).toEqual(
-        prevTargetBalance + TRANSFER_QTY,
+        prevTargetBalance + TRANSFER_QTY.toMIO().valueOf(),
       );
     });
 
@@ -193,7 +193,7 @@ describe('Transfers', () => {
       const writeInteraction = await contract.writeInteraction({
         function: 'transfer',
         target: callerAddress,
-        qty: TRANSFER_QTY,
+        qty: TRANSFER_QTY.valueOf(),
       });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -214,7 +214,7 @@ describe('Transfers', () => {
         const writeInteraction = await contract.writeInteraction({
           function: 'transfer',
           target: badWallet,
-          qty: TRANSFER_QTY,
+          qty: TRANSFER_QTY.valueOf(),
         });
 
         expect(writeInteraction?.originalTxId).not.toBe(undefined);

@@ -21,6 +21,7 @@ import {
   ContractWriteResult,
   DeepReadonly,
   IOState,
+  IOToken,
   PstAction,
   Records,
   RegistrationType,
@@ -56,7 +57,7 @@ export class AuctionBid {
       contractTxId = RESERVED_ATOMIC_TX_ID,
     } = input;
     this.name = name.trim().toLowerCase();
-    this.qty = qty ? new mIOToken(qty) : undefined;
+    this.qty = qty ? new IOToken(qty).toMIO() : undefined;
     this.type = type;
     this.contractTxId =
       contractTxId === RESERVED_ATOMIC_TX_ID
