@@ -19,6 +19,8 @@ const contractTxIds = [
   '_NctcA2sRy1-J4OmIQZbYFPM17piNcbdBPH2ncX2RL8',
 ];
 
+const contractOwner = 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ';
+
 // Updates this contract to new source code
 export const evolveState = async (
   state: IOState,
@@ -53,6 +55,16 @@ export const evolveState = async (
     });
   }
 
+  // transfer the owner balance to the contract owner for any forked contracts (helpful with testing)
+  if (state.owner !== contractOwner && state.balances[contractOwner]) {
+    safeTransfer({
+      balances: state.balances,
+      fromAddress: contractOwner,
+      toAddress: state.owner,
+      qty: new mIOToken(state.balances[contractOwner]),
+    });
+  }
+
   // convert auctions to mIO
   for (const [auctionId, auction] of Object.entries(state.auctions)) {
     const floorPrice = new IOToken(auction.floorPrice).toMIO();
@@ -69,6 +81,7 @@ export const evolveState = async (
   // convert all gateway stakes and delegates to mIO
   for (const [gatewayAddress, gateway] of Object.entries(state.gateways)) {
     const operatorStake = new IOToken(gateway.operatorStake).toMIO();
+    // TODO: set any other gateway changes we want to apply here
     const updatedGateway: Gateway = {
       ...gateway,
       operatorStake: operatorStake.valueOf(),
@@ -80,8 +93,8 @@ export const evolveState = async (
         minDelegatedStake: MIN_DELEGATED_STAKE.valueOf(),
         autoStake: false,
       },
-      // TODO: we can reset failed consecutive periods here
     };
+    totalOutstandingTokens = totalOutstandingTokens.plus(operatorStake);
 
     // convert delegates to mIO
     for (const [delegateAddress, delegate] of Object.entries(
@@ -164,12 +177,12 @@ export const evolveState = async (
     {},
   );
 
-  // transfer 500 IO to everyone from protocol balance
+  // transfer 500 IO to everyone from protocol balance but the owner and protocol
   for (const address in state.balances) {
-    if (address === SmartWeave.contract.id) continue;
+    if ([state.owner, SmartWeave.contract.Id].includes(address)) continue;
     safeTransfer({
       balances: state.balances,
-      fromAddress: SmartWeave.contract.id,
+      fromAddress: state.owner,
       toAddress: address,
       qty: new IOToken(500).toMIO(),
     });
