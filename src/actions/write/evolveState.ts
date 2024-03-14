@@ -1,7 +1,6 @@
-import { resetProtocolBalance } from 'src/utilities';
-
 import { NON_CONTRACT_OWNER_MESSAGE } from '../../constants';
 import { ContractWriteResult, IOState, PstAction } from '../../types';
+import { resetProtocolBalance } from '../../utilities';
 
 // Updates this contract to new source code
 export const evolveState = async (
