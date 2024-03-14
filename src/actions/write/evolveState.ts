@@ -1,5 +1,9 @@
-import { NON_CONTRACT_OWNER_MESSAGE } from '../../constants';
-import { ContractWriteResult, Gateway, IOState, PstAction } from '../../types';
+import {
+  DEFAULT_UNDERNAME_COUNT,
+  NON_CONTRACT_OWNER_MESSAGE,
+  SECONDS_IN_A_YEAR,
+} from '../../constants';
+import { ContractWriteResult, IOState, PstAction } from '../../types';
 
 // Updates this contract to new source code
 export const evolveState = async (
@@ -12,16 +16,15 @@ export const evolveState = async (
     throw new ContractError(NON_CONTRACT_OWNER_MESSAGE);
   }
 
-  for (const [gatewayAddress, gateway] of Object.entries(state.gateways)) {
-    const updatedGateway: Gateway = {
-      ...gateway,
-      settings: {
-        ...gateway.settings,
-        autoStake: false,
-      },
-    };
-    state.gateways[gatewayAddress] = updatedGateway;
-  }
+  // expires in one year
+  state.records['bark'] = {
+    contractTxId: 'uxYtKoLadnS-MH1AZ2ORhDNH5vJIbvjSWvXa6QLjzVg',
+    startTimestamp: +SmartWeave.block.timestamp,
+    endTimestamp: +SmartWeave.block.timestamp + SECONDS_IN_A_YEAR,
+    undernames: DEFAULT_UNDERNAME_COUNT,
+    type: 'lease',
+    purchasePrice: 0,
+  };
 
   return { state };
 };
