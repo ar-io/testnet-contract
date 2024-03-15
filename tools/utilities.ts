@@ -1,7 +1,7 @@
 import Arweave from 'arweave';
 import { Tag } from 'arweave/node/lib/transaction';
 import { config } from 'dotenv';
-import fs from 'fs';
+import * as fs from 'fs';
 import {
   EvaluationManifest,
   JWKInterface,

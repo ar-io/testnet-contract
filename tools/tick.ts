@@ -1,8 +1,6 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import * as fs from 'fs';
 
 import { IOState } from '../src/types';
-import { keyfile } from './constants';
 import { getContractManifest, initialize, loadWallet, warp } from './utilities';
 
 /* eslint-disable no-console */

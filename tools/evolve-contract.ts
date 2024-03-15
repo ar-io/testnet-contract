@@ -4,7 +4,6 @@ import path from 'path';
 import { LoggerFactory } from 'warp-contracts';
 
 import { IOState } from '../src/types';
-import { keyfile } from './constants';
 import {
   arweave,
   getContractManifest,

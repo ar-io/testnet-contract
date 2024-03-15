@@ -3,7 +3,7 @@
   "name": "Arweave Name System Test",
   "version": "0.0.18",
   "owner": "",
-  "evolve": null,
+  "evolve": "",
   "records": {},
   "balances": {},
   "vaults": {},
