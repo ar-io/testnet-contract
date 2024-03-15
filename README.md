@@ -46,7 +46,7 @@ You can also modify the script to use `dryWrite` following Warps documentation [
 
 ### Environment Variables
 
-- `JWK` - the stringified JWK you want to use when writing interactions or deploying contracts
+- `WALLET_FILE_PATH` - the path to the wallet file you intend to use for the transaction (default is `./key.json`)
 - `ARNS_CONTRACT_TX_ID` - the IO Testnet contract ID (defaulted to `bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U`)
 
 You can copy [.env.sample](./env.sample) to `.env` and fill in the values before executing any scripts.
@@ -90,6 +90,12 @@ The following tools can be used to perform basic AR.IO Network operations, such 
   yarn ts-node tools/increase-operator-stake.ts
   ```
 
+- [delegated-state] - delegate the state of a Gateway to another address to a gateway that allows delegation
+
+  ```shell
+  yarn ts-node tools/delegated-state.ts
+  ```
+
 - [decrease-operator-stake] - decrease stake for an existing registered Gateway. Tokens are put into a vault and then returned to the gateway address after the specified duration.
 
   ```shell
@@ -112,6 +118,8 @@ The following tools can be used to perform basic AR.IO Network operations, such 
 [update-gateway-settings]: tools/update-gateway-settings.ts
 [increase-operator-stake]: tools/increase-operator-stake.ts
 [decrease-operator-stake]: tools/decrease-operator-stake.ts
+[delegated-state]: tools/delegated-state.ts
+[get-prescribed-observers]: tools/get-prescribed-observers.ts
 [leave-network]: tools/leave-network.ts
 [buy-arns-name]: tools/buy-arns-name.ts
 [buy-arns-name-atomic-ant]: /tools/buy-arns-name-atomic-ant.ts

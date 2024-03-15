@@ -3,7 +3,13 @@ import * as fs from 'fs';
 
 import { IOState } from '../src/types';
 import { keyfile } from './constants';
-import { arweave, getContractManifest, initialize, warp } from './utilities';
+import {
+  arweave,
+  getContractManifest,
+  initialize,
+  loadWallet,
+  warp,
+} from './utilities';
 
 /* eslint-disable no-console */
 // This script will initiate leaving the network for a gateway that is already joined
@@ -16,9 +22,7 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
   // there are no gateway parameters to fill out for this interaction
 
   // Get the key file used for the distribution
-  const wallet: JWKInterface = JSON.parse(
-    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
-  );
+  const wallet: JWKInterface = loadWallet();
 
   // gate the contract txId
   const arnsContractTxId =

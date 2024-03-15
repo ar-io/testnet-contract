@@ -3,7 +3,7 @@ import * as fs from 'fs';
 
 import { IOState } from '../src/types';
 import { keyfile } from './constants';
-import { arweave, initialize, warp } from './utilities';
+import { arweave, initialize, loadWallet, warp } from './utilities';
 
 /* eslint-disable no-console */
 // This script will stake more tokens to an existing joined gateway
@@ -12,13 +12,11 @@ import { arweave, initialize, warp } from './utilities';
   // simple setup script
   initialize();
 
-  // the quantity of tokens to stake
+  // the quantity of tokens in IO to stake
   const qty = 10_000;
 
   // Get the key file used for the distribution
-  const wallet: JWKInterface = JSON.parse(
-    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
-  );
+  const wallet: JWKInterface = loadWallet();
 
   // gate the contract txId
   const contractTxId =

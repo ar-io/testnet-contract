@@ -11,9 +11,7 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
   initialize();
 
   // load wallet
-  const wallet = JSON.parse(
-    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
-  );
+  const wallet = loadWallet();
 
   // load state of contract
   const ARNS_CONTRACT_TX_ID =

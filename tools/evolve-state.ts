@@ -1,9 +1,5 @@
-import { JWKInterface } from 'arweave/node/lib/wallet';
-import fs from 'fs';
-
 import { IOState } from '../src/types';
-import { keyfile } from './constants';
-import { getContractManifest, initialize, warp } from './utilities';
+import { getContractManifest, initialize, loadWallet, warp } from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
@@ -16,9 +12,7 @@ import { getContractManifest, initialize, warp } from './utilities';
     'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // load local wallet
-  const wallet: JWKInterface = JSON.parse(
-    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
-  );
+  const wallet = loadWallet();
 
   // get contract manifest
   const { evaluationOptions = {} } = await getContractManifest({
