@@ -12,7 +12,7 @@ import { arweave, initialize, loadWallet, warp } from './utilities';
   // simple setup script
   initialize();
 
-  // the quantity of tokens to stake
+  // the quantity of tokens in IO to stake
   const qty = 10_000;
 
   // Get the key file used for the distribution
