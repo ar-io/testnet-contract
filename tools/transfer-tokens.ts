@@ -1,9 +1,13 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import * as fs from 'fs';
 
 import { IOState } from '../src/types';
-import { keyfile } from './constants';
-import { arweave, getContractManifest, initialize, warp } from './utilities';
+import {
+  arweave,
+  getContractManifest,
+  initialize,
+  loadWallet,
+  warp,
+} from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
@@ -14,12 +18,12 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
   // The recipient target of the token transfer
   const target = '1H7WZIWhzwTH9FIcnuMqYkTsoyv1OTfGa_amvuYwrgo';
 
-  // The amount of tokens to be transferred
-  const qty = 2500000;
+  // The amount of tokens to be transferred in IO
+  const qty = 10_000;
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   // Get the key file used for the distribution
-  const wallet: JWKInterface = JSON.parse(fs.readFileSync(keyfile).toString());
+  const wallet: JWKInterface = loadWallet();
 
   // gate the contract txId
   const arnsContractTxId =

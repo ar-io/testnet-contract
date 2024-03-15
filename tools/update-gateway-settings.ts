@@ -1,9 +1,13 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import * as fs from 'fs';
 
 import { IOState } from '../src/types';
-import { keyfile } from './constants';
-import { arweave, getContractManifest, initialize, warp } from './utilities';
+import {
+  arweave,
+  getContractManifest,
+  initialize,
+  loadWallet,
+  warp,
+} from './utilities';
 
 /* eslint-disable no-console */
 // This script will update the settings for a gateway that is already joined to the network
@@ -12,10 +16,10 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
   initialize();
 
   // the friendly label for this gateway
-  const label = 'Test Gateway';
+  // const label = 'Test Gateway';
 
   // the fully qualified domain name for this gateway eg. arweave.net
-  const fqdn = 'permanence-testing.org';
+  // const fqdn = 'permanence-testing.org';
 
   // uncomment the below settings and update as needed
   // the port used for this gateway eg. 443
@@ -40,14 +44,12 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
   // The default is 0
   // const delegateRewardShareRatio: number = 10;
 
-  // The minimum stake a delegate must use for this for this gateway.  Must be greater than the contracts minimum delegated stake
-  // The default is 100
+  // The minimum stake in IO a delegate must use for this for this gateway.  Must be greater than the contracts minimum delegated stake
+  // The default is 100 IO
   // const minDelegatedStake: number = 200;
 
   // Get the key file used for the distribution
-  const wallet: JWKInterface = JSON.parse(
-    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
-  );
+  const wallet: JWKInterface = loadWallet();
 
   // gate the contract txId
   const arnsContractTxId =
@@ -75,8 +77,8 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
   const writeInteraction = await contract.writeInteraction(
     {
       function: 'updateGatewaySettings',
-      label,
-      fqdn,
+      // label,
+      // fqdn,
       // observerWallet,
       // port,
       // protocol,

@@ -1,9 +1,13 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import * as fs from 'fs';
 
 import { IOState } from '../src/types';
-import { keyfile } from './constants';
-import { arweave, getContractManifest, initialize, warp } from './utilities';
+import {
+  arweave,
+  getContractManifest,
+  initialize,
+  loadWallet,
+  warp,
+} from './utilities';
 
 /* eslint-disable no-console */
 // This script will initiate decreasing a delegates stake to a gateway
@@ -22,9 +26,7 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
   const target = 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ';
 
   // Get the key file used for the distribution
-  const wallet: JWKInterface = JSON.parse(
-    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
-  );
+  const wallet: JWKInterface = loadWallet();
 
   // gate the contract txId
   const arnsContractTxId =

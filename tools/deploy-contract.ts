@@ -3,17 +3,20 @@ import path from 'path';
 import { SourceType } from 'warp-contracts';
 
 import { IOState } from '../src/types';
-import { keyfile } from './constants';
-import { arweave, getContractManifest, initialize, warp } from './utilities';
+import {
+  arweave,
+  getContractManifest,
+  initialize,
+  loadWallet,
+  warp,
+} from './utilities';
 
 (async () => {
   // simple setup script
   initialize();
 
   // load wallet
-  const wallet = JSON.parse(
-    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
-  );
+  const wallet = loadWallet();
 
   // load state of contract
   const ARNS_CONTRACT_TX_ID =
@@ -42,7 +45,7 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
 
   const forkedState: IOState = {
     ...(existingContractState as IOState),
-    evolve: null, // clear out evolve so new source code is not overwritten
+    evolve: '', // clear out evolve so new source code is not overwritten
   };
 
   // ~~ Deploy contract ~~

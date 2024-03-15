@@ -1,9 +1,13 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import * as fs from 'fs';
 
 import { IOState } from '../src/types';
-import { keyfile } from './constants';
-import { arweave, getContractManifest, initialize, warp } from './utilities';
+import {
+  arweave,
+  getContractManifest,
+  initialize,
+  loadWallet,
+  warp,
+} from './utilities';
 
 /* eslint-disable no-console */
 // This script will join a gateway to the ar.io network, identified by the gateway operator's wallet address
@@ -14,9 +18,7 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
   initialize();
 
   // Get the key file used for the distribution
-  const wallet: JWKInterface = JSON.parse(
-    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
-  );
+  const wallet: JWKInterface = loadWallet();
 
   // wallet address
   const walletAddress = await arweave.wallets.getAddress(wallet);

@@ -46,7 +46,7 @@ You can also modify the script to use `dryWrite` following Warps documentation [
 
 ### Environment Variables
 
-- `JWK` - the stringified JWK you want to use when writing interactions or deploying contracts
+- `WALLET_FILE_PATH` - the path to the wallet file you intend to use for the transaction (default is `./key.json`)
 - `ARNS_CONTRACT_TX_ID` - the IO Testnet contract ID (defaulted to `bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U`)
 
 You can copy [.env.sample](./env.sample) to `.env` and fill in the values before executing any scripts.
@@ -72,6 +72,12 @@ The following tools can be used to perform basic ArNS operations such as name pu
 
 The following tools can be used to perform basic AR.IO Network operations, such as joining and leaving the network, along with managing the onchain settings of a Gateway.
 
+- [transfer-tokens] - transfer tokens from one wallet to another.
+
+  ```shell
+  yarn ts-node tools/transfer-tokens.ts
+  ```
+
 - [join-network] - takes a Gateway into the ar.io network and adds the Gateway into the Gateway Address Registry. This detail includes the Gateway Operator’s public wallet address, fully qualified domain name, port, protocol, properties and friendly note.
 
   ```shell
@@ -88,6 +94,12 @@ The following tools can be used to perform basic AR.IO Network operations, such 
 
   ```shell
   yarn ts-node tools/increase-operator-stake.ts
+  ```
+
+- [delegate-stake] - delegate stake a to a gateway that allows delegation - you will receive rewards for their work - based on their delegation settings.
+
+  ```shell
+  yarn ts-node tools/delegate-stake.ts
   ```
 
 - [decrease-operator-stake] - decrease stake for an existing registered Gateway. Tokens are put into a vault and then returned to the gateway address after the specified duration.
@@ -112,6 +124,8 @@ The following tools can be used to perform basic AR.IO Network operations, such 
 [update-gateway-settings]: tools/update-gateway-settings.ts
 [increase-operator-stake]: tools/increase-operator-stake.ts
 [decrease-operator-stake]: tools/decrease-operator-stake.ts
+[delegate-stake]: tools/delegate-stake.ts
+[get-prescribed-observers]: tools/get-prescribed-observers.ts
 [leave-network]: tools/leave-network.ts
 [buy-arns-name]: tools/buy-arns-name.ts
 [buy-arns-name-atomic-ant]: /tools/buy-arns-name-atomic-ant.ts
