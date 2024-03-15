@@ -19,7 +19,7 @@ import {
   initialize();
 
   // override log settings
-  LoggerFactory.INST.logLevel('none');
+  LoggerFactory.INST.logLevel('error');
 
   // load local wallet
   const wallet: JWKInterface = loadWallet();
