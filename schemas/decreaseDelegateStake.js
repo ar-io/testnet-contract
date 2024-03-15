@@ -4,7 +4,7 @@ const decreaseDelegateStakeSchema = {
   properties: {
     function: {
       type: 'string',
-      const: 'delegateStake',
+      const: 'decreaseDelegateStake',
     },
     target: {
       type: 'string',
