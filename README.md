@@ -72,6 +72,12 @@ The following tools can be used to perform basic ArNS operations such as name pu
 
 The following tools can be used to perform basic AR.IO Network operations, such as joining and leaving the network, along with managing the onchain settings of a Gateway.
 
+- [transfer-tokens] - transfer tokens from one wallet to another.
+
+  ```shell
+  yarn ts-node tools/transfer-tokens.ts
+  ```
+
 - [join-network] - takes a Gateway into the ar.io network and adds the Gateway into the Gateway Address Registry. This detail includes the Gateway Operator’s public wallet address, fully qualified domain name, port, protocol, properties and friendly note.
 
   ```shell
@@ -90,10 +96,10 @@ The following tools can be used to perform basic AR.IO Network operations, such 
   yarn ts-node tools/increase-operator-stake.ts
   ```
 
-- [delegated-state] - delegate the state of a Gateway to another address to a gateway that allows delegation
+- [delegate-stake] - delegate stake a to a gateway that allows delegation - you will receive rewards for their work - based on their delegation settings.
 
   ```shell
-  yarn ts-node tools/delegated-state.ts
+  yarn ts-node tools/delegate-stake.ts
   ```
 
 - [decrease-operator-stake] - decrease stake for an existing registered Gateway. Tokens are put into a vault and then returned to the gateway address after the specified duration.
@@ -118,7 +124,7 @@ The following tools can be used to perform basic AR.IO Network operations, such 
 [update-gateway-settings]: tools/update-gateway-settings.ts
 [increase-operator-stake]: tools/increase-operator-stake.ts
 [decrease-operator-stake]: tools/decrease-operator-stake.ts
-[delegated-state]: tools/delegated-state.ts
+[delegate-stake]: tools/delegate-stake.ts
 [get-prescribed-observers]: tools/get-prescribed-observers.ts
 [leave-network]: tools/leave-network.ts
 [buy-arns-name]: tools/buy-arns-name.ts
