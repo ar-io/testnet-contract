@@ -3,7 +3,7 @@ import * as fs from 'fs';
 
 import { IOState } from '../src/types';
 import { keyfile } from './constants';
-import { getContractManifest, initialize, warp } from './utilities';
+import { getContractManifest, initialize, loadWallet, warp } from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
@@ -11,9 +11,7 @@ import { getContractManifest, initialize, warp } from './utilities';
   initialize();
 
   // Get the key file used for the distribution
-  const wallet: JWKInterface = JSON.parse(
-    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
-  );
+  const wallet: JWKInterface = loadWallet();
 
   // gate the contract txId
   const arnsContractTxId =

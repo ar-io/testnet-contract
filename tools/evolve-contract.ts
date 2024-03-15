@@ -5,7 +5,13 @@ import { LoggerFactory } from 'warp-contracts';
 
 import { IOState } from '../src/types';
 import { keyfile } from './constants';
-import { arweave, getContractManifest, initialize, warp } from './utilities';
+import {
+  arweave,
+  getContractManifest,
+  initialize,
+  loadWallet,
+  warp,
+} from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
@@ -16,9 +22,7 @@ import { arweave, getContractManifest, initialize, warp } from './utilities';
   LoggerFactory.INST.logLevel('none');
 
   // load local wallet
-  const wallet: JWKInterface = JSON.parse(
-    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
-  );
+  const wallet: JWKInterface = loadWallet();
 
   // load state of contract
   const arnsContractTxId =

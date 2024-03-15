@@ -1,13 +1,17 @@
 import Arweave from 'arweave';
 import { Tag } from 'arweave/node/lib/transaction';
 import { config } from 'dotenv';
+import fs from 'fs';
 import {
   EvaluationManifest,
+  JWKInterface,
   LoggerFactory,
   WarpFactory,
   defaultCacheOptions,
 } from 'warp-contracts';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
+
+import { keyfile } from './constants';
 
 // intended to be run before any scripts
 export const initialize = (): void => {
@@ -16,6 +20,19 @@ export const initialize = (): void => {
 
   // Initialize `LoggerFactory`
   LoggerFactory.INST.logLevel('error');
+};
+
+export const loadWallet = (): JWKInterface => {
+  if (process.env.JWK) {
+    return JSON.parse(process.env.JWK);
+  }
+  if (fs.existsSync(keyfile)) {
+    return JSON.parse(fs.readFileSync(keyfile, 'utf8'));
+  }
+
+  throw new Error(
+    'No wallet found. Provide it via WALLET_FILE_PATH or JWK, or update the `keyfile` path in constants.ts',
+  );
 };
 
 export function isArweaveAddress(address: string): boolean {

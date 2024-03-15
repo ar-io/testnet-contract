@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { Tag } from 'warp-contracts';
 
 import { keyfile } from './constants';
-import { arweave, initialize, warp } from './utilities';
+import { arweave, initialize, loadWallet, warp } from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
@@ -21,9 +21,7 @@ import { arweave, initialize, warp } from './utilities';
   const ANT_TICKER = 'ANT';
 
   // load local wallet
-  const wallet: JWKInterface = JSON.parse(
-    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
-  );
+  const wallet: JWKInterface = loadWallet();
 
   // load state of contract
   const arnsContractTxId =

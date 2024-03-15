@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 import { IOState } from '../src/types';
 import { keyfile } from './constants';
-import { getContractManifest, initialize, warp } from './utilities';
+import { getContractManifest, initialize, loadWallet, warp } from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
@@ -22,9 +22,7 @@ import { getContractManifest, initialize, warp } from './utilities';
   const years = 1;
 
   // load local wallet
-  const wallet = JSON.parse(
-    process.env.JWK ? process.env.JWK : fs.readFileSync(keyfile).toString(),
-  );
+  const wallet = loadWallet();
 
   // load state of contract
   const arnsContractTxId =
