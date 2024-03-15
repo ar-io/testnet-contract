@@ -9,7 +9,7 @@ import { getContractManifest, initialize, loadWallet, warp } from './utilities';
   // load state of contract
   const arnsContractTxId =
     process.env.ARNS_CONTRACT_TX_ID ??
-    '_NctcA2sRy1-J4OmIQZbYFPM17piNcbdBPH2ncX2RL8';
+    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // load local wallet
   const wallet = loadWallet();
@@ -28,13 +28,13 @@ import { getContractManifest, initialize, loadWallet, warp } from './utilities';
       validity: true,
     });
 
-  const writeInteraction = await contract.dryWrite(
+  const writeInteraction = await contract.writeInteraction(
     {
       function: 'evolveState',
     },
-    // {
-    //   disableBundling: true,
-    // },
+    {
+      disableBundling: true,
+    },
   );
   console.log(JSON.stringify(writeInteraction, null, 2));
 })();
