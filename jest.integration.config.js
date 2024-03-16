@@ -8,6 +8,6 @@ module.exports = {
   testEnvironment: 'node',
   testTimeout: 60_000,
   transform: {
-    '^.+\\.(ts|js)$': 'ts-jest',
+    '^.+\\.(ts|tsx)$': 'ts-jest',
   },
 };

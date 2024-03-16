@@ -1,6 +1,8 @@
 import { Gateway } from '@ar.io/sdk';
 import { QuestionCollection } from 'inquirer';
 
+import { isArweaveAddress } from '../utilities';
+
 export default {
   gatewaySettings: (
     address?: string,
@@ -61,12 +63,13 @@ export default {
       {
         name: 'properties',
         type: 'input',
-        message: 'Enter gateway properties (use default if not sure) > ',
+        message:
+          'Enter gateway properties transaction ID (use default if not sure) > ',
         default: gateway
           ? gateway.settings.properties
           : 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44',
         validate: (value: string) =>
-          value.length === 43 ? true : 'Please Enter Valid Properties',
+          isArweaveAddress(value) ? true : 'Please Enter Valid Address',
       },
       {
         name: 'note',
@@ -116,7 +119,7 @@ export default {
         type: 'input',
         message: 'Enter the target gateway you want to delegate to > ',
         validate: (value: string) =>
-          value.length === 43 ? true : 'Please Enter Valid Gateway Address',
+          isArweaveAddress(value) ? true : 'Please Enter Valid Address',
       },
       {
         name: 'qty',
