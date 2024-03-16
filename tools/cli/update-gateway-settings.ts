@@ -37,9 +37,7 @@ import questions from './questions';
   );
 
   // gate the contract txId
-  const arnsContractTxId =
-    process.env.ARNS_CONTRACT_TX_ID ??
-    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
+  const arnsContractTxId = 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // get contract manifest
   const { evaluationOptions = {} } = await getContractManifest({
