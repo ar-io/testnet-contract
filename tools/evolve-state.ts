@@ -28,13 +28,13 @@ import { getContractManifest, initialize, loadWallet, warp } from './utilities';
       validity: true,
     });
 
-  const writeInteraction = await contract.writeInteraction(
+  const writeInteraction = await contract.dryWrite(
     {
       function: 'evolveState',
     },
-    {
-      disableBundling: true,
-    },
+    // {
+    //   disableBundling: true,
+    // },
   );
   console.log(JSON.stringify(writeInteraction, null, 2));
 })();

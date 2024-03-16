@@ -1,0 +1,132 @@
+import { Gateway } from '@ar.io/sdk';
+import { QuestionCollection } from 'inquirer';
+
+export default {
+  gatewaySettings: (
+    address?: string,
+    gateway?: Gateway,
+  ): QuestionCollection => {
+    const questionList: QuestionCollection = [
+      {
+        name: 'label',
+        type: 'input',
+        message: 'Enter your a friendly name for your gateway > ',
+        default: gateway ? gateway.settings.label : '',
+        validate: (value: string) =>
+          value.length > 0 ? true : 'Please Enter Valid Name',
+      },
+      {
+        name: 'fqdn',
+        type: 'input',
+        message: 'Enter your domain for this gateway > ',
+        default: gateway ? gateway.settings.fqdn : '',
+        validate: (value: string) => {
+          const regexDomainValidation: RegExp = new RegExp(
+            '^(?!-)[A-Za-z0-9-]+([\\-\\.]{1}[a-z0-9]+)*\\.[A-Za-z]{2,6}$',
+          );
+          return regexDomainValidation.test(value)
+            ? true
+            : 'Please Enter Valid Domain';
+        },
+      },
+      !gateway
+        ? {
+            name: 'qty',
+            type: 'number',
+            message:
+              'Enter the amount of tokens you want to stake against your gateway - min 10,000 IO > ',
+            default: 10000,
+            validate: (value: number) =>
+              value >= 10000 ? true : 'Please Enter Valid Amount',
+          }
+        : undefined,
+      {
+        name: 'port',
+        type: 'number',
+        message: 'Enter port used for this gateway > ',
+        default: gateway ? gateway.settings.port : 443,
+        validate: (value: number) => {
+          return value >= 0 && value <= 65535
+            ? true
+            : 'Please Enter Valid Port Number';
+        },
+      },
+      {
+        name: 'protocol',
+        type: 'list',
+        message: 'Enter protocol used for this gateway > ',
+        default: gateway ? gateway.settings.protocol : 'https',
+        choices: ['https'],
+      },
+      {
+        name: 'properties',
+        type: 'input',
+        message: 'Enter gateway properties (use default if not sure) > ',
+        default: gateway
+          ? gateway.settings.properties
+          : 'FH1aVetOoulPGqgYukj0VE0wIhDy90WiQoV3U2PeY44',
+        validate: (value: string) =>
+          value.length === 43 ? true : 'Please Enter Valid Properties',
+      },
+      {
+        name: 'note',
+        type: 'input',
+        message: 'Enter short note to further describe this gateway > ',
+        default: gateway
+          ? gateway.settings.note
+          : `Owned and operated by ${address}`,
+      },
+      {
+        name: 'observerWallet',
+        type: 'input',
+        default: gateway ? gateway.observerWallet : address,
+        message: 'Enter the observer wallet public address > ',
+      },
+      {
+        name: 'allowDelegatedStaking',
+        type: 'confirm',
+        default: gateway ? gateway.settings.allowDelegatedStaking : true,
+        message: 'Enable or disable delegated staking? > ',
+      },
+      {
+        name: 'delegateRewardShareRatio',
+        type: 'number',
+        message:
+          'Enter the percent of gateway and observer rewards given to delegates > ',
+        default: gateway ? gateway.settings.delegateRewardShareRatio : 10,
+        validate: (value: number) =>
+          value >= 0 && value <= 100 ? true : 'Please Enter Valid Percentage',
+      },
+      {
+        name: 'minDelegatedStake',
+        type: 'number',
+        message:
+          'Enter the minimum stake in IO a delegate must use for this for this gateway > ',
+        default: gateway ? gateway.settings.minDelegatedStake : 100,
+        validate: (value: number) =>
+          value > 0 ? true : 'Please Enter Valid Amount',
+      },
+    ].filter((question) => !!question);
+    return questionList;
+  },
+  delegateStake: (): QuestionCollection => {
+    const questionList: QuestionCollection = [
+      {
+        name: 'target',
+        type: 'input',
+        message: 'Enter the target gateway you want to delegate to > ',
+        validate: (value: string) =>
+          value.length === 43 ? true : 'Please Enter Valid Gateway Address',
+      },
+      {
+        name: 'qty',
+        type: 'number',
+        message: 'Enter Stake Quantity (in IO) > ',
+        default: 100,
+        validate: (value: number) =>
+          value > 0 ? true : 'Please Enter Valid Amount',
+      },
+    ];
+    return questionList;
+  },
+};

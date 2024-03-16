@@ -1,3 +1,4 @@
+import { ArIO } from '@ar.io/sdk';
 import Arweave from 'arweave';
 import { Tag } from 'arweave/node/lib/transaction';
 import { config } from 'dotenv';
@@ -45,6 +46,12 @@ export function isipV4Address(ipV4Address: string): boolean {
     ipV4Address,
   );
 }
+
+export const networkContract = new ArIO({
+  contractTxId:
+    process.env.ARNS_CONTRACT_TX_ID ||
+    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U',
+});
 
 export const arweave = new Arweave({
   host: 'ar-io.dev',
