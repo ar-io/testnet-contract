@@ -53,6 +53,8 @@ You can copy [.env.sample](./env.sample) to `.env` and fill in the values before
 
 ### CLI
 
+#### Operators
+
 - `yarn join-network` - [join-network] - takes a Gateway into the ar.io network and adds the Gateway into the Gateway Address Registry. This detail includes the Gateway Operator’s public wallet address, fully qualified domain name, port, protocol, properties and friendly note.
 
 ```shell
@@ -101,7 +103,7 @@ tem.","observerWallet":"IPdwa3Mb_9pDD8c2IaJx6aad51Ss-_TfStVwBuhtXMs","allowDeleg
 
 ### Scripts
 
-### Arweave Name System (ArNS)
+#### Arweave Name System (ArNS)
 
 The following tools can be used to perform basic ArNS operations such as name purchase, ANT creation, and ANT transfer.
 
@@ -118,7 +120,7 @@ The following tools can be used to perform basic ArNS operations such as name pu
   yarn ts-node tools/buy-arns-name-atomic-ant.ts
   ```
 
-### AR.IO Testnet Network
+#### AR.IO Testnet Network
 
 The following tools can be used to perform basic AR.IO Network operations, such as joining and leaving the network, along with managing the onchain settings of a Gateway.
 
