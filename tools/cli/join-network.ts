@@ -3,6 +3,7 @@ import inquirer from 'inquirer';
 
 import { IOState } from '../../src/types';
 import {
+  arnsContractTxId,
   arweave,
   getContractManifest,
   initialize,
@@ -23,9 +24,6 @@ import questions from './questions';
   const gatewayDetails = await inquirer.prompt(
     questions.gatewaySettings(walletAddress),
   );
-
-  // gate the contract txId
-  const arnsContractTxId = 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // get contract manifest
   const { evaluationOptions = {} } = await getContractManifest({

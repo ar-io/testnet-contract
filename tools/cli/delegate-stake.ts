@@ -3,6 +3,7 @@ import inquirer from 'inquirer';
 
 import { IOState } from '../../src/types';
 import {
+  arnsContractTxId,
   getContractManifest,
   initialize,
   loadWallet,
@@ -18,9 +19,6 @@ import questions from './questions';
   const wallet: JWKInterface = loadWallet();
 
   const gatewayDetails = await inquirer.prompt(questions.delegateStake());
-
-  // gate the contract txId
-  const arnsContractTxId = 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // get contract manifest
   const { evaluationOptions = {} } = await getContractManifest({

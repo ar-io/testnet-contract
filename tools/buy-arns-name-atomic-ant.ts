@@ -1,7 +1,13 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { Tag } from 'warp-contracts';
 
-import { arweave, initialize, loadWallet, warp } from './utilities';
+import {
+  arnsContractTxId,
+  arweave,
+  initialize,
+  loadWallet,
+  warp,
+} from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
@@ -20,11 +26,6 @@ import { arweave, initialize, loadWallet, warp } from './utilities';
 
   // load local wallet
   const wallet: JWKInterface = loadWallet();
-
-  // load state of contract
-  const arnsContractTxId =
-    process.env.ARNS_CONTRACT_TX_ID ??
-    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // wallet address
   const walletAddress = await arweave.wallets.getAddress(wallet);

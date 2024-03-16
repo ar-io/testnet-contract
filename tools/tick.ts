@@ -1,7 +1,13 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 
 import { IOState } from '../src/types';
-import { getContractManifest, initialize, loadWallet, warp } from './utilities';
+import {
+  arnsContractTxId,
+  getContractManifest,
+  initialize,
+  loadWallet,
+  warp,
+} from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
@@ -10,11 +16,6 @@ import { getContractManifest, initialize, loadWallet, warp } from './utilities';
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = loadWallet();
-
-  // gate the contract txId
-  const arnsContractTxId =
-    process.env.ARNS_CONTRACT_TX_ID ??
-    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // get contract manifest
   const { evaluationOptions = {} } = await getContractManifest({
