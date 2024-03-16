@@ -4,10 +4,10 @@ module.exports = {
   setupFilesAfterEnv: ['./tests/mocks.jest.ts'],
   testMatch: ['**/src/**/*.test.ts'],
   collectCoverage: true,
-  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.test.ts'],
+  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.test.ts/**'],
   testEnvironment: 'node',
   testTimeout: 60_000,
   transform: {
-    '^.+\\.(ts|tsx)$': 'ts-jest',
+    '^.+\\.(ts|js)$': 'ts-jest',
   },
 };
