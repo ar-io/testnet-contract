@@ -38,7 +38,8 @@ export const loadWallet = (): JWKInterface => {
 
 export function isArweaveAddress(address: string): boolean {
   const trimmedAddress = address.toString().trim();
-  return !/[a-z0-9_-]{43}/i.test(trimmedAddress);
+  const ARWEAVE_TX_REGEX = new RegExp('^[a-zA-Z0-9-_s+]{43}$');
+  return ARWEAVE_TX_REGEX.test(trimmedAddress);
 }
 
 export function isipV4Address(ipV4Address: string): boolean {

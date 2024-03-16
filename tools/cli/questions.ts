@@ -117,7 +117,7 @@ export default {
       {
         name: 'target',
         type: 'input',
-        message: 'Enter the target gateway you want to delegate to > ',
+        message: 'Enter the target gateway address you want to delegate to > ',
         validate: (value: string) =>
           isArweaveAddress(value) ? true : 'Please Enter Valid Address',
       },
