@@ -104,12 +104,25 @@ export default {
         name: 'minDelegatedStake',
         type: 'number',
         message:
-          'Enter the minimum stake in IO a delegate must use for this for this gateway > ',
+          'Enter the minimum  delegate stake for this gateway (in IO) > ',
         default: gateway ? gateway.settings.minDelegatedStake : 100,
         validate: (value: number) =>
           value > 0 ? true : 'Please Enter Valid Amount',
       },
     ].filter((question) => !!question);
+    return questionList;
+  },
+  getBalance: (address?: string): QuestionCollection => {
+    const questionList: QuestionCollection = [
+      {
+        name: 'address',
+        type: 'input',
+        message: 'Enter the address you want to check the balance > ',
+        default: address ? address : '',
+        validate: (value: string) =>
+          isArweaveAddress(value) ? true : 'Please Enter Valid Address',
+      },
+    ];
     return questionList;
   },
   delegateStake: (): QuestionCollection => {

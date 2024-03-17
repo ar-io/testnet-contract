@@ -55,6 +55,14 @@ You can copy [.env.sample](./env.sample) to `.env` and fill in the values before
 
 #### Operators
 
+- `yarn get-balance` - [get-balance] - get the balance of a wallet address.
+
+```shell
+❯ yarn get-balance
+? Enter the address you want to check the balance >  QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ
+Balance: 714667588.589208 IO
+```
+
 - `yarn join-network` - [join-network] - takes a Gateway into the ar.io network and adds the Gateway into the Gateway Address Registry. This detail includes the Gateway Operator’s public wallet address, fully qualified domain name, port, protocol, properties and friendly note.
 
 ```shell

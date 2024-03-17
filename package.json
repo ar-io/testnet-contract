@@ -19,7 +19,8 @@
     "pre-commit": "lint-staged",
     "join-network": "yarn ts-node ./tools/cli/join-network.ts",
     "delegate-stake": "yarn ts-node ./tools/cli/delegate-stake.ts",
-    "update-gateway-settings": "yarn ts-node ./tools/cli/update-gateway-settings.ts"
+    "update-gateway-settings": "yarn ts-node ./tools/cli/update-gateway-settings.ts",
+    "get-balance": "yarn ts-node ./tools/cli/get-balance.ts"
   },
   "devDependencies": {
     "@ar.io/sdk": "alpha",

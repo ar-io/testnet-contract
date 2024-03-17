@@ -60,7 +60,7 @@ import questions from './questions';
     });
     // eslint-disable-next-line;
     console.log(
-      `Successfully submitted request to join the network. TxId: ${txId?.originalTxId}`,
+      `Successfully submitted request to delegate stake. TxId: ${txId?.originalTxId}`,
     );
   }
 })();
