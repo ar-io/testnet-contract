@@ -162,6 +162,7 @@ The following tools can be used to perform basic AR.IO Network operations, such 
   yarn ts-node tools/leave-network.ts
   ```
 
+[get-balance]: tools/cli/get-balance.ts
 [join-network]: tools/cli/join-network.ts
 [update-gateway-settings]: tools/cli/update-gateway-settings.ts
 [increase-operator-stake]: tools/increase-operator-stake.ts
