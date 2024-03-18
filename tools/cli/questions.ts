@@ -132,7 +132,7 @@ export default {
         type: 'number',
         message: `Enter the additional operator stake amount in IO (current balance: ${
           balance || 0
-        }) IO > `,
+        } IO) > `,
         default: 100,
         validate: (value: number) =>
           value > 0 ? true : 'Please Enter Valid Amount',
