@@ -125,6 +125,21 @@ export default {
     ];
     return questionList;
   },
+  increaseOperatorStake: (balance?: number): QuestionCollection => {
+    const questionList: QuestionCollection = [
+      {
+        name: 'qty',
+        type: 'number',
+        message: `Enter the additional operator stake amount in IO (current balance: ${
+          balance || 0
+        }) IO > `,
+        default: 100,
+        validate: (value: number) =>
+          value > 0 ? true : 'Please Enter Valid Amount',
+      },
+    ];
+    return questionList;
+  },
   delegateStake: (): QuestionCollection => {
     const questionList: QuestionCollection = [
       {

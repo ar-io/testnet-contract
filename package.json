@@ -20,7 +20,8 @@
     "join-network": "yarn ts-node ./tools/cli/join-network.ts",
     "delegate-stake": "yarn ts-node ./tools/cli/delegate-stake.ts",
     "update-gateway-settings": "yarn ts-node ./tools/cli/update-gateway-settings.ts",
-    "get-balance": "yarn ts-node ./tools/cli/get-balance.ts"
+    "get-balance": "yarn ts-node ./tools/cli/get-balance.ts",
+    "increase-operator-stake": "yarn ts-node ./tools/cli/increase-operator-stake.ts"
   },
   "devDependencies": {
     "@ar.io/sdk": "alpha",
