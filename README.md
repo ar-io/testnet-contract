@@ -109,6 +109,14 @@ tem.","observerWallet":"IPdwa3Mb_9pDD8c2IaJx6aad51Ss-_TfStVwBuhtXMs","allowDeleg
 ? CONFIRM DELEGATION DETAILS? {"target":"1H7WZIWhzwTH9FIcnuMqYkTsoyv1OTfGa_amvuYwrgo","qty":100} > (Y/n)
 ```
 
+- `yarn increase-operator-stake` - [increase-operator-stake] - increase the token amount staked for an existing registered Gateway.
+
+```shell
+❯ yarn increase-operator-stake
+? Enter the additional operator stake amount in IO (current balance: 714667588.589208) IO >  100
+? CONFIRM INCREASE OPERATOR STAKE DETAILS? {"qty":100} > (Y/n)
+```
+
 ### Scripts
 
 #### Arweave Name System (ArNS)
@@ -138,12 +146,6 @@ The following tools can be used to perform basic AR.IO Network operations, such 
   yarn ts-node tools/transfer-tokens.ts
   ```
 
-- [increase-operator-stake] - increase the token amount staked for an existing registered Gateway.
-
-  ```shell
-  yarn ts-node tools/increase-operator-stake.ts
-  ```
-
 - [decrease-operator-stake] - decrease stake for an existing registered Gateway. Tokens are put into a vault and then returned to the gateway address after the specified duration.
 
   ```shell
@@ -165,7 +167,7 @@ The following tools can be used to perform basic AR.IO Network operations, such 
 [get-balance]: tools/cli/get-balance.ts
 [join-network]: tools/cli/join-network.ts
 [update-gateway-settings]: tools/cli/update-gateway-settings.ts
-[increase-operator-stake]: tools/increase-operator-stake.ts
+[increase-operator-stake]: tools/cli/increase-operator-stake.ts
 [decrease-operator-stake]: tools/decrease-operator-stake.ts
 [delegate-stake]: tools/cli/delegate-stake.ts
 [get-prescribed-observers]: tools/get-prescribed-observers.ts
