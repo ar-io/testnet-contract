@@ -4,9 +4,11 @@ import inquirer from 'inquirer';
 import { IOState } from '../../src/types';
 import {
   arnsContractTxId,
+  arweave,
   getContractManifest,
   initialize,
   loadWallet,
+  networkContract,
   warp,
 } from '../utilities';
 import questions from './questions';
@@ -18,7 +20,15 @@ import questions from './questions';
   // Get the key file used for the distribution
   const wallet: JWKInterface = loadWallet();
 
-  const gatewayDetails = await inquirer.prompt(questions.delegateStake());
+  const walletAddress = await arweave.wallets.jwkToAddress(wallet);
+
+  const balance = await networkContract.getBalance({
+    address: walletAddress,
+  });
+
+  const gatewayDetails = await inquirer.prompt(
+    questions.delegateStake(balance / 1000000),
+  );
 
   // get contract manifest
   const { evaluationOptions = {} } = await getContractManifest({

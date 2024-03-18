@@ -135,12 +135,14 @@ export default {
         } IO) > `,
         default: 100,
         validate: (value: number) =>
-          value > 0 ? true : 'Please Enter Valid Amount',
+          value > 0 && (balance ? value <= balance : true)
+            ? true
+            : 'Please Enter Valid Amount',
       },
     ];
     return questionList;
   },
-  delegateStake: (): QuestionCollection => {
+  delegateStake: (balance?: number): QuestionCollection => {
     const questionList: QuestionCollection = [
       {
         name: 'target',
@@ -152,10 +154,12 @@ export default {
       {
         name: 'qty',
         type: 'number',
-        message: 'Enter Stake Quantity (in IO) > ',
+        message: `Enter stake quantity (current balance: ${balance || 0})  > `,
         default: 100,
         validate: (value: number) =>
-          value > 0 ? true : 'Please Enter Valid Amount',
+          value > 0 && (balance ? value <= balance : true)
+            ? true
+            : 'Please Enter Valid Amount',
       },
     ];
     return questionList;
