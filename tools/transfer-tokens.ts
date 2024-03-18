@@ -32,13 +32,6 @@ import {
 
   const walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
-  // Read the ANT Registry Contract
-  console.log(
-    'Transferring %s tokens from %s to %s',
-    qty,
-    walletAddress,
-    target,
-  );
   // get contract manifest
   const { evaluationOptions = {} } = await getContractManifest({
     contractTxId: arnsContractTxId,
@@ -53,7 +46,7 @@ import {
       validity: true,
     });
 
-  await contract.writeInteraction(
+  const interaction = await contract.writeInteraction(
     {
       function: 'transfer',
       target,
@@ -64,5 +57,7 @@ import {
     },
   );
 
-  console.log('Finished transferring tokens');
+  console.log(
+    `Successfully transferred ${qty} IO tokens from ${walletAddress} to ${target}. Interaction TX id: ${interaction?.originalTxId}`,
+  );
 })();

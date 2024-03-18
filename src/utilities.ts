@@ -104,11 +104,12 @@ export function resetProtocolBalance({
   const totalContractIO =
     totalBalances + totalGatewayStaked + totalAuctionStake + totalVaultedStake;
 
+  // could be negative
   const diff = TOTAL_IO_SUPPLY.valueOf() - totalContractIO;
 
-  if (diff > 0) {
+  if (diff !== 0) {
     updatedBalances[SmartWeave.contract.id] =
-      balances[SmartWeave.contract.id] + diff;
+      balances[SmartWeave.contract.id] + diff; // it may be plus a negative number
   }
 
   const newBalances = Object.keys(updatedBalances).length
