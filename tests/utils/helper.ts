@@ -2,6 +2,7 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import * as fs from 'fs';
 import path from 'path';
+import { EvaluationManifest, Tag } from 'warp-contracts';
 
 import { BlockHeight, Gateways, IOState } from '../../src/types';
 import {
@@ -460,8 +461,34 @@ export function getLocalArNSContractKey(key: 'srcTxId' | 'id' = 'id'): string {
   return contract[key];
 }
 
+export async function getContractManifest({
+  arweave,
+  contractTxId,
+}: {
+  arweave: Arweave;
+  contractTxId: string;
+}): Promise<EvaluationManifest> {
+  const { tags: encodedTags = [] } = await arweave.transactions
+    .get(contractTxId)
+    .catch(() => ({ tags: [] }));
+  const decodedTags = tagsToObject(encodedTags);
+  const contractManifestString = decodedTags['Contract-Manifest'] ?? '{}';
+  const contractManifest = JSON.parse(contractManifestString);
+  return contractManifest;
+}
+
+export function tagsToObject(tags: Tag[]): {
+  [x: string]: string;
+} {
+  return tags.reduce((decodedTags: { [x: string]: string }, tag) => {
+    const key = tag.get('name', { decode: true, string: true });
+    const value = tag.get('value', { decode: true, string: true });
+    decodedTags[key] = value;
+    return decodedTags;
+  }, {});
+}
+
 export * from '../../src/utilities';
 export * from '../../src/pricing';
 export * from '../../src/auctions';
 export * from '../../src/records';
-export * from '../../tools/utilities';

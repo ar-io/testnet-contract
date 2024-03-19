@@ -1,5 +1,11 @@
 import { IOState } from '../src/types';
-import { getContractManifest, initialize, loadWallet, warp } from './utilities';
+import {
+  arnsContractTxId,
+  getContractManifest,
+  initialize,
+  loadWallet,
+  warp,
+} from './utilities';
 
 /* eslint-disable no-console */
 (async () => {
@@ -20,11 +26,6 @@ import { getContractManifest, initialize, loadWallet, warp } from './utilities';
 
   // load local wallet
   const wallet = loadWallet();
-
-  // load state of contract
-  const arnsContractTxId =
-    process.env.ARNS_CONTRACT_TX_ID ??
-    'E-pRI1bokGWQBqHnbut9rsHSt9Ypbldos3bAtwg4JMc';
 
   // get contract manifest
   const { evaluationOptions = {} } = await getContractManifest({
