@@ -1,6 +1,11 @@
 import { NON_CONTRACT_OWNER_MESSAGE } from '../../constants';
-import { ContractWriteResult, IOState, PstAction } from '../../types';
-import { resetProtocolBalance } from '../../utilities';
+import {
+  ContractWriteResult,
+  Fees,
+  IOState,
+  IOToken,
+  PstAction,
+} from '../../types';
 
 // Updates this contract to new source code
 export const evolveState = async (
@@ -13,10 +18,14 @@ export const evolveState = async (
     throw new ContractError(NON_CONTRACT_OWNER_MESSAGE);
   }
 
-  // convert all gateway stakes and delegates to mIO
-  const { balances } = resetProtocolBalance(state);
+  const updatedFees = Object.keys(state.fees).reduce((acc: Fees, key) => {
+    const existingFee = new IOToken(state.fees[key]);
+    // convert the base fee to mIO
+    acc[key] = existingFee.toMIO().valueOf();
+    return acc;
+  }, {});
 
-  state.balances = balances;
+  state.fees = updatedFees;
 
   return { state };
 };
