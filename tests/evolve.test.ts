@@ -1,17 +1,37 @@
-import { Contract, JWKInterface } from 'warp-contracts';
+import Arweave from 'arweave';
+import {
+  Contract,
+  JWKInterface,
+  WarpFactory,
+  defaultCacheOptions,
+} from 'warp-contracts';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 import { IOState } from '../src/types';
 import {
-  arweave,
   getContractManifest,
-  warp as warpMainnet,
-} from '../tools/utilities';
-import { getLocalArNSContractKey, getLocalWallet } from './utils/helper';
+  getLocalArNSContractKey,
+  getLocalWallet,
+} from './utils/helper';
 import { arweave as arweaveLocal, warp as warpLocal } from './utils/services';
 
 const testnetContractTxId =
   process.env.ARNS_CONTRACT_TX_ID ??
   'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
+
+const arweave = new Arweave({
+  host: 'ar-io.dev',
+  port: 443,
+  protocol: 'https',
+});
+
+const warpMainnet = WarpFactory.forMainnet(
+  {
+    ...defaultCacheOptions,
+  },
+  true,
+  arweave,
+).use(new DeployPlugin());
 
 describe('evolving', () => {
   let localContractOwnerJWK: JWKInterface;

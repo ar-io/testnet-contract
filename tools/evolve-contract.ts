@@ -5,6 +5,7 @@ import { LoggerFactory } from 'warp-contracts';
 
 import { IOState } from '../src/types';
 import {
+  arnsContractTxId,
   arweave,
   getContractManifest,
   initialize,
@@ -24,9 +25,6 @@ import {
   const wallet: JWKInterface = loadWallet();
 
   // load state of contract
-  const arnsContractTxId =
-    process.env.ARNS_CONTRACT_TX_ID ??
-    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   const { evaluationOptions = {} } = await getContractManifest({
     contractTxId: arnsContractTxId,

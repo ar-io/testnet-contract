@@ -2,6 +2,7 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 
 import { IOState } from '../src/types';
 import {
+  arnsContractTxId,
   arweave,
   getContractManifest,
   initialize,
@@ -57,11 +58,6 @@ import {
   // The minimum stake a delegate must use for this for this gateway.  Must be greater than the contracts minimum delegated stake
   // The default is 100
   // const minDelegatedStake: number = 200;
-
-  // gate the contract txId
-  const arnsContractTxId =
-    process.env.ARNS_CONTRACT_TX_ID ??
-    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
   // get contract manifest
   const { evaluationOptions = {} } = await getContractManifest({

@@ -1,21 +1,27 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
+import inquirer from 'inquirer';
 
-import { IOState } from '../src/types';
+import { IOState } from '../../src/types';
 import {
   arnsContractTxId,
+  arweave,
   getContractManifest,
   initialize,
   loadWallet,
   warp,
-} from './utilities';
+} from '../utilities';
+import questions from './questions';
 
-/* eslint-disable no-console */
 (async () => {
   // simple setup script
   initialize();
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = loadWallet();
+
+  const address = await arweave.wallets.jwkToAddress(wallet);
+
+  const gatewayDetails = await inquirer.prompt(questions.getBalance(address));
 
   // get contract manifest
   const { evaluationOptions = {} } = await getContractManifest({
@@ -31,20 +37,15 @@ import {
       validity: true,
     });
 
-  const txId = await contract.writeInteraction(
-    {
-      function: 'tick',
-    },
-    {
-      disableBundling: true,
-    },
-  );
+  const payload = {
+    function: 'balance',
+    target: gatewayDetails.address,
+  };
 
-  console.log(
-    `Successfully ticked state of contract ${arnsContractTxId} with txId: ${JSON.stringify(
-      txId,
-      null,
-      2,
-    )}`,
-  );
+  const { result } = await contract.viewState<
+    { function: string; target: string },
+    { address: string; balance: number }
+  >(payload);
+  // eslint-disable-next-line;
+  console.log(`Balance: ${result.balance / 1_000_000} IO`);
 })();

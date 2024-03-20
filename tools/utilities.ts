@@ -1,3 +1,4 @@
+import { ArIO } from '@ar.io/sdk';
 import Arweave from 'arweave';
 import { Tag } from 'arweave/node/lib/transaction';
 import { config } from 'dotenv';
@@ -12,6 +13,9 @@ import {
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 import { keyfile } from './constants';
+
+// gate the contract txId
+export const arnsContractTxId = 'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U';
 
 // intended to be run before any scripts
 export const initialize = (): void => {
@@ -37,7 +41,8 @@ export const loadWallet = (): JWKInterface => {
 
 export function isArweaveAddress(address: string): boolean {
   const trimmedAddress = address.toString().trim();
-  return !/[a-z0-9_-]{43}/i.test(trimmedAddress);
+  const ARWEAVE_TX_REGEX = new RegExp('^[a-zA-Z0-9-_s+]{43}$');
+  return ARWEAVE_TX_REGEX.test(trimmedAddress);
 }
 
 export function isipV4Address(ipV4Address: string): boolean {
@@ -45,6 +50,12 @@ export function isipV4Address(ipV4Address: string): boolean {
     ipV4Address,
   );
 }
+
+export const networkContract = new ArIO({
+  contractTxId:
+    process.env.ARNS_CONTRACT_TX_ID ||
+    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U',
+});
 
 export const arweave = new Arweave({
   host: 'ar-io.dev',
