@@ -86,6 +86,12 @@ export default {
         message: 'Enter the observer wallet public address > ',
       },
       {
+        name: 'autoStake',
+        type: 'confirm',
+        default: gateway ? gateway.settings.autoStake : true,
+        message: 'Enable or disable auto staking? > ',
+      },
+      {
         name: 'allowDelegatedStaking',
         type: 'confirm',
         default: gateway ? gateway.settings.allowDelegatedStaking : true,
@@ -103,9 +109,8 @@ export default {
       {
         name: 'minDelegatedStake',
         type: 'number',
-        message:
-          'Enter the minimum  delegate stake for this gateway (in IO) > ',
-        default: gateway ? gateway.settings.minDelegatedStake : 100,
+        message: 'Enter the minimum delegate stake for this gateway (in IO) > ',
+        default: gateway ? gateway.settings.minDelegatedStake / 1_000_000 : 100,
         validate: (value: number) =>
           value > 0 ? true : 'Please Enter Valid Amount',
       },
