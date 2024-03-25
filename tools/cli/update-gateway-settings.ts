@@ -73,6 +73,9 @@ import questions from './questions';
             delegateRewardShareRatio: gatewayDetails.delegateRewardShareRatio,
           }
         : {}),
+      ...(gatewayDetails.autoStake
+        ? { autoStake: gatewayDetails.autoStake }
+        : {}),
       ...(gatewayDetails.minDelegatedStake
         ? { minDelegatedStake: gatewayDetails.minDelegatedStake }
         : {}),
