@@ -53,7 +53,7 @@ export function isipV4Address(ipV4Address: string): boolean {
   );
 }
 
-export const networkContract = new ArIO({
+export const networkContract = ArIO.init({
   contractTxId:
     process.env.ARNS_CONTRACT_TX_ID ||
     'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U',
