@@ -4,6 +4,30 @@ import { QuestionCollection } from 'inquirer';
 import { isArweaveAddress } from '../utilities';
 
 export default {
+  transfer: (balance?: number): QuestionCollection => {
+    const questionList: QuestionCollection = [
+      {
+        name: 'target',
+        type: 'input',
+        message: 'Enter the target address > ',
+        validate: (value: string) =>
+          isArweaveAddress(value) ? true : 'Please Enter Valid Address',
+      },
+      {
+        name: 'qty',
+        type: 'number',
+        message: `Enter the amount of IO tokens you want to transfer (current balance: ${
+          balance || 0
+        } IO tokens) > `,
+        default: 100,
+        validate: (value: number) =>
+          value > 0 && (balance ? value <= balance : true)
+            ? true
+            : 'Please Enter Valid Amount',
+      },
+    ];
+    return questionList;
+  },
   gatewaySettings: (
     address?: string,
     gateway?: Gateway,
