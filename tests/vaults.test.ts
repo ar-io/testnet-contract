@@ -41,7 +41,7 @@ describe('Vaults', () => {
 
       const currentBlock = (await getCurrentBlock(arweave)).valueOf();
       const expectedVault = {
-        balance: TRANSFER_QTY.toMIO().valueOf(),
+        balance: TRANSFER_QTY.valueOf(),
         start: currentBlock,
         end: currentBlock + MIN_TOKEN_LOCK_BLOCK_LENGTH,
       };
@@ -53,7 +53,7 @@ describe('Vaults', () => {
         writeInteraction?.originalTxId,
       );
       expect(newState.balances[ownerAddress]).toEqual(
-        prevOwnerBalance - TRANSFER_QTY.toMIO().valueOf(),
+        prevOwnerBalance - TRANSFER_QTY.valueOf(),
       );
       expect(
         newState.vaults[ownerAddress][writeInteraction?.originalTxId],
@@ -66,7 +66,7 @@ describe('Vaults', () => {
       const prevOwnerBalance = prevState.balances[ownerAddress];
       const currentBlock = (await getCurrentBlock(arweave)).valueOf();
       const expectedVault = {
-        balance: TRANSFER_QTY.toMIO().valueOf(),
+        balance: TRANSFER_QTY.valueOf(),
         start: currentBlock + 1,
         end: currentBlock + MIN_TOKEN_LOCK_BLOCK_LENGTH + 1,
       };
@@ -83,7 +83,7 @@ describe('Vaults', () => {
         writeInteraction?.originalTxId,
       );
       expect(newState.balances[ownerAddress]).toEqual(
-        prevOwnerBalance - TRANSFER_QTY.toMIO().valueOf(),
+        prevOwnerBalance - TRANSFER_QTY.valueOf(),
       );
       expect(
         newState.vaults[ownerAddress][writeInteraction?.originalTxId],
@@ -259,11 +259,11 @@ describe('Vaults', () => {
         writeInteraction?.originalTxId,
       );
       expect(newState.balances[ownerAddress]).toEqual(
-        prevOwnerBalance - TRANSFER_QTY.toMIO().valueOf(),
+        prevOwnerBalance - TRANSFER_QTY.valueOf(),
       );
       expect(newState.vaults[ownerAddress][existingVaultId].balance).toEqual(
         prevState.vaults[ownerAddress][existingVaultId].balance +
-          TRANSFER_QTY.toMIO().valueOf(),
+          TRANSFER_QTY.valueOf(),
       );
     });
 
@@ -350,7 +350,7 @@ describe('Vaults', () => {
 
       const currentBlock = (await getCurrentBlock(arweave)).valueOf();
       const expectedVault = {
-        balance: TRANSFER_QTY.toMIO().valueOf(),
+        balance: TRANSFER_QTY.valueOf(),
         start: currentBlock,
         end: currentBlock + MIN_TOKEN_LOCK_BLOCK_LENGTH,
       };
@@ -362,7 +362,7 @@ describe('Vaults', () => {
         writeInteraction?.originalTxId,
       );
       expect(newState.balances[ownerAddress]).toEqual(
-        prevOwnerBalance - TRANSFER_QTY.toMIO().valueOf(),
+        prevOwnerBalance - TRANSFER_QTY.valueOf(),
       );
       expect(newState.balances[targetAddress]).toEqual(prevTargetBalance);
       expect(
@@ -386,7 +386,7 @@ describe('Vaults', () => {
 
       const currentBlock = (await getCurrentBlock(arweave)).valueOf();
       const expectedVault = {
-        balance: TRANSFER_QTY.toMIO().valueOf(),
+        balance: TRANSFER_QTY.valueOf(),
         start: currentBlock,
         end: currentBlock + MIN_TOKEN_LOCK_BLOCK_LENGTH,
       };
@@ -398,7 +398,7 @@ describe('Vaults', () => {
         writeInteraction?.originalTxId,
       );
       expect(newState.balances[ownerAddress]).toEqual(
-        prevOwnerBalance - TRANSFER_QTY.toMIO().valueOf(),
+        prevOwnerBalance - TRANSFER_QTY.valueOf(),
       );
       expect(newState.balances[srcContractId]).toEqual(prevTargetBalance);
       expect(
@@ -441,7 +441,7 @@ describe('Vaults', () => {
 
       const currentBlock = (await getCurrentBlock(arweave)).valueOf();
       const expectedVault = {
-        balance: TRANSFER_QTY.toMIO().valueOf(),
+        balance: TRANSFER_QTY.valueOf(),
         start: currentBlock,
         end: currentBlock + MIN_TOKEN_LOCK_BLOCK_LENGTH,
       };
@@ -453,7 +453,7 @@ describe('Vaults', () => {
         writeInteraction?.originalTxId,
       );
       expect(newState.balances[ownerAddress]).toEqual(
-        prevOwnerBalance - TRANSFER_QTY.toMIO().valueOf(),
+        prevOwnerBalance - TRANSFER_QTY.valueOf(),
       );
       expect(
         newState.vaults[ownerAddress][writeInteraction?.originalTxId],
