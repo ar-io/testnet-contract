@@ -127,7 +127,7 @@ export function assertRecordCanBeExtended({
     })
   ) {
     throw new ContractError(
-      `This name has expired and must renewed before its undername support can be extended.`,
+      `This name has expired and must renewed before it can be extended.`,
     );
   }
 
