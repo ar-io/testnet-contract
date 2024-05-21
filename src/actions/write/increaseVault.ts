@@ -1,7 +1,6 @@
 import {
   ContractWriteResult,
   IOState,
-  IOToken,
   PstAction,
   TransactionId,
   mIOToken,
@@ -23,7 +22,7 @@ export class IncreaseVault {
     }
     const { id, qty } = input;
     this.id = id;
-    this.qty = new IOToken(qty).toMIO();
+    this.qty = new mIOToken(qty);
   }
 }
 

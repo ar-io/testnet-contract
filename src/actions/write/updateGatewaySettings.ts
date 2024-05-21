@@ -9,7 +9,6 @@ import {
   ContractWriteResult,
   Gateway,
   IOState,
-  IOToken,
   PstAction,
   WalletAddress,
   mIOToken,
@@ -66,7 +65,7 @@ export class GatewaySettings {
         delegateRewardShareRatio,
       }),
       ...(minDelegatedStake !== undefined && {
-        minDelegatedStake: new IOToken(minDelegatedStake).toMIO(),
+        minDelegatedStake: new mIOToken(minDelegatedStake),
       }),
     };
     this.observerWallet = observerWallet;

@@ -2,7 +2,6 @@ import {
   BlockHeight,
   ContractWriteResult,
   IOState,
-  IOToken,
   PstAction,
   mIOToken,
 } from '../../types';
@@ -22,7 +21,7 @@ export class CreateVault {
       );
     }
     const { qty, lockLength } = input;
-    this.qty = new IOToken(qty).toMIO();
+    this.qty = new mIOToken(qty);
     this.lockLength = new BlockHeight(lockLength);
   }
 }

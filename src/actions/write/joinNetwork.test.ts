@@ -23,7 +23,7 @@ const validInput = {
   fqdn: 'test.com',
   note: 'test-note',
   properties: stubbedArweaveTxId,
-  qty: MIN_OPERATOR_STAKE.toIO().valueOf(),
+  qty: MIN_OPERATOR_STAKE.valueOf(),
 };
 
 describe('joinNetwork', () => {
@@ -245,7 +245,7 @@ describe('joinNetwork', () => {
       fqdn: 'test.com',
       note: 'test-note',
       properties: stubbedArweaveTxId,
-      qty: MIN_OPERATOR_STAKE.toIO().valueOf(),
+      qty: MIN_OPERATOR_STAKE.valueOf(),
     };
 
     const initialState = {

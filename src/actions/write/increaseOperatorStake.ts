@@ -4,7 +4,7 @@ import {
   INVALID_INPUT_MESSAGE,
   NETWORK_LEAVING_STATUS,
 } from '../../constants';
-import { ContractWriteResult, IOState, IOToken, PstAction } from '../../types';
+import { ContractWriteResult, IOState, PstAction, mIOToken } from '../../types';
 import {
   unsafeDecrementBalance,
   walletHasSufficientBalance,
@@ -21,7 +21,7 @@ export const increaseOperatorStake = async (
     throw new ContractError(INVALID_INPUT_MESSAGE);
   }
 
-  const qty = new IOToken(input.qty).toMIO();
+  const qty = new mIOToken(input.qty);
 
   if (!(caller in gateways)) {
     throw new ContractError(INVALID_GATEWAY_EXISTS_MESSAGE);
