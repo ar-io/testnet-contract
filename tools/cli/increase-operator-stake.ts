@@ -1,7 +1,7 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import inquirer from 'inquirer';
 
-import { IOState } from '../../src/types';
+import { IOState, IOToken } from '../../src/types';
 import {
   arnsContractTxId,
   arweave,
@@ -55,7 +55,7 @@ import questions from './questions';
   if (confirm.confirm) {
     const payload = {
       function: 'increaseOperatorStake',
-      qty: gatewayDetails.qty,
+      qty: new IOToken(gatewayDetails.qty).toMIO().valueOf(),
     };
     const dryWrite = await contract.dryWrite(payload);
 

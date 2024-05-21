@@ -2,7 +2,7 @@ import { Gateway } from '@ar.io/sdk';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import inquirer from 'inquirer';
 
-import { IOState } from '../../src/types';
+import { IOState, IOToken } from '../../src/types';
 import {
   arnsContractTxId,
   arweave,
@@ -77,7 +77,11 @@ import questions from './questions';
         ? { autoStake: gatewayDetails.autoStake }
         : {}),
       ...(gatewayDetails.minDelegatedStake
-        ? { minDelegatedStake: gatewayDetails.minDelegatedStake }
+        ? {
+            minDelegatedStake: new IOToken(gatewayDetails.minDelegatedStake)
+              .toMIO()
+              .valueOf(),
+          }
         : {}),
       ...(gatewayDetails.note ? { note: gatewayDetails.note } : {}),
       ...(gatewayDetails.properties

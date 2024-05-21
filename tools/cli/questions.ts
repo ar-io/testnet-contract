@@ -36,10 +36,10 @@ export default {
             name: 'qty',
             type: 'number',
             message:
-              'Enter the amount of tokens you want to stake against your gateway - min 10,000 IO > ',
+              'Enter the amount of IO tokens you want to stake against your gateway - min 10,000 IO > ',
             default: 10000,
             validate: (value: number) =>
-              value >= 10000 ? true : 'Please Enter Valid Amount',
+              value >= 10000 ? true : 'Please Enter Valid Amount of IO Tokens',
           }
         : undefined,
       {

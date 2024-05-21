@@ -1,7 +1,7 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import inquirer from 'inquirer';
 
-import { IOState } from '../../src/types';
+import { IOState, IOToken } from '../../src/types';
 import {
   arnsContractTxId,
   arweave,
@@ -60,7 +60,11 @@ import questions from './questions';
           }
         : {}),
       ...(gatewayDetails.minDelegatedStake
-        ? { minDelegatedStake: gatewayDetails.minDelegatedStake }
+        ? {
+            minDelegatedStake: new IOToken(gatewayDetails.minDelegatedStake)
+              .toMIO()
+              .valueOf(),
+          }
         : {}),
       ...(gatewayDetails.note ? { note: gatewayDetails.note } : {}),
       ...(gatewayDetails.properties
@@ -70,7 +74,9 @@ import questions from './questions';
       ...(gatewayDetails.port ? { port: gatewayDetails.port } : {}),
       ...(gatewayDetails.fqdn ? { fqdn: gatewayDetails.fqdn } : {}),
       ...(gatewayDetails.label ? { label: gatewayDetails.label } : {}),
-      ...(gatewayDetails.qty ? { qty: gatewayDetails.qty } : {}),
+      ...(gatewayDetails.qty
+        ? { qty: new IOToken(gatewayDetails.qty).toMIO().valueOf() }
+        : {}),
     };
     const dryWrite = await contract.dryWrite(payload);
 

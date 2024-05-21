@@ -1,6 +1,6 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 
-import { IOState } from '../src/types';
+import { IOState, IOToken } from '../src/types';
 import {
   arnsContractTxId,
   arweave,
@@ -18,8 +18,8 @@ import {
   // simple setup script
   initialize();
 
-  // the qty of the staked vault that is to be unlocked and decreased
-  const qty = 1;
+  // the number of IO tokens to decrease the gateway operator's stake by
+  const qty = new IOToken(100);
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = loadWallet();
@@ -44,7 +44,7 @@ import {
   const txId = await contract.writeInteraction(
     {
       function: 'decreaseOperatorStake',
-      qty,
+      qty: qty.toMIO().valueOf(),
     },
     {
       disableBundling: true,

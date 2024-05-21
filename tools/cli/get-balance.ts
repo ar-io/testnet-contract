@@ -1,7 +1,7 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import inquirer from 'inquirer';
 
-import { IOState } from '../../src/types';
+import { IOState, mIOToken } from '../../src/types';
 import {
   arnsContractTxId,
   arweave,
@@ -47,5 +47,5 @@ import questions from './questions';
     { address: string; balance: number }
   >(payload);
   // eslint-disable-next-line;
-  console.log(`Balance: ${result.balance / 1_000_000} IO`);
+  console.log(`Balance: ${new mIOToken(result.balance).toIO().valueOf()} IO`);
 })();
