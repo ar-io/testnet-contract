@@ -1,4 +1,4 @@
-import { ArIO } from '@ar.io/sdk';
+import { ArIO, ArIOState, WarpContract } from '@ar.io/sdk';
 import Arweave from 'arweave';
 import { Tag } from 'arweave/node/lib/transaction';
 import { config } from 'dotenv';
@@ -7,6 +7,7 @@ import {
   EvaluationManifest,
   JWKInterface,
   LoggerFactory,
+  Warp,
   WarpFactory,
   defaultCacheOptions,
 } from 'warp-contracts';
@@ -53,11 +54,13 @@ export function isipV4Address(ipV4Address: string): boolean {
   );
 }
 
-export const networkContract = ArIO.init({
-  contractTxId:
-    process.env.ARNS_CONTRACT_TX_ID ||
-    'bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U',
-});
+export const networkContract = (signer) =>
+  ArIO.init({
+    contract: new WarpContract<ArIOState>({
+      contractTxId: arnsContractTxId,
+    }),
+    signer,
+  });
 
 export const arweave = new Arweave({
   host: 'ar-io.dev',

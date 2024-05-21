@@ -1,3 +1,4 @@
+import { ArweaveSigner } from '@ar.io/sdk';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import inquirer from 'inquirer';
 
@@ -19,10 +20,9 @@ import questions from './questions';
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = loadWallet();
-
   const walletAddress = await arweave.wallets.jwkToAddress(wallet);
-
-  const balanceMIO = await networkContract.getBalance({
+  const signer = new ArweaveSigner(wallet);
+  const balanceMIO = await networkContract(signer).getBalance({
     address: walletAddress,
   });
 
