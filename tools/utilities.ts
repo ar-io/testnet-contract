@@ -1,4 +1,4 @@
-import { ArIO, ArIOState, WarpContract } from '@ar.io/sdk';
+import { ArIO, ArIOState, ArweaveSigner, WarpContract } from '@ar.io/sdk';
 import Arweave from 'arweave';
 import { Tag } from 'arweave/node/lib/transaction';
 import { config } from 'dotenv';
@@ -7,7 +7,6 @@ import {
   EvaluationManifest,
   JWKInterface,
   LoggerFactory,
-  Warp,
   WarpFactory,
   defaultCacheOptions,
 } from 'warp-contracts';
@@ -54,7 +53,7 @@ export function isipV4Address(ipV4Address: string): boolean {
   );
 }
 
-export const networkContract = (signer) =>
+export const networkContract = (signer: ArweaveSigner) =>
   ArIO.init({
     contract: new WarpContract<ArIOState>({
       contractTxId: arnsContractTxId,
