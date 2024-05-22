@@ -119,7 +119,9 @@ export function isActiveReservedName({
 
   const isCallerTarget = caller !== undefined && target === caller;
   const isActiveReservation =
-    endTimestamp && endTimestamp > currentBlockTimestamp.valueOf();
+    endTimestamp === undefined ||
+    (endTimestamp !== undefined &&
+      endTimestamp > currentBlockTimestamp.valueOf());
 
   // if the caller is not the target, and it's still active - the name is considered reserved
   if (!isCallerTarget && isActiveReservation) {

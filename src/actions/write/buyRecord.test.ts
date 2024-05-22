@@ -36,7 +36,7 @@ describe('buyRecord', () => {
   );
 
   it.each([['a-expired-reserved-name', 'not-short-name', 'reserved']])(
-    'should be able to buy a record of a reserved name when the caller is the target of the reserved name',
+    'should be able to buy a record of a reserved name when the caller is not the target of the reserved name but it is expired',
     async (reservedName: string) => {
       const initialState = {
         ...getBaselineState(),
