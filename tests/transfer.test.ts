@@ -43,7 +43,6 @@ describe('Transfers', () => {
         function: 'transfer',
         target: targetAddress,
         qty: TRANSFER_QTY.valueOf(),
-        denomination: 'IO',
       });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -53,10 +52,10 @@ describe('Transfers', () => {
         writeInteraction?.originalTxId,
       );
       expect(newState.balances[ownerAddress]).toEqual(
-        prevOwnerBalance - TRANSFER_QTY.toMIO().valueOf(),
+        prevOwnerBalance - TRANSFER_QTY.valueOf(),
       );
       expect(newState.balances[targetAddress]).toEqual(
-        prevTargetBalance + TRANSFER_QTY.toMIO().valueOf(),
+        prevTargetBalance + TRANSFER_QTY.valueOf(),
       );
     });
 
@@ -70,7 +69,6 @@ describe('Transfers', () => {
         function: 'transfer',
         target: srcContractId, // The smartweave contract id acts as the protocol balance
         qty: TRANSFER_QTY.valueOf(),
-        denomination: 'IO',
       });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -80,10 +78,10 @@ describe('Transfers', () => {
         writeInteraction?.originalTxId,
       );
       expect(newState.balances[ownerAddress]).toEqual(
-        prevOwnerBalance - TRANSFER_QTY.toMIO().valueOf(),
+        prevOwnerBalance - TRANSFER_QTY.valueOf(),
       );
       expect(newState.balances[srcContractId]).toEqual(
-        prevTargetBalance + TRANSFER_QTY.toMIO().valueOf(),
+        prevTargetBalance + TRANSFER_QTY.valueOf(),
       );
     });
 
@@ -173,7 +171,6 @@ describe('Transfers', () => {
         function: 'transfer',
         target: targetAddress,
         qty: TRANSFER_QTY.valueOf(),
-        denomination: 'IO',
       });
 
       expect(writeInteraction?.originalTxId).not.toBe(undefined);
@@ -183,10 +180,10 @@ describe('Transfers', () => {
         writeInteraction?.originalTxId,
       );
       expect(newState.balances[callerAddress]).toEqual(
-        prevOwnerBalance - TRANSFER_QTY.toMIO().valueOf(),
+        prevOwnerBalance - TRANSFER_QTY.valueOf(),
       );
       expect(newState.balances[targetAddress]).toEqual(
-        prevTargetBalance + TRANSFER_QTY.toMIO().valueOf(),
+        prevTargetBalance + TRANSFER_QTY.valueOf(),
       );
     });
 

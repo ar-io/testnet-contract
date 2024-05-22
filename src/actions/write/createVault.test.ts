@@ -45,7 +45,7 @@ describe('createVault', () => {
         const error = await createVault(initialState, {
           caller: 'test',
           input: {
-            qty: 100,
+            qty: new IOToken(100).toMIO().valueOf(),
             lockLength: badLockLength,
           },
         }).catch((e) => e);
@@ -66,7 +66,7 @@ describe('createVault', () => {
       const error = await createVault(initialState, {
         caller: 'test',
         input: {
-          qty: 100,
+          qty: new IOToken(100).toMIO().valueOf(),
           lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         },
       }).catch((e) => e);
@@ -86,7 +86,7 @@ describe('createVault', () => {
       const { state } = await createVault(initialState, {
         caller: 'test',
         input: {
-          qty: 100,
+          qty: new IOToken(100).toMIO().valueOf(),
           lockLength: MIN_TOKEN_LOCK_BLOCK_LENGTH,
         },
       });

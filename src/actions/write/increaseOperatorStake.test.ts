@@ -47,13 +47,13 @@ describe('increaseOperatorStake', () => {
           [stubbedArweaveTxId]: stubbedGatewayData,
         },
         balances: {
-          [stubbedArweaveTxId]: 100,
+          [stubbedArweaveTxId]: new IOToken(100).toMIO().valueOf(),
         },
       };
       const error = await increaseOperatorStake(initialState, {
         caller: stubbedArweaveTxId,
         input: {
-          qty: 101,
+          qty: new IOToken(101).toMIO().valueOf(),
         },
       }).catch((e: any) => e);
       expect(error).toBeInstanceOf(Error);
@@ -67,7 +67,7 @@ describe('increaseOperatorStake', () => {
       const error = await increaseOperatorStake(initialState, {
         caller: stubbedArweaveTxId,
         input: {
-          qty: 100,
+          qty: new IOToken(100).toMIO().valueOf(),
         },
       }).catch((e: any) => e);
       expect(error).toBeInstanceOf(Error);
@@ -89,7 +89,7 @@ describe('increaseOperatorStake', () => {
       const error = await increaseOperatorStake(initialState, {
         caller: stubbedArweaveTxId,
         input: {
-          qty: 100,
+          qty: new IOToken(100).toMIO().valueOf(),
         },
       }).catch((e: any) => e);
       expect(error).toBeInstanceOf(Error);
@@ -116,7 +116,7 @@ describe('increaseOperatorStake', () => {
       const { state } = await increaseOperatorStake(initialState, {
         caller: stubbedArweaveTxId,
         input: {
-          qty: new IOToken(1000).valueOf(),
+          qty: new IOToken(1000).toMIO().valueOf(),
         },
       });
       expect(state.gateways[stubbedArweaveTxId]).toEqual({

@@ -224,7 +224,7 @@ describe('submitAuctionBid', () => {
       ...getBaselineState(),
       ...stubbedAuctionState,
       balances: {
-        'new-bidder': new IOToken(1000).valueOf(),
+        'new-bidder': new IOToken(1000).toMIO().valueOf(),
         [SmartWeave.contract.id]: 0,
       },
     };
@@ -234,12 +234,18 @@ describe('submitAuctionBid', () => {
         input: {
           name: 'test-auction-close',
           contractTxId: 'atomic',
-          qty: new IOToken(0.000999).valueOf(),
+          qty: new IOToken(0.000999).toMIO().valueOf(),
         },
       });
     }).toThrowError(
       new Error(
-        `The bid (${0.000999} IO) is less than the current required minimum bid of ${0.001} IO.`,
+        `The bid (${new IOToken(0.000999)
+          .toMIO()
+          .valueOf()} mIO) is less than the current required minimum bid of ${new IOToken(
+          1000,
+        )
+          .toMIO()
+          .valueOf()} mIO.`,
       ),
     );
   });
@@ -254,7 +260,7 @@ describe('submitAuctionBid', () => {
         },
       },
       balances: {
-        'new-bidder': new IOToken(1000).valueOf(),
+        'new-bidder': new IOToken(1000).toMIO().valueOf(),
       },
     };
     expect(() => {
@@ -273,8 +279,8 @@ describe('submitAuctionBid', () => {
       {
         contractTxId: SmartWeave.transaction.id,
         type: 'lease',
-        floorPrice: new IOToken(100).valueOf(),
-        startPrice: new IOToken(1000).valueOf(),
+        floorPrice: new IOToken(100).toMIO().valueOf(),
+        startPrice: new IOToken(1000).toMIO().valueOf(),
       },
       {
         contractTxId: SmartWeave.transaction.id,
@@ -287,8 +293,8 @@ describe('submitAuctionBid', () => {
       {
         contractTxId: SmartWeave.transaction.id,
         type: 'permabuy',
-        floorPrice: new IOToken(100).valueOf(),
-        startPrice: new IOToken(1000).valueOf(),
+        floorPrice: new IOToken(100).toMIO().valueOf(),
+        startPrice: new IOToken(1000).toMIO().valueOf(),
       },
       {
         contractTxId: SmartWeave.transaction.id,
@@ -310,8 +316,8 @@ describe('submitAuctionBid', () => {
           'test-auction-close': auction,
         },
         balances: {
-          initiator: 100,
-          'new-bidder': 1000,
+          initiator: new IOToken(100).toMIO().valueOf(),
+          'new-bidder': new IOToken(1000).toMIO().valueOf(),
         },
       };
       const { state } = submitAuctionBid(initialState, {
@@ -327,26 +333,23 @@ describe('submitAuctionBid', () => {
         records: {
           'test-auction-close': {
             contractTxId: expectedData.contractTxId,
-            ...{
-              endTimestamp:
-                expectedData.type === 'lease'
-                  ? 1 + SECONDS_IN_A_YEAR
-                  : undefined,
-            },
+            ...(expectedData.type === 'lease'
+              ? { endTimestamp: SmartWeave.block.timestamp + SECONDS_IN_A_YEAR }
+              : {}),
             type: expectedData.type,
             startTimestamp: expectedData.startTimestamp,
             undernames: expectedData.undernames,
-            purchasePrice: new IOToken(1000).valueOf(),
+            purchasePrice: new IOToken(1000).toMIO().valueOf(),
           },
         },
         demandFactoring: {
           ...initialState.demandFactoring,
           purchasesThisPeriod: 1,
-          revenueThisPeriod: new IOToken(1000).valueOf(),
+          revenueThisPeriod: new IOToken(1000).toMIO().valueOf(),
         },
         balances: {
-          initiator: new IOToken(200).valueOf(), // return balance back to the initiator
-          [SmartWeave.contract.id]: new IOToken(1000).valueOf(),
+          initiator: new IOToken(200).toMIO().valueOf(), // return balance back to the initiator
+          [SmartWeave.contract.id]: new IOToken(1000).toMIO().valueOf(),
           // removes the new-bidder balance as they now have 0 tokens
         },
       });
@@ -359,7 +362,7 @@ describe('submitAuctionBid', () => {
       ...stubbedAuctionState,
       records: {},
       balances: {
-        initiator: 900,
+        initiator: new IOToken(900).toMIO().valueOf(),
       },
     };
     const { state } = submitAuctionBid(initialState, {
@@ -379,16 +382,16 @@ describe('submitAuctionBid', () => {
           type: 'lease',
           startTimestamp: 1,
           undernames: 10,
-          purchasePrice: 1000,
+          purchasePrice: new IOToken(1000).toMIO().valueOf(),
         },
       },
       demandFactoring: {
         ...initialState.demandFactoring,
         purchasesThisPeriod: 1,
-        revenueThisPeriod: 1000,
+        revenueThisPeriod: new IOToken(1000).toMIO().valueOf(),
       },
       balances: {
-        [SmartWeave.contract.id]: 1000,
+        [SmartWeave.contract.id]: new IOToken(1000).toMIO().valueOf(),
         // removes initiator balance as they now have 0 tokens
       },
     });

@@ -1,17 +1,13 @@
-import { Gateway } from '@ar.io/sdk';
+import {
+  ArweaveSigner,
+  Gateway,
+  IOToken,
+  UpdateGatewaySettingsParams,
+} from '@ar.io/sdk';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import inquirer from 'inquirer';
 
-import { IOState } from '../../src/types';
-import {
-  arnsContractTxId,
-  arweave,
-  getContractManifest,
-  initialize,
-  loadWallet,
-  networkContract,
-  warp,
-} from '../utilities';
+import { arweave, initialize, loadWallet, networkContract } from '../utilities';
 import questions from './questions';
 
 (async () => {
@@ -22,11 +18,13 @@ import questions from './questions';
   const wallet: JWKInterface = loadWallet();
 
   const walletAddress = await arweave.wallets.jwkToAddress(wallet);
+  const signer = new ArweaveSigner(wallet);
 
-  const existingGatewayDetails: Gateway | undefined =
-    await networkContract.getGateway({
-      address: walletAddress,
-    });
+  const existingGatewayDetails: Gateway | undefined = await networkContract(
+    signer,
+  ).getGateway({
+    address: walletAddress,
+  });
 
   if (!existingGatewayDetails) {
     console.error('Gateway not found with address:', walletAddress);
@@ -37,20 +35,6 @@ import questions from './questions';
     questions.gatewaySettings(walletAddress, existingGatewayDetails),
   );
 
-  // get contract manifest
-  const { evaluationOptions = {} } = await getContractManifest({
-    contractTxId: arnsContractTxId,
-  });
-
-  // Connect the ArNS Registry Contract
-  const contract = await warp
-    .contract<IOState>(arnsContractTxId)
-    .connect(wallet)
-    .setEvaluationOptions(evaluationOptions)
-    .syncState(`https://api.arns.app/v1/contract/${arnsContractTxId}`, {
-      validity: true,
-    });
-
   const confirm = await inquirer.prompt({
     name: 'confirm',
     type: 'confirm',
@@ -60,50 +44,26 @@ import questions from './questions';
   });
 
   if (confirm.confirm) {
-    const payload = {
-      function: 'updateGatewaySettings',
-      ...(gatewayDetails.observerWallet
-        ? { observerWallet: gatewayDetails.observerWallet }
-        : {}),
-      ...(gatewayDetails.allowDelegatedStaking
-        ? { allowDelegatedStaking: gatewayDetails.allowDelegatedStaking }
-        : {}),
-      ...(gatewayDetails.delegateRewardShareRatio
-        ? {
-            delegateRewardShareRatio: gatewayDetails.delegateRewardShareRatio,
-          }
-        : {}),
-      ...(gatewayDetails.autoStake
-        ? { autoStake: gatewayDetails.autoStake }
-        : {}),
-      ...(gatewayDetails.minDelegatedStake
-        ? { minDelegatedStake: gatewayDetails.minDelegatedStake }
-        : {}),
-      ...(gatewayDetails.note ? { note: gatewayDetails.note } : {}),
-      ...(gatewayDetails.properties
-        ? { properties: gatewayDetails.properties }
-        : {}),
-      ...(gatewayDetails.protocol ? { protocol: gatewayDetails.protocol } : {}),
-      ...(gatewayDetails.port ? { port: gatewayDetails.port } : {}),
-      ...(gatewayDetails.fqdn ? { fqdn: gatewayDetails.fqdn } : {}),
-      ...(gatewayDetails.label ? { label: gatewayDetails.label } : {}),
-      // note: removing qty from the payload as it's not a valid field for updateGatewaySettings
+    const payload: UpdateGatewaySettingsParams = {
+      observerWallet: gatewayDetails.observerWallet,
+      allowDelegatedStaking: gatewayDetails.allowDelegatedStaking,
+      delegateRewardShareRatio: gatewayDetails.delegateRewardShareRatio,
+      autoStake: gatewayDetails.autoStake,
+      minDelegatedStake: new IOToken(gatewayDetails.minDelegatedStake)
+        .toMIO()
+        .valueOf(),
+      note: gatewayDetails.note,
+      properties: gatewayDetails.properties,
+      protocol: gatewayDetails.protocol,
+      port: gatewayDetails.port,
+      fqdn: gatewayDetails.fqdn,
+      label: gatewayDetails.label,
     };
-    const dryWrite = await contract.dryWrite(payload);
 
-    if (dryWrite.type === 'error' || dryWrite.errorMessage) {
-      console.error('Failed to update gateway:', dryWrite.errorMessage);
-      return;
-    }
-
-    console.log('Submitting transaction to update gateway...');
-
-    const txId = await contract.writeInteraction(payload, {
-      disableBundling: true,
-    });
+    const { id } = await networkContract(signer).updateGatewaySettings(payload);
     // eslint-disable-next-line
     console.log(
-      `Successfully submitted request to update gateway. TxId: ${txId?.originalTxId}`,
+      `Successfully submitted request to update gateway. TxId: ${id}`,
     );
   }
 })();

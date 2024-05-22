@@ -1,11 +1,5 @@
 import { safeTransfer } from '../../transfer';
-import {
-  ContractWriteResult,
-  IOState,
-  IOToken,
-  PstAction,
-  mIOToken,
-} from '../../types';
+import { ContractWriteResult, IOState, PstAction, mIOToken } from '../../types';
 import { getInvalidAjvMessage } from '../../utilities';
 import { validateTransferToken } from '../../validations';
 
@@ -20,10 +14,9 @@ export class TransferToken {
         getInvalidAjvMessage(validateTransferToken, input, 'transferToken'),
       );
     }
-    const { target, qty, denomination = 'mIO' } = input;
+    const { target, qty } = input;
     this.target = target;
-    this.qty =
-      denomination === 'mIO' ? new mIOToken(qty) : new IOToken(qty).toMIO();
+    this.qty = new mIOToken(qty);
   }
 }
 

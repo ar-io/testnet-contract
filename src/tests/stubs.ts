@@ -14,6 +14,7 @@ import {
   Gateway,
   Gateways,
   IOState,
+  IOToken,
   WeightedObserver,
 } from '../types';
 
@@ -52,9 +53,9 @@ export const getBaselineState: () => IOState = (): IOState => ({
 
 export const stubbedAuctionData: ArNSLeaseAuctionData = {
   startHeight: 1,
-  startPrice: 1_000,
+  startPrice: new IOToken(1000).toMIO().valueOf(),
   endHeight: 101,
-  floorPrice: 100,
+  floorPrice: new IOToken(100).toMIO().valueOf(),
   type: 'lease',
   initiator: 'initiator',
   contractTxId: 'contractTxId',

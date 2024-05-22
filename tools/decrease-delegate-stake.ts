@@ -1,6 +1,6 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 
-import { IOState } from '../src/types';
+import { IOState, IOToken } from '../src/types';
 import {
   arnsContractTxId,
   arweave,
@@ -18,10 +18,10 @@ import {
   // simple setup script
   initialize();
 
-  // The quantity of the delegated stake that is to be decreased and unlocked
+  // The quantity of the delegated stake in IO that is to be decreased and unlocked
   // This must not bring the delegated staker below the minimum amount required by the gateway
   // To completely withdraw delegated stake, add the full quantity amount
-  const qty = 500;
+  const qty = new IOToken(500);
 
   // the targetted gateway that the delegated stake is to be withdrawn from
   const target = 'QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ';
@@ -49,7 +49,7 @@ import {
   const txId = await contract.writeInteraction(
     {
       function: 'decreaseDelegateStake',
-      qty,
+      qty: qty.toMIO().valueOf(),
       target,
     },
     {

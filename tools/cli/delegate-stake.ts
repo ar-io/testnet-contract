@@ -1,7 +1,8 @@
+import { ArweaveSigner } from '@ar.io/sdk';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import inquirer from 'inquirer';
 
-import { IOState } from '../../src/types';
+import { IOState, mIOToken } from '../../src/types';
 import {
   arnsContractTxId,
   arweave,
@@ -19,15 +20,16 @@ import questions from './questions';
 
   // Get the key file used for the distribution
   const wallet: JWKInterface = loadWallet();
-
   const walletAddress = await arweave.wallets.jwkToAddress(wallet);
-
-  const balance = await networkContract.getBalance({
+  const signer = new ArweaveSigner(wallet);
+  const balanceMIO = await networkContract(signer).getBalance({
     address: walletAddress,
   });
 
+  const balanceIO = new mIOToken(balanceMIO).toIO();
+
   const gatewayDetails = await inquirer.prompt(
-    questions.delegateStake(balance / 1000000),
+    questions.delegateStake(balanceIO.valueOf()),
   );
 
   // get contract manifest
