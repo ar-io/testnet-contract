@@ -334,7 +334,7 @@ describe('submitAuctionBid', () => {
           'test-auction-close': {
             contractTxId: expectedData.contractTxId,
             ...(expectedData.type === 'lease'
-              ? { endTimestamp: 1 + SECONDS_IN_A_YEAR }
+              ? { endTimestamp: SmartWeave.block.timestamp + SECONDS_IN_A_YEAR }
               : {}),
             type: expectedData.type,
             startTimestamp: expectedData.startTimestamp,

@@ -772,7 +772,7 @@ describe('Network', () => {
       });
 
       it('should not join the network without right amount of funds', async () => {
-        const qty = WALLET_FUND_AMOUNT * 2; // This user should not have this much
+        const qty = WALLET_FUND_AMOUNT.valueOf() * 2; // This user should not have this much
         const label = 'Invalid Gateway'; // friendly label
         const fqdn = 'invalid.io';
         const port = 3000;
