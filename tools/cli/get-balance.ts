@@ -2,13 +2,7 @@ import { ArweaveSigner, mIOToken } from '@ar.io/sdk';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import inquirer from 'inquirer';
 
-import {
-  arweave,
-  initialize,
-  loadWallet,
-  networkContract,
-  warp,
-} from '../utilities';
+import { arweave, initialize, loadWallet, networkContract } from '../utilities';
 import questions from './questions';
 
 (async () => {

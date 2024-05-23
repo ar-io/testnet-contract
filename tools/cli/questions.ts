@@ -9,7 +9,7 @@ export default {
       {
         name: 'target',
         type: 'input',
-        message: 'Enter the target address > ',
+        message: 'Enter the target wallet address > ',
         validate: (value: string) =>
           isArweaveAddress(value) ? true : 'Please Enter Valid Address',
       },

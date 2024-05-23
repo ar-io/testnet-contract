@@ -30,16 +30,14 @@ import questions from './questions';
       autoStake: gatewayDetails.autoStake,
       allowDelegatedStaking: gatewayDetails.allowDelegatedStaking,
       delegateRewardShareRatio: gatewayDetails.delegateRewardShareRatio,
-      minDelegatedStake: new IOToken(gatewayDetails.minDelegatedStake)
-        .toMIO()
-        .valueOf(),
+      minDelegatedStake: new IOToken(gatewayDetails.minDelegatedStake).toMIO(),
       note: gatewayDetails.note,
       properties: gatewayDetails.properties,
       protocol: gatewayDetails.protocol,
       port: gatewayDetails.port,
       fqdn: gatewayDetails.fqdn,
       label: gatewayDetails.label,
-      qty: new IOToken(gatewayDetails.qty).toMIO().valueOf(),
+      qty: new IOToken(gatewayDetails.qty).toMIO(),
     };
 
     const { id } = await networkContract(signer).joinNetwork(payload);

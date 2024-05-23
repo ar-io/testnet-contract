@@ -23,10 +23,10 @@
     "get-balance": "yarn ts-node ./tools/cli/get-balance.ts",
     "increase-operator-stake": "yarn ts-node ./tools/cli/increase-operator-stake.ts",
     "create-reserved-name": "yarn ts-node ./tools/cli/reserved-name.ts",
-    "transfer": "yarn ts-node ./tools/cli/transfer.ts"
+    "transfer-tokens": "yarn ts-node ./tools/cli/transfer.ts"
   },
   "devDependencies": {
-    "@ar.io/sdk": "1.0.7-alpha.3",
+    "@ar.io/sdk": "1.0.7",
     "@commitlint/config-conventional": "^17.7.0",
     "@trivago/prettier-plugin-sort-imports": "^4.0.0",
     "@types/jest": "^27.4.0",
