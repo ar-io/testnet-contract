@@ -1,7 +1,7 @@
+import { ArIOState } from '@ar.io/sdk';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import inquirer from 'inquirer';
 
-import { IOState } from '../../src/types';
 import {
   arnsContractTxId,
   getContractManifest,
@@ -27,7 +27,7 @@ import questions from './questions';
 
   // Connect the ArNS Registry Contract
   const contract = await warp
-    .contract<IOState>(arnsContractTxId)
+    .contract<ArIOState>(arnsContractTxId)
     .connect(wallet)
     .setEvaluationOptions(evaluationOptions)
     .syncState(`https://api.arns.app/v1/contract/${arnsContractTxId}`, {

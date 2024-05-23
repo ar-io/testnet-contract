@@ -234,7 +234,7 @@ describe('Auctions', () => {
             it('should throw an error when the bid does not meet the minimum required', async () => {
               const auctionBid = {
                 name: 'apple',
-                qty: new IOToken(100).valueOf(), // not going to win it
+                qty: new IOToken(100).toMIO().valueOf(), // not going to win it
                 contractTxId: ANT_CONTRACT_IDS[0],
               };
               // connect using another wallet
@@ -253,7 +253,9 @@ describe('Auctions', () => {
                 cachedValue.errorMessages[writeInteraction?.originalTxId],
               ).toEqual(
                 expect.stringContaining(
-                  `The bid (${100} IO) is less than the current required minimum bid`,
+                  `The bid (${new IOToken(100)
+                    .toMIO()
+                    .valueOf()} mIO) is less than the current required minimum bid`,
                 ),
               );
               const { auctions, records, balances } =

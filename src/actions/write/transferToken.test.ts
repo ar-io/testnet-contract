@@ -3,7 +3,7 @@ import {
   INVALID_INPUT_MESSAGE,
 } from '../../constants';
 import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
-import { IOToken, mIOToken } from '../../types';
+import { mIOToken } from '../../types';
 import { transferTokens } from './transferTokens';
 
 describe('transferTokens', () => {
@@ -33,7 +33,7 @@ describe('transferTokens', () => {
         const error = await transferTokens(initialState, {
           caller: 'test',
           input: {
-            qty: new IOToken(100).toMIO().valueOf(),
+            qty: new mIOToken(100).valueOf(),
             target: badTarget,
           },
         }).catch((e) => e);
@@ -48,13 +48,13 @@ describe('transferTokens', () => {
       const initialState = {
         ...getBaselineState(),
         balances: {
-          test: new IOToken(99).toMIO().valueOf(),
+          test: new mIOToken(99).valueOf(),
         },
       };
       const error = await transferTokens(initialState, {
         caller: 'test',
         input: {
-          qty: new IOToken(100).toMIO().valueOf(),
+          qty: new mIOToken(100).valueOf(),
           target: stubbedArweaveTxId,
         },
       }).catch((e) => e);
@@ -68,13 +68,13 @@ describe('transferTokens', () => {
       const initialState = {
         ...getBaselineState(),
         balances: {
-          test: new IOToken(10_000).toMIO().valueOf(),
+          test: new mIOToken(10_000).valueOf(),
         },
       };
       const { state } = await transferTokens(initialState, {
         caller: 'test',
         input: {
-          qty: new IOToken(100).valueOf(),
+          qty: new mIOToken(100).valueOf(),
           target: stubbedArweaveTxId,
           denomination: 'IO',
         },
@@ -82,8 +82,8 @@ describe('transferTokens', () => {
       expect(state).toEqual({
         ...initialState,
         balances: {
-          test: new IOToken(9900).toMIO().valueOf(),
-          [stubbedArweaveTxId]: new IOToken(100).toMIO().valueOf(),
+          test: new mIOToken(9900).valueOf(),
+          [stubbedArweaveTxId]: new mIOToken(100).valueOf(),
         },
       });
     });

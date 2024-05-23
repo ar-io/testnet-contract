@@ -63,6 +63,15 @@ You can copy [.env.sample](./env.sample) to `.env` and fill in the values before
 Balance: 714667588.589208 IO
 ```
 
+- `yarn transfer-tokens` - [transfer-tokens] - transfer tokens from one wallet to another.
+
+```shell
+❯ yarn transfer-tokens
+? Enter the target address >  ZjmB2vEUlHlJ7-rgJkYP09N5IzLPhJyStVrK5u9dDEo
+? Enter the amount of IO tokens you want to transfer (current balance: 712208490.074245 IO tokens) >  100
+? CONFIRM TRANSFER DETAILS? {"target":"ZjmB2vEUlHlJ7-rgJkYP09N5IzLPhJyStVrK5u9dDEo","qty":100} > (Y/n)
+```
+
 - `yarn join-network` - [join-network] - takes a Gateway into the ar.io network and adds the Gateway into the Gateway Address Registry. This detail includes the Gateway Operator’s public wallet address, fully qualified domain name, port, protocol, properties and friendly note.
 
 ```shell
@@ -139,12 +148,6 @@ The following tools can be used to perform basic ArNS operations such as name pu
 #### AR.IO Testnet Network
 
 The following tools can be used to perform basic AR.IO Network operations, such as joining and leaving the network, along with managing the onchain settings of a Gateway.
-
-- [transfer-tokens] - transfer tokens from one wallet to another.
-
-  ```shell
-  yarn ts-node tools/transfer-tokens.ts
-  ```
 
 - [decrease-operator-stake] - decrease stake for an existing registered Gateway. Tokens are put into a vault and then returned to the gateway address after the specified duration.
 

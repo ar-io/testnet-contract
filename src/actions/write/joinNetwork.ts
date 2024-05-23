@@ -11,7 +11,6 @@ import {
 import {
   ContractWriteResult,
   IOState,
-  IOToken,
   PstAction,
   TransactionId,
   mIOToken,
@@ -59,7 +58,7 @@ export class JoinNetwork {
       delegateRewardShareRatio = 0,
       minDelegatedStake = MIN_DELEGATED_STAKE,
     } = input;
-    this.qty = new IOToken(qty).toMIO();
+    this.qty = new mIOToken(qty);
     this.label = label;
     this.port = port;
     this.protocol = protocol;

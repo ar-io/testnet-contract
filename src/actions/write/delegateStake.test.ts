@@ -70,7 +70,7 @@ describe('delegateStake', () => {
       const error = await delegateStake(initialState, {
         caller: 'test',
         input: {
-          qty: new IOToken(100).valueOf(),
+          qty: new IOToken(100).toMIO().valueOf(),
           target: stubbedArweaveTxId,
         },
       }).catch((e) => e);
@@ -93,7 +93,7 @@ describe('delegateStake', () => {
       const error = await delegateStake(initialState, {
         caller: 'test',
         input: {
-          qty: new IOToken(100).valueOf(),
+          qty: new IOToken(100).toMIO().valueOf(),
           target: stubbedArweaveTxId,
         },
       }).catch((e) => e);
@@ -118,13 +118,14 @@ describe('delegateStake', () => {
           },
         },
         balances: {
-          test: MIN_DELEGATED_STAKE.valueOf() + 1000,
+          test:
+            MIN_DELEGATED_STAKE.valueOf() + new IOToken(1000).toMIO().valueOf(),
         },
       };
       const { state } = await delegateStake(initialState, {
         caller: 'test',
         input: {
-          qty: MIN_DELEGATED_STAKE.toIO().valueOf(),
+          qty: MIN_DELEGATED_STAKE.valueOf(),
           target: stubbedArweaveTxId,
         },
       });
@@ -148,7 +149,7 @@ describe('delegateStake', () => {
           },
         },
         balances: {
-          test: 1000,
+          test: new IOToken(1000).toMIO().valueOf(),
         },
       });
     });

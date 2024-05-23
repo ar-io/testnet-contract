@@ -3,7 +3,6 @@ import {
   BlockHeight,
   ContractWriteResult,
   IOState,
-  IOToken,
   PstAction,
   mIOToken,
 } from '../../types';
@@ -28,7 +27,7 @@ export class TransferTokensLocked {
     }
     const { target, qty, lockLength } = input;
     this.target = target;
-    this.qty = new IOToken(qty).toMIO();
+    this.qty = new mIOToken(qty);
     this.lockLength = new BlockHeight(lockLength);
   }
 }

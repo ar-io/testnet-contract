@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import path from 'path';
 import { EvaluationManifest, Tag } from 'warp-contracts';
 
+import { IOToken } from '../../src/types';
 import { BlockHeight, Gateways, IOState } from '../../src/types';
 import {
   ANT_CONTRACT_IDS,
@@ -25,7 +26,7 @@ import { arweave } from './services';
 export async function addFunds(
   arweave: Arweave,
   address: string,
-  amount: number = WALLET_FUND_AMOUNT,
+  amount: number = WALLET_FUND_AMOUNT.valueOf(),
 ): Promise<boolean> {
   await arweave.api.get(`/mint/${address}/${amount}`);
   return true;
@@ -122,7 +123,7 @@ async function createRecords(count = ARNS_LEASE_LENGTH_MAX_YEARS) {
 function createGateways(wallets: string[]) {
   const gateways: Gateways = {
     [wallets[0]]: {
-      operatorStake: 50_000,
+      operatorStake: new IOToken(50_000).toMIO().valueOf(),
       totalDelegatedStake: 0,
       start: 0,
       end: 0,
@@ -145,7 +146,7 @@ function createGateways(wallets: string[]) {
       },
     },
     [wallets[1]]: {
-      operatorStake: 10_000,
+      operatorStake: new IOToken(10_000).toMIO().valueOf(),
       totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 0,
@@ -168,7 +169,7 @@ function createGateways(wallets: string[]) {
       },
     },
     [wallets[2]]: {
-      operatorStake: 250_000,
+      operatorStake: new IOToken(250_000).toMIO().valueOf(),
       totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 0,
@@ -191,7 +192,7 @@ function createGateways(wallets: string[]) {
       },
     },
     [wallets[3]]: {
-      operatorStake: 15_000,
+      operatorStake: new IOToken(15_000).toMIO().valueOf(),
       totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 0,
@@ -214,7 +215,7 @@ function createGateways(wallets: string[]) {
       },
     },
     [wallets[4]]: {
-      operatorStake: 100_000,
+      operatorStake: new IOToken(100_000).toMIO().valueOf(),
       totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 0,
@@ -237,7 +238,7 @@ function createGateways(wallets: string[]) {
       },
     },
     [wallets[5]]: {
-      operatorStake: 20_000,
+      operatorStake: new IOToken(20_000).toMIO().valueOf(),
       totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 0,
@@ -260,7 +261,7 @@ function createGateways(wallets: string[]) {
       },
     },
     [wallets[6]]: {
-      operatorStake: 20_000,
+      operatorStake: new IOToken(20_000).toMIO().valueOf(),
       totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 0,
@@ -283,7 +284,7 @@ function createGateways(wallets: string[]) {
       },
     },
     [wallets[7]]: {
-      operatorStake: 10_000,
+      operatorStake: new IOToken(10_000).toMIO().valueOf(),
       totalDelegatedStake: 0,
       status: NETWORK_LEAVING_STATUS,
       start: 0,
@@ -306,7 +307,7 @@ function createGateways(wallets: string[]) {
       },
     },
     [wallets[8]]: {
-      operatorStake: 10_000,
+      operatorStake: new IOToken(10_000).toMIO().valueOf(),
       totalDelegatedStake: 0,
       status: NETWORK_JOIN_STATUS,
       start: 10_000,
@@ -329,7 +330,7 @@ function createGateways(wallets: string[]) {
       },
     },
     [wallets[9]]: {
-      operatorStake: 10_000,
+      operatorStake: new IOToken(10_000).toMIO().valueOf(),
       totalDelegatedStake: 0,
       status: NETWORK_LEAVING_STATUS,
       start: 0,
@@ -369,14 +370,14 @@ export async function setupInitialContractState(
 
   // create wallets and set balances
   state.balances = wallets.reduce((current: any, wallet) => {
-    current[wallet] = WALLET_FUND_AMOUNT;
+    current[wallet] = WALLET_FUND_AMOUNT.valueOf();
     return current;
   }, {});
 
   // add balance to the owner
   state.balances = {
     ...state.balances,
-    [owner]: WALLET_FUND_AMOUNT, // TODO: transfer this to the protocol balance
+    [owner]: WALLET_FUND_AMOUNT.valueOf(), // TODO: transfer this to the protocol balance
   };
 
   // setup demand factor based from the current block height

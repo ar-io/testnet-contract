@@ -3,7 +3,7 @@ import {
   MIN_TOKEN_LOCK_BLOCK_LENGTH,
 } from '../../constants';
 import { getBaselineState, stubbedArweaveTxId } from '../../tests/stubs';
-import { IOState } from '../../types';
+import { IOState, IOToken } from '../../types';
 import { extendVault } from './extendVault';
 
 describe('extendVault', () => {
@@ -18,7 +18,7 @@ describe('extendVault', () => {
           vaults: {
             test: {
               [stubbedArweaveTxId]: {
-                balance: 100,
+                balance: new IOToken(100).toMIO().valueOf(),
                 end: SmartWeave.block.height + MIN_TOKEN_LOCK_BLOCK_LENGTH,
                 start: SmartWeave.block.height,
               },
@@ -58,12 +58,12 @@ describe('extendVault', () => {
       const initialState: IOState = {
         ...getBaselineState(),
         balances: {
-          test: 99,
+          test: new IOToken(99).toMIO().valueOf(),
         },
         vaults: {
           test: {
             [stubbedArweaveTxId]: {
-              balance: 100,
+              balance: new IOToken(100).toMIO().valueOf(),
               end: SmartWeave.block.height + MIN_TOKEN_LOCK_BLOCK_LENGTH,
               start: SmartWeave.block.height,
             },
@@ -89,7 +89,7 @@ describe('extendVault', () => {
         vaults: {
           test: {
             [stubbedArweaveTxId]: {
-              balance: 100,
+              balance: new IOToken(100).toMIO().valueOf(),
               end: SmartWeave.block.height + MIN_TOKEN_LOCK_BLOCK_LENGTH,
               start: SmartWeave.block.height,
             },
@@ -110,7 +110,7 @@ describe('extendVault', () => {
         vaults: {
           test: {
             [stubbedArweaveTxId]: {
-              balance: 100,
+              balance: new IOToken(100).toMIO().valueOf(),
               end:
                 SmartWeave.block.height +
                 MIN_TOKEN_LOCK_BLOCK_LENGTH +

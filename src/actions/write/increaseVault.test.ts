@@ -48,7 +48,7 @@ describe('increaseVault', () => {
       caller: 'test',
       input: {
         id: stubbedArweaveTxId,
-        qty: new IOToken(50).valueOf(),
+        qty: new IOToken(50).toMIO().valueOf(),
       },
     }).catch((e) => e);
     expect(error).toBeInstanceOf(Error);
@@ -75,7 +75,7 @@ describe('increaseVault', () => {
       caller: 'test',
       input: {
         id: stubbedArweaveTxId,
-        qty: new IOToken(100).valueOf(),
+        qty: new IOToken(100).toMIO().valueOf(),
       },
     }).catch((e) => e);
     expect(error).toBeInstanceOf(Error);
@@ -102,7 +102,7 @@ describe('increaseVault', () => {
       caller: 'test',
       input: {
         id: stubbedArweaveTxId,
-        qty: new IOToken(50).valueOf(),
+        qty: new IOToken(50).toMIO().valueOf(),
       },
     });
     expect(state).toEqual({

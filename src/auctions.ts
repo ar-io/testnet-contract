@@ -182,11 +182,7 @@ export function calculateExistingAuctionBidForCaller({
 }): mIOToken {
   if (submittedBid && submittedBid.isLessThan(requiredMinimumBid)) {
     throw new ContractError(
-      `The bid (${submittedBid
-        .toIO()
-        .valueOf()} IO) is less than the current required minimum bid of ${requiredMinimumBid
-        .toIO()
-        .valueOf()} IO.`,
+      `The bid (${submittedBid.valueOf()} mIO) is less than the current required minimum bid of ${requiredMinimumBid.valueOf()} mIO.`,
     );
   }
   if (caller === auction.initiator) {
