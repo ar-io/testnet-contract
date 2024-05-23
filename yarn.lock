@@ -183,7 +183,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@ar-io/arns-pilot@workspace:."
   dependencies:
-    "@ar.io/sdk": 1.0.7-alpha.3
+    "@ar.io/sdk": 1.0.7
     "@commitlint/config-conventional": ^17.7.0
     "@trivago/prettier-plugin-sort-imports": ^4.0.0
     "@types/jest": ^27.4.0
@@ -216,17 +216,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@ar.io/sdk@npm:1.0.7-alpha.3":
-  version: 1.0.7-alpha.3
-  resolution: "@ar.io/sdk@npm:1.0.7-alpha.3"
+"@ar.io/sdk@npm:1.0.7":
+  version: 1.0.7
+  resolution: "@ar.io/sdk@npm:1.0.7"
   dependencies:
     arbundles: 0.11.0
-    arweave: 1.14.4
+    arweave: 1.15.1
     axios: 1.4.0
     bunyan: ^1.8.15
     warp-arbundles: ^1.0.4
-    warp-contracts: 1.4.43
-  checksum: a3ef634b5af3ba9a8a23e360164409d9fae14bf965a592e4ca1940579b32ac40bc4dbb330397b1e2c1d083c1b3130150f6886403943e37e3ab485d717f854e2c
+    warp-contracts: 1.4.45
+  checksum: 6beb41b4ed336a65ea9bcee0b15466cf33dad7aa39583cbb2571526427edeb981bdea98bc2ea9c643a715056062da51f9fb1c19f869614b834b1aed8cde195e5
   languageName: node
   linkType: hard
 
@@ -11818,9 +11818,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"warp-contracts@npm:1.4.43":
-  version: 1.4.43
-  resolution: "warp-contracts@npm:1.4.43"
+"warp-contracts@npm:1.4.45":
+  version: 1.4.45
+  resolution: "warp-contracts@npm:1.4.45"
   dependencies:
     archiver: ^5.3.0
     arweave: 1.14.4
@@ -11836,7 +11836,7 @@ __metadata:
     warp-arbundles: ^1.0.4
     warp-isomorphic: ^1.0.7
     warp-wasm-metering: 1.0.1
-  checksum: caeed2a77c233a3509cb14c6c6565434cfcfea04285aeb8a1f4ec53c39a9fb8d4740cff7d6c5c7502d2ee0082e7881f252270847fe29a8df8aa5616bc664c4ca
+  checksum: 3b144a5f6d8d7f31e869b7d01be5266424c2f6cd2e34532d52bdad5210604d8e97a546e53ed208d6da4afaf14dd4a5385ceacc7c1f322eb877c153fd40f7e434
   languageName: node
   linkType: hard
 

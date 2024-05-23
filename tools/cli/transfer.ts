@@ -33,7 +33,7 @@ import questions from './questions';
   if (confirm.confirm) {
     const { id } = await networkContract(signer).transfer({
       target: gatewayDetails.target,
-      qty: new IOToken(gatewayDetails.qty).toMIO().valueOf(),
+      qty: new IOToken(gatewayDetails.qty).toMIO(),
     });
     // eslint-disable-next-line;
     console.log(

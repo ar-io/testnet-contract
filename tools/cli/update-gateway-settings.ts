@@ -49,9 +49,7 @@ import questions from './questions';
       allowDelegatedStaking: gatewayDetails.allowDelegatedStaking,
       delegateRewardShareRatio: gatewayDetails.delegateRewardShareRatio,
       autoStake: gatewayDetails.autoStake,
-      minDelegatedStake: new IOToken(gatewayDetails.minDelegatedStake)
-        .toMIO()
-        .valueOf(),
+      minDelegatedStake: new IOToken(gatewayDetails.minDelegatedStake).toMIO(),
       note: gatewayDetails.note,
       properties: gatewayDetails.properties,
       protocol: gatewayDetails.protocol,
