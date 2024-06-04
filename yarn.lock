@@ -183,7 +183,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@ar-io/arns-pilot@workspace:."
   dependencies:
-    "@ar.io/sdk": 1.0.7
+    "@ar.io/sdk": ^1.1.0
     "@commitlint/config-conventional": ^17.7.0
     "@trivago/prettier-plugin-sort-imports": ^4.0.0
     "@types/jest": ^27.4.0
@@ -216,17 +216,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@ar.io/sdk@npm:1.0.7":
-  version: 1.0.7
-  resolution: "@ar.io/sdk@npm:1.0.7"
+"@ar.io/sdk@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@ar.io/sdk@npm:1.1.0"
   dependencies:
     arbundles: 0.11.0
-    arweave: 1.15.1
-    axios: 1.4.0
+    arweave: 1.14.4
+    axios: 1.6.0
+    axios-retry: ^4.3.0
     bunyan: ^1.8.15
-    warp-arbundles: ^1.0.4
     warp-contracts: 1.4.45
-  checksum: 6beb41b4ed336a65ea9bcee0b15466cf33dad7aa39583cbb2571526427edeb981bdea98bc2ea9c643a715056062da51f9fb1c19f869614b834b1aed8cde195e5
+  checksum: b1afd7190af423544148f3ee3a8eb85c40d3a83c7dec21d5eee15e1a01863f0bb48c69ee4cd56bf87ae2e8c1326bdae2fc808624b87b80a178cca1c967fb01a2
   languageName: node
   linkType: hard
 
@@ -3541,14 +3541,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:1.4.0":
-  version: 1.4.0
-  resolution: "axios@npm:1.4.0"
+"axios-retry@npm:^4.3.0":
+  version: 4.3.0
+  resolution: "axios-retry@npm:4.3.0"
+  dependencies:
+    is-retry-allowed: ^2.2.0
+  peerDependencies:
+    axios: 0.x || 1.x
+  checksum: 7007b71c257bde2a3e63f41e9a5ef6a2a1bd2277b7cb1ee74bf5f2fa1c6f9cd99af75d739538977e5b0bec94cb27c4883c2e5fd5b919de75bb8ba571f42b5e77
+  languageName: node
+  linkType: hard
+
+"axios@npm:1.6.0":
+  version: 1.6.0
+  resolution: "axios@npm:1.6.0"
   dependencies:
     follow-redirects: ^1.15.0
     form-data: ^4.0.0
     proxy-from-env: ^1.1.0
-  checksum: 7fb6a4313bae7f45e89d62c70a800913c303df653f19eafec88e56cea2e3821066b8409bc68be1930ecca80e861c52aa787659df0ffec6ad4d451c7816b9386b
+  checksum: c7c9f2ae9e0b9bad7d6f9a4dff030930b12ee667dedf54c3c776714f91681feb743c509ac0796ae5c01e12c4ab4a2bee74905068dd200fbc1ab86f9814578fb0
   languageName: node
   linkType: hard
 
@@ -6986,6 +6997,13 @@ __metadata:
   version: 1.0.1
   resolution: "is-potential-custom-element-name@npm:1.0.1"
   checksum: ced7bbbb6433a5b684af581872afe0e1767e2d1146b2207ca0068a648fb5cab9d898495d1ac0583524faaf24ca98176a7d9876363097c2d14fee6dd324f3a1ab
+  languageName: node
+  linkType: hard
+
+"is-retry-allowed@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "is-retry-allowed@npm:2.2.0"
+  checksum: 3d1103a9290b5d03626756a41054844633eac78bc5d3e3a95b13afeae94fa3cfbcf7f0b5520d83f75f48a25ce7b142fdbac4217dc4b0630f3ea55e866ec3a029
   languageName: node
   linkType: hard
 
