@@ -62,7 +62,7 @@ export const networkContract = (signer: ArweaveSigner) =>
   });
 
 export const arweave = new Arweave({
-  host: 'ar-io.dev',
+  host: 'arweave.net',
   port: 443,
   protocol: 'https',
 });

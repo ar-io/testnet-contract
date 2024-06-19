@@ -35,6 +35,26 @@ import {
   PstAction,
 } from './types';
 
+export const FORKED_AO_BLOCK_HEIGHT = 144900; // approximately July 21, 2024
+
+const writeInteractions = [
+  'joinNetwork',
+  'leaveNetwork',
+  'increaseOperatorStake',
+  'decreaseOperatorStake',
+  'updateGatewaySettings',
+  'saveObservations',
+  'submitAuctionBid',
+  'buyRecord',
+  'extendRecord',
+  'increaseUndernameCount',
+  'transfer',
+  'vaultedTransfer',
+  'createVault',
+  'extendVault',
+  'increaseVault',
+];
+
 export async function handle(
   state: IOState,
   action: PstAction,
@@ -57,6 +77,18 @@ export async function handle(
 
   // all the remaining interactions require a ticked state, even when reading, so users get the most recent evaluation
   const { state: tickedState } = await tick(state);
+
+  const blockHeight = +SmartWeave.block.height;
+
+  // check if it's a write interaction and if it's being called after the forked block height
+  if (
+    writeInteractions.includes(input.function) &&
+    blockHeight >= FORKED_AO_BLOCK_HEIGHT
+  ) {
+    throw new ContractError(
+      `This contract is being forked to AO. Write interactions are disabled. Follow along for migration updates: https://twitter.com/ar_io_network`,
+    );
+  }
 
   switch (input.function as IOContractFunctions) {
     // owner wallet functions
