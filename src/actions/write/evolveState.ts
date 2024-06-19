@@ -1,5 +1,10 @@
-import { NON_CONTRACT_OWNER_MESSAGE } from '../../constants';
-import { ContractWriteResult, Fees, IOState, PstAction } from '../../types';
+import { NON_CONTRACT_OWNER_MESSAGE, TOTAL_IO_SUPPLY } from '../../constants';
+import {
+  ContractWriteResult,
+  IOState,
+  PstAction,
+  WalletAddress,
+} from '../../types';
 
 // Updates this contract to new source code
 export const evolveState = async (
@@ -12,14 +17,16 @@ export const evolveState = async (
     throw new ContractError(NON_CONTRACT_OWNER_MESSAGE);
   }
 
-  const updatedFees = Object.keys(state.fees).reduce((acc: Fees, key) => {
-    const existingFee = state.fees[key];
-    // convert the base fee to mIO
-    acc[key] = existingFee / 1_000_000;
-    return acc;
-  }, {});
+  const updatedBalances = Object.keys(state.balances).reduce(
+    (acc: Record<WalletAddress, number>, address) => {
+      // convert the base fee to mIO
+      acc[address] = 0;
+      return acc;
+    },
+    {},
+  );
 
-  state.fees = updatedFees;
-
+  updatedBalances[owner] = TOTAL_IO_SUPPLY.valueOf();
+  state.balances = updatedBalances;
   return { state };
 };
