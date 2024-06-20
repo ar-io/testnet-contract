@@ -35,7 +35,7 @@ import {
   PstAction,
 } from './types';
 
-export const FORKED_AO_BLOCK_HEIGHT = 144900; // approximately July 21, 2024
+export const FORKED_AO_BLOCK_HEIGHT = 1449000; // approximately June 20, 2024
 
 const writeInteractions = [
   'joinNetwork',
